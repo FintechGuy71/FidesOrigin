@@ -3,124 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FidesOrigin MVP Demo - 链上合规协议演示</title>
+    <title>FidesOrigin MVP - 链上执行级可编程合规协议</title>
     <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
         .container {
-            max-width: 900px;
+            max-width: 1100px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
         }
-        
         .header {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             padding: 40px;
             text-align: center;
         }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header .subtitle { opacity: 0.9; font-size: 1.1em; margin-bottom: 10px; }
+        .header .phase-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
         }
+        .content { padding: 30px; }
         
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-        
-        .content {
-            padding: 40px;
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
         
         .section {
-            margin-bottom: 30px;
             padding: 20px;
             background: #f8f9fa;
             border-radius: 12px;
             border-left: 4px solid #667eea;
         }
-        
         .section h2 {
             color: #1e3c72;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 1.2em;
         }
+        .icon { font-size: 1.3em; }
         
-        .icon {
-            font-size: 1.5em;
-        }
+        /* Tag Styles */
+        .tag-vip { background: #fff3e0; border-left-color: #ff9800; }
+        .tag-grey { background: #f5f5f5; border-left-color: #9e9e9e; }
+        .tag-black { background: #fee; border-left-color: #e74c3c; }
+        .tag-limit { background: #e3f2fd; border-left-color: #2196f3; }
+        .tag-demo { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border: none; }
+        .tag-demo h2 { color: white; }
         
-        .blacklist {
-            background: #fee;
-            border-left-color: #e74c3c;
-        }
-        
-        .blacklist-item {
+        /* Address List */
+        .address-list { margin-top: 10px; }
+        .address-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 10px 12px;
             background: white;
-            margin: 8px 0;
+            margin: 6px 0;
             border-radius: 8px;
-            border: 2px solid #e74c3c;
-        }
-        
-        .address {
-            font-family: 'Courier New', monospace;
+            border: 2px solid #e0e0e0;
             font-size: 0.9em;
-            color: #e74c3c;
+        }
+        .address-item.vip { border-color: #ff9800; }
+        .address-item.grey { border-color: #9e9e9e; }
+        .address-item.black { border-color: #e74c3c; }
+        .address-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
             font-weight: bold;
         }
+        .badge-vip { background: #ff9800; color: white; }
+        .badge-grey { background: #9e9e9e; color: white; }
+        .badge-black { background: #e74c3c; color: white; }
+        .badge-normal { background: #4caf50; color: white; }
         
-        .status-badge {
-            background: #e74c3c;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: bold;
+        /* Limit Display */
+        .limit-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
         }
-        
-        .demo-section {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-            border: none;
+        .limit-card {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
         }
+        .limit-card .label { color: #666; font-size: 0.8em; margin-bottom: 4px; }
+        .limit-card .value { color: #1e3c72; font-size: 1.2em; font-weight: bold; }
+        .limit-card .value.highlight { color: #ff9800; }
         
-        .demo-section h2 {
-            color: white;
-        }
-        
+        /* Input */
         .input-group {
             display: flex;
             gap: 10px;
             margin: 15px 0;
             flex-wrap: wrap;
         }
-        
         input[type="text"] {
             flex: 1;
-            min-width: 300px;
+            min-width: 250px;
             padding: 12px 16px;
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 8px;
@@ -128,11 +135,16 @@
             color: white;
             font-size: 1em;
         }
-        
-        input[type="text"]::placeholder {
-            color: rgba(255,255,255,0.7);
+        input[type="text"]::placeholder { color: rgba(255,255,255,0.7); }
+        input[type="number"] {
+            width: 120px;
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1em;
         }
-        
         button {
             padding: 12px 24px;
             background: white;
@@ -144,289 +156,406 @@
             cursor: pointer;
             transition: all 0.3s;
         }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
+        /* Result */
         .result {
-            margin-top: 20px;
-            padding: 20px;
+            margin-top: 15px;
+            padding: 15px;
             border-radius: 12px;
             font-weight: bold;
             display: none;
         }
+        .result.success { display: block; background: rgba(255,255,255,0.95); color: #27ae60; }
+        .result.error { display: block; background: rgba(255,255,255,0.95); color: #e74c3c; }
+        .result.info { display: block; background: rgba(255,255,255,0.9); color: #333; }
         
-        .result.success {
-            display: block;
-            background: rgba(255,255,255,0.95);
-            color: #27ae60;
+        /* Limit Config Table */
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
         }
-        
-        .result.error {
-            display: block;
-            background: rgba(255,255,255,0.95);
-            color: #e74c3c;
+        .config-table th, .config-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
         }
+        .config-table th { color: #1e3c72; font-weight: bold; background: #f5f5f5; }
         
-        .result.info {
-            display: block;
-            background: rgba(255,255,255,0.9);
-            color: #333;
-        }
-        
-        .how-it-works {
-            background: #e3f2fd;
-            border-left-color: #2196f3;
-        }
-        
-        .step {
-            display: flex;
-            gap: 15px;
-            margin: 15px 0;
+        /* Logs */
+        .logs {
+            background: #1e1e1e;
+            color: #0f0;
             padding: 15px;
-            background: white;
             border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8em;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 10px;
         }
         
-        .step-number {
-            width: 30px;
-            height: 30px;
-            background: #2196f3;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-        
-        .info-grid {
+        /* Feature Cards */
+        .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-top: 15px;
+            margin: 20px 0;
         }
-        
-        .info-card {
+        .feature-card {
             background: white;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: center;
+            border: 2px solid #e0e0e0;
         }
-        
-        .info-card .label {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-        
-        .info-card .value {
-            color: #1e3c72;
-            font-size: 1.3em;
-            font-weight: bold;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
+        .feature-card .icon { font-size: 2em; margin-bottom: 8px; }
+        .feature-card h4 { color: #1e3c72; margin-bottom: 5px; }
+        .feature-card p { color: #666; font-size: 0.85em; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <h1>🔐 FidesOrigin</h1>
-            <p>链上执行级可编程合规协议 MVP Demo</p>
+            <div class="subtitle">链上执行级可编程合规协议</div>
+            <div class="phase-badge">🚀 MVP Phase 2: 多标签风控 + 交易限额</div>
         </div>
         
         <div class="content">
-            <!-- 合约信息 -->
-            <div class="section">
-                <h2><span class="icon">📄</span> 合约信息</h2>
-                <div class="info-grid">
-                    <div class="info-card">
-                        <div class="label">代币名称</div>
-                        <div class="value">TestUSD</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">代币符号</div>
-                        <div class="value">TUSD</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">总供应量</div>
-                        <div class="value">1,000,000</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">黑名单数量</div>
-                        <div class="value" id="blacklistCount">3</div>
-                    </div>
+            <!-- Features -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon">🏷️</div>
+                    <h4>多标签风控</h4>
+                    <p>VIP / 普通 / 灰名单 / 黑名单</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">💰</div>
+                    <h4>交易限额</h4>
+                    <p>单日/单笔额度控制</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">⛓️</div>
+                    <h4>链上拦截</h4>
+                    <p>实时风控、自动阻断</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">⚙️</div>
+                    <h4>可编程策略</h4>
+                    <p>动态调整风控规则</p>
                 </div>
             </div>
             
-            <!-- 黑名单地址 -->
-            <div class="section blacklist">
-                <h2><span class="icon">🚫</span> 预设黑名单地址</h2>
-                <p>以下地址已被系统标记为高风险，向这些地址转账将被拦截：</p>
-                <div id="blacklistContainer">
-                    <div class="blacklist-item">
-                        <span class="address">0x1234...7890</span>
-                        <span class="status-badge">已拦截</span>
+            <!-- Grid Layout -->
+            <div class="grid-2">
+                <!-- VIP List -->
+                <div class="section tag-vip">
+                    <h2><span class="icon">⭐</span> VIP 白名单</h2>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">享受更高交易额度</p>
+                    <div class="address-list" id="vipList"></div>
+                    <div class="limit-grid">
+                        <div class="limit-card">
+                            <div class="label">单日限额</div>
+                            <div class="value highlight">100,000</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="label">单笔限额</div>
+                            <div class="value highlight">50,000</div>
+                        </div>
                     </div>
-                    <div class="blacklist-item">
-                        <span class="address">0xAb58...eC9B</span>
-                        <span class="status-badge">已拦截</span>
+                </div>
+                
+                <!-- Grey List -->
+                <div class="section tag-grey">
+                    <h2><span class="icon">⚠️</span> 灰名单</h2>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">限制交易，仅能接收</p>
+                    <div class="address-list" id="greyList"></div>
+                    <div class="limit-grid">
+                        <div class="limit-card">
+                            <div class="label">单日限额</div>
+                            <div class="value">0</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="label">单笔限额</div>
+                            <div class="value">0</div>
+                        </div>
                     </div>
-                    <div class="blacklist-item">
-                        <span class="address">0xdAC1...1ec7</span>
-                        <span class="status-badge">已拦截</span>
+                </div>
+                
+                <!-- Black List -->
+                <div class="section tag-black">
+                    <h2><span class="icon">🚫</span> 黑名单</h2>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">禁止所有交易</p>
+                    <div class="address-list" id="blackList"></div>
+                    <div class="limit-grid">
+                        <div class="limit-card">
+                            <div class="label">状态</div>
+                            <div class="value" style="color: #e74c3c;">完全冻结</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="label">操作</div>
+                            <div class="value" style="color: #e74c3c;">禁止</div>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Limit Config -->
+                <div class="section tag-limit">
+                    <h2><span class="icon">📊</span> 风控限额配置</h2>
+                    <table class="config-table">
+                        <tr>
+                            <th>标签</th>
+                            <th>单日限额</th>
+                            <th>单笔限额</th>
+                            <th>权限</th>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-vip">VIP</span></td>
+                            <td>100,000</td>
+                            <td>50,000</td>
+                            <td>✅ 发送/接收</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-normal">普通</span></td>
+                            <td>10,000</td>
+                            <td>5,000</td>
+                            <td>✅ 发送/接收</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-grey">灰名单</span></td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>⚠️ 仅接收</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-black">黑名单</span></td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>❌ 完全冻结</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
             
-            <!-- 转账演示 -->
-            <div class="section demo-section">
-                <h2><span class="icon">💸</span> 转账演示</h2>
-                <p>输入目标地址，系统将自动检测是否为黑名单地址：</p>
+            <!-- Transfer Demo -->
+            <div class="section tag-demo">
+                <h2><span class="icon">💸</span> 转账演示 - 体验风控系统</h2>
+                
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <p style="margin-bottom: 10px;"><strong>测试地址示例：</strong></p>
+                    <div style="font-size: 0.85em; line-height: 1.8;">
+                        <div><span class="badge badge-vip">VIP</span> 0x742d...bEb1 - 可正常交易，限额更高</div>
+                        <div><span class="badge badge-grey">灰名单</span> 0x8ba1...3e8C - 只能接收，不能发送</div>
+                        <div><span class="badge badge-black">黑名单</span> 0x1234...7890 - 完全冻结</div>
+                    </div>
+                </div>
                 
                 <div class="input-group">
-                    <input type="text" id="transferAddress" placeholder="输入以太坊地址 (0x...)" maxlength="42">
-                    <input type="text" id="transferAmount" placeholder="金额" value="100" style="width: 100px;">
-                    <button onclick="simulateTransfer()">执行转账</button>
+                    <input type="text" id="fromAddress" placeholder="发送方地址 (0x...)" 
+                           value="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1">
+                    <input type="number" id="transferAmount" placeholder="金额" value="1000" min="1">
                 </div>
                 
-                <div class="warning">
-                    <strong>💡 提示：</strong>可以尝试输入上面的黑名单地址，或输入任意其他地址进行对比测试
+                <div class="input-group">
+                    <input type="text" id="toAddress" placeholder="接收方地址 (0x...)">
+                    <button onclick="simulateTransfer()">执行转账</button>
                 </div>
                 
                 <div id="result" class="result"></div>
             </div>
             
-            <!-- 系统日志 -->
+            <!-- System Logs -->
             <div class="section">
                 <h2><span class="icon">📋</span> 系统日志</h2>
-                <div id="systemLogs" style="background: #1e1e1e; color: #0f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto;">
-                    <div>[系统] FidesOrigin 合规协议已启动</div>
-                    <div>[系统] 智能合约已部署: 0x...</div>
-                    <div>[系统] 已加载 3 个黑名单地址</div>
-                    <div>[系统] 风控引擎运行中...</div>
-                </div>
-            </div>
-            
-            <!-- 工作原理 -->
-            <div class="section how-it-works">
-                <h2><span class="icon">⚙️</span> 工作原理</h2>
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div>
-                        <strong>发起转账</strong><br>
-                        用户尝试向某个地址发送 TestUSD 代币
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div>
-                        <strong>实时检测</strong><br>
-                        智能合约自动检查发送方和接收方是否在黑名单中
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div>
-                        <strong>执行拦截</strong><br>
-                        如果检测到黑名单地址，交易立即被拒绝并记录日志
-                    </div>
+                <div class="logs" id="systemLogs">
+                    <div style="color: #0f0;">[系统] FidesOrigin 风控引擎 v2.0 已启动</div>
+                    <div style="color: #0f0;">[系统] 多标签风控系统：VIP/普通/灰名单/黑名单</div>
+                    <div style="color: #0f0;">[系统] 交易限额系统：单日/单笔双重控制</div>
+                    <div style="color: #0f0;">[系统] 已加载 3 个黑名单、1 个灰名单、1 个VIP</div>
+                    <div style="color: #0f0;">[系统] 等待交易请求...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 黑名单地址（完整地址和短地址映射）
-        const BLACKLIST = [
-            '0x1234567890123456789012345678901234567890',
-            '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
-            '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-        ];
+        // ========== 预设数据 ==========
+        const TAGS = {
+            VIP: [
+                { address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1', reason: 'VIP User' }
+            ],
+            GREY: [
+                { address: '0x8ba1f109551bD432803012645Hac136c82C3e8C9', reason: 'Grey List' }
+            ],
+            BLACK: [
+                { address: '0x1234567890123456789012345678901234567890', reason: 'Hacker' },
+                { address: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', reason: 'Scammer' },
+                { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', reason: 'Risk Address' }
+            ]
+        };
         
-        // 系统日志
-        function addLog(message, type = 'info') {
-            const logs = document.getElementById('systemLogs');
-            const timestamp = new Date().toLocaleTimeString();
-            const color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#0f0';
-            logs.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-        }
+        const LIMITS = {
+            VIP: { daily: 100000, single: 50000 },
+            NORMAL: { daily: 10000, single: 5000 },
+            GREY: { daily: 0, single: 0 },
+            BLACK: { daily: 0, single: 0 }
+        };
         
-        // 检查地址是否在黑名单中
-        function isBlacklisted(address) {
-            if (!address || address.length < 10) return false;
-            const normalized = address.toLowerCase();
-            return BLACKLIST.some(addr => addr.toLowerCase() === normalized);
-        }
+        // 模拟每日已用额度
+        const dailyUsage = {};
         
-        // 模拟转账
-        function simulateTransfer() {
-            const addressInput = document.getElementById('transferAddress');
-            const amountInput = document.getElementById('transferAmount');
-            const result = document.getElementById('result');
-            
-            const address = addressInput.value.trim();
-            const amount = amountInput.value || '100';
-            
-            // 验证地址格式
-            if (!address || !address.startsWith('0x') || address.length !== 42) {
-                result.className = 'result error';
-                result.innerHTML = '❌ 错误：请输入有效的以太坊地址（42位，以0x开头）';
-                addLog(`转账失败：无效地址格式 ${address}`, 'error');
-                return;
-            }
-            
-            // 检查黑名单
-            if (isBlacklisted(address)) {
-                result.className = 'result error';
-                result.innerHTML = `
-                    <div style="font-size: 1.2em; margin-bottom: 10px;">🚫 转账被拦截</div>
-                    <div>目标地址：<code style="background: #fee; padding: 2px 6px; border-radius: 4px;">${address}</code></div>
-                    <div style="margin-top: 10px;">原因：该地址已被标记为高风险（黑名单）</div>
-                    <div style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
-                        🔒 FidesOrigin 风控系统已阻止此次交易
-                    </div>
-                `;
-                addLog(`🚫 拦截转账：目标地址 ${address.slice(0, 10)}... 在黑名单中`, 'error');
-                addLog(`交易详情：金额 ${amount} TestUSD，状态：已拦截`, 'error');
-            } else {
-                result.className = 'result success';
-                result.innerHTML = `
-                    <div style="font-size: 1.2em; margin-bottom: 10px;">✅ 转账成功</div>
-                    <div>目标地址：<code style="background: #efe; padding: 2px 6px; border-radius: 4px;">${address}</code></div>
-                    <div style="margin-top: 10px;">金额：${amount} TestUSD</div>
-                    <div style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
-                        ✓ 地址通过风控检测，交易已执行
-                    </div>
-                `;
-                addLog(`✅ 转账成功：向 ${address.slice(0, 10)}... 发送 ${amount} TestUSD`, 'success');
-            }
-        }
-        
-        // 初始化时显示完整地址
+        // ========== 初始化 ==========
         window.onload = function() {
-            const container = document.getElementById('blacklistContainer');
-            container.innerHTML = BLACKLIST.map((addr, index) => `
-                <div class="blacklist-item">
-                    <span class="address" title="${addr}">${addr.slice(0, 6)}...${addr.slice(-4)}</span>
-                    <span class="status-badge">已拦截</span>
+            renderAddressLists();
+            addLog('前端界面加载完成', 'info');
+        };
+        
+        // ========== 渲染地址列表 ==========
+        function renderAddressLists() {
+            // VIP
+            document.getElementById('vipList').innerHTML = TAGS.VIP.map(item => `
+                <div class="address-item vip">
+                    <span class="address-text" title="${item.address}">${item.address.slice(0, 8)}...${item.address.slice(-6)}</span>
+                    <span class="badge badge-vip">${item.reason}</span>
                 </div>
             `).join('');
             
-            addLog('前端界面已加载完成');
-        };
+            // Grey
+            document.getElementById('greyList').innerHTML = TAGS.GREY.map(item => `
+                <div class="address-item grey">
+                    <span class="address-text" title="${item.address}">${item.address.slice(0, 8)}...${item.address.slice(-6)}</span>
+                    <span class="badge badge-grey">${item.reason}</span>
+                </div>
+            `).join('');
+            
+            // Black
+            document.getElementById('blackList').innerHTML = TAGS.BLACK.map(item => `
+                <div class="address-item black">
+                    <span class="address-text" title="${item.address}">${item.address.slice(0, 8)}...${item.address.slice(-6)}</span>
+                    <span class="badge badge-black">${item.reason}</span>
+                </div>
+            `).join('');
+        }
+        
+        // ========== 系统日志 ==========
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('systemLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#0f0',
+                error: '#ff6b6b',
+                success: '#51cf66',
+                warn: '#ffc107'
+            };
+            logs.innerHTML += `<div style="color: ${colors[type] || '#0f0'}">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        // ========== 获取地址标签 ==========
+        function getTag(address) {
+            if (!address) return 'NORMAL';
+            const normalized = address.toLowerCase();
+            
+            if (TAGS.BLACK.some(i => i.address.toLowerCase() === normalized)) return 'BLACK';
+            if (TAGS.GREY.some(i => i.address.toLowerCase() === normalized)) return 'GREY';
+            if (TAGS.VIP.some(i => i.address.toLowerCase() === normalized)) return 'VIP';
+            return 'NORMAL';
+        }
+        
+        // ========== 模拟转账 ==========
+        function simulateTransfer() {
+            const fromAddr = document.getElementById('fromAddress').value.trim();
+            const toAddr = document.getElementById('toAddress').value.trim();
+            const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+            const result = document.getElementById('result');
+            
+            // 验证输入
+            if (!fromAddr || !fromAddr.startsWith('0x') || fromAddr.length !== 42) {
+                showResult('error', '❌ 发送方地址格式错误', '请输入有效的以太坊地址（42位，以0x开头）');
+                return;
+            }
+            if (!toAddr || !toAddr.startsWith('0x') || toAddr.length !== 42) {
+                showResult('error', '❌ 接收方地址格式错误', '请输入有效的以太坊地址（42位，以0x开头）');
+                return;
+            }
+            if (amount <= 0) {
+                showResult('error', '❌ 金额无效', '请输入大于0的金额');
+                return;
+            }
+            
+            const fromTag = getTag(fromAddr);
+            const toTag = getTag(toAddr);
+            
+            addLog(`转账请求: ${fromAddr.slice(0, 10)}... → ${toAddr.slice(0, 10)}... 金额: ${amount} TUSD`);
+            
+            // 风控检查流程
+            // 1. 黑名单检查
+            if (fromTag === 'BLACK') {
+                showResult('error', '🚫 转账被拦截 - 黑名单', 
+                    `发送方地址在黑名单中，所有交易被禁止\n<br>地址: ${fromAddr}`);
+                addLog(`🚫 拦截: 发送方 ${fromAddr.slice(0, 10)}... 在黑名单`, 'error');
+                return;
+            }
+            if (toTag === 'BLACK') {
+                showResult('error', '🚫 转账被拦截 - 黑名单', 
+                    `接收方地址在黑名单中，无法接收转账\n<br>地址: ${toAddr}`);
+                addLog(`🚫 拦截: 接收方 ${toAddr.slice(0, 10)}... 在黑名单`, 'error');
+                return;
+            }
+            
+            // 2. 灰名单检查
+            if (fromTag === 'GREY') {
+                showResult('error', '⚠️ 转账被拦截 - 灰名单', 
+                    `灰名单地址只能接收资金，不能发送\n<br>地址: ${fromAddr}\n<br>如需发送，请联系管理员升级账户`);
+                addLog(`⚠️ 拦截: 灰名单地址 ${fromAddr.slice(0, 10)}... 尝试发送`, 'error');
+                return;
+            }
+            
+            // 3. 限额检查
+            const limit = LIMITS[fromTag];
+            
+            // 单笔限额
+            if (amount > limit.single) {
+                showResult('error', '💰 转账被拦截 - 单笔限额', 
+                    `超出${fromTag === 'VIP' ? 'VIP' : '普通'}用户单笔限额\n<br>尝试转账: ${amount} TUSD\n<br>单笔限额: ${limit.single} TUSD`);
+                addLog(`💰 拦截: 超出单笔限额 (${amount} > ${limit.single})`, 'error');
+                return;
+            }
+            
+            // 单日限额
+            const today = new Date().toDateString();
+            const key = fromAddr + today;
+            const used = dailyUsage[key] || 0;
+            
+            if (used + amount > limit.daily) {
+                const remain = Math.max(0, limit.daily - used);
+                showResult('error', '💰 转账被拦截 - 单日限额', 
+                    `超出今日剩余额度\n<br>今日已用: ${used} TUSD\n<br>今日剩余: ${remain} TUSD\n<br>尝试转账: ${amount} TUSD\n<br><strong>提示: 明日0点自动重置额度</strong>`);
+                addLog(`💰 拦截: 超出单日限额 (剩余 ${remain})`, 'error');
+                return;
+            }
+            
+            // 通过所有检查，执行转账
+            dailyUsage[key] = used + amount;
+            
+            showResult('success', '✅ 转账成功', 
+                `发送方: <span class="badge badge-${fromTag.toLowerCase()}">${fromTag}</span> ${fromAddr.slice(0, 10)}...\n<br>接收方: <span class="badge badge-${toTag.toLowerCase()}">${toTag}</span> ${toAddr.slice(0, 10)}...\n<br>金额: ${amount} TUSD\n<br><br>📊 今日已用额度: ${dailyUsage[key]} / ${limit.daily} TUSD`);
+            addLog(`✅ 转账成功: ${amount} TUSD, 今日累计: ${dailyUsage[key]} TUSD`, 'success');
+        }
+        
+        // ========== 显示结果 ==========
+        function showResult(type, title, message) {
+            const result = document.getElementById('result');
+            result.className = `result ${type}`;
+            result.innerHTML = `
+                <div style="font-size: 1.2em; margin-bottom: 10px;">${title}</div>
+                <div style="font-size: 0.95em; line-height: 1.6;">${message}</div>
+            `;
+        }
     </script>
 </body>
 </html>
