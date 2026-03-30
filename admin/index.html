@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FidesOrigin Admin - 运营后台</title>
+    <title>FidesOrigin Admin - 运营后台 v0.3.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,13 +14,17 @@
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-card: #334155;
+            --bg-hover: #475569;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
+            --text-muted: #64748b;
             --accent-purple: #8b5cf6;
             --accent-cyan: #06b6d4;
+            --accent-pink: #ec4899;
             --success: #22c55e;
             --warning: #f59e0b;
             --danger: #ef4444;
+            --info: #3b82f6;
             --border: rgba(148, 163, 184, 0.2);
         }
         
@@ -34,13 +40,15 @@
             min-height: 100vh;
         }
         
+        /* Sidebar */
         .sidebar {
-            width: 260px;
+            width: 280px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
             padding: 20px 0;
             position: fixed;
             height: 100vh;
+            overflow-y: auto;
         }
         
         .logo {
@@ -53,17 +61,19 @@
         }
         
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.25rem;
         }
         
         .logo-text { font-size: 1.25rem; font-weight: 700; }
         .logo-sub { font-size: 0.75rem; color: var(--text-secondary); }
+        .version { font-size: 0.65rem; color: var(--accent-purple); margin-top: 2px; }
         
         .nav-section {
             padding: 0 12px;
@@ -71,8 +81,8 @@
         }
         
         .nav-title {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+            font-size: 0.7rem;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             padding: 0 12px;
@@ -90,6 +100,7 @@
             font-size: 0.9rem;
             transition: all 0.2s;
             cursor: pointer;
+            margin-bottom: 4px;
         }
         
         .nav-item:hover, .nav-item.active {
@@ -99,14 +110,17 @@
         
         .nav-item.active {
             border-left: 3px solid var(--accent-purple);
+            padding-left: 9px;
         }
         
+        /* Main Content */
         .main {
             flex: 1;
-            margin-left: 260px;
+            margin-left: 280px;
             padding: 24px 32px;
         }
         
+        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -127,6 +141,40 @@
             font-size: 0.9rem;
         }
         
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .wallet-status.connected {
+            border: 1px solid var(--success);
+        }
+        
+        .wallet-status.disconnected {
+            border: 1px solid var(--danger);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.connected { background: var(--success); }
+        .status-dot.disconnected { background: var(--danger); }
+        
+        /* Buttons */
         .btn {
             padding: 10px 20px;
             border-radius: 8px;
@@ -135,6 +183,9 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .btn-primary {
@@ -150,6 +201,29 @@
             border: 1px solid var(--border);
         }
         
+        .btn-secondary:hover { background: var(--bg-hover); }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: var(--bg-primary);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -162,6 +236,12 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
         }
         
         .stat-label {
@@ -186,11 +266,13 @@
         .stat-change.positive { color: var(--success); }
         .stat-change.negative { color: var(--danger); }
         
+        /* Cards */
         .card {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
+            margin-bottom: 24px;
         }
         
         .card-header {
@@ -210,6 +292,38 @@
             padding: 20px;
         }
         
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-container.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -234,14 +348,15 @@
         }
         
         .address-cell {
-            font-family: monospace;
+            font-family: 'Monaco', 'Consolas', monospace;
             font-size: 0.85rem;
         }
         
+        /* Tags */
         .tag {
             display: inline-flex;
             align-items: center;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -267,6 +382,109 @@
             color: var(--success);
         }
         
+        .tag-admin {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+        
+        .tag-operator {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--border);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        
+        /* Page Sections */
         .page-section {
             display: none;
         }
@@ -275,33 +493,115 @@
             display: block;
         }
         
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+        }
+        
+        .timeline-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .timeline-content {
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        
+        /* Responsive */
         @media (max-width: 1200px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
         }
         
         @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            .main {
-                margin-left: 0;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 16px; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
     <div class="layout">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
                 <div class="logo-icon">🔐</div>
                 <div>
                     <div class="logo-text">FidesOrigin</div>
                     <div class="logo-sub">运营后台</div>
+                    <div class="version">v0.3.0 Phase 3</div>
                 </div>
             </div>
             
@@ -329,6 +629,19 @@
             </div>
             
             <div class="nav-section">
+                <div class="nav-title">安全 (Phase 3)</div>
+                <a class="nav-item" onclick="showPage('timelock')">
+                    <span>⏱️</span> 时间锁管理
+                </a>
+                <a class="nav-item" onclick="showPage('multisig')">
+                    <span>🔏</span> 多签管理
+                </a>
+                <a class="nav-item" onclick="showPage('emergency')">
+                    <span>🚨</span> 紧急暂停
+                </a>
+            </div>
+            
+            <div class="nav-section">
                 <div class="nav-title">系统</div>
                 <a class="nav-item" onclick="showPage('logs')">
                     <span>📋</span> 操作日志
@@ -340,48 +653,73 @@
         </aside>
 
         <main class="main">
+            <!-- Dashboard Page -->
             <div id="dashboard" class="page-section active">
                 <div class="header">
                     <div class="header-title">
                         <h1>数据看板</h1>
-                        <p>实时监控平台运行状态</p>
+                        <p>实时监控平台运行状态与链上数据</p>
                     </div>
                     <div class="header-actions">
+                        <div id="walletStatus" class="wallet-status disconnected">
+                            <span class="status-dot disconnected"></span>
+                            <span id="walletAddress">未连接钱包</span>
+                        </div>
+                        <button id="connectBtn" class="btn btn-primary" onclick="connectWallet()">
+                            🔗 连接 MetaMask
+                        </button>
                         <button class="btn btn-secondary">📅 今日</button>
-                        <button class="btn btn-primary">+ 新增客户</button>
                     </div>
                 </div>
 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-label">总客户数</div>
-                        <div class="stat-value">12</div>
+                        <div class="stat-label">总供应量</div>
+                        <div class="stat-value" id="totalSupply">--</div>
+                        <div class="stat-change positive">TUSD</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">标签地址总数</div>
+                        <div class="stat-value" id="totalTagged">--</div>
                         <div class="stat-change positive">
-                            <span>↑</span> +3 本月新增
+                            <span>VIP:</span> <span id="vipCount">--</span>
+                            <span style="margin-left: 8px;">黑名单:</span> <span id="blackCount">--</span>
                         </div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-label">今日交易</div>
-                        <div class="stat-value">2,847</div>
-                        <div class="stat-change positive">
-                            <span>↑</span> +12.5%
-                        </div>
+                        <div class="stat-label">待执行操作</div>
+                        <div class="stat-value" id="pendingOps" style="color: var(--warning);">--</div>
+                        <div class="stat-change">时间锁保护中</div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-label">拦截次数</div>
-                        <div class="stat-value" style="color: var(--danger);">156</div>
-                        <div class="stat-change negative">
-                            <span>↓</span> 拦截率 5.4%
+                        <div class="stat-label">合约状态</div>
+                        <div class="stat-value" id="contractStatus">--</div>
+                        <div class="stat-change" id="signerStatus">签名者: --</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">风险分布</div>
+                        <div class="chart-wrapper">
+                            <canvas id="riskChart"></canvas>
                         </div>
                     </div>
                     
-                    <div class="stat-card">
-                        <div class="stat-label">标签地址</div>
-                        <div class="stat-value">5,234</div>
-                        <div class="stat-change positive">
-                            <span>↑</span> +89 今日
+                    <div class="chart-container">
+                        <div class="chart-title">角色分布</div>
+                        <div class="chart-wrapper">
+                            <canvas id="roleChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container full-width">
+                        <div class="chart-title">交易监控 (24小时)</div>
+                        <div class="chart-wrapper">
+                            <canvas id="txChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -389,7 +727,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">最近拦截记录</div>
-                        <button class="btn btn-secondary">查看全部</button>
+                        <button class="btn btn-secondary" onclick="loadBlockedTransfers()">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -397,35 +735,103 @@
                                 <tr>
                                     <th>时间</th>
                                     <th>地址</th>
+                                    <th>标签</th>
                                     <th>原因</th>
                                     <th>金额</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>2分钟前</td>
-                                    <td class="address-cell">0x1234...7890</td>
-                                    <td><span class="tag tag-black">黑名单</span></td>
-                                    <td>10,000 TUSD</td>
-                                </tr>
-                                <tr>
-                                    <td>15分钟前</td>
-                                    <td class="address-cell">0xAb58...eC9B</td>
-                                    <td><span class="tag tag-black">黑名单</span></td>
-                                    <td>5,000 TUSD</td>
-                                </tr>
-                                <tr>
-                                    <td>32分钟前</td>
-                                    <td class="address-cell">0x8ba1...3e8C</td>
-                                    <td><span class="tag tag-grey">灰名单</span></td>
-                                    <td>1,000 TUSD</td>
-                                </tr>
+                            <tbody id="blockedTable">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
+            <!-- Monitor Page -->
+            <div id="monitor" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>实时监控</h1>
+                        <p>链上交易实时追踪与风控拦截</p>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container full-width">
+                        <div class="chart-title">实时交易流量</div>
+                        <div class="chart-wrapper">
+                            <canvas id="realtimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">实时风控拦截</div>
+                        <div>
+                            <span class="tag tag-success" style="margin-right: 8px;">自动拦截已启用</span>
+                            <button class="btn btn-sm btn-secondary" onclick="refreshMonitor()">刷新</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>区块</th>
+                                    <th>交易哈希</th>
+                                    <th>发送方</th>
+                                    <th>接收方</th>
+                                    <th>金额</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monitorTable">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">等待数据...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div id="customers" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>客户管理</h1>
+                        <p>管理用户地址与风控标签</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openAddCustomerModal()">+ 新增客户</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">客户列表</div>
+                        <input type="text" class="form-input" style="width: 300px;" placeholder="搜索地址..." id="customerSearch">
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>地址</th>
+                                    <th>风险等级</th>
+                                    <th>日限额</th>
+                                    <th>已用额度</th>
+                                    <th>余额</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTable">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags Page -->
             <div id="tags" class="page-section">
                 <div class="header">
                     <div class="header-title">
@@ -433,7 +839,7 @@
                         <p>管理地址风险标签和风控策略</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary">+ 新增标签</button>
+                        <button class="btn btn-primary" onclick="openTagModal()">+ 新增标签</button>
                     </div>
                 </div>
 
@@ -448,86 +854,66 @@
                                     <th>地址</th>
                                     <th>标签</th>
                                     <th>原因</th>
+                                    <th>操作人</th>
                                     <th>操作</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="address-cell">0x742d...bEb1</td>
-                                    <td><span class="tag tag-vip">VIP</span></td>
-                                    <td>高信誉机构用户</td>
-                                    <td><button class="btn btn-secondary">编辑</button></td>
-                                </tr>
-                                <tr>
-                                    <td class="address-cell">0x8ba1...3e8C</td>
-                                    <td><span class="tag tag-grey">灰名单</span></td>
-                                    <td>风险观察中</td>
-                                    <td><button class="btn btn-secondary">编辑</button></td>
-                                </tr>
-                                <tr>
-                                    <td class="address-cell">0x1234...7890</td>
-                                    <td><span class="tag tag-black">黑名单</span></td>
-                                    <td>已知黑客地址</td>
-                                    <td><button class="btn btn-secondary">编辑</button></td>
-                                </tr>
+                            <tbody id="tagsTable">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <div id="customers" class="page-section">
-                <div class="header">
-                    <h1>客户管理</h1>
-                </div>
-                <div class="card">
-                    <div class="card-body">客户列表功能开发中...</div>
-                </div>
-            </div>
-
-            <div id="monitor" class="page-section">
-                <div class="header">
-                    <h1>实时监控</h1>
-                </div>
-                <div class="card">
-                    <div class="card-body">实时监控功能开发中...</div>
-                </div>
-            </div>
-
+            <!-- Limits Page -->
             <div id="limits" class="page-section">
                 <div class="header">
-                    <h1>限额配置</h1>
+                    <div class="header-title">
+                        <h1>限额配置</h1>
+                        <p>管理各风险等级的交易限额</p>
+                    </div>
                 </div>
+
                 <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">当前限额配置</div>
+                        <button class="btn btn-primary" onclick="saveLimits()">保存修改</button>
+                    </div>
                     <div class="card-body">
-                        <h3 style="margin-bottom: 16px;">当前限额配置</h3>
                         <table>
                             <thead>
                                 <tr>
                                     <th>标签</th>
-                                    <th>单日限额</th>
-                                    <th>单笔限额</th>
-                                    <th>操作</th>
+                                    <th>单日限额 (TUSD)</th>
+                                    <th>单笔限额 (TUSD)</th>
+                                    <th>状态</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="limitsTable">
                                 <tr>
                                     <td><span class="tag tag-vip">VIP</span></td>
-                                    <td>100,000 TUSD</td>
-                                    <td>50,000 TUSD</td>
-                                    <td><button class="btn btn-secondary">修改</button></td>
+                                    <td><input type="number" class="form-input" id="vipDaily" value="100000"></td>
+                                    <td><input type="number" class="form-input" id="vipSingle" value="50000"></td>
+                                    <td><input type="checkbox" checked id="vipEnabled"></td>
                                 </tr>
                                 <tr>
                                     <td><span class="tag tag-normal">普通</span></td>
-                                    <td>10,000 TUSD</td>
-                                    <td>5,000 TUSD</td>
-                                    <td><button class="btn btn-secondary">修改</button></td>
+                                    <td><input type="number" class="form-input" id="normalDaily" value="10000"></td>
+                                    <td><input type="number" class="form-input" id="normalSingle" value="5000"></td>
+                                    <td><input type="checkbox" checked id="normalEnabled"></td>
                                 </tr>
                                 <tr>
                                     <td><span class="tag tag-grey">灰名单</span></td>
-                                    <td>0 TUSD</td>
-                                    <td>0 TUSD</td>
-                                    <td><button class="btn btn-secondary">修改</button></td>
+                                    <td><input type="number" class="form-input" id="greyDaily" value="1000"></td>
+                                    <td><input type="number" class="form-input" id="greySingle" value="500"></td>
+                                    <td><input type="checkbox" checked id="greyEnabled"></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="tag tag-black">黑名单</span></td>
+                                    <td><input type="number" class="form-input" id="blackDaily" value="0" disabled></td>
+                                    <td><input type="number" class="form-input" id="blackSingle" value="0" disabled></td>
+                                    <td><input type="checkbox" disabled id="blackEnabled"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -535,27 +921,632 @@
                 </div>
             </div>
 
-            <div id="logs" class="page-section">
+            <!-- Timelock Page -->
+            <div id="timelock" class="page-section">
                 <div class="header">
-                    <h1>操作日志</h1>
+                    <div class="header-title">
+                        <h1>时间锁管理</h1>
+                        <p>管理交易延迟执行与待处理操作</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openTimelockConfigModal()">⚙️ 配置延迟时间</button>
+                    </div>
                 </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">时间锁状态</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">当前延迟时间</label>
+                                <div style="font-size: 1.5rem; font-weight: 600;" id="currentDelay">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">最小延迟</label>
+                                <div>1 天</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">最大延迟</label>
+                                <div>30 天</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">宽限期</label>
+                                <div>14 天</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">快速统计</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">待执行操作</label>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--warning);" id="pendingCount">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">已执行</label>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);" id="executedCount">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">已取消</label>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--danger);" id="cancelledCount">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <div class="card-body">操作日志功能开发中...</div>
+                    <div class="card-header">
+                        <div class="card-title">待执行操作队列</div>
+                        <button class="btn btn-secondary" onclick="loadPendingOperations()">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>操作ID</th>
+                                    <th>类型</th>
+                                    <th>目标</th>
+                                    <th>执行时间</th>
+                                    <th>签名数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingOpsTable">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
+            <!-- Multisig Page -->
+            <div id="multisig" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>多签管理</h1>
+                        <p>管理签名者与多签阈值</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openAddSignerModal()">+ 添加签名者</button>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">多签配置</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">当前签名者数量</label>
+                                <div style="font-size: 1.5rem; font-weight: 600;" id="signerCount">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">所需签名数</label>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="number" class="form-input" id="requiredSigs" value="2" style="width: 100px;">
+                                    <button class="btn btn-secondary" onclick="updateRequiredSigs()">更新</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">您的角色</label>
+                                <div id="userRole" style="color: var(--accent-cyan);">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">安全提示</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <strong>⚠️ 重要提醒</strong><br>
+                                多签机制确保关键操作需要多方确认。请确保签名者分布安全，避免单点故障。
+                            </div>
+                            <ul style="margin-top: 16px; padding-left: 20px; color: var(--text-secondary);">
+                                <li>至少保持 2 个签名者</li>
+                                <li>建议签名者使用不同设备</li>
+                                <li>定期审核签名者列表</li>
+                                <li>新签名者需完成身份验证</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">签名者列表</div>
+                        <button class="btn btn-secondary" onclick="loadSigners()">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>地址</th>
+                                    <th>角色</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="signersTable">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Page -->
+            <div id="emergency" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>🚨 紧急暂停</h1>
+                        <p>紧急情况下暂停合约功能</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger" style="font-size: 1rem;">
+                    <strong>⚠️ 警告</strong><br>
+                    紧急暂停功能用于应对安全事件。暂停后，所有转账、铸造等操作将被阻止，只有管理员可以解除暂停。
+                    <br><br>
+                    此操作需要多签确认，且会通过时间锁执行。
+                </div>
+
+                <div class="grid-2" style="margin-top: 24px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">当前状态</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="pauseStatus" style="text-align: center; padding: 40px;">
+                                <div style="font-size: 4rem; margin-bottom: 16px;">✅</div>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">合约运行正常</div>
+                                <div style="color: var(--text-secondary); margin-top: 8px;">所有功能正常运行</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">操作面板</div>
+                        </div>
+                        <div class="card-body">
+                            <div style="text-align: center; padding: 20px;">
+                                <button class="btn btn-danger" style="padding: 16px 32px; font-size: 1.1rem;" onclick="emergencyPause()">
+                                    🛑 紧急暂停合约
+                                </button>
+                                <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
+                                    此操作将通过时间锁执行，需要多签确认
+                                </div>
+                            </div>
+                            <div style="text-align: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px;">
+                                <button class="btn btn-success" style="padding: 16px 32px; font-size: 1.1rem;" onclick="emergencyUnpause()">
+                                    ✅ 解除暂停
+                                </button>
+                                <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
+                                    只有管理员可以解除暂停
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Page -->
+            <div id="logs" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>操作日志</h1>
+                        <p>查看所有管理操作记录</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="loadLogs()">刷新</button>
+                        <button class="btn btn-primary" onclick="exportLogs()">导出</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">日志列表</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline" id="logsTimeline">
+                            <div class="timeline-item">
+                                <div class="timeline-time">连接钱包后查看日志</div>
+                                <div class="timeline-content">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
             <div id="settings" class="page-section">
                 <div class="header">
-                    <h1>系统设置</h1>
+                    <div class="header-title">
+                        <h1>系统设置</h1>
+                        <p>配置合约连接与网络</p>
+                    </div>
                 </div>
+
                 <div class="card">
-                    <div class="card-body">系统设置功能开发中...</div>
+                    <div class="card-header">
+                        <div class="card-title">合约配置</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">合约地址</label>
+                            <input type="text" class="form-input" id="contractAddress" value="0x...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">网络</label>
+                            <select class="form-select" id="networkSelect">
+                                <option value="sepolia">Sepolia Testnet</option>
+                                <option value="goerli">Goerli Testnet</option>
+                                <option value="localhost">Localhost</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">RPC URL</label>
+                            <input type="text" class="form-input" id="rpcUrl" value="https://rpc.sepolia.org">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Connect Wallet Modal -->
+    <div id="connectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">连接钱包</div>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                请连接 MetaMask 钱包以管理 FidesOrigin 合约
+            </p>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('connectModal')">取消</button>
+                <button class="btn btn-primary" onclick="connectMetaMask()">连接 MetaMask</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Tag Modal -->
+    <div id="tagModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">新增地址标签</div>
+            <div class="form-group">
+                <label class="form-label">地址</label>
+                <input type="text" class="form-input" id="tagAddress" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">风险等级</label>
+                <select class="form-select" id="tagLevel">
+                    <option value="1">VIP</option>
+                    <option value="2">普通</option>
+                    <option value="3">灰名单</option>
+                    <option value="4">黑名单</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">原因</label>
+                <input type="text" class="form-input" id="tagReason" placeholder="标注原因...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('tagModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitTag()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Signer Modal -->
+    <div id="signerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">添加签名者</div>
+            <div class="form-group">
+                <label class="form-label">签名者地址</label>
+                <input type="text" class="form-input" id="signerAddress" placeholder="0x...">
+            </div>
+            <div class="alert alert-warning">
+                添加签名者需要多签确认并通过时间锁执行
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('signerModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitAddSigner()">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timelock Config Modal -->
+    <div id="timelockConfigModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">配置时间锁延迟</div>
+            <div class="form-group">
+                <label class="form-label">延迟时间（天）</label>
+                <input type="number" class="form-input" id="timelockDays" value="2" min="1" max="30">
+            </div>
+            <div class="alert alert-warning">
+                修改时间锁延迟将通过时间锁执行，需要多签确认
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('timelockConfigModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitTimelockConfig()">提交</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Contract ABI (简化版，实际使用时需要完整 ABI)
+        const CONTRACT_ABI = [
+            "function getContractInfo() view returns (string name, string symbol, uint8 decimals, uint256 totalSupply, uint256 vipCount, uint256 greyCount, uint256 blackCount, bool paused, uint256 timelockDelay, uint256 requiredSigs, uint256 signerCount)",
+            "function getRiskLevel(address account) view returns (uint8)",
+            "function getRiskLevelName(address account) view returns (string)",
+            "function getLimitInfo(address account) view returns (string levelName, uint256 dailyLimit, uint256 singleLimit, uint256 dailyUsed, uint256 remaining, bool limited)",
+            "function getVIPList() view returns (address[])",
+            "function getGreyList() view returns (address[])",
+            "function getBlackList() view returns (address[])",
+            "function tagAddress(address account, uint8 level, string reason)",
+            "function untagAddress(address account)",
+            "function mint(address to, uint256 amount)",
+            "function emergencyPause()",
+            "function emergencyUnpause()",
+            "function addSigner(address signer)",
+            "function removeSigner(address signer)",
+            "function updateRequiredSignatures(uint256 newRequired)",
+            "function getSigners() view returns (address[])",
+            "function isSigner(address account) view returns (bool)",
+            "function scheduleOperation(uint8 operationType, address target, uint256 value, bytes data) returns (bytes32)",
+            "function signOperation(bytes32 operationId)",
+            "function executeOperation(bytes32 operationId)",
+            "function getPendingOperations() view returns (bytes32[])",
+            "function getOperationDetails(bytes32 operationId) view returns (uint8 operationType, address target, uint256 value, bytes data, uint256 timestamp, bool executed, uint256 signatureCount, uint256 requiredSignatures)",
+            "function updateTimelockDelay(uint256 newDelay)",
+            "function hasRole(bytes32 role, address account) view returns (bool)",
+            "event AddressTagged(address indexed account, uint8 level, string reason, address indexed operator)",
+            "event TransferBlocked(address indexed from, address indexed to, uint256 amount, string reason)"
+        ];
+
+        // Contract Address - 需要替换为实际部署地址
+        const CONTRACT_ADDRESS = localStorage.getItem('contractAddress') || '0x0000000000000000000000000000000000000000';
+        
+        let provider, signer, contract, userAddress;
+        let charts = {};
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            loadSettings();
+        });
+
+        // 初始化图表
+        function initCharts() {
+            const chartConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#94a3b8' }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
+                }
+            };
+
+            // 风险分布饼图
+            charts.risk = new Chart(document.getElementById('riskChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['VIP', '普通', '灰名单', '黑名单'],
+                    datasets: [{
+                        data: [1, 0, 1, 3],
+                        backgroundColor: ['#f59e0b', '#22c55e', '#94a3b8', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } }
+                }
+            });
+
+            // 角色分布饼图
+            charts.role = new Chart(document.getElementById('roleChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Admin', 'Operator', 'Viewer', 'Signer'],
+                    datasets: [{
+                        data: [1, 0, 0, 1],
+                        backgroundColor: ['#8b5cf6', '#06b6d4', '#94a3b8', '#ec4899'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } }
+                }
+            });
+
+            // 交易监控折线图
+            charts.tx = new Chart(document.getElementById('txChart'), {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [
+                        {
+                            label: '正常交易',
+                            data: [12, 19, 15, 25, 22, 30],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: '拦截次数',
+                            data: [2, 3, 1, 4, 2, 3],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: chartConfig
+            });
+
+            // 实时监控图表
+            charts.realtime = new Chart(document.getElementById('realtimeChart'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i),
+                    datasets: [{
+                        label: '实时TPS',
+                        data: Array.from({length: 20}, () => Math.floor(Math.random() * 10) + 5),
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    ...chartConfig,
+                    animation: { duration: 0 },
+                    scales: {
+                        x: { display: false },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
+                    }
+                }
+            });
+
+            // 实时更新
+            setInterval(() => {
+                if (charts.realtime) {
+                    const data = charts.realtime.data.datasets[0].data;
+                    data.shift();
+                    data.push(Math.floor(Math.random() * 10) + 5);
+                    charts.realtime.update();
+                }
+            }, 2000);
+        }
+
+        // 连接钱包
+        async function connectWallet() {
+            document.getElementById('connectModal').classList.add('active');
+        }
+
+        async function connectMetaMask() {
+            try {
+                if (!window.ethereum) {
+                    alert('请安装 MetaMask!');
+                    return;
+                }
+
+                provider = new ethers.BrowserProvider(window.ethereum);
+                await provider.send('eth_requestAccounts', []);
+                signer = await provider.getSigner();
+                userAddress = await signer.getAddress();
+                
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+                // 更新UI
+                document.getElementById('walletStatus').className = 'wallet-status connected';
+                document.getElementById('walletStatus').querySelector('.status-dot').className = 'status-dot connected';
+                document.getElementById('walletAddress').textContent = 
+                    userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                document.getElementById('connectBtn').style.display = 'none';
+
+                closeModal('connectModal');
+                
+                // 加载数据
+                await loadContractData();
+                await loadUserRole();
+                
+                // 开始轮询更新
+                startDataPolling();
+                
+            } catch (error) {
+                console.error('连接失败:', error);
+                alert('连接失败: ' + error.message);
+            }
+        }
+
+        // 加载合约数据
+        async function loadContractData() {
+            if (!contract) return;
+            
+            try {
+                const info = await contract.getContractInfo();
+                
+                document.getElementById('totalSupply').textContent = 
+                    Number(ethers.formatUnits(info.totalSupply, 18)).toLocaleString();
+                
+                const totalTagged = Number(info.vipCount) + Number(info.greyCount) + Number(info.blackCount);
+                document.getElementById('totalTagged').textContent = totalTagged;
+                document.getElementById('vipCount').textContent = info.vipCount;
+                document.getElementById('blackCount').textContent = info.blackCount;
+                
+                document.getElementById('contractStatus').textContent = info.paused ? '已暂停' : '正常';
+                document.getElementById('contractStatus').style.color = info.paused ? 'var(--danger)' : 'var(--success)';
+                document.getElementById('signerStatus').textContent = `签名者: ${info.signerCount}`;
+                
+                // 更新图表数据
+                if (charts.risk) {
+                    charts.risk.data.datasets[0].data = [
+                        Number(info.vipCount),
+                        0, // Normal 未存储在合约中
+                        Number(info.greyCount),
+                        Number(info.blackCount)
+                    ];
+                    charts.risk.update();
+                }
+                
+                // 更新时间锁数据
+                const pending = await contract.getPendingOperations();
+                document.getElementById('pendingOps').textContent = pending.length;
+                document.getElementById('pendingCount').textContent = pending.length;
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        // 加载用户角色
+        async function loadUserRole() {
+            if (!contract || !userAddress) return;
+            
+            try {
+                const ADMIN_ROLE = ethers.keccak256(ethers.toUtf8Bytes('ADMIN_ROLE'));
+                const OPERATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes('OPERATOR_ROLE'));
+                const VIEWER_ROLE = ethers.keccak256(ethers.toUtf8Bytes('VIEWER_ROLE'));
+                
+                const [isAdmin, isOperator, isViewer] = await Promise.all([
+                    contract.hasRole(ADMIN_ROLE, userAddress),
+                    contract.hasRole(OPERATOR_ROLE, userAddress),
+                    contract.hasRole(VIEWER_ROLE, userAddress)
+                ]);
+                
+                let role = '无权限';
+                if (isAdmin) role = '管理员 (Admin)';
+                else if (isOperator) role = '操作员 (Operator)';
+                else if (isViewer) role = '查看者 (Viewer)';
+                
+                document.getElementById('userRole').textContent = role;
+                
+            } catch (error) {
+                console.error('加载角色失败:', error);
+            }
+        }
+
+        // 页面切换
         function showPage(pageId) {
             document.querySelectorAll('.page-section').forEach(section => {
                 section.classList.remove('active');
@@ -566,7 +1557,333 @@
                 item.classList.remove('active');
             });
             event.target.classList.add('active');
+            
+            // 加载对应页面数据
+            if (pageId === 'tags') loadTags();
+            if (pageId === 'multisig') loadSigners();
+            if (pageId === 'timelock') loadPendingOperations();
+            if (pageId === 'logs') loadLogs();
         }
+
+        // 标签管理
+        async function loadTags() {
+            if (!contract) return;
+            
+            try {
+                const [vips, greys, blacks] = await Promise.all([
+                    contract.getVIPList(),
+                    contract.getGreyList(),
+                    contract.getBlackList()
+                ]);
+                
+                const tbody = document.getElementById('tagsTable');
+                tbody.innerHTML = '';
+                
+                [...vips.map(a => ({addr: a, level: 1, reason: 'VIP User'})),
+                 ...greys.map(a => ({addr: a, level: 3, reason: 'Risk Observation'})),
+                 ...blacks.map(a => ({addr: a, level: 4, reason: 'Known Risk'}))]
+                .forEach(item => {
+                    const tagClass = ['', 'tag-vip', '', 'tag-grey', 'tag-black'][item.level];
+                    const tagName = ['', 'VIP', '', '灰名单', '黑名单'][item.level];
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="address-cell">${item.addr}</td>
+                            <td><span class="tag ${tagClass}">${tagName}</span></td>
+                            <td>${item.reason}</td>
+                            <td>--</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" onclick="removeTag('${item.addr}')">移除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+            } catch (error) {
+                console.error('加载标签失败:', error);
+            }
+        }
+
+        function openTagModal() {
+            document.getElementById('tagModal').classList.add('active');
+        }
+
+        async function submitTag() {
+            const address = document.getElementById('tagAddress').value;
+            const level = document.getElementById('tagLevel').value;
+            const reason = document.getElementById('tagReason').value;
+            
+            if (!contract) {
+                alert('请先连接钱包');
+                return;
+            }
+            
+            try {
+                const tx = await contract.tagAddress(address, level, reason);
+                await tx.wait();
+                alert('标签添加成功!');
+                closeModal('tagModal');
+                loadTags();
+            } catch (error) {
+                alert('添加失败: ' + error.message);
+            }
+        }
+
+        // 多签管理
+        async function loadSigners() {
+            if (!contract) return;
+            
+            try {
+                const signers = await contract.getSigners();
+                const info = await contract.getContractInfo();
+                
+                document.getElementById('signerCount').textContent = info.signerCount;
+                
+                const tbody = document.getElementById('signersTable');
+                tbody.innerHTML = '';
+                
+                signers.forEach(addr => {
+                    const isCurrentUser = addr.toLowerCase() === userAddress?.toLowerCase();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="address-cell">${addr} ${isCurrentUser ? '(你)' : ''}</td>
+                            <td><span class="tag tag-admin">签名者</span></td>
+                            <td><span class="tag tag-success">活跃</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="removeSigner('${addr}')">移除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+            } catch (error) {
+                console.error('加载签名者失败:', error);
+            }
+        }
+
+        function openAddSignerModal() {
+            document.getElementById('signerModal').classList.add('active');
+        }
+
+        async function submitAddSigner() {
+            const address = document.getElementById('signerAddress').value;
+            
+            if (!contract) {
+                alert('请先连接钱包');
+                return;
+            }
+            
+            try {
+                const tx = await contract.addSigner(address);
+                await tx.wait();
+                alert('签名者添加成功!');
+                closeModal('signerModal');
+                loadSigners();
+            } catch (error) {
+                alert('添加失败: ' + error.message);
+            }
+        }
+
+        async function updateRequiredSigs() {
+            const newRequired = document.getElementById('requiredSigs').value;
+            
+            if (!contract) {
+                alert('请先连接钱包');
+                return;
+            }
+            
+            try {
+                const tx = await contract.updateRequiredSignatures(newRequired);
+                await tx.wait();
+                alert('更新成功!');
+            } catch (error) {
+                alert('更新失败: ' + error.message);
+            }
+        }
+
+        // 时间锁管理
+        async function loadPendingOperations() {
+            if (!contract) return;
+            
+            try {
+                const pending = await contract.getPendingOperations();
+                const tbody = document.getElementById('pendingOpsTable');
+                tbody.innerHTML = '';
+                
+                for (const opId of pending) {
+                    const details = await contract.getOperationDetails(opId);
+                    const opType = ['MINT', 'BURN', 'OWNERSHIP', 'LIMITS', 'TAG', 'UNTAG', 'TIMELOCK', 'PAUSE', 'UNPAUSE'][details.operationType] || 'UNKNOWN';
+                    const executeTime = new Date(Number(details.timestamp) * 1000).toLocaleString();
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="address-cell">${opId.slice(0, 10)}...</td>
+                            <td>${opType}</td>
+                            <td class="address-cell">${details.target.slice(0, 10)}...</td>
+                            <td>${executeTime}</td>
+                            <td>${details.signatureCount}/${details.requiredSignatures}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="signOperation('${opId}')">签名</button>
+                                <button class="btn btn-sm btn-success" onclick="executeOperation('${opId}')">执行</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                if (pending.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">暂无待执行操作</td></tr>';
+                }
+                
+            } catch (error) {
+                console.error('加载待执行操作失败:', error);
+            }
+        }
+
+        function openTimelockConfigModal() {
+            document.getElementById('timelockConfigModal').classList.add('active');
+        }
+
+        async function submitTimelockConfig() {
+            const days = document.getElementById('timelockDays').value;
+            
+            if (!contract) {
+                alert('请先连接钱包');
+                return;
+            }
+            
+            try {
+                const delayInSeconds = days * 24 * 60 * 60;
+                const tx = await contract.updateTimelockDelay(delayInSeconds);
+                await tx.wait();
+                alert('时间锁配置已提交，等待多签确认!');
+                closeModal('timelockConfigModal');
+            } catch (error) {
+                alert('配置失败: ' + error.message);
+            }
+        }
+
+        async function signOperation(opId) {
+            if (!contract) return;
+            
+            try {
+                const tx = await contract.signOperation(opId);
+                await tx.wait();
+                alert('签名成功!');
+                loadPendingOperations();
+            } catch (error) {
+                alert('签名失败: ' + error.message);
+            }
+        }
+
+        async function executeOperation(opId) {
+            if (!contract) return;
+            
+            try {
+                const tx = await contract.executeOperation(opId);
+                await tx.wait();
+                alert('执行成功!');
+                loadPendingOperations();
+            } catch (error) {
+                alert('执行失败: ' + error.message);
+            }
+        }
+
+        // 紧急暂停
+        async function emergencyPause() {
+            if (!contract) {
+                alert('请先连接钱包');
+                return;
+            }
+            
+            if (!confirm('确定要紧急暂停合约吗？此操作需要多签确认。')) return;
+            
+            try {
+                const tx = await contract.emergencyPause();
+                await tx.wait();
+                alert('紧急暂停已执行!');
+                loadContractData();
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        async function emergencyUnpause() {
+            if (!contract) {
+                alert('请先连接钱包');
+                return;
+            }
+            
+            if (!confirm('确定要解除暂停吗？')) return;
+            
+            try {
+                const tx = await contract.emergencyUnpause();
+                await tx.wait();
+                alert('合约已恢复运行!');
+                loadContractData();
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        // 日志
+        async function loadLogs() {
+            // 模拟日志数据
+            const logs = [
+                { time: '2025-03-31 10:23:45', type: 'TAG_ADDRESS', operator: '0x1234...5678', details: 'Tagged 0xabcd...ef01 as BLACK' },
+                { time: '2025-03-31 09:15:22', type: 'MINT', operator: '0x1234...5678', details: 'Minted 100000 TUSD' },
+                { time: '2025-03-30 18:42:11', type: 'EMERGENCY_PAUSE', operator: '0x1234...5678', details: 'Emergency pause triggered' },
+            ];
+            
+            const container = document.getElementById('logsTimeline');
+            container.innerHTML = '';
+            
+            logs.forEach(log => {
+                container.innerHTML += `
+                    <div class="timeline-item">
+                        <div class="timeline-time">${log.time}</div>
+                        <div class="timeline-content">
+                            <strong>${log.type}</strong> - ${log.details}<br>
+                            <span style="color: var(--text-muted);">By: ${log.operator}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 设置
+        function loadSettings() {
+            const savedAddress = localStorage.getItem('contractAddress');
+            if (savedAddress) {
+                document.getElementById('contractAddress').value = savedAddress;
+            }
+        }
+
+        function saveSettings() {
+            const address = document.getElementById('contractAddress').value;
+            localStorage.setItem('contractAddress', address);
+            alert('设置已保存，刷新页面后生效');
+        }
+
+        // 轮询更新
+        function startDataPolling() {
+            setInterval(() => {
+                loadContractData();
+            }, 30000); // 每30秒更新
+        }
+
+        // Modal 控制
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // 关闭 modal 点击外部
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
     </script>
 </body>
 </html>
