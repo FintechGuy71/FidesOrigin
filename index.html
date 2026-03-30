@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin MVP Demo - 链上合规协议演示</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .icon {
+            font-size: 1.5em;
+        }
+        
+        .blacklist {
+            background: #fee;
+            border-left-color: #e74c3c;
+        }
+        
+        .blacklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 2px solid #e74c3c;
+        }
+        
+        .address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .status-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .demo-section {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+        }
+        
+        .demo-section h2 {
+            color: white;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1em;
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: white;
+            color: #11998e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .result.success {
+            display: block;
+            background: rgba(255,255,255,0.95);
+            color: #27ae60;
+        }
+        
+        .result.error {
+            display: block;
+            background: rgba(255,255,255,0.95);
+            color: #e74c3c;
+        }
+        
+        .result.info {
+            display: block;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        
+        .how-it-works {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        
+        .step {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #2196f3;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .info-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .info-card .value {
+            color: #1e3c72;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 FidesOrigin</h1>
+            <p>链上执行级可编程合规协议 MVP Demo</p>
+        </div>
+        
+        <div class="content">
+            <!-- 合约信息 -->
+            <div class="section">
+                <h2><span class="icon">📄</span> 合约信息</h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="label">代币名称</div>
+                        <div class="value">TestUSD</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">代币符号</div>
+                        <div class="value">TUSD</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">总供应量</div>
+                        <div class="value">1,000,000</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="label">黑名单数量</div>
+                        <div class="value" id="blacklistCount">3</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 黑名单地址 -->
+            <div class="section blacklist">
+                <h2><span class="icon">🚫</span> 预设黑名单地址</h2>
+                <p>以下地址已被系统标记为高风险，向这些地址转账将被拦截：</p>
+                <div id="blacklistContainer">
+                    <div class="blacklist-item">
+                        <span class="address">0x1234...7890</span>
+                        <span class="status-badge">已拦截</span>
+                    </div>
+                    <div class="blacklist-item">
+                        <span class="address">0xAb58...eC9B</span>
+                        <span class="status-badge">已拦截</span>
+                    </div>
+                    <div class="blacklist-item">
+                        <span class="address">0xdAC1...1ec7</span>
+                        <span class="status-badge">已拦截</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 转账演示 -->
+            <div class="section demo-section">
+                <h2><span class="icon">💸</span> 转账演示</h2>
+                <p>输入目标地址，系统将自动检测是否为黑名单地址：</p>
+                
+                <div class="input-group">
+                    <input type="text" id="transferAddress" placeholder="输入以太坊地址 (0x...)" maxlength="42">
+                    <input type="text" id="transferAmount" placeholder="金额" value="100" style="width: 100px;">
+                    <button onclick="simulateTransfer()">执行转账</button>
+                </div>
+                
+                <div class="warning">
+                    <strong>💡 提示：</strong>可以尝试输入上面的黑名单地址，或输入任意其他地址进行对比测试
+                </div>
+                
+                <div id="result" class="result"></div>
+            </div>
+            
+            <!-- 系统日志 -->
+            <div class="section">
+                <h2><span class="icon">📋</span> 系统日志</h2>
+                <div id="systemLogs" style="background: #1e1e1e; color: #0f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto;">
+                    <div>[系统] FidesOrigin 合规协议已启动</div>
+                    <div>[系统] 智能合约已部署: 0x...</div>
+                    <div>[系统] 已加载 3 个黑名单地址</div>
+                    <div>[系统] 风控引擎运行中...</div>
+                </div>
+            </div>
+            
+            <!-- 工作原理 -->
+            <div class="section how-it-works">
+                <h2><span class="icon">⚙️</span> 工作原理</h2>
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>发起转账</strong><br>
+                        用户尝试向某个地址发送 TestUSD 代币
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>实时检测</strong><br>
+                        智能合约自动检查发送方和接收方是否在黑名单中
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>执行拦截</strong><br>
+                        如果检测到黑名单地址，交易立即被拒绝并记录日志
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 黑名单地址（完整地址和短地址映射）
+        const BLACKLIST = [
+            '0x1234567890123456789012345678901234567890',
+            '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
+            '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+        ];
+        
+        // 系统日志
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('systemLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#0f0';
+            logs.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        // 检查地址是否在黑名单中
+        function isBlacklisted(address) {
+            if (!address || address.length < 10) return false;
+            const normalized = address.toLowerCase();
+            return BLACKLIST.some(addr => addr.toLowerCase() === normalized);
+        }
+        
+        // 模拟转账
+        function simulateTransfer() {
+            const addressInput = document.getElementById('transferAddress');
+            const amountInput = document.getElementById('transferAmount');
+            const result = document.getElementById('result');
+            
+            const address = addressInput.value.trim();
+            const amount = amountInput.value || '100';
+            
+            // 验证地址格式
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                result.className = 'result error';
+                result.innerHTML = '❌ 错误：请输入有效的以太坊地址（42位，以0x开头）';
+                addLog(`转账失败：无效地址格式 ${address}`, 'error');
+                return;
+            }
+            
+            // 检查黑名单
+            if (isBlacklisted(address)) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <div style="font-size: 1.2em; margin-bottom: 10px;">🚫 转账被拦截</div>
+                    <div>目标地址：<code style="background: #fee; padding: 2px 6px; border-radius: 4px;">${address}</code></div>
+                    <div style="margin-top: 10px;">原因：该地址已被标记为高风险（黑名单）</div>
+                    <div style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                        🔒 FidesOrigin 风控系统已阻止此次交易
+                    </div>
+                `;
+                addLog(`🚫 拦截转账：目标地址 ${address.slice(0, 10)}... 在黑名单中`, 'error');
+                addLog(`交易详情：金额 ${amount} TestUSD，状态：已拦截`, 'error');
+            } else {
+                result.className = 'result success';
+                result.innerHTML = `
+                    <div style="font-size: 1.2em; margin-bottom: 10px;">✅ 转账成功</div>
+                    <div>目标地址：<code style="background: #efe; padding: 2px 6px; border-radius: 4px;">${address}</code></div>
+                    <div style="margin-top: 10px;">金额：${amount} TestUSD</div>
+                    <div style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                        ✓ 地址通过风控检测，交易已执行
+                    </div>
+                `;
+                addLog(`✅ 转账成功：向 ${address.slice(0, 10)}... 发送 ${amount} TestUSD`, 'success');
+            }
+        }
+        
+        // 初始化时显示完整地址
+        window.onload = function() {
+            const container = document.getElementById('blacklistContainer');
+            container.innerHTML = BLACKLIST.map((addr, index) => `
+                <div class="blacklist-item">
+                    <span class="address" title="${addr}">${addr.slice(0, 6)}...${addr.slice(-4)}</span>
+                    <span class="status-badge">已拦截</span>
+                </div>
+            `).join('');
+            
+            addLog('前端界面已加载完成');
+        };
+    </script>
+</body>
+</html>
