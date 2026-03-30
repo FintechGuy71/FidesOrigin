@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin - 链上执行级可编程合规协议</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary-purple: #7c3aed;
+            --primary-dark: #1e1b4b;
+            --accent-cyan: #06b6d4;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255,255,255,0.7);
+            --text-muted: rgba(255,255,255,0.5);
+            --card-bg: rgba(255,255,255,0.05);
+            --border-color: rgba(255,255,255,0.1);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(30, 27, 75, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+        
+        .nav-cta {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .btn-secondary {
+            color: var(--text-primary);
+            background: transparent;
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--card-bg);
+        }
+        
+        .btn-primary {
+            color: var(--primary-dark);
+            background: var(--text-primary);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 160px 24px 100px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+        
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 1rem;
+        }
+        
+        /* Code Preview */
+        .code-preview {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .code-dot:nth-child(1) { background: #ef4444; }
+        .code-dot:nth-child(2) { background: #f59e0b; }
+        .code-dot:nth-child(3) { background: #22c55e; }
+        
+        .code-content {
+            padding: 24px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            line-height: 1.8;
+            text-align: left;
+            overflow-x: auto;
+        }
+        
+        .code-keyword { color: #c084fc; }
+        .code-function { color: #60a5fa; }
+        .code-string { color: #86efac; }
+        .code-comment { color: var(--text-muted); }
+        
+        /* Features Section */
+        .features {
+            padding: 100px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        /* Use Cases */
+        .use-cases {
+            padding: 100px 24px;
+            background: linear-gradient(180deg, transparent, rgba(124,58,237,0.1), transparent);
+        }
+        
+        .use-cases-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 60px;
+        }
+        
+        .use-case-card {
+            text-align: center;
+            padding: 40px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+        
+        .use-case-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.3));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 20px;
+        }
+        
+        .use-case-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .use-case-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 100px 24px;
+            text-align: center;
+        }
+        
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.2));
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            margin-bottom: 32px;
+        }
+        
+        /* Footer */
+        .footer {
+            padding: 60px 24px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+        
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+        
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .features-grid,
+            .use-cases-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 3rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">🔐</div>
+                FidesOrigin
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="#features">产品功能</a></li>
+                <li><a href="#use-cases">应用场景</a></li>
+                <li><a href="#docs">技术文档</a></li>
+                <li><a href="#pricing">定价</a></li>
+            </ul>
+            
+            <div class="nav-cta">
+                <a href="https://github.com/FintechGuy71/FidesOrigin" class="btn btn-secondary">GitHub</a>
+                <a href="mailto:contact@fidesorigin.com" class="btn btn-primary">联系我们</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="badge">
+            <span class="badge-dot"></span>
+            香港稳定币法案合规基础设施
+        </div>
+        
+        <h1>链上执行级<br>可编程合规协议</h1>
+        
+        <p class="hero-subtitle">
+            为链上金融世界注入实时风控与可信秩序，推动合规化 RWA 与区块链融合发展的下一代基础设施
+        </p>
+        
+        <div class="hero-cta">
+            <a href="#demo" class="btn btn-primary btn-large">查看 Demo</a>
+            <a href="https://github.com/FintechGuy71/FidesOrigin" class="btn btn-secondary btn-large">GitHub</a>
+        </div>
+        
+        <div class="code-preview">
+            <div class="code-header">
+                <span class="code-dot"></span>
+                <span class="code-dot"></span>
+                <span class="code-dot"></span>
+                <span style="margin-left: 12px; color: var(--text-muted); font-size: 0.875rem;">TestUSD.sol</span>
+            </div>
+            <div class="code-content">
+                <span class="code-comment">// 智能合约自动执行风控检查</span><br>
+                <span class="code-keyword">function</span> <span class="code-function">_transfer</span>(<span class="code-keyword">address</span> from, <span class="code-keyword">address</span> to, <span class="code-keyword">uint256</span> amount) <span class="code-keyword">internal</span> {<br>
+                &nbsp;&nbsp;<span class="code-comment">// 1. 检查黑名单</span><br>
+                &nbsp;&nbsp;<span class="code-keyword">require</span>(!isBlacklisted(from), <span class="code-string">"Sender blacklisted"</span>);<br>
+                &nbsp;&nbsp;<span class="code-keyword">require</span>(!isBlacklisted(to), <span class="code-string">"Recipient blacklisted"</span>);<br>
+                &nbsp;&nbsp;<span class="code-comment">// 2. 检查交易限额</span><br>
+                &nbsp;&nbsp;<span class="code-keyword">require</span>(amount <= getLimit(from), <span class="code-string">"Limit exceeded"</span>);<br>
+                &nbsp;&nbsp;<span class="code-comment">// 3. 执行转账</span><br>
+                &nbsp;&nbsp;super._transfer(from, to, amount);<br>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <h2>三步构建合规体系</h2>
+            <p>AI 驱动的链上风控，从标签生成到实时拦截的全链路解决方案</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>AI 特征模型工程</h3>
+                <p>图神经网络与机器学习结合，自动生成 CDD 标签、行为标签、交易标签和黑名单标签</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⛓️</div>
+                <h3>链上检测与拦截</h3>
+                <p>可插拔合规策略模块，智能合约实时防止可疑交易，7×24 小时热处理</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📡</div>
+                <h3>实时情报监控</span>
+                <p>持续监控链上地址，黑名单自动更新，突发事件秒级响应</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="use-cases" id="use-cases">
+        <div class="use-cases-container">
+            <div class="section-header">
+                <h2>应用场景</h2>
+                <p>为不同业务场景提供定制化合规解决方案</p>
+            </div>
+            
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <div class="use-case-icon">💰</div>
+                    <h3>稳定币发行方</h3>
+                    <p>满足监管要求，实现合规稳定币的安全外循环，支持 KYC/AML 全流程</p>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="use-case-icon">🏛️</div>
+                    <h3>RWA 资产发行机构</div>
+                    <p>让真实资产在合规边界内具备去中心化可组合性，支持 P2P 合规交易</p>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="use-case-icon">🏢</div>
+                    <h3>Web2 Fintech</h3>
+                    <p>零门槛接入 Web3，嵌入机构级风控能力，保留原有用户体验</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-container">
+            <h2>准备好构建合规未来了吗？</h2>
+            <p>加入我们的早期合作伙伴计划，共同定义链上合规新标准</p>
+            <div class="hero-cta">
+                <a href="mailto:contact@fidesorigin.com" class="btn btn-primary btn-large">预约演示</a>
+                <a href="https://github.com/FintechGuy71/FidesOrigin" class="btn btn-secondary btn-large">查看代码</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <a href="/" class="logo" style="font-size: 1.25rem;">
+                    <div class="logo-icon" style="width: 32px; height: 32px; font-size: 1rem;">🔐</div>
+                    FidesOrigin
+                </a>
+                
+                <ul class="footer-links">
+                    <li><a href="#">隐私政策</a></li>
+                    <li><a href="#">服务条款</a></li>
+                    <li><a href="#">联系我们</a></li>
+                </ul>
+            </div>
+            
+            <div class="copyright">
+                © 2025 FidesOrigin. All rights reserved.
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
