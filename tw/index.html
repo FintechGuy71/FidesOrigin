@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FidesOrigin — Real-Time On-Chain Compliance for the AI Agent Era</title>
-  <meta name="description" content="Programmable on-chain compliance protocol. Real-time risk control, autonomous policy enforcement, immutable audit trails — for stablecoins, RWA tokenization, and AI Agent transactions.">
+  <title>FidesOrigin — AI Agent 時代的鏈上實時合規協議</title>
+  <meta name="description" content="可編程鏈上合規協議。實時風控、自主策略執行、不可篡改審計追蹤 — 專為穩定幣、RWA 代幣化及 AI Agent 交易而設計。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../styles.css">
   <style>
     .mobile-menu { display: none; }
     @media (max-width: 900px) { .mobile-menu { display: flex; } }
@@ -23,15 +23,15 @@
         <span class="logo-text">FidesOrigin</span>
       </a>
       <nav class="nav">
-        <a href="#compare">Differentiation</a>
+        <a href="#compare">差異化</a>
         <a href="#ai-agent">AI Agent</a>
-        <a href="#demo">Live Demo</a>
-        <a href="#features">Features</a>
+        <a href="#demo">即時演示</a>
+        <a href="#features">核心功能</a>
         <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
         <div class="lang-switch">
-          <button class="active" onclick="switchLang('en')">EN</button>
+          <button onclick="switchLang('en')">EN</button>
           <button onclick="switchLang('cn')">简</button>
-          <button onclick="switchLang('tw')">繁</button>
+          <button class="active" onclick="switchLang('tw')">繁</button>
         </div>
       </nav>
       <button class="mobile-menu" onclick="document.querySelector('.nav').classList.toggle('show')" style="background:none;border:none;color:var(--text);">
@@ -45,18 +45,18 @@
     <div class="container">
       <div class="hero-badge fade-in delay-1">
         <span class="dot"></span>
-        <span>v1.0 — Hong Kong Stablecoin Ordinance Ready</span>
+        <span>v1.0 — 香港穩定幣條例合規就緒</span>
       </div>
       <h1 class="fade-in delay-2">
-        Real-Time On-Chain Compliance<br>
-        <span class="gradient-text">for the AI Agent Era</span>
+        AI Agent 時代的<br>
+        <span class="gradient-text">鏈上實時合規協議</span>
       </h1>
       <p class="hero-subtitle fade-in delay-3">
-        Programmable risk control that executes natively on-chain. No APIs, no latency, no black boxes — just cryptographic certainty for every transaction.
+        原生鏈上執行的可編程風控系統。無需 API、零延遲、無黑箱 — 每筆交易都獲得密碼學級別的確定性保障。
       </p>
       <div class="hero-cta fade-in delay-3">
-        <a href="#demo" class="btn btn-primary">Try Live Demo</a>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn btn-secondary">View on GitHub</a>
+        <a href="#demo" class="btn btn-primary">立即體驗演示</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn btn-secondary">查看 GitHub</a>
       </div>
 
       <div class="pillars">
@@ -64,22 +64,22 @@
           <div class="pillar-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
-          <h3>On-Chain Real-Time</h3>
-          <p>Every transaction verified in milliseconds via Merkle proof, with zero external API dependency.</p>
+          <h3>鏈上實時</h3>
+          <p>每筆交易透過 Merkle 證明毫秒級驗證，零外部 API 依賴。</p>
         </div>
         <div class="pillar fade-in delay-2">
           <div class="pillar-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
           </div>
-          <h3>Fully Programmable</h3>
-          <p>Policy engine with four-tier decisions: ALLOW / BLOCK / FLAG / HOLD. Composable with any smart contract.</p>
+          <h3>完全可編程</h3>
+          <p>四級決策引擎：放行 / 攔截 / 標記 / 凍結。可與任何智能合約組合。</p>
         </div>
         <div class="pillar fade-in delay-3">
           <div class="pillar-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
           </div>
-          <h3>AI Agent Ready</h3>
-          <p>Autonomous agents can query risk status, receive on-chain decisions, and enforce compliance without human intervention.</p>
+          <h3>AI Agent 就緒</h3>
+          <p>自主代理可直接查詢鏈上風險狀態、接收決策、執行合規 — 無需人工介入。</p>
         </div>
       </div>
     </div>
@@ -89,31 +89,31 @@
   <section class="section" id="compare">
     <div class="container">
       <div class="section-header">
-        <h2>Why FidesOrigin is Different</h2>
-        <p>Traditional compliance relies on centralized APIs. We moved the entire risk engine on-chain.</p>
+        <h2>為什麼 FidesOrigin 不同</h2>
+        <p>傳統合規依賴中心化 API。我們把整個風控引擎搬到了鏈上。</p>
       </div>
       <div class="comparison">
         <div class="comparison-card">
-          <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Traditional Compliance</h3>
+          <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 傳統合規方案</h3>
           <ul class="comparison-list">
-            <li><span class="cross">✕</span> Centralized API calls (100-500ms latency)</li>
-            <li><span class="cross">✕</span> Black-box risk scoring — no transparency</li>
-            <li><span class="cross">✕</span> Single point of failure — API downtime = no protection</li>
-            <li><span class="cross">✕</span> High per-query cost ($0.01-$0.10 per check)</li>
-            <li><span class="cross">✕</span> Not composable with smart contracts</li>
-            <li><span class="cross">✕</span> Requires off-chain infrastructure</li>
+            <li><span class="cross">✕</span> 中心化 API 呼叫（延遲 100-500ms）</li>
+            <li><span class="cross">✕</span> 黑盒風險評分 — 無透明度</li>
+            <li><span class="cross">✕</span> 單點故障 — API 當機 = 無保護</li>
+            <li><span class="cross">✕</span> 高查詢成本（每次 $0.01-$0.10）</li>
+            <li><span class="cross">✕</span> 無法與智能合約組合</li>
+            <li><span class="cross">✕</span> 依賴鏈下基礎設施</li>
           </ul>
         </div>
         <div class="comparison-divider">vs</div>
         <div class="comparison-card fo">
           <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> FidesOrigin</h3>
           <ul class="comparison-list">
-            <li><span class="check">✓</span> On-chain Merkle verification (&lt;50ms, zero latency)</li>
-            <li><span class="check">✓</span> Cryptographically verifiable — every decision is auditable</li>
-            <li><span class="check">✓</span> Decentralized — runs on every node, no downtime</li>
-            <li><span class="check">✓</span> Fixed gas cost (~30k gas per verification)</li>
-            <li><span class="check">✓</span> Native Solidity integration — call from any contract</li>
-            <li><span class="check">✓</span> Fully on-chain — no external dependencies</li>
+            <li><span class="check">✓</span> 鏈上 Merkle 驗證（&lt;50ms，零延遲）</li>
+            <li><span class="check">✓</span> 密碼學可驗證 — 每筆決策可審計</li>
+            <li><span class="check">✓</span> 去中心化 — 每個節點運行，零當機</li>
+            <li><span class="check">✓</span> 固定 Gas 成本（約 3 萬 Gas/次驗證）</li>
+            <li><span class="check">✓</span> 原生 Solidity 整合 — 任意合約可呼叫</li>
+            <li><span class="check">✓</span> 完全鏈上 — 零外部依賴</li>
           </ul>
         </div>
       </div>
@@ -124,17 +124,17 @@
   <section class="section ai-agent-section" id="ai-agent">
     <div class="container">
       <div class="section-header">
-        <h2>Built for the AI Agent Economy</h2>
-        <p>When autonomous agents trade, lend, and move assets 24/7, traditional manual compliance breaks. FidesOrigin gives AI Agents native on-chain risk awareness.</p>
+        <h2>為 AI Agent 經濟而設計</h2>
+        <p>當自主代理 24/7 交易、借貸、轉移資產時，傳統人工合規失效。FidesOrigin 賦予 AI Agent 原生鏈上風險感知能力。</p>
       </div>
       <div class="code-block">
         <div class="code-header">
-          <span>Integrate in 5 minutes</span>
+          <span>5 分鐘整合</span>
           <span class="lang-tag">Solidity</span>
         </div>
-        <pre><code><span class="code-comment">// AI Agent calls FidesOrigin before every trade</span>
+        <pre><code><span class="code-comment">// AI Agent 每筆交易前呼叫 FidesOrigin</span>
 <span class="code-keyword">function</span> <span class="code-function">executeTrade</span>(<span class="code-keyword">address</span> counterparty, <span class="code-keyword">uint256</span> amount) <span class="code-keyword">external</span> {
-    <span class="code-comment">// 1. Query risk status on-chain</span>
+    <span class="code-comment">// 1. 鏈上查詢風險狀態</span>
     <span class="code-keyword">bool</span> isSafe = riskRegistry.verifyAddress(
         counterparty,
         expectedRiskScore,
@@ -142,17 +142,17 @@
         merkleProof
     );
 
-    <span class="code-comment">// 2. Enforce policy</span>
-    <span class="code-keyword">require</span>(isSafe, <span class="code-string">"Counterparty blocked by compliance policy"</span>);
+    <span class="code-comment">// 2. 執行策略攔截</span>
+    <span class="code-keyword">require</span>(isSafe, <span class="code-string">"對手方被合規策略攔截"</span>);
 
-    <span class="code-comment">// 3. Execute with immutable audit trail</span>
+    <span class="code-comment">// 3. 執行並生成不可篡改審計記錄</span>
     complianceEngine.recordDecision(<span class="code-keyword">msg.sender</span>, counterparty, amount, <span class="code-number">0</span>);
     swap.execute(counterparty, amount);
 }</code></pre>
       </div>
       <div style="text-align:center; margin-top:24px;">
         <p style="color:var(--text-secondary); font-size:0.9rem;">
-          The agent never sleeps. Neither does the compliance layer. Every decision is recorded on-chain, forever.
+          代理永不休眠。合規層也永不休眠。每筆決策永久記錄於鏈上。
         </p>
       </div>
     </div>
@@ -162,13 +162,13 @@
   <section class="section" id="demo">
     <div class="container">
       <div class="section-header">
-        <h2>Live Risk Scan Demo</h2>
-        <p>Enter any Ethereum address to see how FidesOrigin instantly evaluates on-chain risk.</p>
+        <h2>即時風險掃描演示</h2>
+        <p>輸入任意以太坊地址，體驗 FidesOrigin 如何即時完成鏈上風險評估。</p>
       </div>
       <div class="demo-box">
         <div class="demo-input-row">
-          <input type="text" class="demo-input" id="demoAddress" placeholder="0x... (Ethereum address)" maxlength="42">
-          <button class="btn btn-primary" onclick="checkRisk()">Scan</button>
+          <input type="text" class="demo-input" id="demoAddress" placeholder="0x... (以太坊地址)" maxlength="42">
+          <button class="btn btn-primary" onclick="checkRisk()">掃描</button>
         </div>
         <div class="demo-result" id="demoResult">
           <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
@@ -176,12 +176,12 @@
             <span id="riskScore" style="font-family:var(--font-mono); color:var(--text-secondary);"></span>
           </div>
           <div style="font-size:0.85rem; color:var(--text-muted); font-family:var(--font-mono);">
-            Source: <span id="riskSource"></span> | Tags: <span id="riskTags"></span>
+            來源: <span id="riskSource"></span> | 標籤: <span id="riskTags"></span>
           </div>
         </div>
         <p style="font-size:0.8rem; color:var(--text-muted); margin-top:12px;">
-          Powered by 20,645+ risk addresses from OFAC, Chainalysis, and Etherscan.
-          <a href="address-check.html" style="color:var(--accent-light);">Full database →</a>
+          資料覆蓋 20,645+ 風險地址，來源包括 OFAC、Chainalysis、Etherscan。
+          <a href="../address-check.html" style="color:var(--accent-light);">查看完整資料庫 →</a>
         </p>
       </div>
     </div>
@@ -191,29 +191,29 @@
   <section class="section" id="features">
     <div class="container">
       <div class="section-header">
-        <h2>Core Capabilities</h2>
-        <p>Everything you need to build compliant on-chain financial products.</p>
+        <h2>核心能力</h2>
+        <p>建構合規鏈上金融產品所需的一切。</p>
       </div>
       <div class="features-grid">
         <div class="feature-card">
           <div class="num">01</div>
-          <h3>Merkle Risk Registry</h3>
-          <p>Store and verify 20,000+ risk addresses with cryptographic certainty. Updates propagate globally in one transaction.</p>
+          <h3>Merkle 風險註冊表</h3>
+          <p>以密碼學確定性儲存並驗證 20,000+ 風險地址。一次交易即可全球更新。</p>
         </div>
         <div class="feature-card">
           <div class="num">02</div>
-          <h3>Four-Tier Policy Engine</h3>
-          <p>ALLOW / BLOCK / FLAG / HOLD decisions. Composable rules that adapt to your risk appetite.</p>
+          <h3>四級策略引擎</h3>
+          <p>放行 / 攔截 / 標記 / 凍結。可組合規則，靈活適配您的風險偏好。</p>
         </div>
         <div class="feature-card">
           <div class="num">03</div>
-          <h3>Immutable Audit Trail</h3>
-          <p>Every compliance decision recorded on-chain. Queryable forever, tamper-proof by design.</p>
+          <h3>不可篡改審計鏈</h3>
+          <p>每筆合規決策永久記錄於鏈上。隨時可查，防篡改設計。</p>
         </div>
         <div class="feature-card">
           <div class="num">04</div>
-          <h3>Multi-Chain Native</h3>
-          <p>Deploy on Ethereum, Polygon, Arbitrum, Optimism, Base, BNB Chain, and Tempo L1 with identical interfaces.</p>
+          <h3>多鏈原生支援</h3>
+          <p>完全一致的介面，支援 Ethereum、Polygon、Arbitrum、Optimism、Base、BNB Chain 及 Tempo L1。</p>
         </div>
       </div>
     </div>
@@ -222,8 +222,8 @@
   <!-- Chain Logos -->
   <section class="section">
     <div class="container" style="text-align:center;">
-      <h2 style="font-size:1.3rem; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">Supported Networks</h2>
-      <p style="font-size:0.9rem; color:var(--text-muted);">Deploy once. Run everywhere.</p>
+      <h2 style="font-size:1.3rem; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">已支援網路</h2>
+      <p style="font-size:0.9rem; color:var(--text-muted);">一次部署，全鏈執行。</p>
       <div class="chains-grid">
         <div class="chain-item"><div class="chain-logo">⬡</div><span class="chain-name">Ethereum</span></div>
         <div class="chain-item"><div class="chain-logo">🔷</div><span class="chain-name">Polygon</span></div>
@@ -240,33 +240,33 @@
   <section class="section trust-section">
     <div class="container">
       <div class="section-header">
-        <h2>Protocol Metrics</h2>
-        <p>Built for production. Auditable by design.</p>
+        <h2>協議數據</h2>
+        <p>為生產環境建構。設計上可審計。</p>
       </div>
       <div class="stats-row">
         <div class="stat-item">
           <div class="stat-num">20,645+</div>
-          <div class="stat-label">Risk Addresses Covered</div>
+          <div class="stat-label">覆蓋風險地址</div>
         </div>
         <div class="stat-item">
           <div class="stat-num">202</div>
-          <div class="stat-label">Tests Passing</div>
+          <div class="stat-label">測試通過</div>
         </div>
         <div class="stat-item">
           <div class="stat-num">&lt;50ms</div>
-          <div class="stat-label">Verification Latency</div>
+          <div class="stat-label">驗證延遲</div>
         </div>
         <div class="stat-item">
           <div class="stat-num">7</div>
-          <div class="stat-label">Supported Networks</div>
+          <div class="stat-label">支援網路</div>
         </div>
       </div>
       <div style="text-align:center; margin-top:40px;">
         <div style="display:inline-flex; align-items:center; gap:24px; padding:16px 28px; border-radius:12px; background:var(--bg-card); border:1px solid var(--border);">
-          <span style="font-size:0.85rem; color:var(--text-muted);">Compliance Ready:</span>
-          <span style="font-size:0.85rem; color:var(--text); font-weight:600;">🇭🇰 Hong Kong Stablecoin Ordinance</span>
+          <span style="font-size:0.85rem; color:var(--text-muted);">合規就緒:</span>
+          <span style="font-size:0.85rem; color:var(--text); font-weight:600;">🇭🇰 香港穩定幣條例</span>
           <span style="color:var(--border-light);">|</span>
-          <span style="font-size:0.85rem; color:var(--text); font-weight:600;">🇪🇺 MiCA Framework</span>
+          <span style="font-size:0.85rem; color:var(--text); font-weight:600;">🇪🇺 MiCA 框架</span>
           <span style="color:var(--border-light);">|</span>
           <span style="font-size:0.85rem; color:var(--text); font-weight:600;">🇺🇸 OFAC SDN</span>
         </div>
@@ -278,9 +278,9 @@
   <section class="section">
     <div class="container">
       <div class="cta-box">
-        <h2>Start Building Compliant On-Chain Products</h2>
-        <p>Open source. Production-ready. Integrate in 5 minutes.</p>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn">Explore the Protocol</a>
+        <h2>開始建構合規鏈上產品</h2>
+        <p>開源。生產就緒。5 分鐘整合。</p>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn">探索協議</a>
       </div>
     </div>
   </section>
@@ -296,41 +296,40 @@
             </div>
             <span style="font-weight:700;">FidesOrigin</span>
           </div>
-          <p>Real-time on-chain compliance for tokenized assets, stablecoins, and AI Agent transactions.</p>
+          <p>為代幣化資產、穩定幣及 AI Agent 交易提供實時鏈上合規。</p>
         </div>
         <div class="footer-col">
-          <h4>Product</h4>
-          <a href="#features">Features</a>
-          <a href="address-check.html">Risk Scanner</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin/tree/main/docs">Documentation</a>
+          <h4>產品</h4>
+          <a href="#features">核心功能</a>
+          <a href="../address-check.html">風險掃描</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/tree/main/docs">文件</a>
           <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
         </div>
         <div class="footer-col">
-          <h4>Resources</h4>
-          <a href="#">API Reference</a>
-          <a href="#">Integration Guide</a>
+          <h4>資源</h4>
+          <a href="#">API 參考</a>
+          <a href="#">整合指南</a>
           <a href="#">SDK</a>
           <a href="#">Subgraph</a>
         </div>
         <div class="footer-col">
-          <h4>Connect</h4>
+          <h4>聯繫</h4>
           <a href="mailto:contact@fidesorigin.com">contact@fidesorigin.com</a>
           <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 FidesOrigin. MIT License.</span>
+        <span>© 2026 FidesOrigin. MIT 授權條款。</span>
         <div class="lang-switch">
-          <button class="active" onclick="switchLang('en')">English</button>
+          <button onclick="switchLang('en')">English</button>
           <button onclick="switchLang('cn')">简体中文</button>
-          <button onclick="switchLang('tw')">繁體中文</button>
+          <button class="active" onclick="switchLang('tw')">繁體中文</button>
         </div>
       </div>
     </div>
   </footer>
 
   <script>
-    // IP-based language detection
     async function detectLang() {
       try {
         const res = await fetch('https://ipapi.co/json/', { timeout: 3000 });
@@ -346,63 +345,56 @@
         return 'en';
       }
     }
-
     async function init() {
-      // Only redirect on first visit
       if (!sessionStorage.getItem('lang-checked')) {
         sessionStorage.setItem('lang-checked', '1');
         const detected = await detectLang();
         const current = document.documentElement.lang;
         if (detected !== current) {
-          window.location.href = detected === 'en' ? './' : `./${detected}/`;
+          window.location.href = detected === 'en' ? '../' : `../${detected}/`;
         }
       }
     }
     init();
 
     function switchLang(lang) {
-      window.location.href = lang === 'en' ? './' : `./${lang}/`;
+      window.location.href = lang === 'en' ? '../' : `../${lang}/`;
     }
 
-    // Demo
     const KNOWN_ADDRESSES = {
-      '0x1234567890123456789012345678901234567890': { score: 95, tier: 'BLACK', source: 'OFAC', tags: 'Sanctioned' },
-      '0xab5801a7d398351b8be11c439e05c5b3259aec9b': { score: 90, tier: 'BLACK', source: 'Chainalysis', tags: 'Hacker' },
-      '0xdac17f958d2ee523a2206206994597c13d831ec7': { score: 85, tier: 'GREY', source: 'Etherscan', tags: 'Scam' }
+      '0x1234567890123456789012345678901234567890': { score: 95, tier: 'BLACK', source: 'OFAC', tags: '制裁名單' },
+      '0xab5801a7d398351b8be11c439e05c5b3259aec9b': { score: 90, tier: 'BLACK', source: 'Chainalysis', tags: '駭客' },
+      '0xdac17f958d2ee523a2206206994597c13d831ec7': { score: 85, tier: 'GREY', source: 'Etherscan', tags: '詐騙' }
     };
-
     function checkRisk() {
       const input = document.getElementById('demoAddress').value.trim().toLowerCase();
       const result = document.getElementById('demoResult');
       const badge = document.getElementById('riskBadge');
-
       if (!input.match(/^0x[a-f0-9]{40}$/)) {
         badge.className = 'risk-indicator risk-low';
-        badge.textContent = '⚠ Invalid Address';
+        badge.textContent = '⚠ 無效地址';
         document.getElementById('riskScore').textContent = '';
         document.getElementById('riskSource').textContent = '-';
         document.getElementById('riskTags').textContent = '-';
         result.classList.add('show');
         return;
       }
-
       result.classList.add('show');
       const data = KNOWN_ADDRESSES[input];
       if (data) {
         badge.className = data.tier === 'BLACK' ? 'risk-indicator risk-high' : 'risk-indicator risk-low';
-        badge.textContent = data.tier === 'BLACK' ? '🔴 High Risk' : '🟡 Flagged';
-        document.getElementById('riskScore').textContent = `Score: ${data.score}/100`;
+        badge.textContent = data.tier === 'BLACK' ? '🔴 高風險' : '🟡 已標記';
+        document.getElementById('riskScore').textContent = `風險分: ${data.score}/100`;
         document.getElementById('riskSource').textContent = data.source;
         document.getElementById('riskTags').textContent = data.tags;
       } else {
         badge.className = 'risk-indicator risk-safe';
-        badge.textContent = '🟢 Not in Database';
-        document.getElementById('riskScore').textContent = 'No risk signals detected';
+        badge.textContent = '🟢 未在資料庫中';
+        document.getElementById('riskScore').textContent = '未偵測到風險訊號';
         document.getElementById('riskSource').textContent = 'N/A';
-        document.getElementById('riskTags').textContent = 'None';
+        document.getElementById('riskTags').textContent = '無';
       }
     }
-
     document.getElementById('demoAddress').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') checkRisk();
     });
