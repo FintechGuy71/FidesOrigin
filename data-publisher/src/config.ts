@@ -21,8 +21,14 @@ export interface FATFConfig {
 import dotenv from 'dotenv';
 import path from 'path';
 
+// [Fix] __dirname may not be available in ESM/bundled environments
+const getDirname = (): string => {
+  if (typeof __dirname !== 'undefined') return __dirname;
+  return process.cwd();
+};
+
 // Load .env from data-publisher directory
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(getDirname(), '../.env') });
 
 function getEnv(key: string, defaultValue?: string): string {
   const value = process.env[key];

@@ -30,8 +30,8 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard {
 
     /// @notice MEV 保护最大 deadline 时长
     uint256 public constant MAX_DEADLINE_DURATION = 5 minutes;
-    /// @notice 批量检查最大数组长度
-    uint256 public constant MAX_BATCH_SIZE = 500;
+    // I-02 FIX: Unified MAX_BATCH_SIZE to 100 for consistency across contracts
+    uint256 public constant MAX_BATCH_SIZE = 100;
     /// @notice 关键地址变更时间锁
     uint256 public constant SETTER_DELAY = 48 hours;
     /// @notice 紧急冷却最大值
@@ -50,7 +50,8 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard {
     uint256 public minRiskScoreForQuarantine = 80;
     uint256 public maxRiskScoreForBlock = 95;
     uint256 public minUpdateInterval = 24 hours;
-    uint256 public maxRiskAddresses = 100000;
+    
+    // I-01 FIX: Removed unused maxRiskAddresses state variable
     
     /// @notice 交易统计
     uint256 public totalTransactionsChecked;
@@ -557,11 +558,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard {
         emit RiskThresholdUpdated("minUpdateInterval", old, _value, msg.sender, block.timestamp);
     }
 
-    function setMaxRiskAddresses(uint256 _value) external onlyRole(ADMIN_ROLE) {
-        uint256 old = maxRiskAddresses;
-        maxRiskAddresses = _value;
-        emit RiskThresholdUpdated("maxRiskAddresses", old, _value, msg.sender, block.timestamp);
-    }
+    // I-01 FIX: Removed unused maxRiskAddresses setter
 
     function setEmergencyCooldown(uint256 _cooldown) external onlyRole(ADMIN_ROLE) {
         if (_cooldown > MAX_EMERGENCY_COOLDOWN) revert InvalidCooldown(_cooldown);

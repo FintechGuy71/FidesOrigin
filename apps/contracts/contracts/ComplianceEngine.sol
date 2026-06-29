@@ -94,6 +94,11 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         string reason;
     }
     
+    /// @notice M-03: UUPS upgrade timelock state
+    uint256 public upgradeTimelockDelay;
+    mapping(bytes32 => uint256) public upgradeProposals;
+    mapping(address => bytes32) public implementationToProposal;
+    
     // ============ Events ============
     
     event ComplianceCheckPerformed(
@@ -155,6 +160,11 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     event ContractPaused(address indexed account, uint256 timestamp);
     event ContractUnpaused(address indexed account, uint256 timestamp);
     
+    // M-03: Upgrade timelock events
+    event UpgradeProposed(bytes32 indexed proposalId, address indexed newImplementation, uint256 executeAfter);
+    event UpgradeExecuted(bytes32 indexed proposalId, address indexed newImplementation);
+    event UpgradeTimelockDelayUpdated(uint256 oldDelay, uint256 newDelay);
+    
     // ============ Errors ============
     
     error InvalidAddress();
@@ -164,6 +174,8 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     error DeadlineExpired(uint256 deadline, uint256 currentTime);
     error UnauthorizedCaller(address caller);
     error BatchSizeExceeded(uint256 size, uint256 maxSize);
+    error UpgradeTimelockActive(bytes32 proposalId, uint256 executeAfter);
+    error UpgradeNotProposed(bytes32 proposalId);
     
     // ============ Constructor & Initializer ============
     
@@ -197,9 +209,36 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         
         // L-15: Renounce DEFAULT_ADMIN_ROLE after granting ADMIN_ROLE to reduce centralization risk
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        
+        // M-03: Initialize upgrade timelock delay
+        upgradeTimelockDelay = 2 days;
     }
     
-    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {}
+    // M-03: UUPS upgrade timelock proposal
+    function proposeUpgrade(address newImplementation) external onlyRole(ADMIN_ROLE) returns (bytes32 proposalId) {
+        require(newImplementation != address(0), "Zero address");
+        proposalId = keccak256(abi.encode(newImplementation, block.chainid, block.timestamp));
+        upgradeProposals[proposalId] = block.timestamp + upgradeTimelockDelay;
+        implementationToProposal[newImplementation] = proposalId;
+        emit UpgradeProposed(proposalId, newImplementation, upgradeProposals[proposalId]);
+    }
+    
+    function setUpgradeTimelockDelay(uint256 delay) external onlyRole(ADMIN_ROLE) {
+        require(delay >= 1 hours && delay <= 30 days, "Invalid delay");
+        uint256 oldDelay = upgradeTimelockDelay;
+        upgradeTimelockDelay = delay;
+        emit UpgradeTimelockDelayUpdated(oldDelay, delay);
+    }
+    
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
+        bytes32 proposalId = implementationToProposal[newImplementation];
+        if (proposalId == bytes32(0)) revert UpgradeNotProposed(proposalId);
+        uint256 executeAfter = upgradeProposals[proposalId];
+        if (block.timestamp < executeAfter) revert UpgradeTimelockActive(proposalId, executeAfter);
+        delete upgradeProposals[proposalId];
+        delete implementationToProposal[newImplementation];
+        emit UpgradeExecuted(proposalId, newImplementation);
+    }
     
     // ============ Core Compliance Checks ============
     
@@ -355,11 +394,12 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         IssuerPolicy memory policy = issuerPolicies[token];
         
         // [Fix] 检查代币黑名单
+        // M-02 FIX: Check if destination is a blocked token, not self-reference
         if (policy.blockedTokens.length > 0) {
             for (uint256 i = 0; i < policy.blockedTokens.length; i++) {
-                if (policy.blockedTokens[i] == token) {
+                if (policy.blockedTokens[i] == to) {
                     decision = IComplianceEngine.Decision.BLOCK;
-                    reason = "Token is blocked by issuer policy";
+                    reason = "Destination token is blocked by issuer policy";
                     emit TransactionBlocked(from, to, amount, token, reason, block.timestamp, block.number);
                     blockedTransactions++;
                     return (decision, reason);

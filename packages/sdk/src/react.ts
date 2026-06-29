@@ -32,13 +32,21 @@ export interface UseRiskCheckResult extends UseRiskCheckState, UseRiskCheckActio
 // [P2 Fix] Deep-equal comparison for options, avoiding JSON.stringify quirks
 function isOptionsEqual(a: ClientOptions, b: ClientOptions): boolean {
   if (a === b) return true;
-  const keysA = Object.keys(a).sort();
-  const keysB = Object.keys(b).sort();
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
   if (keysA.length !== keysB.length) return false;
-  for (let i = 0; i < keysA.length; i++) {
-    const k = keysA[i];
-    if (k !== keysB[i]) return false;
-    if ((a as any)[k] !== (b as any)[k]) return false;
+
+  for (const k of keysA) {
+    if (!keysB.includes(k)) return false;
+    const valA = (a as any)[k];
+    const valB = (b as any)[k];
+    if (typeof valA === 'object' && typeof valB === 'object' && valA !== null && valB !== null) {
+      if (!isOptionsEqual(valA, valB)) return false;
+    } else if (valA !== valB) {
+      return false;
+    }
   }
   return true;
 }

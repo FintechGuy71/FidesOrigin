@@ -181,10 +181,10 @@ export const RiskScore: React.FC<RiskScoreProps> = ({
       {/* Transaction Stats */}
       {showStats && risk.transactionStats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Transactions" value={risk.transactionStats.totalTransactions.toString()} />
-          <StatCard label="Volume" value={risk.transactionStats.totalVolume} />
-          <StatCard label="Age (days)" value={risk.transactionStats.accountAge.toString()} />
-          <StatCard label="Counterparties" value={risk.transactionStats.uniqueCounterparties.toString()} />
+          <StatCard label="Transactions" value={String(risk.transactionStats?.totalTransactions ?? '-')} />
+          <StatCard label="Volume" value={String(risk.transactionStats?.totalVolume ?? '-')} />
+          <StatCard label="Age (days)" value={String(risk.transactionStats?.accountAge ?? '-')} />
+          <StatCard label="Counterparties" value={String(risk.transactionStats?.uniqueCounterparties ?? '-')} />
         </div>
       )}
     </div>

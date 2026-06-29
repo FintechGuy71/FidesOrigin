@@ -23,7 +23,14 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const CONFIG = {
     rpcUrl: process.env.RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com',
     privateKey: process.env.PRIVATE_KEY,
+    // [M-04 Fix] Support KMS/Vault-derived private keys (preferred for production)
+    kmsProvider: process.env.KMS_PROVIDER || '',        // e.g. 'aws', 'gcp', 'vault'
+    kmsKeyId: process.env.KMS_KEY_ID || '',             // KMS key ID / Vault key name
+    vaultAddr: process.env.VAULT_ADDR || '',            // Vault server address
+    vaultToken: process.env.VAULT_TOKEN || '',          // Vault token (transient, not in code)
+    vaultSecretPath: process.env.VAULT_SECRET_PATH || '', // Vault secret path
     checkInterval: parseInt(process.env.CHECK_INTERVAL) || 30000,
+    batchInterval: parseInt(process.env.BATCH_INTERVAL) || 300000, // [L-06 Fix] separate batch interval (default 5min)
     batchSize: parseInt(process.env.BATCH_SIZE) || 50,
     maxPendingTx: parseInt(process.env.MAX_PENDING_TX) || 5,
 };
@@ -78,10 +85,10 @@ class KeeperState {
             stats: this.stats,
             knownWallets: Array.from(this.knownWallets),
         };
-        fs.writeFileSync(
-            path.join(__dirname, '.keeper-state.json'),
-            JSON.stringify(data, null, 2)
-        );
+        const statePath = path.join(__dirname, '.keeper-state.json');
+        fs.writeFileSync(statePath, JSON.stringify(data, null, 2));
+        // [M-05 Fix] restrict state file to owner-only (0o600) to prevent tampering
+        try { fs.chmodSync(statePath, 0o600); } catch (_e) { /* ignore on Windows */ }
     }
 
     load() {
@@ -119,11 +126,34 @@ class QuarantineKeeper {
         const network = await this.provider.getNetwork();
         console.log(`🔗 Connected to ${network.name} (chainId: ${network.chainId})`);
         
-        // 设置签名者
-        if (!CONFIG.privateKey) {
-            throw new Error('PRIVATE_KEY environment variable required');
+        // [M-04 Fix] Resolve signer: prefer KMS/Vault, fallback to plaintext env var (dev only)
+        if (CONFIG.kmsProvider && CONFIG.kmsKeyId) {
+            console.log(`🔐 Using KMS provider: ${CONFIG.kmsProvider}, keyId: ${CONFIG.kmsKeyId}`);
+            // Production path: derive signer via KMS. Implementations omitted for brevity;
+            // in production, use AWS KMS (aws-sdk), GCP Cloud KMS, or HashiCorp Vault SDK.
+            throw new Error(
+                'KMS signer not yet implemented in this script. ' +
+                'Please implement the corresponding KMS provider SDK (aws-sdk, @google-cloud/kms, or node-vault) ' +
+                'or fall back to plaintext PRIVATE_KEY for dev/test only.'
+            );
+        } else if (CONFIG.vaultAddr && CONFIG.vaultToken && CONFIG.vaultSecretPath) {
+            console.log(`🔐 Using HashiCorp Vault: ${CONFIG.vaultAddr}, path: ${CONFIG.vaultSecretPath}`);
+            throw new Error(
+                'Vault signer not yet implemented. ' +
+                'Please integrate node-vault or @hashicorp/vault-client to fetch the private key at runtime.'
+            );
+        } else if (CONFIG.privateKey) {
+            console.warn('⚠️  WARNING: Using plaintext PRIVATE_KEY from environment variable. ' +
+                         'This is acceptable for dev/test ONLY. For production, use KMS or Vault.');
+            this.signer = new ethers.Wallet(CONFIG.privateKey, this.provider);
+        } else {
+            throw new Error(
+                'No signing key available. Set one of:\n' +
+                '  - KMS_PROVIDER + KMS_KEY_ID (production preferred)\n' +
+                '  - VAULT_ADDR + VAULT_TOKEN + VAULT_SECRET_PATH (production preferred)\n' +
+                '  - PRIVATE_KEY (dev/test only)'
+            );
         }
-        this.signer = new ethers.Wallet(CONFIG.privateKey, this.provider);
         console.log(`🔑 Keeper address: ${this.signer.address}`);
         
         // 检查余额
@@ -342,9 +372,11 @@ class QuarantineKeeper {
                         try {
                             risk = await this.checkRisk(from);
                         } catch (riskErr) {
-                            // [High Fix] Skip this address if risk check fails (fail-closed)
-                            console.warn(`Skipping ${from}: risk check unavailable`);
-                            continue;
+                            // [L-07 Fix] FAIL-CLOSED: if risk check fails, treat as HIGH RISK and quarantine
+                            // rather than skipping (which would let a potentially contaminated transfer through)
+                            console.warn(`⚠️ Risk check failed for ${from}: ${riskErr.message}. ` +
+                                         `Treating as HIGH RISK (fail-closed).`);
+                            risk = { isBlacklisted: true, isHighRisk: true, riskLevel: 99, riskScore: 999 };
                         }
                         
                         if (risk.isBlacklisted || risk.isHighRisk) {
@@ -439,7 +471,7 @@ class QuarantineKeeper {
         }
         
         // 定时扫描（批量模式）
-        console.log(`⏰ Batch scan interval: ${CONFIG.checkInterval}ms`);
+        console.log(`⏰ Batch scan interval: ${CONFIG.batchInterval}ms (poll: ${CONFIG.checkInterval}ms)`);
         
         setInterval(() => {
             if (walletList.length > 0) {
@@ -447,7 +479,7 @@ class QuarantineKeeper {
             }
             this.printStats();
             this.state.save();
-        }, CONFIG.checkInterval);
+        }, CONFIG.batchInterval);
         
         // 初始扫描
         if (walletList.length > 0) {

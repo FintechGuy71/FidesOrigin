@@ -25,6 +25,10 @@ contract FidesOriginTimelock is TimelockController {
     /// @notice 是否为紧急模式
     bool public emergencyMode;
     
+    /// @notice M-07 FIX: 紧急模式切换时间锁
+    bool public pendingEmergencyMode;
+    uint256 public emergencyModeChangeTimestamp;
+    
     /// @notice 紧急操作员 (安全团队多签)
     mapping(address => bool) public emergencyOperators;
     
@@ -40,6 +44,8 @@ contract FidesOriginTimelock is TimelockController {
     error NotEmergencyOperator(address caller);
     error EmergencyModeAlreadySet(bool current);
     error InvalidAddress();
+    error EmergencyModeTimelockActive(uint256 availableAt);
+    error EmergencyOperatorAlreadySet(bool current);
     
     // ============ Constructor ============
     
@@ -54,31 +60,45 @@ contract FidesOriginTimelock is TimelockController {
     // ============ Emergency Functions ============
     
     /**
-     * @notice 启用紧急模式标记
-     * @dev 紧急模式下，建议通过标准 Timelock 流程更新延迟期
-     * @dev L-06 NOTE: Emergency mode toggle has no timelock. Production should
-     *      require multi-sig for emergencyOperators or wrap this contract behind
-     *      a governance timelock.
+     * @notice 提议启用紧急模式
+     * @dev M-07 FIX: 启用紧急模式需经过 EMERGENCY_DELAY 时间锁
      */
-    function enableEmergencyMode() external {
+    function proposeEnableEmergencyMode() external {
         if (!emergencyOperators[msg.sender]) revert NotEmergencyOperator(msg.sender);
         if (emergencyMode) revert EmergencyModeAlreadySet(true);
-        
-        emergencyMode = true;
-        
+        if (emergencyModeChangeTimestamp != 0 && !pendingEmergencyMode) revert EmergencyModeAlreadySet(false); // already has a pending disable
+
+        pendingEmergencyMode = true;
+        emergencyModeChangeTimestamp = block.timestamp + EMERGENCY_DELAY;
+
         emit EmergencyModeEnabled(msg.sender);
     }
-    
+
     /**
-     * @notice 关闭紧急模式标记
+     * @notice 提议关闭紧急模式
+     * @dev M-07 FIX: 关闭紧急模式需经过 EMERGENCY_DELAY 时间锁
      */
-    function disableEmergencyMode() external {
+    function proposeDisableEmergencyMode() external {
         if (!emergencyOperators[msg.sender]) revert NotEmergencyOperator(msg.sender);
         if (!emergencyMode) revert EmergencyModeAlreadySet(false);
-        
-        emergencyMode = false;
-        
+        if (emergencyModeChangeTimestamp != 0 && pendingEmergencyMode) revert EmergencyModeAlreadySet(true); // already has a pending enable
+
+        pendingEmergencyMode = false;
+        emergencyModeChangeTimestamp = block.timestamp + EMERGENCY_DELAY;
+
         emit EmergencyModeDisabled(msg.sender);
+    }
+
+    /**
+     * @notice 执行紧急模式切换（在时间锁到期后）
+     * @dev M-07 FIX: 任何人均可在时间锁到期后执行
+     */
+    function executeEmergencyModeChange() external {
+        if (emergencyModeChangeTimestamp == 0) revert EmergencyModeAlreadySet(emergencyMode);
+        if (block.timestamp < emergencyModeChangeTimestamp) revert EmergencyModeTimelockActive(emergencyModeChangeTimestamp);
+
+        emergencyMode = pendingEmergencyMode;
+        emergencyModeChangeTimestamp = 0;
     }
     
     /**
@@ -86,7 +106,7 @@ contract FidesOriginTimelock is TimelockController {
      */
     function addEmergencyOperator(address operator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (operator == address(0)) revert InvalidAddress();
-        if (emergencyOperators[operator]) revert EmergencyModeAlreadySet(true);
+        if (emergencyOperators[operator]) revert EmergencyOperatorAlreadySet(true);
         emergencyOperators[operator] = true;
         emit EmergencyOperatorAdded(operator);
     }
@@ -95,7 +115,7 @@ contract FidesOriginTimelock is TimelockController {
      * @notice 移除紧急操作员
      */
     function removeEmergencyOperator(address operator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (!emergencyOperators[operator]) revert EmergencyModeAlreadySet(false);
+        if (!emergencyOperators[operator]) revert EmergencyOperatorAlreadySet(false);
         emergencyOperators[operator] = false;
         emit EmergencyOperatorRemoved(operator);
     }

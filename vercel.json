@@ -1,4 +1,5 @@
 {
+  "_comment": "[M-14 Fix] LEGACY: This vercel.json is for a separate static marketing site. The main Next.js application lives in apps/web/ and has its own vercel.json. If deploying the marketing site from website/ and admin/ directories, use a SEPARATE Vercel project to avoid routing conflicts with the Next.js app.",
   "builds": [
     { "src": "website/**", "use": "@vercel/static" },
     { "src": "admin/**", "use": "@vercel/static" }

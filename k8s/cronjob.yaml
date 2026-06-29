@@ -111,11 +111,13 @@ spec:
                     key: vault-key-name
                     optional: true
               resources:
+                # [L-20 Fix] CronJob memory limit raised to match Deployment (1Gi)
+                # Batch sync may load large OFAC datasets; 512Mi is insufficient.
                 requests:
-                  memory: "256Mi"
+                  memory: "512Mi"
                   cpu: "250m"
                 limits:
-                  memory: "512Mi"
+                  memory: "1Gi"
                   cpu: "500m"
               securityContext:
                 allowPrivilegeEscalation: false

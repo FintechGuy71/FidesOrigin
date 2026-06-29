@@ -28,8 +28,13 @@ function validateUrl(urlStr) {
   } catch (e) {
     throw new ValidationError(`无效的 URL: ${urlStr}`);
   }
-  if (parsed.protocol !== 'https:')
-    throw new ValidationError(`仅允许 HTTPS 协议: ${parsed.protocol}`);
+  // [Fix] Allow HTTP in development/test environments
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new ValidationError(`仅允许 HTTP/HTTPS 协议: ${parsed.protocol}`);
+  }
+  if (parsed.protocol === 'http:' && process.env.NODE_ENV === 'production') {
+    throw new ValidationError(`生产环境仅允许 HTTPS 协议: ${parsed.protocol}`);
+  }
 
   const hostname = parsed.hostname.toLowerCase();
   const blocked = [

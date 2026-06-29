@@ -121,6 +121,7 @@ export const useRiskStore = create<RiskState & RiskActions>()(
         state.loading = false;
         state.error = null;
         state.currentAddress = null;
+        state.history = [];
       }),
   }))
 );

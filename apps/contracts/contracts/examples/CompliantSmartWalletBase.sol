@@ -896,6 +896,23 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
     }
 
     /**
+     * @notice M-07b FIX: Reset stale daily spending data for a given dayKey
+     * @param dayKey The day key to reset (block.timestamp / 1 days)
+     */
+    function resetDailyEthSpent(uint256 dayKey) external onlyOwner {
+        dailyEthSpent[dayKey] = 0;
+    }
+
+    /**
+     * @notice M-07b FIX: Reset stale daily token spending data for a given dayKey
+     * @param token The token address
+     * @param dayKey The day key to reset (block.timestamp / 1 days)
+     */
+    function resetDailyTokenSpent(address token, uint256 dayKey) external onlyOwner {
+        dailyTokenSpent[token][dayKey] = 0;
+    }
+
+    /**
      * @dev [H-29] 修复: fallback 支持 DeFi 协议回调（如 Uniswap、Aave 等）
      * 使用普通 call 将调用转发给目标合约，避免 delegatecall 导致的存储覆盖风险
      * 
@@ -903,9 +920,11 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
      * 修复后使用 call，保持安全性同时支持协议回调
      */
     fallback() external payable nonReentrant {
-        // 只允许 owner 或白名单合约通过 fallback 进行交互
-        if (msg.sender != owner && !whitelistedTargets[msg.sender]) {
-            revert("Fallback calls restricted to owner or whitelisted targets");
+        // H-03 FIX: Restrict fallback to whitelisted targets only. Owner removed to prevent
+        // arbitrary calldata forwarding abuse if owner is a compromised or malicious contract.
+        // Owner must whitelist their own contracts if they need callback support.
+        if (!whitelistedTargets[msg.sender]) {
+            revert("Fallback calls restricted to whitelisted targets");
         }
         
         address target = msg.sender;

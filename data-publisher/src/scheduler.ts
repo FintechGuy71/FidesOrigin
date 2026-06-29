@@ -7,6 +7,32 @@ import { SyncJob, RiskProfile } from './types';
 import { config } from './config';
 import logger from './logger';
 
+// ─── Lightweight Promise-based Mutex (replaces boolean lock) ─────────────────
+
+class AsyncMutex {
+  private _locked = false;
+  private _waiters: Array<(release: () => void) => void> = [];
+
+  async acquire(): Promise<() => void> {
+    if (!this._locked) {
+      this._locked = true;
+      return () => this._release();
+    }
+    return new Promise((resolve) => {
+      this._waiters.push(resolve);
+    });
+  }
+
+  private _release(): void {
+    const next = this._waiters.shift();
+    if (next) {
+      next(() => this._release());
+    } else {
+      this._locked = false;
+    }
+  }
+}
+
 /**
  * Job Scheduler — orchestrates data collection, processing, and publishing
  * With cluster support: uses distributed locks to prevent duplicate syncs
@@ -19,7 +45,7 @@ export class JobScheduler {
   private jobs: Map<string, SyncJob> = new Map();
   private tasks: cron.ScheduledTask[] = [];
   private isRunning: boolean = false;
-  private localLock: boolean = false;
+  private localMutex: AsyncMutex = new AsyncMutex();
 
   constructor(
     collector: DataCollector, 
@@ -40,6 +66,14 @@ export class JobScheduler {
     if (this.isRunning) {
       logger.warn('Scheduler already running');
       return;
+    }
+
+    // [Fix] Validate cron expressions at startup to catch errors early
+    if (!cron.validate(config.scheduler.fullSync)) {
+      throw new Error(`Invalid full sync cron expression: ${config.scheduler.fullSync}`);
+    }
+    if (!cron.validate(config.scheduler.incrementalSync)) {
+      throw new Error(`Invalid incremental sync cron expression: ${config.scheduler.incrementalSync}`);
     }
 
     // Full sync job
@@ -86,11 +120,7 @@ export class JobScheduler {
    * Execute a sync job with cluster locking
    */
   private async runSyncJob(type: 'full' | 'incremental', jobId: string): Promise<SyncJob> {
-    if (this.localLock) {
-      logger.warn('Sync already in progress, skipping');
-      return { id: jobId, type, startedAt: new Date(), addressesProcessed: 0, addressesUpdated: 0, errors: ['Skipped: another sync is already running'], status: 'skipped' };
-    }
-    this.localLock = true;
+    const release = await this.localMutex.acquire();
     const uniqueJobId = `${type}-${Date.now()}`;
     const job: SyncJob = {
       id: uniqueJobId,
@@ -120,6 +150,7 @@ export class JobScheduler {
         job.status = 'skipped';
         job.completedAt = new Date();
         job.errors.push('Skipped: another instance holds the lock');
+        release();
         return job;
       }
     }
@@ -137,6 +168,7 @@ export class JobScheduler {
         job.status = 'completed';
         job.completedAt = new Date();
         await this.releaseLock(type);
+        release();
         return job;
       }
 
@@ -174,6 +206,7 @@ export class JobScheduler {
         job.status = 'completed';
         job.completedAt = new Date();
         await this.releaseLock(type);
+        release();
         return job;
       }
 
@@ -212,7 +245,7 @@ export class JobScheduler {
         error: (error as Error).stack,
       });
     } finally {
-      this.localLock = false;
+      release();
       await this.releaseLock(type);
     }
 

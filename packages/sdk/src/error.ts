@@ -31,7 +31,7 @@ export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   UNAUTHORIZED: 401,
   NOT_FOUND: 404,
   SERVER_ERROR: 500,
-  TIMEOUT: 408,
+  TIMEOUT: 0,
   UNKNOWN: 500,
   BAD_REQUEST: 400,
 };

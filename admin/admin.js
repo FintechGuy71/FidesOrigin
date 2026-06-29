@@ -12,6 +12,10 @@ let currentPage = 'dashboard';
 let charts = {};
 let updateInterval = null;
 
+// [M-17 Security Note] The following functions are exposed to window for HTML onclick
+// compatibility. In production, migrate to event delegation (addEventListener) and
+// remove these global assignments to reduce the attack surface from malicious scripts.
+
 // ==================== 工具函数 ====================
 function showToast(message, type = 'info') {
   const toast = document.getElementById('toast');
@@ -337,6 +341,12 @@ function initCharts() {
 
 // ==================== 数据加载 (安全DOM版) ====================
 
+// ==================== [M-16 Fix] DEMO DATA — 所有数据为 Mock/Demo 展示用 ====================
+// 注意: 以下所有 dashboard / monitor / customers / tags / timelock / multisig /
+// quarantine / policies / logs / complianceLogs / incomingBlocks 数据均为硬编码
+// 演示数据。生产部署前必须替换为真实合约调用和 GraphQL 查询。
+// ============================================================================
+
 async function initDashboard() {
   if (!walletConnected) return;
   
@@ -348,6 +358,7 @@ async function initDashboard() {
   const contractStatus = document.getElementById('contractStatus');
   const signerStatus = document.getElementById('signerStatus');
   
+  // [DEMO] Mock dashboard numbers — replace with on-chain query
   if (totalSupply) totalSupply.textContent = formatCurrency(1250000);
   if (totalTagged) totalTagged.textContent = formatNumber(15420);
   if (vipCount) vipCount.textContent = formatNumber(230);
@@ -359,12 +370,13 @@ async function initDashboard() {
   }
   if (signerStatus) signerStatus.textContent = `签名者: ${formatAddress(walletAddress)}`;
   
-  // Subgraph 数据
+  // Subgraph 数据 (DEMO)
   const subgraphTotalChecks = document.getElementById('subgraphTotalChecks');
   const subgraphBlocked = document.getElementById('subgraphBlocked');
   const subgraphSanctioned = document.getElementById('subgraphSanctioned');
   const subgraphHeld = document.getElementById('subgraphHeld');
   
+  // [DEMO] Mock subgraph stats — replace with Subgraph GraphQL query
   if (subgraphTotalChecks) subgraphTotalChecks.textContent = formatNumber(45230);
   if (subgraphBlocked) subgraphBlocked.textContent = formatNumber(128);
   if (subgraphSanctioned) subgraphSanctioned.textContent = formatNumber(67);
@@ -390,7 +402,7 @@ async function loadBlockedTransfers() {
   tr.appendChild(td);
   tbody.appendChild(tr);
   
-  // 模拟数据
+  // [DEMO] Mock blocked transfers — replace with on-chain event query
   setTimeout(() => {
     const mockData = [
       { time: '2026-06-16 14:30:00', address: '0x1234...5678', tag: '黑名单', reason: 'OFAC 制裁', amount: '10,000 TUSD' },
@@ -418,7 +430,7 @@ async function initMonitor() {
     return;
   }
   
-  // 模拟监控数据
+  // [DEMO] Mock monitor data — replace with on-chain event query
   const mockData = [
     { id: 'TX001', hash: '0xabc...def', from: '0x111...222', to: '0x333...444', amount: '1,000 TUSD', status: '已拦截' },
     { id: 'TX002', hash: '0xdef...abc', from: '0x555...666', to: '0x777...888', amount: '500 TUSD', status: '已通过' },
@@ -433,10 +445,11 @@ function refreshMonitor() {
   showToast('监控数据已刷新', 'success');
 }
 
-// ==================== 客户管理 ====================
+// ==================== 客户管理 (DEMO) ====================
 async function loadCustomers() {
   if (!walletConnected) return;
   
+  // [DEMO] Mock customer data — replace with on-chain profile query
   const mockData = [
     { address: '0x1234...5678', risk: 15, daily: 100000, used: 45000, balance: 125000 },
     { address: '0xabcd...efgh', risk: 65, daily: 10000, used: 8000, balance: 25000 },
@@ -469,10 +482,11 @@ function editCustomer(address) {
   showToast(`编辑客户: ${address}`, 'info');
 }
 
-// ==================== 标签管理 ====================
+// ==================== 标签管理 (DEMO) ====================
 async function loadTags() {
   if (!walletConnected) return;
   
+  // [DEMO] Mock tag data — replace with on-chain tag query
   const mockData = [
     { address: '0x1234...5678', tag: 'VIP', reason: '机构客户', operator: 'Admin' },
     { address: '0xabcd...efgh', tag: '灰名单', reason: '异常交易模式', operator: 'System' },
@@ -534,7 +548,7 @@ function saveLimits() {
   showToast('限额配置已保存', 'success');
 }
 
-// ==================== 时间锁管理 ====================
+// ==================== 时间锁管理 (DEMO) ====================
 async function loadTimelock() {
   if (!walletConnected) return;
   
@@ -543,12 +557,13 @@ async function loadTimelock() {
   const executedCount = document.getElementById('executedCount');
   const cancelledCount = document.getElementById('cancelledCount');
   
+  // [DEMO] Mock timelock stats — replace with on-chain TimelockController query
   if (currentDelay) currentDelay.textContent = '3 天';
   if (pendingCount) pendingCount.textContent = '3';
   if (executedCount) executedCount.textContent = '12';
   if (cancelledCount) cancelledCount.textContent = '1';
   
-  // 加载待执行操作
+  // [DEMO] Mock pending operations
   const mockOps = [
     { id: 'OP001', type: '添加标签', target: '0x1234...5678', scheduled: '2026-06-19 14:30:00', status: '待执行' },
     { id: 'OP002', type: '修改限额', target: 'VIP', scheduled: '2026-06-18 10:00:00', status: '待执行' },
@@ -587,7 +602,7 @@ function cancelOperation(opId) {
   });
 }
 
-// ==================== 多签管理 ====================
+// ==================== 多签管理 (DEMO) ====================
 async function loadMultisig() {
   if (!walletConnected) return;
   
@@ -595,6 +610,7 @@ async function loadMultisig() {
   const requiredSigs = document.getElementById('requiredSigs');
   const userRole = document.getElementById('userRole');
   
+  // [DEMO] Mock multisig stats — replace with on-chain Gnosis Safe / MultiSig query
   if (signerCount) signerCount.textContent = '3';
   if (requiredSigs) requiredSigs.value = '2';
   if (userRole) userRole.textContent = 'Owner';
@@ -643,7 +659,7 @@ function submitAddSigner() {
   addSigner();
 }
 
-// ==================== 隔离风控 ====================
+// ==================== 隔离风控 (DEMO) ====================
 async function loadQuarantine() {
   if (!walletConnected) return;
   
@@ -652,6 +668,7 @@ async function loadQuarantine() {
   const pendingRelease = document.getElementById('pendingRelease');
   const permanentlyFrozen = document.getElementById('permanentlyFrozen');
   
+  // [DEMO] Mock quarantine stats — replace with on-chain vault query
   if (totalQuarantined) totalQuarantined.textContent = formatCurrency(45000);
   if (recordCount) recordCount.textContent = '5';
   if (pendingRelease) pendingRelease.textContent = '2';
@@ -683,11 +700,12 @@ function releaseFunds(id) {
   });
 }
 
-// ==================== 收款拦截 ====================
+// ==================== 收款拦截 (DEMO) ====================
 async function loadIncomingBlocks() {
   const tbody = document.getElementById('incomingBlocksTable');
   if (!tbody) return;
   
+  // [DEMO] Mock incoming block data — replace with on-chain event query
   const mockData = [
     { time: '2026-06-16 14:30:00', from: '0x1234...5678', to: '0xabcd...efgh', amount: '1.5', reason: '黑名单地址', hash: '0xabc...def' }
   ];
@@ -740,13 +758,14 @@ function emergencyUnpause() {
   });
 }
 
-// ==================== 日志 ====================
+// ==================== 日志 (DEMO) ====================
 async function loadLogs() {
   const timeline = document.getElementById('logsTimeline');
   if (!timeline) return;
   
   clearElement(timeline);
   
+  // [DEMO] Mock audit logs — replace with on-chain event query or backend API
   const mockLogs = [
     { time: '2026-06-16 14:30:00', content: 'Admin 添加了地址标签: 0x1234...5678 → 黑名单' },
     { time: '2026-06-16 13:15:00', content: 'System 自动拦截交易: 0xabcd...efgh' },
@@ -768,7 +787,7 @@ function exportLogs() {
   setTimeout(() => showToast('日志导出完成', 'success'), 2000);
 }
 
-// ==================== 策略配置 ====================
+// ==================== 策略配置 (DEMO) ====================
 async function loadPolicies() {
   const policyMaxTx = document.getElementById('policyMaxTx');
   const policyDailyLimit = document.getElementById('policyDailyLimit');
@@ -777,6 +796,7 @@ async function loadPolicies() {
   const policyBlockMixer = document.getElementById('policyBlockMixer');
   const policyRequireKYC = document.getElementById('policyRequireKYC');
   
+  // [DEMO] Mock policy values — replace with on-chain PolicyEngine query
   if (policyMaxTx) policyMaxTx.textContent = formatNumber(1000000);
   if (policyDailyLimit) policyDailyLimit.textContent = formatNumber(500000);
   if (policyAllowMedium) policyAllowMedium.textContent = '是';
@@ -784,6 +804,7 @@ async function loadPolicies() {
   if (policyBlockMixer) policyBlockMixer.textContent = '是';
   if (policyRequireKYC) policyRequireKYC.textContent = '是';
   
+  // [DEMO] Mock policy history — replace with on-chain event query
   const mockHistory = [
     { version: 'v1.2', maxTx: 1000000, dailyLimit: 500000, allowMedium: true, allowHigh: false, updatedAt: '2026-06-15' },
     { version: 'v1.1', maxTx: 500000, dailyLimit: 250000, allowMedium: true, allowHigh: false, updatedAt: '2026-05-20' },
@@ -804,11 +825,12 @@ function submitPolicy() {
   if (modal) modal.classList.remove('active');
 }
 
-// ==================== 合规日志 ====================
+// ==================== 合规日志 (DEMO) ====================
 async function loadSubgraphComplianceChecks() {
   const tbody = document.getElementById('complianceLogsTable');
   if (!tbody) return;
   
+  // [DEMO] Mock compliance logs — replace with Subgraph GraphQL query
   const mockData = [
     { from: '0x1234...5678', to: '0xabcd...efgh', amount: '10,000 TUSD', decision: 'BLOCK', reason: 'OFAC 制裁', time: '2026-06-16 14:30:00' },
     { from: '0x1111...2222', to: '0x3333...4444', amount: '5,000 TUSD', decision: 'ALLOW', reason: '低风险', time: '2026-06-16 14:25:00' },

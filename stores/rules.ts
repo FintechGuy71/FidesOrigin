@@ -116,7 +116,17 @@ export const useRulesStore = create<RulesState & RulesActions>()(
       set((state) => {
         const rule = state.rules.find((r) => r.id === id);
         if (rule) {
-          Object.assign(rule, updates, { updatedAt: Date.now() });
+          // [Fix] Whitelist allowed update fields to prevent property injection
+          const ALLOWED_FIELDS: Array<keyof Rule> = [
+            'name', 'description', 'enabled', 'threshold', 'action', 'conditions'
+          ];
+          const sanitized: Partial<Rule> = {};
+          for (const key of ALLOWED_FIELDS) {
+            if (key in updates) {
+              (sanitized as any)[key] = (updates as any)[key];
+            }
+          }
+          Object.assign(rule, sanitized, { updatedAt: Date.now() });
         }
       }),
 

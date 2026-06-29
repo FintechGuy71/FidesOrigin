@@ -44,38 +44,42 @@ function validateContractAddress(addr, networkName) {
   return addr;
 }
 
-// ==================== [Critical] 必需环境变量校验 ====================
+// ==================== [M-15 Fix] 根据 network 动态确定必需环境变量 ====================
 
-const REQUIRED_ENV = [
-  'SEPOLIA_CONTRACT_ADDR',
-  'MAINNET_CONTRACT_ADDR',
-  'ALCHEMY_API_KEY',
-  'SUBGRAPH_ID'
-];
+const network = ENV.NETWORK || 'sepolia';
+const REQUIRED_ENV = ['SEPOLIA_CONTRACT_ADDR'];
+
+if (network === 'mainnet' || network === 'production') {
+  REQUIRED_ENV.push('MAINNET_CONTRACT_ADDR', 'ALCHEMY_API_KEY', 'SUBGRAPH_ID');
+} else if (network === 'sepolia' || network === 'testnet') {
+  // Sepolia/testnet: Alchemy key and Subgraph are optional (can use public RPC)
+  if (ENV.ALCHEMY_API_KEY) REQUIRED_ENV.push('ALCHEMY_API_KEY');
+  if (ENV.SUBGRAPH_ID) REQUIRED_ENV.push('SUBGRAPH_ID');
+} else {
+  // Unknown network: require all for safety
+  REQUIRED_ENV.push('MAINNET_CONTRACT_ADDR', 'ALCHEMY_API_KEY', 'SUBGRAPH_ID');
+}
 
 const _missing = REQUIRED_ENV.filter((key) => !ENV[key]);
 if (_missing.length > 0) {
   throw new Error(
-    `[BOOTSTRAP FATAL] 以下必需环境变量未配置，拒绝启动:\n` +
+    `[BOOTSTRAP FATAL] Network=${network} — 以下必需环境变量未配置，拒绝启动:\n` +
     _missing.map((k) => `  - ${k}`).join('\n') +
     `\n请复制 .env.example 为 .env 并填入真实值。`
   );
 }
 
-// ==================== [High] 从环境变量注入敏感配置 ====================
+// ==================== [L-27 Fix] RPC URL 从环境变量注入，避免硬编码公共节点 ====================
 
-const SEPOLIA_CONTRACT_ADDR = validateContractAddress(
-  ENV.SEPOLIA_CONTRACT_ADDR,
-  'sepolia'
-);
+const SEPOLIA_CONTRACT_ADDR = validateContractAddress(ENV.SEPOLIA_CONTRACT_ADDR, 'sepolia');
+const MAINNET_CONTRACT_ADDR = (network === 'mainnet' || network === 'production')
+  ? validateContractAddress(ENV.MAINNET_CONTRACT_ADDR, 'mainnet')
+  : (ENV.MAINNET_CONTRACT_ADDR || '0x0000000000000000000000000000000000000000');
+const ALCHEMY_API_KEY = ENV.ALCHEMY_API_KEY || '';
+const SUBGRAPH_ID = ENV.SUBGRAPH_ID || '';
 
-const MAINNET_CONTRACT_ADDR = validateContractAddress(
-  ENV.MAINNET_CONTRACT_ADDR,
-  'mainnet'
-);
-
-const ALCHEMY_API_KEY = ENV.ALCHEMY_API_KEY;
-const SUBGRAPH_ID = ENV.SUBGRAPH_ID;
+const SEPOLIA_RPC_URL = ENV.SEPOLIA_RPC_URL || 'https://rpc.sepolia.org';
+const MAINNET_RPC_URL = ENV.MAINNET_RPC_URL || `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
 // ==================== 配置对象 ====================
 
@@ -89,14 +93,14 @@ const CONFIG = {
     sepolia: {
       chainId: 11155111,
       name: 'Sepolia Testnet',
-      rpcUrl: 'https://rpc.sepolia.org',
+      rpcUrl: SEPOLIA_RPC_URL,   // [L-27 Fix] injected from env, not hardcoded
       explorerUrl: 'https://sepolia.etherscan.io',
       contractAddress: SEPOLIA_CONTRACT_ADDR
     },
     mainnet: {
       chainId: 1,
       name: 'Ethereum Mainnet',
-      rpcUrl: `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+      rpcUrl: MAINNET_RPC_URL,   // [L-27 Fix] injected from env, uses Alchemy or override
       explorerUrl: 'https://etherscan.io',
       contractAddress: MAINNET_CONTRACT_ADDR
     }

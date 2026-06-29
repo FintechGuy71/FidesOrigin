@@ -96,8 +96,9 @@ async function main(): Promise<void> {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('uncaughtException', (err) => {
       logger.error('Uncaught exception', { error: err.stack });
-      // [FIX] uncaughtException handler must be synchronous — Node.js does not await async handlers.
-      // Log the error, attempt best-effort cleanup synchronously, then exit immediately.
+      // [FIX] Use process.exitCode instead of process.exit(1) to allow async cleanup
+      process.exitCode = 1;
+      // Attempt best-effort synchronous cleanup
       try {
         scheduler.stop();
         batchScheduler.stop();
@@ -106,8 +107,6 @@ async function main(): Promise<void> {
       } catch (cleanupErr) {
         logger.error('Sync cleanup failed during uncaughtException', { error: (cleanupErr as Error).message });
       }
-      // Force exit to prevent continued execution in corrupted state
-      process.exit(1);
     });
     process.on('unhandledRejection', (reason) => {
       logger.error('Unhandled rejection', { reason });

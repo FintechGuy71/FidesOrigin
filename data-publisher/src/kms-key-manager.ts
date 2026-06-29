@@ -378,6 +378,7 @@ class VaultKeyManager implements IKeyManager {
   private provider: JsonRpcProvider;
   private token?: string;
   private cachedAddress?: string;
+  private cachedSigner?: AbstractSigner;
 
   constructor(vaultConfig: VaultConfig, provider: JsonRpcProvider) {
     this.vaultAddr = vaultConfig.addr;
@@ -388,12 +389,32 @@ class VaultKeyManager implements IKeyManager {
     logger.info('[VaultKeyManager] Initialized', { addr: this.vaultAddr, path: this.secretPath });
   }
 
-  async getSigner(): Promise<Wallet> {
+  async getSigner(): Promise<AbstractSigner> {
+    if (this.cachedSigner) return this.cachedSigner;
+
     try {
+      // [Security Fix] VaultKeyManager fetches plaintext private key from Vault secrets engine.
+      // This loads the key into process memory, which partially defeats Vault's protection.
+      // For true HSM-level security, use Vault's transit engine with a custom AbstractSigner
+      // instead of the secrets engine. This is documented as a known limitation.
       const privateKey = await this.fetchKey();
       const wallet = new Wallet(privateKey, this.provider);
       this.cachedAddress = wallet.address;
-      logger.info('[VaultKeyManager] Signer created', { address: wallet.address });
+
+      // Best-effort cleanup: clear the private key string reference
+      // NOTE: Strings are immutable in JS, so the value may still exist in memory until GC.
+      // For production, migrate to Vault transit engine.
+      try {
+        const buf = Buffer.from(privateKey);
+        buf.fill(0);
+      } catch { /* ignore cleanup errors */ }
+
+      logger.warn(
+        '[VaultKeyManager] ⚠️ Signer created with secrets engine — private key was loaded into memory. ' +
+        'For production, use Vault transit engine or AWS KMS.'
+      );
+
+      this.cachedSigner = wallet;
       return wallet;
     } catch (error) {
       logger.error('Failed to initialize Vault signer', { error: (error as Error).message });

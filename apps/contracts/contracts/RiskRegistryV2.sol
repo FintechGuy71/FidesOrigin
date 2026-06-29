@@ -147,8 +147,21 @@ contract RiskRegistryV2 is
         // V2.2/V2.3/V2.3.1: pure logic fixes only, no storage changes
     }
 
-    // ============ UUPS Upgrade Authorization ============
-    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {}
+    // L-09 FIX: RiskRegistryV2 now uses UPGRADE_TIMELOCK for upgrades
+    function proposeUpgrade(address newImplementation) external onlyRole(ADMIN_ROLE) {
+        require(newImplementation != address(0), "Zero address");
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        upgradeProposals[proposalId] = block.timestamp + UPGRADE_TIMELOCK;
+        emit UpgradeProposed(newImplementation, block.timestamp, "RiskRegistryV2 upgrade proposal");
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        uint256 executeAfter = upgradeProposals[proposalId];
+        require(executeAfter != 0, "No proposal for implementation");
+        require(block.timestamp >= executeAfter, "Timelock not expired");
+        delete upgradeProposals[proposalId];
+    }
 
     // ============ Bit-Packing Helpers (v0.2.1 兼容) ============
 
@@ -345,12 +358,9 @@ contract RiskRegistryV2 is
             // capture wasNew BEFORE writing
             bool wasNew = _packedProfiles[accounts[i]] == 0;
             uint256 packed = _packedProfiles[accounts[i]];
-            bool wasSanctioned = _unpackIsSanctioned(packed);
 
-            if (!wasSanctioned) {
-                packed |= (1 << 16);
-                totalSanctioned++;
-            }
+            // M-05 FIX: Store pre-sanction profile for restoration
+            preSanctionProfiles[accounts[i]] = packed;
 
             uint8 highTier = uint8(RiskTier.CRITICAL);
             uint8 currentTier = _unpackTier(packed);
@@ -390,6 +400,14 @@ contract RiskRegistryV2 is
             }
             sanctionedAddresses[account] = false;
             if (totalSanctioned > 0) totalSanctioned--;
+            
+            // M-05 FIX: Restore pre-sanction score/tier if available
+            uint256 prePacked = preSanctionProfiles[account];
+            if (prePacked != 0) {
+                _packedProfiles[account] = prePacked;
+                delete preSanctionProfiles[account];
+            }
+            
             emit SanctionRemoved(account);
         }
     }
@@ -629,6 +647,12 @@ contract RiskRegistryV2 is
         lastGlobalUpdate = block.timestamp;
     }
 
+    // M-05 FIX: Store pre-sanction packed profiles for restoration
+    mapping(address => uint256) public preSanctionProfiles;
+    
+    // L-09 FIX: Upgrade proposal tracking
+    mapping(bytes32 => uint256) public upgradeProposals;
+    
     // ============ Storage Gap ============
-    uint256[39] private __gap;
+    uint256[37] private __gap;
 }

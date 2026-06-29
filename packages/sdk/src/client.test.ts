@@ -37,17 +37,14 @@ describe('FidesOriginClient', () => {
   describe('checkRisk', () => {
     it('should return risk data for valid address', async () => {
       const mockResponse = {
-        success: true,
-        data: {
-          address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
-          chain: 'ethereum',
-          addressType: 'wallet',
-          overallScore: 75,
-          overallLevel: 'high',
-          scores: [],
-          flags: [],
-          timestamp: '2024-01-01T00:00:00Z',
-        },
+        address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+        chain: 'ethereum',
+        addressType: 'wallet',
+        overallScore: 75,
+        overallLevel: 'high',
+        scores: [],
+        flags: [],
+        timestamp: '2024-01-01T00:00:00Z',
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -132,7 +129,7 @@ describe('FidesOriginClient', () => {
 
       await expect(
         client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('HTTP 502: Bad Gateway');
+      ).rejects.toThrow('API error 502');
     });
 
     it('should handle network error', async () => {
@@ -155,22 +152,19 @@ describe('FidesOriginClient', () => {
   describe('batchCheckRisk', () => {
     it('should check multiple addresses', async () => {
       const mockResponse = {
-        success: true,
-        data: {
-          results: [
-            {
-              address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
-              chain: 'ethereum',
-              addressType: 'wallet',
-              overallScore: 75,
-              overallLevel: 'high',
-              scores: [],
-              flags: [],
-              timestamp: '2024-01-01T00:00:00Z',
-            },
-          ],
-          errors: [],
-        },
+        results: [
+          {
+            address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+            chain: 'ethereum',
+            addressType: 'wallet',
+            overallScore: 75,
+            overallLevel: 'high',
+            scores: [],
+            flags: [],
+            timestamp: '2024-01-01T00:00:00Z',
+          },
+        ],
+        errors: [],
       };
 
       mockFetch.mockResolvedValueOnce({

@@ -32,3 +32,12 @@ data-sync/.env
 
 # Wallet files (contain sensitive mnemonic phrases)
 .wallet-*.json
+
+# [L-29/L-30 Fix] Additional sensitive file patterns
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+.ssh/
+.vercel/

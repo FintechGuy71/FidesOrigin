@@ -467,6 +467,10 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
 
         // 检查是否达到所需确认数
         if (currentConfirmations >= requiredOracleConfirmations && !confirmedUpdates[account]) {
+            // H-02 FIX: Enforce updateCooldown before registry update
+            if (lastUpdateTime[account] != 0 && block.timestamp - lastUpdateTime[account] < updateCooldown) {
+                revert UpdateCooldownActive(account);
+            }
             confirmedUpdates[account] = true;
 
             bytes32[] memory emptyTags = new bytes32[](0);
@@ -780,6 +784,8 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
     
     /**
      * @dev 外部调用辅助函数，供 tryDecodeAddresses 的 try/catch 使用
+     * L-17 NOTE: This must remain external because Solidity try/catch only works on external calls.
+     * The function is pure and has no side effects; it is not intended for direct external use.
      */
     function _decodeAddressesExternal(bytes calldata data) external pure returns (address[] memory) {
         return abi.decode(data, (address[]));

@@ -226,39 +226,11 @@ function parseFTMResponse(data: string): FTMEntity[] {
       const arr = JSON.parse(trimmed) as any[];
       return arr.filter(e => e && typeof e === 'object');
     } catch (arrErr) {
-      logger.warn('FTM JSON array parse failed, attempting line-by-line fallback', {
+      // [Fix] Remove fragile split(/\}\s*,\s*\{/) fallback that breaks on nested objects/strings with commas.
+      // Fall through to JSON Lines parsing below.
+      logger.warn('FTM JSON array parse failed, falling back to JSON Lines', {
         error: (arrErr as Error).message,
       });
-      // Fallback: strip outer brackets and try parsing each object line-by-line
-      // This handles truncated arrays or arrays mixed with JSON Lines
-      const entities: FTMEntity[] = [];
-      const inner = trimmed
-        .replace(/^\[/, '')
-        .replace(/\]\s*$/, '')
-        .trim();
-      if (inner) {
-        // Split by "},{" pattern to extract individual objects
-        const objects = inner.split(/\}\s*,\s*\{/);
-        for (let i = 0; i < objects.length; i++) {
-          let objStr = objects[i];
-          if (i === 0) objStr = objStr + '}';
-          else if (i === objects.length - 1) objStr = '{' + objStr;
-          else objStr = '{' + objStr + '}';
-          try {
-            const entity = JSON.parse(objStr);
-            if (entity && typeof entity === 'object') {
-              entities.push(entity);
-            }
-          } catch {
-            // skip malformed fragment
-          }
-        }
-      }
-      if (entities.length > 0) {
-        logger.info(`FTM fallback parse recovered ${entities.length} entities`);
-        return entities;
-      }
-      // If no entities recovered from array fallback, continue to JSON Lines
     }
   }
 
@@ -323,12 +295,14 @@ function buildEntityMap(entities: FTMEntity[]): FTMEntityMap {
  * Extract the first string value from a property that may be an array or object.
  * Handles FTM reference objects ({ id: string }) and value objects ({ value: string }).
  */
-function extractFirstString(value: any): string | undefined {
+function extractFirstString(value: any, depth: number = 0): string | undefined {
+  // [Fix] Prevent infinite recursion / stack overflow on cyclic or deeply nested objects
+  if (depth > 10) return undefined;
   if (value === null || value === undefined) return undefined;
   if (typeof value === 'string') return value.trim() || undefined;
   if (Array.isArray(value)) {
     for (const v of value) {
-      const s = extractFirstString(v);
+      const s = extractFirstString(v, depth + 1);
       if (s) return s;
     }
   }
@@ -676,7 +650,8 @@ async function publishBatches(
       const validScores = validIndices.map(idx => batchScores[idx]);
       const validTiers = validIndices.map(idx => batchTiers[idx]);
       const validSanc = validIndices.map(idx => batchSanc[idx]);
-      const validTags = validIndices.map(idx => batch.tags[i + idx]).map(tagArr =>
+      const batchTags = batch.tags.slice(i, end);
+      const validTags = validIndices.map(idx => batchTags[idx]).map(tagArr =>
         tagArr.map(t => ethers.encodeBytes32String(t))
       );
 

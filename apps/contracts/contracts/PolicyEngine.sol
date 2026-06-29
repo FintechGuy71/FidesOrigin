@@ -460,7 +460,10 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     }
 
     /**
-     * @notice 3 参版本 — 内部调用避免外部自调用（M-08）
+     * @notice 3-parameter version — convenience function for internal/trusted callers
+     * @dev M-04 FIX: This bypasses MEV deadline protection by design (deadline=0 skips check).
+     *      Only use in trusted read-only contexts. For untrusted external calls,
+     *      always use the 4-parameter version with an explicit deadline.
      */
     function evaluatePolicy(
         address addr,
@@ -474,6 +477,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
 
     /**
      * @notice 将风险等级转换为代表性评分（getRiskScore 不存在于 RiskRegistry，由 getRiskLevel 推导）
+     * I-03 NOTE: This helper is kept for future use though currently unused internally.
+     * External callers may reference it for tier-to-score mapping.
      */
     function _tierToRiskScore(RiskRegistry.RiskTier tier) internal pure returns (uint256) {
         if (tier == RiskRegistry.RiskTier.LOW) return 10;

@@ -121,7 +121,7 @@ const SENSITIVE_PATTERNS: Array<{ re: RegExp; repl: string }> = [
 function redactSecrets(input: string): string {
   let out = input;
   for (const { re, repl } of SENSITIVE_PATTERNS) {
-    out = out.replace(re, repl as any);
+    out = out.replace(re, repl);
   }
   return out;
 }

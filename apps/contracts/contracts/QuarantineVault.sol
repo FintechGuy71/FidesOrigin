@@ -143,9 +143,8 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         _grantRole(AUDITOR_ROLE, msg.sender);
         _grantRole(RELEASE_ROLE, msg.sender);
         _grantRole(EMERGENCY_ROLE, msg.sender);
-        // L-05 NOTE: Deployer should renounce DEFAULT_ADMIN_ROLE after setup:
-        //   renounceRole(DEFAULT_ADMIN_ROLE, msg.sender)
-        //   Or grant DEFAULT_ADMIN to a Timelock/multisig first, then renounce.
+        // L-05 FIX: Renounce DEFAULT_ADMIN_ROLE after setup to remove backdoor
+        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     // ============ External API (兼容层) ============
@@ -215,7 +214,7 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
 
             // [H-3] 使用单调递增 nonce 替代 totalQuarantined
             bytes32 recordId = keccak256(abi.encodePacked(
-                owners[i], tokens[i], amounts[i], block.timestamp, recordNonce
+                owners[i], tokens[i], amounts[i], block.timestamp, msg.sender, recordNonce
             ));
             recordNonce++;
 
@@ -535,7 +534,7 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
      * @notice 提取合约中的 ETH（防止 ETH 被意外锁定）
      * @param to 接收地址
      */
-    function withdrawETH(address payable to) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function withdrawETH(address payable to) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         uint256 balance = address(this).balance;
         require(balance > 0, "No ETH to withdraw");

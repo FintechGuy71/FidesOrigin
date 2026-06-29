@@ -4,6 +4,61 @@ import { DataSourceConfig, RawRiskData, RiskTier } from './types';
 import logger from './logger';
 import { fetchElliptic, fetchTRMLabs, fetchCSV, fetchJSON } from './collectors-extended';
 
+// ─── SSRF Protection (mirrors lib/api.ts validation) ─────────────────────────
+
+const ALLOWED_PROTOCOLS = new Set(["https:", "http:"]);
+
+const PRIVATE_HOST_PATTERNS = [
+  /^127\./,
+  /^10\./,
+  /^192\.168\./,
+  /^169\.254\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^::ffff:(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i,
+  /^fc00:/i,
+  /^fe80:/i,
+  /^fd[0-9a-f]{2}:/i,
+  /\.local$/i,
+  /^metadata\.google\.internal$/i,
+  /^0\./,
+  /^localhost$/i,
+];
+
+/**
+ * Validate URL to prevent SSRF attacks.
+ * Ensures only external, non-private URLs are fetched.
+ */
+function assertSafeUrl(url: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Invalid URL: ${url}`);
+  }
+
+  if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
+    throw new Error(`Disallowed protocol: ${parsed.protocol}`);
+  }
+
+  if (PRIVATE_HOST_PATTERNS.some((re) => re.test(parsed.hostname))) {
+    throw new Error(`Private/internal host blocked: ${parsed.hostname}`);
+  }
+
+  // Prevent path traversal in URL path
+  if (parsed.pathname.includes("..")) {
+    throw new Error("Path traversal detected in URL");
+  }
+}
+
+/**
+ * Safe axios wrapper that validates URL before request.
+ */
+async function safeAxiosGet<T = any>(url: string, config?: any): Promise<T> {
+  assertSafeUrl(url);
+  const response = await axios.get(url, config);
+  return response.data;
+}
+
 /**
  * Data Collector — fetches risk data from multiple sources
  */
@@ -92,14 +147,14 @@ export class DataCollector {
    * Fetch OFAC SDN List (XML format)
    */
   private async fetchOFAC(config: DataSourceConfig): Promise<RawRiskData[]> {
-    const response = await axios.get(config.endpoint, {
+    const response = await safeAxiosGet(config.endpoint, {
       timeout: config.timeout,
       responseType: 'text',
-      maxRedirects: 5, // Allow HTTPS upgrade redirects with limit
-      validateStatus: (status) => status === 200,
+      maxRedirects: 5,
+      validateStatus: (status: number) => status === 200,
     });
 
-    const xml = response.data;
+    const xml = response;
     const parsed = await parseStringPromise(xml, { explicitArray: false });
 
     const results: RawRiskData[] = [];
@@ -151,15 +206,12 @@ export class DataCollector {
       return [];
     }
 
-    const response = await axios.get(`${config.endpoint}api/v1/risk`, {
+    const data = await safeAxiosGet(`${config.endpoint}api/v1/risk`, {
       headers: { 'Authorization': `Bearer ${config.apiKey}` },
       timeout: config.timeout,
-      maxRedirects: 5, // Allow HTTPS upgrade redirects with limit
-      validateStatus: (status) => status === 200,
+      maxRedirects: 5,
+      validateStatus: (status: number) => status === 200,
     });
-
-    // Chainalysis returns risk assessments
-    const data = response.data;
     const results: RawRiskData[] = [];
 
     for (const item of data?.entities || []) {
@@ -191,16 +243,16 @@ export class DataCollector {
       headers['Authorization'] = `ApiKey ${config.apiKey}`;
     }
 
-    const response = await axios.get(`${config.endpoint}entities/?schema=Person&limit=1000`, {
+    const data = await safeAxiosGet(`${config.endpoint}entities/?schema=Person&limit=1000`, {
       headers,
       timeout: config.timeout,
-      maxRedirects: 5, // Allow HTTPS upgrade redirects with limit
-      validateStatus: (status) => status === 200,
+      maxRedirects: 5,
+      validateStatus: (status: number) => status === 200,
     });
 
     const results: RawRiskData[] = [];
 
-    for (const entity of response.data?.results || []) {
+    for (const entity of data?.results || []) {
       // Extract Ethereum addresses from properties
       const cryptoAddresses = entity?.properties?.cryptoAddress || [];
       for (const addr of cryptoAddresses) {

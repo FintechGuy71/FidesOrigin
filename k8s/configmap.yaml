@@ -27,7 +27,9 @@ data:
   MAX_PRIORITY_FEE_PER_GAS: "2"
   BATCH_SIZE: "50"
   TX_INTERVAL_MS: "2000"
-  DRY_RUN: "false"
+  # [L-18 Fix] Default DRY_RUN to "true" for safety — operators must explicitly
+  # set DRY_RUN=false in production after verifying all configurations.
+  DRY_RUN: "true"
 
   # Data Sources
   OFAC_ENABLED: "true"

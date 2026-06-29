@@ -47,9 +47,9 @@ export function useWebSocket(config: WebSocketConfig = {}) {
   // refs for mutable state that doesn't trigger re-renders
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heartbeatTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isManualCloseRef = useRef(false);
   const onMessageRef = useRef(onMessage);
   const onConnectRef = useRef(onConnect);

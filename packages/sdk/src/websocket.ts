@@ -79,6 +79,7 @@ export class FidesOriginWebSocket {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private isManualClose = false;
+  private connectingPromise: Promise<void> | null = null;
 
   private eventCallbacks: {
     transaction: WebSocketEventCallback[];
@@ -93,6 +94,7 @@ export class FidesOriginWebSocket {
   private connectCallbacks: WebSocketConnectCallback[] = [];
   private disconnectCallbacks: WebSocketDisconnectCallback[] = [];
   private errorCallbacks: WebSocketErrorCallback[] = [];
+  private readonly MAX_CALLBACKS = 100;
 
   constructor(options: WebSocketClientOptions) {
     this.options = {
@@ -111,17 +113,23 @@ export class FidesOriginWebSocket {
    * @returns Promise that resolves when connected
    */
   connect(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.ws?.readyState === getWebSocketImpl().OPEN) {
-        resolve();
-        return;
-      }
+    // [High Fix] If already connected, resolve immediately
+    if (this.ws?.readyState === getWebSocketImpl().OPEN) {
+      return Promise.resolve();
+    }
 
-      this.isManualClose = false;
+    // [High Fix] If already connecting, return existing promise to prevent concurrent connections
+    if (this.connectingPromise) {
+      return this.connectingPromise;
+    }
 
+    this.isManualClose = false;
+
+    this.connectingPromise = new Promise((resolve, reject) => {
       // [High Fix] Force wss:// to prevent plaintext API Key transmission
       const connectUrl = this.options.url.replace(/^ws:/, 'wss:');
       if (!connectUrl.startsWith('wss:')) {
+        this.connectingPromise = null;
         throw new FidesOriginError(
           'WebSocket URL must use wss:// protocol for secure API key transmission',
           'NETWORK_ERROR'
@@ -142,6 +150,7 @@ export class FidesOriginWebSocket {
         );
         this.errorCallbacks.forEach((cb) => cb(err));
         this.ws?.close();
+        this.connectingPromise = null;
         reject(err);
       }, 10000);
 
@@ -161,6 +170,7 @@ export class FidesOriginWebSocket {
           this.send('auth', { apiKey: this.options.apiKey });
         }
         this.connectCallbacks.forEach((cb) => cb());
+        this.connectingPromise = null;
         resolve();
       };
 
@@ -176,6 +186,7 @@ export class FidesOriginWebSocket {
           { cause: error instanceof Error ? error : undefined }
         );
         this.errorCallbacks.forEach((cb) => cb(err));
+        this.connectingPromise = null;
         reject(err);
       };
 
@@ -183,12 +194,15 @@ export class FidesOriginWebSocket {
         clearTimeout(connectionTimeout);
         this.stopHeartbeat();
         this.disconnectCallbacks.forEach((cb) => cb());
+        this.connectingPromise = null;
 
         if (!this.isManualClose) {
           this.scheduleReconnect();
         }
       };
     });
+
+    return this.connectingPromise;
   }
 
   /**
@@ -207,6 +221,14 @@ export class FidesOriginWebSocket {
       this.ws.close();
       this.ws = null;
     }
+
+    // [Fix] Clear callback arrays on disconnect to prevent memory leaks in long-running apps
+    this.eventCallbacks.transaction = [];
+    this.eventCallbacks.risk_alert = [];
+    this.eventCallbacks.compliance_alert = [];
+    this.connectCallbacks = [];
+    this.disconnectCallbacks = [];
+    this.errorCallbacks = [];
 
     if (this.options.debug) {
       console.log('[FidesOriginWebSocket] Disconnected');
@@ -241,19 +263,33 @@ export class FidesOriginWebSocket {
     event: string,
     callback: WebSocketEventCallback | WebSocketConnectCallback | WebSocketDisconnectCallback | WebSocketErrorCallback
   ): void {
+    // [Fix] Prevent unbounded callback array growth (memory leak protection)
+    const enforceLimit = (arr: any[]) => {
+      if (arr.length >= this.MAX_CALLBACKS) {
+        if (this.options.debug) {
+          console.warn(`[FidesOriginWebSocket] Callback limit (${this.MAX_CALLBACKS}) reached for event "${event}"`);
+        }
+        arr.shift(); // remove oldest callback
+      }
+    };
+
     switch (event) {
       case 'transaction':
       case 'risk_alert':
       case 'compliance_alert':
+        enforceLimit(this.eventCallbacks[event]);
         this.eventCallbacks[event].push(callback as WebSocketEventCallback);
         break;
       case 'connect':
+        enforceLimit(this.connectCallbacks);
         this.connectCallbacks.push(callback as WebSocketConnectCallback);
         break;
       case 'disconnect':
+        enforceLimit(this.disconnectCallbacks);
         this.disconnectCallbacks.push(callback as WebSocketDisconnectCallback);
         break;
       case 'error':
+        enforceLimit(this.errorCallbacks);
         this.errorCallbacks.push(callback as WebSocketErrorCallback);
         break;
     }
@@ -356,9 +392,17 @@ export class FidesOriginWebSocket {
 
     this.reconnectAttempts++;
 
+    // [High Fix] Exponential backoff with cap to prevent reconnection storm
+    const baseDelay = this.options.reconnectInterval;
+    const maxDelay = 30000; // 30s cap
+    const exponentialDelay = Math.min(
+      baseDelay * Math.pow(2, this.reconnectAttempts - 1),
+      maxDelay
+    );
+
     if (this.options.debug) {
       console.log(
-        `[FidesOriginWebSocket] Reconnecting in ${this.options.reconnectInterval}ms (attempt ${this.reconnectAttempts})`
+        `[FidesOriginWebSocket] Reconnecting in ${exponentialDelay}ms (attempt ${this.reconnectAttempts})`
       );
     }
 
@@ -366,7 +410,7 @@ export class FidesOriginWebSocket {
       this.connect().catch(() => {
         // Error handled by onerror callback
       });
-    }, this.options.reconnectInterval);
+    }, exponentialDelay);
   }
 
   private startHeartbeat(): void {

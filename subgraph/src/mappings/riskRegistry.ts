@@ -66,6 +66,27 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
       stats.lastUpdated = event.block.timestamp;
       stats.save();
     }
+  } else {
+    // [L-31 Fix] If sanction was removed via RiskProfileUpdated (not SanctionRemoved event),
+    // deactivate the SanctionedAddress entity so subgraph stays consistent.
+    let sanctioned = SanctionedAddress.load(account);
+    if (sanctioned && sanctioned.isActive) {
+      sanctioned.isActive = false;
+      sanctioned.removedAt = event.block.timestamp;
+      sanctioned.save();
+
+      // Update stats
+      let stats = getOrCreateStats();
+      if (stats.totalSanctioned > 0) {
+        stats.totalSanctioned -= 1;
+      } else {
+        log.warning('[handleRiskProfileUpdated] totalSanctioned already 0, skipping decrement', []);
+      }
+      stats.lastUpdated = event.block.timestamp;
+      stats.save();
+
+      log.info('[handleRiskProfileUpdated] SanctionedAddress deactivated for account={}', [account]);
+    }
   }
 
   profile.save();
