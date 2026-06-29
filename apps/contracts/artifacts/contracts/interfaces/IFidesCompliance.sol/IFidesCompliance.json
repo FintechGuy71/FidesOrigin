@@ -24,6 +24,11 @@
           "internalType": "address",
           "name": "_token",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_deadline",
+          "type": "uint256"
         }
       ],
       "name": "evaluateTransaction",
@@ -53,46 +58,19 @@
       "name": "getRiskProfile",
       "outputs": [
         {
-          "components": [
-            {
-              "internalType": "enum IFidesCompliance.RiskLevel",
-              "name": "level",
-              "type": "uint8"
-            },
-            {
-              "internalType": "uint256",
-              "name": "score",
-              "type": "uint256"
-            },
-            {
-              "internalType": "string[]",
-              "name": "tags",
-              "type": "string[]"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lastUpdated",
-              "type": "uint256"
-            },
-            {
-              "internalType": "address",
-              "name": "updatedBy",
-              "type": "address"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "reasonHash",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bool",
-              "name": "exists",
-              "type": "bool"
-            }
-          ],
-          "internalType": "struct IFidesCompliance.RiskProfile",
-          "name": "",
-          "type": "tuple"
+          "internalType": "uint256",
+          "name": "riskScore",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isSanctioned",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastUpdated",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",

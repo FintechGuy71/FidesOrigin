@@ -15,11 +15,12 @@ contract MockFidesCompliance is IFidesCompliance {
         return false;
     }
 
-    function getRiskProfile(address account) external view returns (RiskProfile memory) {
-        return _profiles[account];
+    function getRiskProfile(address account) external view returns (uint256 riskScore, bool isSanctioned, uint256 lastUpdated) {
+        RiskProfile memory p = _profiles[account];
+        return (p.score, p.level == RiskLevel.BLACKLIST, p.lastUpdated);
     }
 
-    function evaluateTransaction(address, address, uint256, address) external pure returns (bool, uint256) {
+    function evaluateTransaction(address, address, uint256, address, uint256) external pure returns (bool, uint256) {
         return (true, 0);
     }
 

@@ -28,6 +28,6 @@ interface IFidesCompliance {
 
     function isBlacklisted(address _account) external view returns (bool);
     function isWhitelisted(address _account) external view returns (bool);
-    function getRiskProfile(address _account) external view returns (RiskProfile memory);
-    function evaluateTransaction(address _from, address _to, uint256 _amount, address _token) external returns (bool allowed, uint256 riskScore);
+    function getRiskProfile(address _account) external view returns (uint256 riskScore, bool isSanctioned, uint256 lastUpdated);
+    function evaluateTransaction(address _from, address _to, uint256 _amount, address _token, uint256 _deadline) external returns (bool allowed, uint256 riskScore);
 }

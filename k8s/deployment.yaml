@@ -35,9 +35,14 @@ spec:
           type: RuntimeDefault
       containers:
         - name: publisher
-          # [M-12 Fix] Use immutable digest-pinned image to prevent supply-chain tampering
-          # Replace the placeholder digest with the actual SHA256 of the deployed image
-          image: fidesorigin/data-publisher@sha256:PLACEHOLDER_DIGEST
+          # [M-12 Fix] Use immutable digest-pinned image to prevent supply-chain tampering.
+          # IMPORTANT: Replace ${IMAGE_DIGEST} with the actual SHA256 digest of the deployed image.
+          # Build and push the image, then run:
+          #   IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' fidesorigin/data-publisher:latest | cut -d'@' -f2)
+          #   sed -i "s|\\${IMAGE_DIGEST}|${IMAGE_DIGEST#sha256:}|g" k8s/deployment.yaml
+          image: fidesorigin/data-publisher@sha256:${IMAGE_DIGEST}
+          # Fallback for local dev / CI without digest pinning:
+          # image: fidesorigin/data-publisher:node-18-alpine
           imagePullPolicy: IfNotPresent
           ports:
             - name: metrics

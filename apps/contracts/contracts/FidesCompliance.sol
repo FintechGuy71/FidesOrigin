@@ -20,7 +20,7 @@ import "./QuarantineVault.sol";
  * @dev VERSION: 1.3.1 - 修复统计回滚(H-01) + MEV保护强制(H-02) + 多项安全加固
  *      + DEFAULT_ADMIN_ROLE后门移除(S-06) + isBlacklisted Fail-Closed(S-07) + 合约校验(S-08)
  */
-contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard {
+contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesCompliance {
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");

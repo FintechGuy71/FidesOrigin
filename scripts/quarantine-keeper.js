@@ -129,19 +129,10 @@ class QuarantineKeeper {
         // [M-04 Fix] Resolve signer: prefer KMS/Vault, fallback to plaintext env var (dev only)
         if (CONFIG.kmsProvider && CONFIG.kmsKeyId) {
             console.log(`🔐 Using KMS provider: ${CONFIG.kmsProvider}, keyId: ${CONFIG.kmsKeyId}`);
-            // Production path: derive signer via KMS. Implementations omitted for brevity;
-            // in production, use AWS KMS (aws-sdk), GCP Cloud KMS, or HashiCorp Vault SDK.
-            throw new Error(
-                'KMS signer not yet implemented in this script. ' +
-                'Please implement the corresponding KMS provider SDK (aws-sdk, @google-cloud/kms, or node-vault) ' +
-                'or fall back to plaintext PRIVATE_KEY for dev/test only.'
-            );
+            this.signer = await this._resolveKMSSigner(CONFIG.kmsProvider, CONFIG.kmsKeyId);
         } else if (CONFIG.vaultAddr && CONFIG.vaultToken && CONFIG.vaultSecretPath) {
             console.log(`🔐 Using HashiCorp Vault: ${CONFIG.vaultAddr}, path: ${CONFIG.vaultSecretPath}`);
-            throw new Error(
-                'Vault signer not yet implemented. ' +
-                'Please integrate node-vault or @hashicorp/vault-client to fetch the private key at runtime.'
-            );
+            this.signer = await this._resolveVaultSigner(CONFIG.vaultAddr, CONFIG.vaultToken, CONFIG.vaultSecretPath);
         } else if (CONFIG.privateKey) {
             console.warn('⚠️  WARNING: Using plaintext PRIVATE_KEY from environment variable. ' +
                          'This is acceptable for dev/test ONLY. For production, use KMS or Vault.');
@@ -175,6 +166,229 @@ class QuarantineKeeper {
         console.log(`📦 Starting from block ${this.state.lastBlock}, current: ${currentBlock}`);
         
         console.log('✅ Keeper ready\n');
+    }
+
+    /**
+     * [M-04 Fix] Resolve AWS/GCP KMS signer
+     * Supports AWS KMS (production-ready). GCP stub with clear integration guide.
+     */
+    async _resolveKMSSigner(provider, keyId) {
+        if (provider === 'aws') {
+            try {
+                const { KMSClient, GetPublicKeyCommand, SignCommand } = require('@aws-sdk/client-kms');
+                const region = process.env.AWS_REGION || 'us-east-1';
+                const kmsClient = new KMSClient({ region });
+
+                // Fetch public key to derive Ethereum address
+                const pubKeyResponse = await kmsClient.send(new GetPublicKeyCommand({ KeyId: keyId }));
+                const publicKey = Buffer.from(pubKeyResponse.PublicKey);
+                const address = this._deriveAddressFromPublicKey(publicKey);
+
+                // Build a minimal signer that delegates to KMS
+                const signer = {
+                    provider: this.provider,
+                    address: address,
+                    getAddress: async () => address,
+                    signMessage: async (message) => {
+                        const msgHash = ethers.hashMessage(message);
+                        return this._kmsSign(kmsClient, keyId, msgHash, address);
+                    },
+                    signTransaction: async (tx) => {
+                        const populated = await ethers.Transaction.from(tx).populate();
+                        const unsignedHash = populated.unsignedHash;
+                        const flatSig = await this._kmsSign(kmsClient, keyId, unsignedHash, address);
+                        const sig = ethers.Signature.from({
+                            r: flatSig.slice(0, 66),
+                            s: '0x' + flatSig.slice(66, 130),
+                            v: parseInt(flatSig.slice(130, 132), 16),
+                        });
+                        populated.signature = sig;
+                        return populated.serialized;
+                    },
+                    sendTransaction: async (tx) => {
+                        const serialized = await signer.signTransaction(tx);
+                        return this.provider.broadcastTransaction(serialized);
+                    },
+                };
+                console.log(`   AWS KMS signer ready: ${address.substring(0, 10)}...`);
+                return signer;
+            } catch (err) {
+                if (err.code === 'MODULE_NOT_FOUND') {
+                    throw new Error(
+                        '@aws-sdk/client-kms is not installed. Install it with: npm install @aws-sdk/client-kms'
+                    );
+                }
+                throw new Error(`AWS KMS signer resolution failed: ${err.message}`);
+            }
+        }
+
+        if (provider === 'gcp') {
+            throw new Error(
+                'GCP KMS signer not yet implemented in quarantine-keeper.\n' +
+                'To enable:\n' +
+                '  1. npm install @google-cloud/kms\n' +
+                '  2. Use KeyManagementServiceClient to fetch public key and sign digests\n' +
+                '  3. Convert GCP ASN.1 signatures to flat RSV (see _kmsSign for DER→RSV logic)\n' +
+                '  4. Return a signer object with getAddress, signMessage, signTransaction, sendTransaction'
+            );
+        }
+
+        throw new Error(`Unsupported KMS provider: ${provider}. Supported: aws, gcp`);
+    }
+
+    /**
+     * [M-04 Fix] Resolve HashiCorp Vault signer
+     * Fetches the private key from Vault at runtime (never stored in env or code).
+     */
+    async _resolveVaultSigner(vaultAddr, vaultToken, secretPath) {
+        try {
+            const vault = require('node-vault')({ apiVersion: 'v1', endpoint: vaultAddr });
+            vault.token = vaultToken;
+
+            // Read the secret from Vault (e.g., secret/data/ethereum/keeper)
+            const secret = await vault.read(secretPath);
+            const privateKey = secret.data?.data?.privateKey || secret.data?.privateKey;
+
+            if (!privateKey) {
+                throw new Error(
+                    `No private key found at Vault path: ${secretPath}. ` +
+                    'Expected structure: { "privateKey": "0x..." } or { "data": { "privateKey": "0x..." } }'
+                );
+            }
+
+            // Validate the private key
+            const wallet = new ethers.Wallet(privateKey, this.provider);
+            console.log(`   Vault signer ready: ${wallet.address.substring(0, 10)}...`);
+            return wallet;
+        } catch (err) {
+            if (err.code === 'MODULE_NOT_FOUND') {
+                throw new Error(
+                    'node-vault is not installed. Install it with: npm install node-vault'
+                );
+            }
+            throw new Error(`Vault signer resolution failed: ${err.message}`);
+        }
+    }
+
+    /**
+     * Derive Ethereum address from SPKI public key (shared helper)
+     */
+    _deriveAddressFromPublicKey(publicKey) {
+        const buf = Buffer.from(publicKey);
+        let offset = 0;
+
+        // Parse outer SEQUENCE
+        if (buf[offset++] !== 0x30) {
+            throw new Error('Invalid SPKI: expected SEQUENCE');
+        }
+        const seqLen = this._readAsn1Length(buf, offset);
+        offset += this._asn1LengthSize(buf, offset);
+        offset += seqLen; // skip over the whole sequence (we just need the key inside)
+
+        // Actually, let's do a simpler approach: find the EC point directly
+        // Reset and parse properly
+        return this._deriveAddressFromSPKI(buf);
+    }
+
+    _deriveAddressFromSPKI(buf) {
+        let offset = 0;
+        if (buf[offset++] !== 0x30) throw new Error('Invalid SPKI');
+        offset += this._readAsn1Length(buf, offset);
+
+        if (buf[offset++] !== 0x30) throw new Error('Invalid AlgorithmIdentifier');
+        const algoLen = this._readAsn1Length(buf, offset);
+        offset += this._asn1LengthSize(buf, offset) + algoLen;
+
+        if (buf[offset++] !== 0x03) throw new Error('Invalid BIT STRING');
+        const bitStrLen = this._readAsn1Length(buf, offset);
+        offset += this._asn1LengthSize(buf, offset);
+        const unusedBits = buf[offset++];
+        if (unusedBits !== 0) throw new Error('Invalid unused bits');
+
+        const ecPoint = buf.subarray(offset, offset + bitStrLen - 1);
+        if (ecPoint.length !== 65 || ecPoint[0] !== 0x04) {
+            throw new Error(`Invalid EC point: ${ecPoint.length} bytes`);
+        }
+
+        const pubKeyNoPrefix = ecPoint.subarray(1);
+        const hash = ethers.keccak256(pubKeyNoPrefix);
+        return '0x' + hash.substring(26);
+    }
+
+    _readAsn1Length(buf, offset) {
+        const firstByte = buf[offset];
+        if ((firstByte & 0x80) === 0) return firstByte;
+        const numBytes = firstByte & 0x7f;
+        let length = 0;
+        for (let i = 0; i < numBytes; i++) {
+            length = (length << 8) | buf[offset + 1 + i];
+        }
+        return length;
+    }
+
+    _asn1LengthSize(buf, offset) {
+        const firstByte = buf[offset];
+        if ((firstByte & 0x80) === 0) return 1;
+        return 1 + (firstByte & 0x7f);
+    }
+
+    /**
+     * Sign a hash using AWS KMS and convert DER signature to flat RSV
+     */
+    async _kmsSign(kmsClient, keyId, msgHash, address) {
+        const { SignCommand } = require('@aws-sdk/client-kms');
+        const response = await kmsClient.send(new SignCommand({
+            KeyId: keyId,
+            Message: Buffer.from(msgHash.slice(2), 'hex'),
+            MessageType: 'DIGEST',
+            SigningAlgorithm: 'ECDSA_SHA_256',
+        }));
+
+        if (!response.Signature) {
+            throw new Error('KMS signing failed: no signature returned');
+        }
+
+        return this._derToRSV(Buffer.from(response.Signature), msgHash, address);
+    }
+
+    _derToRSV(derSig, msgHash, address) {
+        let offset = 0;
+        if (derSig[offset++] !== 0x30) throw new Error('Invalid DER: expected SEQUENCE');
+        offset += this._readAsn1Length(derSig, offset);
+
+        if (derSig[offset++] !== 0x02) throw new Error('Invalid DER: expected INTEGER for r');
+        const rLen = this._readAsn1Length(derSig, offset);
+        offset += this._asn1LengthSize(derSig, offset);
+        let rStart = offset;
+        if (derSig[rStart] === 0x00 && rLen > 32) rStart++;
+        const r = derSig.subarray(rStart, rStart + Math.min(rLen, 32));
+        offset += rLen;
+
+        if (derSig[offset++] !== 0x02) throw new Error('Invalid DER: expected INTEGER for s');
+        const sLen = this._readAsn1Length(derSig, offset);
+        offset += this._asn1LengthSize(derSig, offset);
+        let sStart = offset;
+        if (derSig[sStart] === 0x00 && sLen > 32) sStart++;
+        const s = derSig.subarray(sStart, sStart + Math.min(sLen, 32));
+
+        const rHex = '0x' + r.toString('hex').padStart(64, '0');
+        const sHex = '0x' + s.toString('hex').padStart(64, '0');
+        const halfN = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141') / BigInt(2);
+        const sVal = BigInt(sHex);
+        const sNormalized = sVal > halfN
+            ? '0x' + (BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141') - sVal).toString(16).padStart(64, '0')
+            : sHex;
+
+        for (let v = 27; v <= 28; v++) {
+            try {
+                const pubKey = ethers.SigningKey.recoverPublicKey(msgHash, { r: rHex, s: sNormalized, v });
+                const recovered = '0x' + ethers.keccak256('0x' + pubKey.slice(4)).slice(26);
+                if (recovered.toLowerCase() === address.toLowerCase()) {
+                    return rHex + sNormalized.slice(2) + v.toString(16).padStart(2, '0');
+                }
+            } catch { /* try next v */ }
+        }
+        throw new Error('Unable to determine signature recovery ID');
     }
 
     /**

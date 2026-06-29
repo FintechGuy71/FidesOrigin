@@ -1255,8 +1255,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/FidesCompliance.sol": {
-      "lastModificationDate": 1782746258805,
-      "contentHash": "d80c35975fa06136908919d03825091f",
+      "lastModificationDate": 1782751569141,
+      "contentHash": "07f381cc5d67d87dce46be8f16c54043",
       "sourceName": "contracts/FidesCompliance.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -1317,8 +1317,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/interfaces/IFidesCompliance.sol": {
-      "lastModificationDate": 1782315940433,
-      "contentHash": "441b6255f9516a3a0991e6435bb32aa6",
+      "lastModificationDate": 1782751565078,
+      "contentHash": "2e09a4b8a5c66cba49771edb51db5a0f",
       "sourceName": "contracts/interfaces/IFidesCompliance.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -3306,8 +3306,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/examples/MockFidesCompliance.sol": {
-      "lastModificationDate": 1782316150151,
-      "contentHash": "3fd64fb2c3af63ff96843f8dd6bd1a8a",
+      "lastModificationDate": 1782751832177,
+      "contentHash": "48d4e42e850ce3d46454aa9414995029",
       "sourceName": "contracts/examples/MockFidesCompliance.sol",
       "solcConfig": {
         "version": "0.8.26",

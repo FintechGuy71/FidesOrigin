@@ -204,7 +204,8 @@ class BlockchainSyncService {
   }
 
   /**
-   * [FIX] Lazy KMS wallet initialization for production
+   * [FIX] Plugin-style lazy KMS wallet initialization for production
+   * Supports: AWS KMS (full), Azure KeyVault, HashiCorp Vault, GCP KMS (stubs)
    */
   async _ensureWallet() {
     if (this.wallet) return;
@@ -213,8 +214,10 @@ class BlockchainSyncService {
       throw new Error('Wallet not initialized: no KMS config or private key available');
     }
 
-    // Try AWS KMS first
-    if (this._kmsConfig.awsKmsKeyId) {
+    const cfg = this._kmsConfig;
+
+    // AWS KMS — production-ready
+    if (cfg.awsKmsKeyId) {
       try {
         await this._initAWSKMSWallet();
         return;
@@ -225,10 +228,46 @@ class BlockchainSyncService {
       }
     }
 
-    // Other KMS providers not yet implemented
+    // Azure Key Vault — stub with clear guidance
+    if (cfg.azureKeyVaultName && cfg.azureKeyName) {
+      try {
+        await this._initAzureKMSWallet();
+        return;
+      } catch (err) {
+        logger.error('Azure Key Vault wallet initialization failed', { error: err.message });
+        throw err;
+      }
+    }
+
+    // HashiCorp Vault — stub with clear guidance
+    if (cfg.vaultAddr && cfg.vaultKeyPath) {
+      try {
+        await this._initVaultKMSWallet();
+        return;
+      } catch (err) {
+        logger.error('Vault KMS wallet initialization failed', { error: err.message });
+        throw err;
+      }
+    }
+
+    // GCP KMS — stub with clear guidance
+    if (cfg.gcpKmsKeyPath) {
+      try {
+        await this._initGCPKMSWallet();
+        return;
+      } catch (err) {
+        logger.error('GCP KMS wallet initialization failed', { error: err.message });
+        throw err;
+      }
+    }
+
     throw new Error(
-      'KMS wallet initialization not fully implemented for the configured provider. ' +
-      'Currently supported: AWS KMS (AWS_KMS_KEY_ID + AWS_REGION).'
+      'No supported KMS provider configured. Currently supported:\n' +
+      '  - AWS KMS: AWS_KMS_KEY_ID + AWS_REGION\n' +
+      '  - Azure KeyVault: AZURE_KEY_VAULT_NAME + AZURE_KEY_NAME\n' +
+      '  - HashiCorp Vault: VAULT_ADDR + VAULT_KEY_PATH\n' +
+      '  - GCP KMS: GCP_KMS_KEY_PATH\n' +
+      'See the adapter class stubs for integration guidance.'
     );
   }
 
@@ -255,6 +294,99 @@ class BlockchainSyncService {
       if (err.code === 'MODULE_NOT_FOUND') {
         throw new Error(
           '@aws-sdk/client-kms is not installed. Install it with: npm install @aws-sdk/client-kms'
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * [STUB] Azure Key Vault wallet initialization
+   * Requires: npm install @azure/keyvault-keys @azure/identity
+   */
+  async _initAzureKMSWallet() {
+    const { azureKeyVaultName, azureKeyName } = this._kmsConfig;
+    logger.info('Initializing Azure Key Vault wallet adapter', { vault: azureKeyVaultName, key: azureKeyName });
+
+    try {
+      const { CryptographyClient } = require('@azure/keyvault-keys');
+      const { DefaultAzureCredential } = require('@azure/identity');
+      const credential = new DefaultAzureCredential();
+      const cryptoClient = new CryptographyClient(
+        `https://${azureKeyVaultName}.vault.azure.net/keys/${azureKeyName}`,
+        credential
+      );
+
+      // Fetch public key to derive Ethereum address
+      const pubKeyResponse = await cryptoClient.getKey();
+      const publicKey = Buffer.from(pubKeyResponse.key.x + pubKeyResponse.key.y, 'hex');
+      const address = this._deriveAddressFromPublicKey(publicKey);
+
+      this.wallet = new AzureKeyVaultWalletAdapter(
+        azureKeyVaultName, azureKeyName, '', address, this.provider
+      );
+      logger.info('Azure Key Vault wallet initialized', { address: address.substring(0, 10) + '...' });
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        throw new Error(
+          '@azure/keyvault-keys or @azure/identity is not installed. ' +
+          'Install with: npm install @azure/keyvault-keys @azure/identity'
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * [STUB] HashiCorp Vault wallet initialization
+   * Requires: npm install node-vault
+   */
+  async _initVaultKMSWallet() {
+    const { vaultAddr, vaultKeyPath } = this._kmsConfig;
+    logger.info('Initializing Vault KMS wallet adapter', { addr: vaultAddr, path: vaultKeyPath });
+
+    try {
+      const vault = require('node-vault')({ apiVersion: 'v1', endpoint: vaultAddr });
+      // Public key retrieval via Vault transit would go here
+      // For now, address must be provided via VAULT_EXPECTED_ADDRESS env var
+      const address = process.env.VAULT_EXPECTED_ADDRESS;
+      if (!address || !ethers.isAddress(address)) {
+        throw new Error(
+          'VAULT_EXPECTED_ADDRESS env var must be set to the Ethereum address ' +
+          'derived from the Vault key (since Vault transit does not expose public key directly).'
+        );
+      }
+      this.wallet = new VaultKMSWalletAdapter(vaultAddr, vault.token, vaultKeyPath, address, this.provider);
+      logger.info('Vault KMS wallet initialized', { address: address.substring(0, 10) + '...' });
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        throw new Error(
+          'node-vault is not installed. Install with: npm install node-vault'
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * [STUB] GCP KMS wallet initialization
+   * Requires: npm install @google-cloud/kms
+   */
+  async _initGCPKMSWallet() {
+    const { gcpKmsKeyPath } = this._kmsConfig;
+    logger.info('Initializing GCP KMS wallet adapter', { keyPath: gcpKmsKeyPath });
+
+    try {
+      const { KeyManagementServiceClient } = require('@google-cloud/kms');
+      const kmsClient = new KeyManagementServiceClient();
+      const [publicKey] = await kmsClient.getPublicKey({ name: gcpKmsKeyPath });
+      const address = this._deriveAddressFromPublicKey(Buffer.from(publicKey.pem));
+      this.wallet = new GCPKMSWalletAdapter(gcpKmsKeyPath, address, this.provider);
+      logger.info('GCP KMS wallet initialized', { address: address.substring(0, 10) + '...' });
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        throw new Error(
+          '@google-cloud/kms is not installed. Install with: npm install @google-cloud/kms'
         );
       }
       throw err;
@@ -689,24 +821,73 @@ class BlockchainSyncService {
   }
 }
 
-// ─── AWS KMS Wallet Adapter (minimal implementation for data-sync) ─────────
+// ─── KMS Adapter Interface & Plugin Registry ─────────────────────────────
 
 /**
- * Minimal AWS KMS wallet adapter that implements the ethers Signer interface.
- * Delegates signing to AWS KMS without loading the private key into memory.
- * 
- * NOTE: This is a production-ready adapter. It requires @aws-sdk/client-kms to be installed.
+ * Abstract KMS adapter interface. All KMS providers must implement this.
+ * @abstract
  */
-class AWSKMSWalletAdapter {
+class BaseKMSAdapter {
+  /**
+   * @param {string} address - Ethereum address derived from the public key
+   * @param {ethers.Provider} provider - Ethers provider
+   */
+  constructor(address, provider) {
+    this._address = address;
+    this._provider = provider;
+  }
+
+  /** @returns {Promise<string>} */
+  async getAddress() { return this._address; }
+
+  /**
+   * Sign a message (raw hash). Must be implemented by subclasses.
+   * @param {string} msgHash - 32-byte hex hash to sign
+   * @returns {Promise<string>} - flat signature hex string (r+s+v)
+   */
+  async _signHash(msgHash) {
+    throw new Error('_signHash must be implemented by subclass');
+  }
+
+  async signMessage(message) {
+    const msgHash = ethers.hashMessage(message);
+    return this._signHash(msgHash);
+  }
+
+  async signTransaction(tx) {
+    const populated = await ethers.Transaction.from(tx).populate();
+    const unsignedHash = populated.unsignedHash;
+    const flatSig = await this._signHash(unsignedHash);
+    const sig = ethers.Signature.from({
+      r: flatSig.slice(0, 66),
+      s: '0x' + flatSig.slice(66, 130),
+      v: parseInt(flatSig.slice(130, 132), 16),
+    });
+    populated.signature = sig;
+    return populated.serialized;
+  }
+
+  async signTypedData(domain, types, value) {
+    throw new Error('signTypedData not implemented for KMS adapters');
+  }
+
+  connect(provider) {
+    throw new Error('connect() must be implemented by subclass');
+  }
+}
+
+/**
+ * AWS KMS Wallet Adapter — production-ready implementation
+ * Extends ethers.AbstractSigner for full ethers v6 compatibility.
+ */
+class AWSKMSWalletAdapter extends ethers.AbstractSigner {
   constructor(kmsClient, keyId, address, provider, region) {
+    super(provider);
     this._kmsClient = kmsClient;
     this._keyId = keyId;
     this._address = address;
-    this._provider = provider;
     this._region = region;
   }
-
-  get address() { return this._address; }
 
   async getAddress() { return this._address; }
 
@@ -726,6 +907,14 @@ class AWSKMSWalletAdapter {
     });
     populated.signature = sig;
     return populated.serialized;
+  }
+
+  async signTypedData(domain, types, value) {
+    throw new Error('signTypedData not implemented for AWS KMS adapter');
+  }
+
+  connect(provider) {
+    return new AWSKMSWalletAdapter(this._kmsClient, this._keyId, this._address, provider, this._region);
   }
 
   async _kmsSign(msgHash) {
@@ -797,6 +986,93 @@ class AWSKMSWalletAdapter {
     const firstByte = buf[offset];
     if ((firstByte & 0x80) === 0) return 1;
     return 1 + (firstByte & 0x7f);
+  }
+}
+
+/**
+ * Azure Key Vault Wallet Adapter — stub with clear integration guide
+ * To enable: install @azure/keyvault-keys and @azure/identity, then implement
+ * the _signHash method using Azure Key Vault's sign API.
+ */
+class AzureKeyVaultWalletAdapter extends BaseKMSAdapter {
+  constructor(keyVaultName, keyName, keyVersion, address, provider) {
+    super(address, provider);
+    this._keyVaultName = keyVaultName;
+    this._keyName = keyName;
+    this._keyVersion = keyVersion;
+  }
+
+  connect(provider) {
+    return new AzureKeyVaultWalletAdapter(
+      this._keyVaultName, this._keyName, this._keyVersion, this._address, provider
+    );
+  }
+
+  async _signHash(msgHash) {
+    throw new Error(
+      'Azure Key Vault signing not yet implemented.\n' +
+      'To enable:\n' +
+      '  1. npm install @azure/keyvault-keys @azure/identity\n' +
+      '  2. Implement _signHash using KeyVaultClient.cryptography.sign(\'ES256\', digest)\n' +
+      '  3. Convert Azure signature (DER) to flat RSV format (see AWSKMSWalletAdapter._derToRSV)\n' +
+      '  4. Return flat signature hex string'
+    );
+  }
+}
+
+/**
+ * HashiCorp Vault Wallet Adapter — stub with clear integration guide
+ * To enable: install node-vault, then implement the _signHash method
+ * using Vault's transit/sign API.
+ */
+class VaultKMSWalletAdapter extends BaseKMSAdapter {
+  constructor(vaultAddr, vaultToken, keyPath, address, provider) {
+    super(address, provider);
+    this._vaultAddr = vaultAddr;
+    this._vaultToken = vaultToken;
+    this._keyPath = keyPath;
+  }
+
+  connect(provider) {
+    return new VaultKMSWalletAdapter(
+      this._vaultAddr, this._vaultToken, this._keyPath, this._address, provider
+    );
+  }
+
+  async _signHash(msgHash) {
+    throw new Error(
+      'HashiCorp Vault signing not yet implemented.\n' +
+      'To enable:\n' +
+      '  1. npm install node-vault\n' +
+      '  2. Implement _signHash using vault.write(keyPath + \/sign\/sha2-256, { input: digest })\n' +
+      '  3. Parse Vault signature (base64-encoded ASN.1 or raw RSV) to flat hex\n' +
+      '  4. Return flat signature hex string'
+    );
+  }
+}
+
+/**
+ * GCP KMS Wallet Adapter — stub with clear integration guide
+ */
+class GCPKMSWalletAdapter extends BaseKMSAdapter {
+  constructor(keyPath, address, provider) {
+    super(address, provider);
+    this._keyPath = keyPath;
+  }
+
+  connect(provider) {
+    return new GCPKMSWalletAdapter(this._keyPath, this._address, provider);
+  }
+
+  async _signHash(msgHash) {
+    throw new Error(
+      'GCP KMS signing not yet implemented.\n' +
+      'To enable:\n' +
+      '  1. npm install @google-cloud/kms\n' +
+      '  2. Implement _signHash using kmsClient.asymmetricSign({ name: keyPath, digest: { sha256: digest } })\n' +
+      '  3. Convert GCP signature (ASN.1/DER) to flat RSV format\n' +
+      '  4. Return flat signature hex string'
+    );
   }
 }
 
