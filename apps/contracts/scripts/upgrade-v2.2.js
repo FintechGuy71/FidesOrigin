@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-const PROXY = process.env.PROXY_ADDRESS || '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
+const PROXY = proxyAddress ;
 
 async function main() {
   const [signer] = await ethers.getSigners();
@@ -40,7 +40,7 @@ async function main() {
   console.log('totalProfiles:', (await v2.totalProfiles()).toString());
   console.log('totalHighRisk:', (await v2.totalHighRisk()).toString());
   console.log('totalSanctioned:', (await v2.totalSanctioned()).toString());
-  console.log('isSanctioned(OFAC):', await v2.isSanctioned('0xe950dc316b836e4eefb8308bf32bf7c72a1358ff'));
+  console.log('isSanctioned(OFAC):', await v2.isSanctioned(process.env.TEST_ADDRESS));
 
   // Test a ScamSniffer address too
   console.log('isSanctioned(Scam):', await v2.isSanctioned('0x101ce0cedd142f199c9ef61739ae59b6611a0fc0'));

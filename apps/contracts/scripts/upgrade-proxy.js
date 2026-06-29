@@ -1,12 +1,12 @@
 const { ethers } = require("hardhat");
 
-const PROXY = process.env.PROXY_ADDRESS;
+const PROXY = proxyAddress;
 if (!PROXY) {
   console.error('❌ PROXY_ADDRESS env var required');
   console.error('   Example: PROXY_ADDRESS=0x... npx hardhat run scripts/upgrade-proxy.js --network sepolia');
   process.exit(1);
 }
-const V2_IMPL = process.env.V2_IMPL_ADDRESS || '0x788c534acd7E377b86a2f7E9284C2f3b03DD749a';
+const V2_IMPL = v2Impl ;
 
 // ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
 // Production deployments MUST use a TimelockController with a two-phase process.
@@ -73,7 +73,7 @@ async function main() {
   console.log('totalSanctioned:', (await v2.totalSanctioned()).toString());
 
   // Test isSanctioned on a known OFAC address
-  const ofacAddr = '0xe950dc316b836e4eefb8308bf32bf7c72a1358ff';
+  const ofacAddr = process.env.TEST_ADDRESS;
   try {
     const sanctioned = await v2.isSanctioned(ofacAddr);
     console.log(`isSanctioned(${ofacAddr}):`, sanctioned);

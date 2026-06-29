@@ -3,10 +3,10 @@ const { ethers } = require('ethers');
 async function main() {
     const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
     
-    const walletAddress = '0xbC3E072F83118D9d68DFD8D78e0ed1E7d72BB6b1';
+    const walletAddress = process.env.WALLET_ADDRESS || '0x0000000000000000000000000000000000000000';
     const tokenAddress = '0x9c9f4d5775BAf5DB2f4E8f8cD1C5ca695D5c7BDb';
     const vaultAddress = '0xF5593e26b2560b9fc71de729EA2D86F979dfd76b';
-    const deployer = '0x5F6Ae278e7a62E64F9F467a91B693f372b84a374';
+    const deployer = process.env.DEPLOYER_ADDRESS || '0x0000000000000000000000000000000000000000';
     
     // Check allowance
     const tokenABI = ['function allowance(address, address) view returns (uint256)'];

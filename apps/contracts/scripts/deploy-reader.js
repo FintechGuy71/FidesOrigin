@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-const PROXY = process.env.PROXY_ADDRESS || '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
+const PROXY = proxyAddress ;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -15,7 +15,7 @@ async function main() {
   console.log('RiskRegistryReader deployed to:', addr);
   
   // Verify
-  const ofacAddr = process.env.TEST_ADDRESS || '0xe950dc316b836e4eefb8308bf32bf7c72a1358ff';
+  const ofacAddr = testAddr ;
   const isSanctioned = await reader.isSanctioned(ofacAddr);
   console.log(`isSanctioned(${ofacAddr}):`, isSanctioned);
 }

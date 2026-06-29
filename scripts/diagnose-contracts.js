@@ -4,8 +4,8 @@ async function main() {
     const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
     
     const tokenAddress = '0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A';
-    const walletAddress = '0xbC3E072F83118D9d68DFD8D78e0ed1E7d72BB6b1';
-    const deployer = '0x5F6Ae278e7a62E64F9F467a91B693f372b84a374';
+    const walletAddress = process.env.WALLET_ADDRESS || '0x0000000000000000000000000000000000000000';
+    const deployer = process.env.DEPLOYER_ADDRESS || '0x0000000000000000000000000000000000000000';
     
     // 正确的 ABI - addressRiskLevel 是 public mapping 的自动 getter
     const minimalABI = [

@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-const PROXY = process.env.PROXY_ADDRESS || '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
+const PROXY = proxyAddress ;
 
 async function main() {
   const [signer] = await ethers.getSigners();
@@ -38,7 +38,7 @@ async function main() {
   console.log('VERSION raw:', result);
 
   // Test isSanctioned
-  const testAddr = process.env.TEST_ADDRESS || '0xe950dc316b836e4eefb8308bf32bf7c72a1358ff';
+  const testAddr = testAddr ;
   const data = '0x9948b18d000000000000000000000000' + testAddr.slice(2);
   const result2 = await ethers.provider.call({ to: PROXY, data });
   console.log('isSanctioned raw:', result2);

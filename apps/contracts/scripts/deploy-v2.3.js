@@ -14,7 +14,7 @@ if (!PROXY_ADDR) {
   console.error('   Example: PROXY_ADDRESS=0x... npx hardhat run scripts/deploy-v2.3.js --network sepolia');
   process.exit(1);
 }
-const TEST_ADDR = process.env.TEST_ADDRESS || '0xe950dc316b836e4eefb8308bf32bf7c72a1358ff';
+const TEST_ADDR = process.env.TEST_ADDRESS || process.env.TEST_ADDRESS;
 
 // ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
 // Production deployments MUST use a TimelockController with a two-phase process:

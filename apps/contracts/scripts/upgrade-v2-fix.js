@@ -14,7 +14,7 @@
  *
  * Environment:
  *   ADMIN_PRIVATE_KEY - Admin key with ADMIN_ROLE on the proxy
- *   PROXY_ADDRESS - Proxy address (default: 0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc)
+ *   PROXY_ADDRESS - Proxy address (default: process.env.PROXY_ADDRESS || address(0))
  */
 
 const { ethers, network } = require("hardhat");

@@ -6,7 +6,7 @@ async function main() {
     const [deployer] = await hre.ethers.getSigners();
     
     // 已部署地址
-    const walletAddress = '0xbC3E072F83118D9d68DFD8D78e0ed1E7d72BB6b1';
+    const walletAddress = process.env.WALLET_ADDRESS || '0x0000000000000000000000000000000000000000';
     const quarantineVaultAddress = '0x787CC3b07D59830DFBF0c7D93430E241c8aEf762';
     
     const wallet = await hre.ethers.getContractAt('CompliantSmartWallet', walletAddress);

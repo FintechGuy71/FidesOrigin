@@ -124,7 +124,7 @@ async function main() {
   }
 
   // 3. isSanctioned check
-  const sanctioned = await postCheck.isSanctioned('0xe950dc316b836e4eefb8308bf32bf7c72a1358ff');
+  const sanctioned = await postCheck.isSanctioned(process.env.TEST_ADDRESS);
   console.log('isSanctioned(0xe950...58ff):', sanctioned);
   if (!sanctioned) {
     console.warn('⚠️  Expected isSanctioned = true');
@@ -132,7 +132,7 @@ async function main() {
 
   // 4. getProfile returns 8 values
   try {
-    const profile = await postCheck.getProfile('0xe950dc316b836e4eefb8308bf32bf7c72a1358ff');
+    const profile = await postCheck.getProfile(process.env.TEST_ADDRESS);
     console.log('getProfile() returned', profile.length, 'values ✅');
     console.log('  riskScore:', profile[0].toString());
     console.log('  addr:', profile[1]);
@@ -148,7 +148,7 @@ async function main() {
 
   // 5. getRiskProfile returns 5 values
   try {
-    const rp = await postCheck.getRiskProfile('0xe950dc316b836e4eefb8308bf32bf7c72a1358ff');
+    const rp = await postCheck.getRiskProfile(process.env.TEST_ADDRESS);
     console.log('getRiskProfile() returned', rp.length, 'values ✅');
   } catch (e) {
     console.log('getRiskProfile() check failed:', e.message?.slice(0, 100));

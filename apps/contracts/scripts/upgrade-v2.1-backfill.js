@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-const PROXY = process.env.PROXY_ADDRESS || '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
+const PROXY = proxyAddress ;
 
 async function main() {
   const [signer] = await ethers.getSigners();

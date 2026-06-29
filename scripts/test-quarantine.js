@@ -8,7 +8,7 @@ async function main() {
     const [deployer] = await hre.ethers.getSigners();
     console.log(`🔑 Tester: ${deployer.address}`);
 
-    const walletAddress = '0xbC3E072F83118D9d68DFD8D78e0ed1E7d72BB6b1';
+    const walletAddress = process.env.WALLET_ADDRESS || '0x0000000000000000000000000000000000000000';
     // 新部署的 TestUSD
     const tokenAddress = '0x9c9f4d5775BAf5DB2f4E8f8cD1C5ca695D5c7BDb';
     const riskRegistry = '0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3';
