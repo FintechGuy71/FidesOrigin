@@ -1,0 +1,2985 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b",
+      "txHash": "0x3dd3bf3317cbcd40cc5e090b76ec83adf0f2b94671fb66ecbce779f03e9436c6",
+      "kind": "uups"
+    },
+    {
+      "address": "0x66ba7a3C4855563879E6bF6cd9D6E7e4F0f4B954",
+      "txHash": "0x43eb0ec6572b77d2ed58edf2befb37b4a475917a2d64fb92e07c5281aa2bd2cb",
+      "kind": "uups"
+    },
+    {
+      "address": "0x4Fc9F7C00cb5c6A7F9b0dcc31b201F5d0c971A4f",
+      "txHash": "0x07dd888c54c3fe45ec6ea9bf0fbac3ae9dd2dc9cb3eb77d694a46df006983b5d",
+      "kind": "uups"
+    },
+    {
+      "address": "0x074913CAf037394E6cb67D6C0C72Eab5DaB9981D",
+      "txHash": "0xc4ccf25ed286cb35343b74961103cea1e1e9457eb1ee7f73d2af1c1ae40655d6",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+      "txHash": "0x45215c227fee279471dc9c941f6f21a0000997733fcc6933930ca34c634ba18a",
+      "kind": "uups"
+    },
+    {
+      "address": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+      "txHash": "0x979e8087074917eed1b5e114c5cc74e2a4e7c3b8802b9ca387e266983337aeb8",
+      "kind": "uups"
+    },
+    {
+      "address": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+      "txHash": "0x4b4751b3bda23cc6d3f6238e4fc55e0b08ee4a7a79e194cf1b8502376ffa9ab2",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "6b01c475fc7f70cf22068ac082b5a0bf1fc1ebf095afc879cc664cdbf5ef7220": {
+      "address": "0x74c63D64a548262B0E1508Ac397C7Afc45e4d7cC",
+      "txHash": "0x4f03bc5b97616a520800d42d17d18be062d6bb75000c8f98d5e26aeba07e637e",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "contracts/utils/ReentrancyGuardUpgradeable.sol:14"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "contracts/utils/ReentrancyGuardUpgradeable.sol:43"
+          },
+          {
+            "label": "chainConfigs",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_mapping(t_enum(ChainId)4065,t_struct(ChainConfig)4078_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:62"
+          },
+          {
+            "label": "chainIdToEnum",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_mapping(t_uint256,t_enum(ChainId)4065)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:63"
+          },
+          {
+            "label": "supportedChains",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_enum(ChainId)4065)dyn_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:63"
+          },
+          {
+            "label": "riskProfiles",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_mapping(t_address,t_struct(RiskProfile)4117_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:78"
+          },
+          {
+            "label": "_allRiskAddresses",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_struct(AddressSet)2198_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:79"
+          },
+          {
+            "label": "_ruleEngine",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_struct(RuleEngine)4175_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:107"
+          },
+          {
+            "label": "allRuleIds",
+            "offset": 0,
+            "slot": "59",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:109"
+          },
+          {
+            "label": "transactions",
+            "offset": 0,
+            "slot": "60",
+            "type": "t_mapping(t_bytes32,t_struct(TransactionRecord)4194_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:118"
+          },
+          {
+            "label": "addressTransactions",
+            "offset": 0,
+            "slot": "61",
+            "type": "t_mapping(t_address,t_array(t_bytes32)dyn_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:121"
+          },
+          {
+            "label": "auditLogs",
+            "offset": 0,
+            "slot": "62",
+            "type": "t_mapping(t_uint256,t_struct(AuditLog)4236_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:148"
+          },
+          {
+            "label": "actorAuditLogs",
+            "offset": 0,
+            "slot": "63",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:150"
+          },
+          {
+            "label": "subjectAuditLogs",
+            "offset": 0,
+            "slot": "64",
+            "type": "t_mapping(t_bytes32,t_array(t_uint256)dyn_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:152"
+          },
+          {
+            "label": "auditLogCount",
+            "offset": 0,
+            "slot": "65",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:153"
+          },
+          {
+            "label": "config",
+            "offset": 0,
+            "slot": "66",
+            "type": "t_struct(ComplianceConfig)4266_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:165"
+          },
+          {
+            "label": "dailyTransactionCount",
+            "offset": 0,
+            "slot": "71",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:168"
+          },
+          {
+            "label": "dailyTransactionVolume",
+            "offset": 0,
+            "slot": "72",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:169"
+          },
+          {
+            "label": "lastResetTime",
+            "offset": 0,
+            "slot": "73",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:171"
+          },
+          {
+            "label": "lastEmergencyToggle",
+            "offset": 0,
+            "slot": "74",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:172"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)24_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)34_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)432_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)187_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)24_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_enum(ChainId)4065)dyn_storage": {
+            "label": "enum FidesCompliance.ChainId[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_string_storage)dyn_storage": {
+            "label": "string[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes_storage": {
+            "label": "bytes",
+            "numberOfBytes": "32"
+          },
+          "t_enum(AuditEventType)4216": {
+            "label": "enum FidesCompliance.AuditEventType",
+            "members": [
+              "COMPLIANCE_CHECK",
+              "RISK_PROFILE_UPDATED",
+              "RULE_CREATED",
+              "RULE_UPDATED",
+              "RULE_ACTIVATED",
+              "RULE_PAUSED",
+              "RULE_DEPRECATED",
+              "CONFIG_UPDATED",
+              "EMERGENCY_ACTION",
+              "ROLE_GRANTED",
+              "ROLE_REVOKED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(ChainId)4065": {
+            "label": "enum FidesCompliance.ChainId",
+            "members": [
+              "ETHEREUM",
+              "POLYGON",
+              "BNB_CHAIN",
+              "ARBITRUM",
+              "OPTIMISM",
+              "BASE",
+              "SEPOLIA",
+              "AMOY"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(RiskLevel)4100": {
+            "label": "enum FidesCompliance.RiskLevel",
+            "members": [
+              "NONE",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "BLACKLIST",
+              "WHITELIST"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(RuleStatus)4135": {
+            "label": "enum FidesCompliance.RuleStatus",
+            "members": [
+              "DRAFT",
+              "ACTIVE",
+              "PAUSED",
+              "DEPRECATED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(RuleType)4130": {
+            "label": "enum FidesCompliance.RuleType",
+            "members": [
+              "TRANSACTION",
+              "VELOCITY",
+              "AMOUNT",
+              "CUSTOM"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_bytes32)dyn_storage)": {
+            "label": "mapping(address => bytes32[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(RiskProfile)4117_storage)": {
+            "label": "mapping(address => struct FidesCompliance.RiskProfile)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(bytes32 => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(Rule)4160_storage)": {
+            "label": "mapping(bytes32 => struct FidesCompliance.Rule)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(TransactionRecord)4194_storage)": {
+            "label": "mapping(bytes32 => struct FidesCompliance.TransactionRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_enum(ChainId)4065,t_struct(ChainConfig)4078_storage)": {
+            "label": "mapping(enum FidesCompliance.ChainId => struct FidesCompliance.ChainConfig)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_enum(RuleType)4130,t_array(t_bytes32)dyn_storage)": {
+            "label": "mapping(enum FidesCompliance.RuleType => bytes32[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_enum(ChainId)4065)": {
+            "label": "mapping(uint256 => enum FidesCompliance.ChainId)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(AuditLog)4236_storage)": {
+            "label": "mapping(uint256 => struct FidesCompliance.AuditLog)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)2198_storage": {
+            "label": "struct EnumerableSet.AddressSet",
+            "members": [
+              {
+                "label": "_inner",
+                "type": "t_struct(Set)1883_storage",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(AuditLog)4236_storage": {
+            "label": "struct FidesCompliance.AuditLog",
+            "members": [
+              {
+                "label": "logId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "eventType",
+                "type": "t_enum(AuditEventType)4216",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "actor",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "1"
+              },
+              {
+                "label": "subject",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "data",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "blockNumber",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "txHash",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "memo",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          },
+          "t_struct(ChainConfig)4078_storage": {
+            "label": "struct FidesCompliance.ChainConfig",
+            "members": [
+              {
+                "label": "chainId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "supported",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "confirmationBlocks",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "maxTransactionValue",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "requiresKYC",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(ComplianceConfig)4266_storage": {
+            "label": "struct FidesCompliance.ComplianceConfig",
+            "members": [
+              {
+                "label": "maxDailyVolume",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "maxTransactionAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "velocityWindow",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "velocityMaxTx",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "strictMode",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "auditMode",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(RiskProfile)4117_storage": {
+            "label": "struct FidesCompliance.RiskProfile",
+            "members": [
+              {
+                "label": "level",
+                "type": "t_enum(RiskLevel)4100",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "score",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tags",
+                "type": "t_array(t_string_storage)dyn_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "lastUpdated",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "updatedBy",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "reasonHash",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "exists",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_struct(Rule)4160_storage": {
+            "label": "struct FidesCompliance.Rule",
+            "members": [
+              {
+                "label": "ruleId",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "ruleType",
+                "type": "t_enum(RuleType)4130",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(RuleStatus)4135",
+                "offset": 1,
+                "slot": "2"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "condition",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "action",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "createdAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "updatedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "description",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "9"
+              }
+            ],
+            "numberOfBytes": "320"
+          },
+          "t_struct(RuleEngine)4175_storage": {
+            "label": "struct FidesCompliance.RuleEngine",
+            "members": [
+              {
+                "label": "rules",
+                "type": "t_mapping(t_bytes32,t_struct(Rule)4160_storage)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "activeRules",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "rulesByType",
+                "type": "t_mapping(t_enum(RuleType)4130,t_array(t_bytes32)dyn_storage)",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(Set)1883_storage": {
+            "label": "struct EnumerableSet.Set",
+            "members": [
+              {
+                "label": "_values",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_positions",
+                "type": "t_mapping(t_bytes32,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(TransactionRecord)4194_storage": {
+            "label": "struct FidesCompliance.TransactionRecord",
+            "members": [
+              {
+                "label": "from",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "to",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "riskAssessment",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "compliant",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "b761c3b7f2d11a8b9ce971c04a1c27ae8ce2f639a6122b7f546057904bd9bd32": {
+      "address": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59",
+      "txHash": "0x9914b33d4321ab43954de3603a34475f242b7f518ae059586dcaf9309d52299d",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "_packedProfiles",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:36"
+          },
+          {
+            "label": "_lastUpdateTime",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:40"
+          },
+          {
+            "label": "_profileTags",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_address,t_array(t_bytes32)dyn_storage)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:43"
+          },
+          {
+            "label": "sanctionedAddresses",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:47"
+          },
+          {
+            "label": "_addressTags",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_mapping(t_bytes32,t_bool))",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:51"
+          },
+          {
+            "label": "_addressTagList",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_address,t_array(t_bytes32)dyn_storage)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:53"
+          },
+          {
+            "label": "contractRegistry",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_struct(ContractInfo)23418_storage)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:63"
+          },
+          {
+            "label": "entityAddresses",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_bytes32,t_array(t_address)dyn_storage)",
+            "contract": "RiskRegistry",
+            "src": "contracts/RiskRegistry.sol:68"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)925_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)935_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)1849_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1088_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)925_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_bytes32)dyn_storage)": {
+            "label": "mapping(address => bytes32[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_bytes32,t_bool))": {
+            "label": "mapping(address => mapping(bytes32 => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(ContractInfo)23418_storage)": {
+            "label": "mapping(address => struct RiskRegistry.ContractInfo)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_array(t_address)dyn_storage)": {
+            "label": "mapping(bytes32 => address[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(ContractInfo)23418_storage": {
+            "label": "struct RiskRegistry.ContractInfo",
+            "members": [
+              {
+                "label": "isVerified",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "riskScore",
+                "type": "t_uint8",
+                "offset": 1,
+                "slot": "0"
+              },
+              {
+                "label": "contractType",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "verifiedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "verifiedBy",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "d5743db0c095f8d67f3de73495c148e0240af2a779e10aca9a967331a6477250": {
+      "address": "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7",
+      "txHash": "0x01524f93456b57011074904215e6589f0f254ba48ccb1e555fce9683d3c80f5f",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "riskRegistry",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(RiskRegistry)24493",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:33"
+          },
+          {
+            "label": "issuerPolicies",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_struct(IssuerPolicyStruct)18707_storage)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:57"
+          },
+          {
+            "label": "issuerPolicyHistory",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(IssuerPolicy)28676_storage))",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:60"
+          },
+          {
+            "label": "issuerPolicyVersion",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:61"
+          },
+          {
+            "label": "walletPolicies",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_struct(WalletPolicyStruct)18731_storage)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:62"
+          },
+          {
+            "label": "walletPolicyHistory",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_struct(WalletPolicy)28922_storage))",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:65"
+          },
+          {
+            "label": "walletPolicyVersion",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:66"
+          },
+          {
+            "label": "dailySpent",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:71"
+          },
+          {
+            "label": "lastResetDay",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:76"
+          },
+          {
+            "label": "transferRecords",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_bytes32,t_struct(TransferRecord)18786_storage)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:86"
+          },
+          {
+            "label": "transferRecordIds",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:89"
+          },
+          {
+            "label": "knownMixers",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:89"
+          },
+          {
+            "label": "operationRecords",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_bytes32,t_struct(OperationRecord)18808_storage)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:98"
+          },
+          {
+            "label": "operationCounter",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:99"
+          },
+          {
+            "label": "issuerPolicyUpdatedAt",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:103"
+          },
+          {
+            "label": "walletPolicyUpdatedAt",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:104"
+          },
+          {
+            "label": "lastTxTimestamp",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "PolicyEngine",
+            "src": "contracts/PolicyEngine.sol:105"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)925_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)935_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)1849_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1088_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)925_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_contract(RiskRegistry)24493": {
+            "label": "contract RiskRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_enum(OperationType)28880": {
+            "label": "enum IWalletCompliance.OperationType",
+            "members": [
+              "TRANSFER",
+              "CONTRACT_CALL",
+              "TOKEN_APPROVE",
+              "TOKEN_TRANSFER",
+              "TOKEN_TRANSFER_FROM",
+              "SWAP",
+              "BRIDGE",
+              "STAKE",
+              "UNSTAKE",
+              "CLAIM",
+              "DELEGATE",
+              "BATCH"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(IssuerPolicy)28676_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct IAssetCompliance.IssuerPolicy))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_struct(WalletPolicy)28922_storage))": {
+            "label": "mapping(address => mapping(uint256 => struct IWalletCompliance.WalletPolicy))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(IssuerPolicyStruct)18707_storage)": {
+            "label": "mapping(address => struct PolicyEngine.IssuerPolicyStruct)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(WalletPolicyStruct)18731_storage)": {
+            "label": "mapping(address => struct PolicyEngine.WalletPolicyStruct)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(OperationRecord)18808_storage)": {
+            "label": "mapping(bytes32 => struct PolicyEngine.OperationRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(TransferRecord)18786_storage)": {
+            "label": "mapping(bytes32 => struct PolicyEngine.TransferRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(IssuerPolicy)28676_storage)": {
+            "label": "mapping(uint256 => struct IAssetCompliance.IssuerPolicy)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(WalletPolicy)28922_storage)": {
+            "label": "mapping(uint256 => struct IWalletCompliance.WalletPolicy)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(IssuerPolicy)28676_storage": {
+            "label": "struct IAssetCompliance.IssuerPolicy",
+            "members": [
+              {
+                "label": "maxTxAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "dailyLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "allowMediumRisk",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "allowHighRisk",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "2"
+              },
+              {
+                "label": "blockMixer",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "2"
+              },
+              {
+                "label": "requireDestinationKYC",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "2"
+              },
+              {
+                "label": "cooldownPeriod",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "blockedTokens",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(IssuerPolicyStruct)18707_storage": {
+            "label": "struct PolicyEngine.IssuerPolicyStruct",
+            "members": [
+              {
+                "label": "maxTxAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "dailyLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "allowMediumRisk",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "allowHighRisk",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "2"
+              },
+              {
+                "label": "blockMixer",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "2"
+              },
+              {
+                "label": "requireDestinationKYC",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "2"
+              },
+              {
+                "label": "cooldownPeriod",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "blockedTokens",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(OperationRecord)18808_storage": {
+            "label": "struct PolicyEngine.OperationRecord",
+            "members": [
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "walletOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "opType",
+                "type": "t_enum(OperationType)28880",
+                "offset": 20,
+                "slot": "1"
+              },
+              {
+                "label": "success",
+                "type": "t_bool",
+                "offset": 21,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(TransferRecord)18786_storage": {
+            "label": "struct PolicyEngine.TransferRecord",
+            "members": [
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "from",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "to",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "asset",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "success",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(WalletPolicy)28922_storage": {
+            "label": "struct IWalletCompliance.WalletPolicy",
+            "members": [
+              {
+                "label": "maxTxValue",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "maxTokenTxAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "dailyEthLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "dailyTokenLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "blockContractCalls",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "blockUnknownTokens",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "4"
+              },
+              {
+                "label": "requireWhitelist",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "4"
+              },
+              {
+                "label": "allowedDex",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "blockedContracts",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "whitelistedContracts",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          },
+          "t_struct(WalletPolicyStruct)18731_storage": {
+            "label": "struct PolicyEngine.WalletPolicyStruct",
+            "members": [
+              {
+                "label": "maxTxValue",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "maxTokenTxAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "dailyEthLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "dailyTokenLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "blockContractCalls",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "blockUnknownTokens",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "4"
+              },
+              {
+                "label": "requireWhitelist",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "4"
+              },
+              {
+                "label": "allowedDex",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "blockedContracts",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "whitelistedContracts",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "6c43c5483410e611d0a462031fa567c40233193029ea930b9255262f0e022cf7": {
+      "address": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807",
+      "txHash": "0x8ade66c3a2b750167ad5f796304e49359cc748fcf5c3d57ea3703f892c7af713",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "contracts/utils/ReentrancyGuardUpgradeable.sol:14"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "contracts/utils/ReentrancyGuardUpgradeable.sol:43"
+          },
+          {
+            "label": "riskRegistry",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_contract(RiskRegistry)24493",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:39"
+          },
+          {
+            "label": "policyEngine",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_contract(PolicyEngine)20773",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:40"
+          },
+          {
+            "label": "heldFunds",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:43"
+          },
+          {
+            "label": "holdRecords",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:47"
+          },
+          {
+            "label": "holdDetails",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_mapping(t_bytes32,t_struct(HoldRecord)14111_storage)",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:48"
+          },
+          {
+            "label": "logs",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_array(t_struct(OperationLog)14123_storage)dyn_storage",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:67"
+          },
+          {
+            "label": "emergencyMode",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_bool",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:82"
+          },
+          {
+            "label": "lastEmergencyActivation",
+            "offset": 0,
+            "slot": "57",
+            "type": "t_uint256",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:85"
+          },
+          {
+            "label": "emergencyMinApprovals",
+            "offset": 0,
+            "slot": "58",
+            "type": "t_uint256",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:99"
+          },
+          {
+            "label": "emergencyGuardians",
+            "offset": 0,
+            "slot": "59",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:100"
+          },
+          {
+            "label": "emergencyApprovals",
+            "offset": 0,
+            "slot": "60",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:100"
+          },
+          {
+            "label": "activeEmergencyActions",
+            "offset": 0,
+            "slot": "61",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:101"
+          },
+          {
+            "label": "approvals",
+            "offset": 0,
+            "slot": "62",
+            "type": "t_mapping(t_bytes32,t_array(t_struct(ReleaseApproval)14988_storage)dyn_storage)",
+            "contract": "ComplianceEngine",
+            "src": "contracts/ComplianceEngine.sol:416"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)925_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)935_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)1849_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1088_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)925_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(OperationLog)14123_storage)dyn_storage": {
+            "label": "struct ComplianceEngine.OperationLog[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(ReleaseApproval)14988_storage)dyn_storage": {
+            "label": "struct ComplianceEngine.ReleaseApproval[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_contract(PolicyEngine)20773": {
+            "label": "contract PolicyEngine",
+            "numberOfBytes": "20"
+          },
+          "t_contract(RiskRegistry)24493": {
+            "label": "contract RiskRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_array(t_struct(ReleaseApproval)14988_storage)dyn_storage)": {
+            "label": "mapping(bytes32 => struct ComplianceEngine.ReleaseApproval[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(HoldRecord)14111_storage)": {
+            "label": "mapping(bytes32 => struct ComplianceEngine.HoldRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(HoldRecord)14111_storage": {
+            "label": "struct ComplianceEngine.HoldRecord",
+            "members": [
+              {
+                "label": "owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "asset",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "reason",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "released",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(OperationLog)14123_storage": {
+            "label": "struct ComplianceEngine.OperationLog",
+            "members": [
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "operator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "operationType",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "result",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "details",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(ReleaseApproval)14988_storage": {
+            "label": "struct ComplianceEngine.ReleaseApproval",
+            "members": [
+              {
+                "label": "approver",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "cd4c3a99a720cd3ac4076016790bcf184dd27961268bf1703752a97f196bdba9": {
+      "address": "0x2845dAFB7ab77E64F87634634C4b2C77F72c4956",
+      "txHash": "0x71d1ff5e2b9a354e050d95df91acbffb7efb99ed8f6d7777a6cb500a631c1c45",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "contracts/utils/ReentrancyGuardUpgradeable.sol:14"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "contracts/utils/ReentrancyGuardUpgradeable.sol:43"
+          },
+          {
+            "label": "emergencyCooldown",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:40"
+          },
+          {
+            "label": "chainConfigs",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_mapping(t_enum(ChainId)15785,t_struct(ChainConfig)15798_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:64"
+          },
+          {
+            "label": "chainIdToEnum",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_mapping(t_uint256,t_enum(ChainId)15785)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:64"
+          },
+          {
+            "label": "supportedChains",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_array(t_enum(ChainId)15785)dyn_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:68"
+          },
+          {
+            "label": "riskProfiles",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_mapping(t_address,t_struct(RiskProfile)15837_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:88"
+          },
+          {
+            "label": "_allRiskAddresses",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_struct(AddressSet)13747_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:91"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "57",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:100"
+          },
+          {
+            "label": "_ruleEngine",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_struct(RuleEngine)15899_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:126"
+          },
+          {
+            "label": "allRuleIds",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:127"
+          },
+          {
+            "label": "transactions",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_mapping(t_bytes32,t_struct(TransactionRecord)15918_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:138"
+          },
+          {
+            "label": "addressTransactions",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_mapping(t_address,t_array(t_bytes32)dyn_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:143"
+          },
+          {
+            "label": "auditLogs",
+            "offset": 0,
+            "slot": "113",
+            "type": "t_mapping(t_uint256,t_struct(AuditLog)15960_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:168"
+          },
+          {
+            "label": "actorAuditLogs",
+            "offset": 0,
+            "slot": "114",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:170"
+          },
+          {
+            "label": "subjectAuditLogs",
+            "offset": 0,
+            "slot": "115",
+            "type": "t_mapping(t_bytes32,t_array(t_uint256)dyn_storage)",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:171"
+          },
+          {
+            "label": "auditLogCount",
+            "offset": 0,
+            "slot": "116",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:172"
+          },
+          {
+            "label": "config",
+            "offset": 0,
+            "slot": "117",
+            "type": "t_struct(ComplianceConfig)15990_storage",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:184"
+          },
+          {
+            "label": "dailyTransactionCount",
+            "offset": 0,
+            "slot": "122",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:188"
+          },
+          {
+            "label": "dailyTransactionVolume",
+            "offset": 0,
+            "slot": "123",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:190"
+          },
+          {
+            "label": "lastResetTime",
+            "offset": 0,
+            "slot": "124",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:191"
+          },
+          {
+            "label": "lastEmergencyToggle",
+            "offset": 0,
+            "slot": "125",
+            "type": "t_uint256",
+            "contract": "FidesCompliance",
+            "src": "contracts/FidesCompliance.sol:193"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)925_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)935_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)1849_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1088_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)925_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_enum(ChainId)15785)dyn_storage": {
+            "label": "enum FidesCompliance.ChainId[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_string_storage)dyn_storage": {
+            "label": "string[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes_storage": {
+            "label": "bytes",
+            "numberOfBytes": "32"
+          },
+          "t_enum(AuditEventType)15940": {
+            "label": "enum FidesCompliance.AuditEventType",
+            "members": [
+              "COMPLIANCE_CHECK",
+              "RISK_PROFILE_UPDATED",
+              "RULE_CREATED",
+              "RULE_UPDATED",
+              "RULE_ACTIVATED",
+              "RULE_PAUSED",
+              "RULE_DEPRECATED",
+              "CONFIG_UPDATED",
+              "EMERGENCY_ACTION",
+              "ROLE_GRANTED",
+              "ROLE_REVOKED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(ChainId)15785": {
+            "label": "enum FidesCompliance.ChainId",
+            "members": [
+              "ETHEREUM",
+              "POLYGON",
+              "BNB_CHAIN",
+              "ARBITRUM",
+              "OPTIMISM",
+              "BASE",
+              "SEPOLIA",
+              "AMOY"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(RiskLevel)15820": {
+            "label": "enum FidesCompliance.RiskLevel",
+            "members": [
+              "NONE",
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "BLACKLIST",
+              "WHITELIST"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(RuleStatus)15859": {
+            "label": "enum FidesCompliance.RuleStatus",
+            "members": [
+              "DRAFT",
+              "ACTIVE",
+              "PAUSED",
+              "DEPRECATED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(RuleType)15854": {
+            "label": "enum FidesCompliance.RuleType",
+            "members": [
+              "TRANSACTION",
+              "VELOCITY",
+              "AMOUNT",
+              "CUSTOM"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_bytes32)dyn_storage)": {
+            "label": "mapping(address => bytes32[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(RiskProfile)15837_storage)": {
+            "label": "mapping(address => struct FidesCompliance.RiskProfile)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(bytes32 => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(Rule)15884_storage)": {
+            "label": "mapping(bytes32 => struct FidesCompliance.Rule)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(TransactionRecord)15918_storage)": {
+            "label": "mapping(bytes32 => struct FidesCompliance.TransactionRecord)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_enum(ChainId)15785,t_struct(ChainConfig)15798_storage)": {
+            "label": "mapping(enum FidesCompliance.ChainId => struct FidesCompliance.ChainConfig)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_enum(RuleType)15854,t_array(t_bytes32)dyn_storage)": {
+            "label": "mapping(enum FidesCompliance.RuleType => bytes32[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_enum(ChainId)15785)": {
+            "label": "mapping(uint256 => enum FidesCompliance.ChainId)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(AuditLog)15960_storage)": {
+            "label": "mapping(uint256 => struct FidesCompliance.AuditLog)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)13747_storage": {
+            "label": "struct EnumerableSet.AddressSet",
+            "members": [
+              {
+                "label": "_inner",
+                "type": "t_struct(Set)13432_storage",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(AuditLog)15960_storage": {
+            "label": "struct FidesCompliance.AuditLog",
+            "members": [
+              {
+                "label": "logId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "eventType",
+                "type": "t_enum(AuditEventType)15940",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "actor",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "1"
+              },
+              {
+                "label": "subject",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "data",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "blockNumber",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "txHash",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "memo",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          },
+          "t_struct(ChainConfig)15798_storage": {
+            "label": "struct FidesCompliance.ChainConfig",
+            "members": [
+              {
+                "label": "chainId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "supported",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "confirmationBlocks",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "maxTransactionValue",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "requiresKYC",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(ComplianceConfig)15990_storage": {
+            "label": "struct FidesCompliance.ComplianceConfig",
+            "members": [
+              {
+                "label": "maxDailyVolume",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "maxTransactionAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "velocityWindow",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "velocityMaxTx",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "strictMode",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "auditMode",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(RiskProfile)15837_storage": {
+            "label": "struct FidesCompliance.RiskProfile",
+            "members": [
+              {
+                "label": "level",
+                "type": "t_enum(RiskLevel)15820",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "score",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tags",
+                "type": "t_array(t_string_storage)dyn_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "lastUpdated",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "updatedBy",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "reasonHash",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "exists",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_struct(Rule)15884_storage": {
+            "label": "struct FidesCompliance.Rule",
+            "members": [
+              {
+                "label": "ruleId",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "ruleType",
+                "type": "t_enum(RuleType)15854",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(RuleStatus)15859",
+                "offset": 1,
+                "slot": "2"
+              },
+              {
+                "label": "priority",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "condition",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "action",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "createdAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "updatedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "description",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "9"
+              }
+            ],
+            "numberOfBytes": "320"
+          },
+          "t_struct(RuleEngine)15899_storage": {
+            "label": "struct FidesCompliance.RuleEngine",
+            "members": [
+              {
+                "label": "rules",
+                "type": "t_mapping(t_bytes32,t_struct(Rule)15884_storage)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "activeRules",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "rulesByType",
+                "type": "t_mapping(t_enum(RuleType)15854,t_array(t_bytes32)dyn_storage)",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(Set)13432_storage": {
+            "label": "struct EnumerableSet.Set",
+            "members": [
+              {
+                "label": "_values",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_positions",
+                "type": "t_mapping(t_bytes32,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(TransactionRecord)15918_storage": {
+            "label": "struct FidesCompliance.TransactionRecord",
+            "members": [
+              {
+                "label": "from",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "to",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "riskAssessment",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "compliant",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)925_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

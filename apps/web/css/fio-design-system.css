@@ -1,0 +1,319 @@
+/* ============================================
+   FIDESORIGIN — BRAND DESIGN SYSTEM v2
+   Institutional Fintech. Restrained. Authoritative.
+   ============================================ */
+
+@layer base {
+  :root {
+    /* Core Palette — Deep, cold, institutional */
+    --fio-ink:        #070810;
+    --fio-ink-soft:   #0c0e16;
+    --fio-surface:    #12141d;
+    --fio-surface-2:  #181b26;
+    --fio-surface-3:  #1e2130;
+    --fio-elevated:   #262a3a;
+
+    --fio-text:       #e8eaf0;
+    --fio-text-2:     #8a8f9e;
+    --fio-text-3:     #5a6070;
+    --fio-text-4:     #3a4050;
+
+    /* Primary accent — Deep violet. Calm, modern, institutional */
+    --fio-accent:     #8b7ec8;
+    --fio-accent-dim: rgba(139, 126, 200, 0.12);
+    --fio-accent-glow:rgba(139, 126, 200, 0.06);
+
+    /* Warm accent — Burnished gold. For CTAs. Tasty. */
+    --fio-gold:       #c9a96e;
+    --fio-gold-dim:   rgba(201, 169, 110, 0.12);
+    --fio-gold-glow:  rgba(201, 169, 110, 0.08);
+
+    /* Secondary accent — Steel blue. Supporting elements. */
+    --fio-steel:      #6b8cae;
+    --fio-steel-dim:  rgba(107, 140, 174, 0.12);
+
+    /* Semantic */
+    --fio-success:    #4ade80;
+    --fio-warn:       #fbbf24;
+    --fio-danger:     #f87171;
+    --fio-info:       #60a5fa;
+
+    /* Typography */
+    --font-sans:      var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif:     var(--font-serif), 'Playfair Display', Georgia, serif;
+    --font-mono:      var(--font-mono), 'JetBrains Mono', 'SF Mono', monospace;
+
+    /* Radii — Slightly reduced for a sharper, more institutional feel */
+    --radius-sm:      4px;
+    --radius-md:      8px;
+    --radius-lg:      12px;
+    --radius-xl:      20px;
+
+    /* Motion */
+    --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--fio-ink);
+    color: var(--fio-text);
+    line-height: 1.6;
+  }
+}
+
+@layer components {
+  /* ---- Gradients & Surfaces ---- */
+  .fio-gradient-hero {
+    background:
+      radial-gradient(ellipse 70% 50% at 50% -5%, rgba(139,126,200,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 30% at 85% 40%, rgba(201,169,110,0.03) 0%, transparent 50%),
+      var(--fio-ink);
+  }
+
+  .fio-surface-glass {
+    background: rgba(12, 14, 22, 0.75);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .fio-border-subtle {
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .fio-border-glow {
+    border: 1px solid rgba(139,126,200,0.12);
+    box-shadow: 0 0 24px rgba(139,126,200,0.04), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  /* ---- Accent Glows ---- */
+  .fio-glow-accent {
+    box-shadow:
+      0 0 0 1px rgba(139,126,200,0.15),
+      0 0 32px -8px rgba(139,126,200,0.1);
+  }
+
+  .fio-glow-gold {
+    box-shadow:
+      0 0 0 1px rgba(201,169,110,0.2),
+      0 0 32px -8px rgba(201,169,110,0.12);
+  }
+
+  .fio-text-glow {
+    text-shadow: 0 0 24px rgba(139,126,200,0.25);
+  }
+
+  /* ---- Typography ---- */
+  .fio-heading-xl {
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-family: var(--font-serif);
+  }
+
+  .fio-heading-lg {
+    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-family: var(--font-serif);
+  }
+
+  .fio-heading-md {
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    font-family: var(--font-serif);
+  }
+
+  .fio-body-lg {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--fio-text-2);
+  }
+
+  .fio-body {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--fio-text-2);
+  }
+
+  .fio-caption {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--fio-text-3);
+    font-family: var(--font-mono);
+  }
+
+  .fio-mono {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---- Buttons ---- */
+  .fio-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.25s var(--ease-out);
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  .fio-btn-primary {
+    background: var(--fio-gold);
+    color: var(--fio-ink);
+    box-shadow: 0 0 20px rgba(201,169,110,0.2);
+  }
+  .fio-btn-primary:hover {
+    background: #d4b87a;
+    box-shadow: 0 0 30px rgba(201,169,110,0.35);
+    transform: translateY(-1px);
+  }
+
+  .fio-btn-secondary {
+    background: var(--fio-surface-2);
+    color: var(--fio-text);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .fio-btn-secondary:hover {
+    background: var(--fio-surface-3);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .fio-btn-ghost {
+    background: transparent;
+    color: var(--fio-text-2);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .fio-btn-ghost:hover {
+    color: var(--fio-text);
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  /* ---- Cards ---- */
+  .fio-card {
+    background: var(--fio-surface);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: var(--radius-lg);
+    transition: all 0.3s var(--ease-out);
+  }
+  .fio-card:hover {
+    border-color: rgba(255,255,255,0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+
+  .fio-card-glow {
+    background: var(--fio-surface);
+    border: 1px solid rgba(139,126,200,0.08);
+    border-radius: var(--radius-lg);
+    transition: all 0.3s var(--ease-out);
+  }
+  .fio-card-glow:hover {
+    border-color: rgba(139,126,200,0.18);
+    box-shadow: 0 0 40px -12px rgba(139,126,200,0.08);
+  }
+
+  /* ---- Tags / Pills ---- */
+  .fio-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    font-family: var(--font-mono);
+  }
+
+  .fio-pill-accent {
+    background: var(--fio-accent-dim);
+    color: var(--fio-accent);
+    border: 1px solid rgba(139,126,200,0.12);
+  }
+
+  .fio-pill-gold {
+    background: var(--fio-gold-dim);
+    color: var(--fio-gold);
+    border: 1px solid rgba(201,169,110,0.12);
+  }
+
+  .fio-pill-success {
+    background: rgba(74,222,128,0.08);
+    color: var(--fio-success);
+    border: 1px solid rgba(74,222,128,0.12);
+  }
+
+  /* ---- Grid Pattern Background ---- */
+  .fio-grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ---- Animations ---- */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(139,126,200,0.08); }
+    50%      { box-shadow: 0 0 30px rgba(139,126,200,0.15); }
+  }
+  @keyframes scan-line {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+
+  .fio-animate-fade-up {
+    animation: fade-up 0.6s var(--ease-out) both;
+  }
+  .fio-animate-fade-in {
+    animation: fade-in 0.5s ease both;
+  }
+
+  .fio-delay-1 { animation-delay: 0.1s; }
+  .fio-delay-2 { animation-delay: 0.2s; }
+  .fio-delay-3 { animation-delay: 0.3s; }
+  .fio-delay-4 { animation-delay: 0.4s; }
+  .fio-delay-5 { animation-delay: 0.5s; }
+
+  /* ---- Scrollbar ---- */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+
+  /* ---- Selection ---- */
+  ::selection {
+    background: rgba(139,126,200,0.2);
+    color: var(--fio-text);
+  }
+}

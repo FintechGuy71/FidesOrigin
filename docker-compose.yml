@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+  # ── Data Publisher (main service) ───────────────────────────────────
+  data-publisher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fidesorigin-publisher
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    env_file:
+      - data-publisher/.env
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./data-publisher/logs:/app/logs
+      - ./data-publisher/data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - fidesorigin
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9090/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── Redis (cluster coordination & caching) ──────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: fidesorigin-redis
+    restart: unless-stopped
+    # [P1-fix] Do NOT expose Redis port to host — only accessible via fidesorigin network
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - fidesorigin
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ── Prometheus (metrics scraping) ───────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: fidesorigin-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - fidesorigin
+
+  # ── Grafana (metrics visualization) ─────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: fidesorigin-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      # [P1-fix] No default password — must set GRAFANA_ADMIN_PASSWORD env var
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - fidesorigin
+    depends_on:
+      - prometheus
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  fidesorigin:
+    driver: bridge

@@ -1,0 +1,661 @@
+# FidesOrigin Security Checklist
+
+> Prepared for: Pre-deployment, Runtime Monitoring, and Incident Response
+> Prepared on: 2026-06-26
+> Protocol Version: v0.4.0 Sepolia
+
+---
+
+## 1. Pre-Deployment Checks
+
+### 1.1 Static Analysis
+
+#### Slither (Trail of Bits)
+
+```bash
+# Installation
+pip install slither-analyzer
+
+# Run full analysis
+slither contracts/ --solc-remaps @openzeppelin/=$(pwd)/node_modules/@openzeppelin/ --exclude-informational --exclude-low --json slither-report.json
+
+# Check for specific detectors
+slither contracts/ --detect reentrancy-eth,reentrancy-benign,reentrancy-events,unchecked-transfer,unchecked-lowlevel,delegatecall-loop,msg-value-loop,assembly-usage,suicidal,uninitialized-state,uninitialized-storage,uninitialized-local,shadowing-local,shadowing-abstract,shadowing-state,arbitrary-send-eth,weak-prng,controlled-delegatecall,controlled-array-length,write-after-write,variable-scope,void-cst,incorrect-shift,incorrect-exp
+```
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Run Slither on all contracts | ⬜ TODO | Expected: 0 High, 0 Medium |
+| Review informational findings | ⬜ TODO | May contain false positives |
+| Generate SARIF for GitHub Security | ⬜ TODO | Upload to GitHub Security tab |
+| Document accepted risks | ⬜ TODO | Any intentionally accepted findings |
+
+#### Mythril (Consensys)
+
+```bash
+# Installation
+pip install mythril
+
+# Run on each critical contract
+myth analyze contracts/RiskRegistry.sol --solc-json mythril-config.json --execution-timeout 3600
+myth analyze contracts/PolicyEngine.sol --solc-json mythril-config.json --execution-timeout 3600
+myth analyze contracts/ComplianceEngine.sol --solc-json mythril-config.json --execution-timeout 3600
+myth analyze contracts/QuarantineVault.sol --solc-json mythril-config.json --execution-timeout 3600
+myth analyze contracts/FidesCompliance.sol --solc-json mythril-config.json --execution-timeout 3600
+myth analyze contracts/CompliantStableCoin.sol --solc-json mythril-config.json --execution-timeout 3600
+```
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Run Mythril on all Tier 1 contracts | ⬜ TODO | Symbolic execution for deep path analysis |
+| Run Mythril on all Tier 2 contracts | ⬜ TODO | Focus on fund-moving contracts |
+| Review unconstrained storage writes | ⬜ TODO | Critical for access control verification |
+| Review external call analysis | ⬜ TODO | Check for unchecked return values |
+
+#### Echidna (Trail of Bits — Fuzzing)
+
+```solidity
+// contracts/test/EchidnaRiskRegistry.sol
+// Fuzzing harness for RiskRegistry
+
+contract EchidnaRiskRegistry is RiskRegistry {
+    constructor() RiskRegistry() {
+        // Setup for fuzzing
+    }
+    
+    // Invariant: Sanctioned => riskScore >= 75
+    function echidna_sanctioned_implies_high_risk() public view returns (bool) {
+        // Echidna will fuzz all addresses and check this
+        for (uint i = 0; i < fuzzedAddresses.length; i++) {
+            address a = fuzzedAddresses[i];
+            RiskProfile memory p = riskProfile[a];
+            if (p.sanctioned) {
+                require(p.riskScore >= 75, "Sanctioned but low risk");
+            }
+        }
+        return true;
+    }
+    
+    // Invariant: totalProfiles is accurate
+    function echidna_total_profiles_accuracy() public view returns (bool) {
+        uint256 count = 0;
+        for (uint i = 0; i < fuzzedAddresses.length; i++) {
+            if (riskProfile[fuzzedAddresses[i]].lastUpdated != 0) {
+                count++;
+            }
+        }
+        require(count == totalProfiles(), "Total profiles mismatch");
+        return true;
+    }
+    
+    // Invariant: Only oracle can update risk
+    function echidna_oracle_only_update() public view returns (bool) {
+        // Tested via mutation: Echidna tries calling as random addresses
+        return true;
+    }
+}
+```
+
+```bash
+# Run Echidna
+echidna contracts/test/EchidnaRiskRegistry.sol --contract EchidnaRiskRegistry --config echidna-config.yaml
+
+# echidna-config.yaml
+testMode: assertion
+testLimit: 50000
+estimateGas: true
+coverage: true
+corpusDir: echidna-corpus
+format: text
+```
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Write fuzzing harnesses for RiskRegistry | ⬜ TODO | 3+ invariants |
+| Write fuzzing harnesses for PolicyEngine | ⬜ TODO | Tier logic, deadline |
+| Write fuzzing harnesses for ComplianceEngine | ⬜ TODO | Daily limit, quarantine |
+| Write fuzzing harnesses for QuarantineVault | ⬜ TODO | Reentrancy, balance |
+| Run fuzzing for minimum 10M transactions | ⬜ TODO | Each contract |
+| Analyze coverage report | ⬜ TODO | Target: >90% branch coverage |
+
+### 1.2 Manual Review Checklist
+
+| # | Check | Status | Notes |
+|---|-------|--------|-------|
+| 1 | All external calls check return values | ⬜ TODO | `call`, `delegatecall`, `staticcall` |
+| 2 | No delegatecall to user-controlled addresses | ⬜ TODO | Critical for UUPS safety |
+| 3 | All state changes before external calls (CEI) | ⬜ TODO | Check-Effects-Interactions pattern |
+| 4 | No sensitive data in logs (unless intentional) | ⬜ TODO | Event parameter review |
+| 5 | No tx.origin usage | ⬜ TODO | Must use msg.sender |
+| 6 | No block.timestamp for critical randomness | ⬜ TODO | Acceptable for time-based delays |
+| 7 | No storage collision in UUPS upgrades | ⬜ TODO | Verify `storageLayoutVersion` |
+| 8 | All initializers called only once | ⬜ TODO | `_disableInitializers` in constructor |
+| 9 | No self-destruct in production contracts | ⬜ TODO | Check for `SELFDESTRUCT` / `selfdestruct` |
+| 10 | No assembly unless necessary | ⬜ TODO | Document any assembly use |
+| 11 | All modifiers applied correctly | ⬜ TODO | `nonReentrant`, `onlyRole`, `whenNotPaused` |
+| 12 | No integer division before multiplication | ⬜ TODO | Precision loss in financial calculations |
+| 13 | No silent failures on arithmetic | ⬜ TODO | Solidity 0.8+ handles this, but check custom math |
+| 14 | All events emitted for state changes | ⬜ TODO | Off-chain monitoring depends on this |
+| 15 | No hardcoded addresses (except well-known) | ⬜ TODO | Check for literal addresses in code |
+| 16 | Access control roles have proper admin | ⬜ TODO | Verify `_setRoleAdmin` calls |
+| 17 | No unprotected self-destruct | ⬜ TODO | Verify any self-destruct is behind access control |
+| 18 | No unprotected initializer | ⬜ TODO | Verify `Initializable` pattern |
+| 19 | No ERC20 transfer to zero address | ⬜ TODO | Check `_mint` / `_transfer` to zero address |
+| 20 | No ERC20 approve race condition | ⬜ TODO | Use `increaseAllowance` / `decreaseAllowance` |
+
+### 1.3 Test Verification
+
+| # | Check | Status | Notes |
+|---|-------|--------|-------|
+| 1 | All 139 tests passing | ✅ PASS | Current status |
+| 2 | Add tests for each H/M bug fix | ⬜ TODO | Regression tests |
+| 3 | Add edge case tests (zero, max uint) | ⬜ TODO | Boundary testing |
+| 4 | Add fork tests (Sepolia integration) | ⬜ TODO | Test against deployed contracts |
+| 5 | Add gas snapshot tests | ⬜ TODO | Track gas regression |
+| 6 | Add invariant tests (Foundry) | ⬜ TODO | `invariant_*` functions |
+| 7 | Test coverage >90% for core contracts | ⬜ TODO | Use `forge coverage` |
+| 8 | Run tests in CI on every PR | ✅ PASS | GitHub Actions configured |
+| 9 | Test UUPS upgrade path end-to-end | ⬜ TODO | Deploy proxy → upgrade → verify state |
+| 10 | Test emergency pause flow | ⬜ TODO | Pause → verify → unpause → verify |
+
+### 1.4 Deployment Checklist
+
+| # | Check | Status | Notes |
+|---|-------|--------|-------|
+| 1 | Deploy to fresh Sepolia instance | ⬜ TODO | Use clean wallet |
+| 2 | Verify all contracts on Etherscan | ⬜ TODO | Run `hardhat verify` |
+| 3 | Transfer admin roles to multi-sig | ⏳ CRITICAL | Must do before mainnet |
+| 4 | Transfer oracle role to secure oracle | ⬜ TODO | Consider Chainlink or custom oracle |
+| 5 | Set appropriate timelock delay (≥2 days) | ⬜ TODO | FidesOriginTimelock |
+| 6 | Test upgrade path on testnet | ⬜ TODO | Schedule → delay → execute |
+| 7 | Test emergency pause | ⬜ TODO | Verify all functions halt |
+| 8 | Verify event emission on all actions | ⬜ TODO | Monitor with subgraph |
+| 9 | Configure monitoring dashboards | ⬜ TODO | See Section 2 |
+| 10 | Document all contract addresses | ⬜ TODO | Update docs and website |
+| 11 | Set up Gnosis Safe for multi-sig | ⏳ CRITICAL | Before mainnet |
+| 12 | Remove deployer EOA privileges | ⏳ CRITICAL | After multi-sig setup |
+| 13 | Test role revocation | ⬜ TODO | Ensure roles can be revoked |
+| 14 | Validate storage layout after upgrade | ⬜ TODO | Use `hardhat-storage-layout` |
+| 15 | Add rescue/withdraw functions for accidental ETH/ERC20 | ⬜ TODO | QuarantineVault, FidesCompliance, CompliantStableCoin |
+| 16 | Run final Slither/Mythril check | ⬜ TODO | Post-deployment verification |
+
+---
+
+## 2. Runtime Monitoring
+
+### 2.1 Forta Bot Monitoring
+
+#### Deployed Forta Agents
+
+| Agent | File | Status | Alerts On |
+|-------|------|--------|-----------|
+| Risk Profile Update Monitor | `forta-agents/risk-update/` | ⬜ TODO | `RiskProfileUpdated` event |
+| Large Quarantine Detection | `forta-agents/large-quarantine/` | ⬜ TODO | Quarantine > 100 ETH equivalent |
+| Unauthorized Role Grant | `forta-agents/role-grant/` | ⬜ TODO | `RoleGranted` by non-admin |
+| UUPS Upgrade Detection | `forta-agents/upgrade-monitor/` | ⬜ TODO | `Upgraded` event |
+| Suspicious Transaction Pattern | `forta-agents/suspicious-tx/` | ⬜ TODO | Unusual frequency/volume |
+| Oracle Inactivity | `forta-agents/oracle-monitor/` | ⬜ TODO | No `RiskProfileUpdated` for >24h |
+| Daily Limit Breach | `forta-agents/daily-limit/` | ⬜ TODO | `dailySpent` > `dailyLimit` |
+| Pause Event Monitor | `forta-agents/pause-monitor/` | ⬜ TODO | `Paused` / `Unpaused` events |
+
+#### Forta Agent Configuration
+
+```typescript
+// forta-agents/risk-update/agent.ts
+import { Finding, FindingSeverity, FindingType, HandleTransaction } from 'forta-agent';
+
+const RISK_REGISTRY = '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
+const RISK_PROFILE_UPDATED_EVENT = 'event RiskProfileUpdated(address indexed target, uint256 riskScore, uint8 tier, bool sanctioned, uint256 timestamp)';
+
+export const handleTransaction: HandleTransaction = async (txEvent) => {
+  const findings: Finding[] = [];
+  
+  const events = txEvent.filterLog(RISK_PROFILE_UPDATED_EVENT, RISK_REGISTRY);
+  
+  for (const event of events) {
+    const { target, riskScore, tier, sanctioned } = event.args;
+    
+    // Alert on critical tier updates
+    if (tier === 4) {
+      findings.push(Finding.fromObject({
+        name: 'FidesOrigin Critical Risk Profile Update',
+        description: `Address ${target} updated to CRITICAL tier (score: ${riskScore})`,
+        alertId: 'FIDESORIGIN-CRITICAL-RISK-1',
+        severity: FindingSeverity.Critical,
+        type: FindingType.Suspicious,
+        metadata: {
+          target,
+          riskScore: riskScore.toString(),
+          tier: tier.toString(),
+          sanctioned: sanctioned.toString(),
+          txHash: txEvent.hash,
+        },
+      }));
+    }
+    
+    // Alert on sanctioned updates
+    if (sanctioned) {
+      findings.push(Finding.fromObject({
+        name: 'FidesOrigin Sanctioned Address Update',
+        description: `Address ${target} marked as sanctioned`,
+        alertId: 'FIDESORIGIN-SANCTIONED-1',
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+        metadata: {
+          target,
+          riskScore: riskScore.toString(),
+          txHash: txEvent.hash,
+        },
+      }));
+    }
+  }
+  
+  return findings;
+};
+```
+
+| Forta Setup | Status | Notes |
+|-------------|--------|-------|
+| Deploy Forta agents to scan node | ⬜ TODO | Use Forta scan node or local node |
+| Configure alert destinations (Slack, PagerDuty, Email) | ⬜ TODO | Multi-channel alerting |
+| Set up Forta Explorer dashboard | ⬜ TODO | https://explorer.forta.network/ |
+| Configure alert thresholds | ⬜ TODO | Per-agent severity tuning |
+| Test alert delivery end-to-end | ⬜ TODO | Trigger test alert |
+| Document alert response procedures | ⬜ TODO | See Section 3 |
+
+### 2.2 Tenderly Monitoring
+
+| Setup | Status | Notes |
+|-------|--------|-------|
+| Add all contracts to Tenderly project | ⬜ TODO | Monitor all 6 core contracts |
+| Configure alert rules | ⬜ TODO | Custom alert conditions |
+| Set up Web3 Actions for auto-response | ⬜ TODO | Automated countermeasures |
+| Enable transaction simulation before execution | ⬜ TODO | Test transactions before sending |
+| Configure gas price alerts | ⬜ TODO | Spike detection |
+| Set up contract state change alerts | ⬜ TODO | Track critical state changes |
+| Enable real-time event monitoring | ⬜ TODO | Dashboard for all events |
+| Configure team access | ⬜ TODO | Role-based access |
+
+#### Tenderly Alert Rules
+
+```yaml
+# tenderly-alerts.yaml
+alerts:
+  - name: "UUPS Upgrade Detected"
+    contract: "RiskRegistry"
+    event: "Upgraded(address indexed implementation)"
+    severity: critical
+    channels: [slack, email, pagerduty]
+    
+  - name: "Large Quarantine Release"
+    contract: "QuarantineVault"
+    function: "releaseFunds(address,uint256)"
+    condition: "amount > 100 * 10^18"  # > 100 ETH
+    severity: high
+    channels: [slack, email]
+    
+  - name: "Role Granted by Non-Admin"
+    contract: "RiskRegistry"
+    event: "RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)"
+    condition: "!hasRole(getRoleAdmin(role), sender)"
+    severity: critical
+    channels: [slack, email, pagerduty]
+    
+  - name: "Oracle Inactive > 24h"
+    contract: "RiskRegistry"
+    condition: "timeSinceLastEvent('RiskProfileUpdated') > 86400"
+    severity: medium
+    channels: [slack]
+    
+  - name: "Contract Pause"
+    contract: "CompliantStableCoin"
+    event: "Paused(address account)"
+    severity: high
+    channels: [slack, email, pagerduty]
+    
+  - name: "Unexpected ETH Transfer"
+    contract: "QuarantineVault"
+    function: "receive()"
+    condition: "msg.value > 10 * 10^18"  # > 10 ETH
+    severity: medium
+    channels: [slack]
+```
+
+### 2.3 Subgraph Monitoring
+
+| Setup | Status | Notes |
+|-------|--------|-------|
+| Ensure subgraph is syncing | ✅ DONE | https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3 |
+| Monitor sync health | ⬜ TODO | Alert if indexing lag > 10 blocks |
+| Set up subgraph health checks | ⬜ TODO | Automated sync status checks |
+| Query high-risk address counts | ⬜ TODO | Daily metric |
+| Track quarantine volume | ⬜ TODO | Daily metric |
+| Monitor upgrade events | ⬜ TODO | Historical tracking |
+
+### 2.4 On-Chain Monitoring (Custom)
+
+```python
+# monitoring/onchain_monitor.py
+import asyncio
+from web3 import Web3
+from dataclasses import dataclass
+from typing import List, Callable
+
+@dataclass
+class Alert:
+    severity: str  # critical, high, medium, low
+    title: str
+    description: str
+    metadata: dict
+
+class OnChainMonitor:
+    def __init__(self, rpc_url: str, contracts: dict):
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+        self.contracts = contracts
+        self.alert_handlers: List[Callable[[Alert], None]] = []
+        
+    async def monitor_events(self):
+        """Monitor all contract events in real-time"""
+        while True:
+            for name, contract in self.contracts.items():
+                # Poll for new events
+                events = contract.events.createFilter(fromBlock='latest')
+                for event in events.get_new_entries():
+                    await self._process_event(name, event)
+            await asyncio.sleep(12)  # ~1 block on Ethereum
+    
+    async def _process_event(self, contract_name: str, event):
+        """Process and alert on critical events"""
+        event_name = event.event
+        
+        if event_name == 'Upgraded':
+            await self._alert(Alert(
+                severity='critical',
+                title=f'{contract_name} UUPS Upgrade Detected',
+                description=f'New implementation: {event.args.implementation}',
+                metadata={'tx': event.transactionHash.hex(), 'implementation': event.args.implementation}
+            ))
+        
+        elif event_name == 'RiskProfileUpdated' and event.args.tier == 4:
+            await self._alert(Alert(
+                severity='critical',
+                title='CRITICAL Risk Profile Update',
+                description=f'Address {event.args.target} promoted to CRITICAL',
+                metadata={'target': event.args.target, 'score': event.args.riskScore}
+            ))
+        
+        elif event_name == 'RoleGranted':
+            # Verify the sender is the role admin
+            contract = self.contracts[contract_name]
+            role_admin = contract.functions.getRoleAdmin(event.args.role).call()
+            if not contract.functions.hasRole(role_admin, event.args.sender).call():
+                await self._alert(Alert(
+                    severity='critical',
+                    title='Unauthorized Role Grant Detected',
+                    description=f'Role {event.args.role.hex()} granted by non-admin',
+                    metadata={'role': event.args.role.hex(), 'account': event.args.account, 'sender': event.args.sender}
+                ))
+    
+    async def _alert(self, alert: Alert):
+        for handler in self.alert_handlers:
+            handler(alert)
+    
+    def add_alert_handler(self, handler: Callable[[Alert], None]):
+        self.alert_handlers.append(handler)
+
+# Usage
+monitor = OnChainMonitor(
+    rpc_url='https://rpc.sepolia.org',
+    contracts={
+        'RiskRegistry': risk_registry_contract,
+        'PolicyEngine': policy_engine_contract,
+        'ComplianceEngine': compliance_engine_contract,
+        'QuarantineVault': quarantine_vault_contract,
+    }
+)
+
+# Add Slack handler
+monitor.add_alert_handler(slack_handler)
+monitor.add_alert_handler(pagerduty_handler)
+monitor.add_alert_handler(email_handler)
+
+asyncio.run(monitor.monitor_events())
+```
+
+---
+
+## 3. Incident Response Playbook
+
+### 3.1 Severity Classification
+
+| Severity | Description | Examples | Response Time |
+|----------|-------------|----------|---------------|
+| **P0 — Critical** | Protocol at risk of fund loss | Unauthorized upgrade, admin key compromise, oracle manipulation | Immediate (< 15 min) |
+| **P1 — High** | Significant risk to users | Large unauthorized quarantine release, role escalation | < 1 hour |
+| **P2 — Medium** | Degraded functionality or potential risk | Oracle inactivity, daily limit miscalculation, pause event | < 4 hours |
+| **P3 — Low** | Monitoring issue or informational | Unusual transaction pattern, gas spike, subgraph lag | < 24 hours |
+
+### 3.2 Incident Response: Private Key Compromise
+
+```
+TRIGGER: Multi-sig or admin key suspected compromised
+
+IMMEDIATE (0-15 min):
+□ Alert all team members via emergency channel (Signal/Discord)
+□ DO NOT panic. Verify the alert first (false positive check)
+□ If confirmed:
+  □ Execute emergency pause on CompliantStableCoin if not already paused
+  □ Execute emergency pause on QuarantineVault if applicable
+  □ Revoke compromised key from ALL roles across ALL contracts
+  □ Transfer remaining admin roles to backup multi-sig
+  □ If backup multi-sig not available, transfer to cold storage
+
+SHORT-TERM (15 min - 2 hours):
+□ Document all transactions made by compromised key
+□ Analyze attack vector (phishing, malware, social engineering)
+□ Notify affected users if funds at risk
+□ Contact security team for forensic analysis
+□ Prepare incident report
+
+MEDIUM-TERM (2 hours - 1 day):
+□ Rotate all remaining keys
+□ Audit all contract states for unauthorized changes
+□ Deploy new implementations if any were upgraded maliciously
+□ Update all access control policies
+□ Review and update security procedures
+
+COMMUNICATION:
+□ Internal: Immediate Slack/Discord alert to all team
+□ External: Twitter/X announcement if user funds affected
+□ Partners: Direct notification to integrated protocols
+□ Legal: Consult legal team if regulatory implications
+```
+
+### 3.3 Incident Response: Contract Vulnerability Discovered
+
+```
+TRIGGER: Vulnerability found in deployed contract (audit, bug bounty, internal)
+
+IMMEDIATE (0-30 min):
+□ Assess severity and exploitability
+□ Check if vulnerability is actively exploited
+□ If actively exploited OR easily exploitable:
+  □ Execute emergency pause (if pausable)
+  □ Activate circuit breaker if available
+  □ Monitor mempool for exploitation attempts
+
+SHORT-TERM (30 min - 4 hours):
+□ If upgradeable:
+  □ Prepare fix implementation
+  □ Schedule upgrade via timelock (if not emergency)
+  □ Execute emergency upgrade if situation warrants
+□ If not upgradeable:
+  □ Prepare migration plan to new contract
+  □ Document state migration strategy
+  □ Draft user communication
+
+MEDIUM-TERM (4 hours - 2 days):
+□ Deploy fix or migration contract
+□ Execute upgrade or migration
+□ Verify fix with automated tests
+□ Run post-fix audit (even if informal)
+□ Prepare bug bounty payout if applicable
+
+COMMUNICATION:
+□ Bug bounty: Coordinate with Immunefi/security team
+□ Public: Transparent disclosure post-fix (responsible disclosure)
+□ Users: Clear instructions if action required (e.g., migrate)
+```
+
+### 3.4 Incident Response: Oracle Compromise
+
+```
+TRIGGER: Oracle sending incorrect data or oracle key compromised
+
+IMMEDIATE (0-15 min):
+□ Verify oracle data against alternative sources (Chainlink, multiple feeds)
+□ If oracle compromised:
+  □ Pause oracle-dependent functions
+  □ Revoke ORACLE_ROLE from compromised address
+  □ Switch to backup oracle if available
+
+SHORT-TERM (15 min - 1 hour):
+□ Analyze incorrect data impact:
+  □ Were any addresses incorrectly sanctioned/unsanctioned?
+  □ Were any risk scores incorrectly modified?
+  □ Were any transactions incorrectly approved/denied?
+□ If data corruption occurred:
+  □ Document all incorrect updates
+  □ Prepare batch correction transaction
+  □ Verify corrections with independent source
+
+MEDIUM-TERM (1 hour - 1 day):
+□ Deploy new oracle or switch to decentralized oracle
+□ Implement multi-oracle consensus (recommended long-term)
+□ Add oracle data sanity checks (e.g., rate limiting, range checks)
+□ Update oracle monitoring to detect anomalies faster
+
+PREVENTION:
+□ Migrate from single EOA oracle to multi-sig oracle
+□ Consider Chainlink oracle integration
+□ Implement oracle update rate limiting
+□ Add oracle data validation (e.g., score cannot jump >50 points in one update)
+```
+
+### 3.5 Incident Response: Unexpected UUPS Upgrade
+
+```
+TRIGGER: Upgrade event detected without prior approval
+
+IMMEDIATE (0-5 min):
+□ Verify upgrade was authorized:
+  □ Check timelock proposal existence
+  □ Check if delay period elapsed
+  □ Verify proposal was not cancelled
+□ If unauthorized:
+  □ EMERGENCY: If admin key still secure, immediately upgrade back to safe implementation
+  □ If admin key compromised, see "Private Key Compromise" playbook
+
+SHORT-TERM (5 min - 1 hour):
+□ Analyze new implementation code:
+  □ Decompile if source not verified
+  □ Check for fund drain, self-destruct, or backdoor
+  □ Check storage layout changes
+□ If malicious:
+  □ Emergency pause if possible
+  □ Notify users to not interact with protocol
+  □ Monitor for fund drain attempts
+
+MEDIUM-TERM (1 hour - 1 day):
+□ If benign but unauthorized:
+  □ Revert to previous implementation
+  □ Investigate how unauthorized upgrade occurred
+  □ Strengthen access controls
+□ If malicious:
+  □ Deploy new protocol instance
+  □ Plan state migration
+  □ Coordinate with law enforcement if applicable
+```
+
+### 3.6 Emergency Contacts
+
+| Role | Contact | Method | Availability | Note |
+|------|---------|--------|--------------|------|
+| Lead Smart Contract Dev | **FILL BEFORE MAINNET** | Signal / Discord | 24/7 (on-call) | Add phone number + Signal ID |
+| Security Lead | **FILL BEFORE MAINNET** | Signal / PagerDuty | 24/7 (on-call) | Add PagerDuty escalation policy |
+| Operations | **FILL BEFORE MAINNET** | Slack / Discord | Business hours + on-call | Add secondary contact |
+| Legal / Compliance | **FILL BEFORE MAINNET** | Email | Business hours | Add legal@company.com |
+| External Auditor | **FILL BEFORE MAINNET** | Email | Business hours | e.g., security@trailofbits.com |
+| Immunefi (Bug Bounty) | support@immunefi.com | Email / Platform | 24/7 | Verified — do not change |
+| Forta Support | [Discord](https://discord.gg/fortanetwork) | Discord | Business hours | Community + paid support |
+| Tenderly Support | support@tenderly.co | Email | Business hours | Verified — do not change |
+
+> **⚠️ CRITICAL**: All placeholder contacts **must be filled** before mainnet deployment. Verify each contact method works by sending a test message. Update this document whenever contacts change.
+
+### 3.7 Emergency Pause Procedures
+
+```solidity
+// Emergency pause function call (via Gnosis Safe or direct if EOA)
+
+// 1. Pause CompliantStableCoin
+CompliantStableCoin.pause()
+
+// 2. RiskRegistry uses OZ Pausable
+RiskRegistry.pause()
+
+// 3. ComplianceEngine uses OZ Pausable
+ComplianceEngine.pause()
+
+// 4. FidesCompliance uses OZ Pausable
+FidesCompliance.pause()
+
+// 5. QuarantineVault uses custom emergency pause (NOT OZ Pausable)
+QuarantineVault.emergencyPause()
+
+// 6. Revoke all roles from compromised address (if applicable)
+// For each contract:
+contract.revokeRole(ORACLE_ROLE, compromisedAddress)
+contract.revokeRole(ADMIN_ROLE, compromisedAddress)
+contract.revokeRole(OPERATOR_ROLE, compromisedAddress)
+contract.revokeRole(MINTER_ROLE, compromisedAddress)
+contract.revokeRole(BURNER_ROLE, compromisedAddress)
+contract.revokeRole(PAUSER_ROLE, compromisedAddress)
+contract.revokeRole(RELEASE_ROLE, compromisedAddress)
+contract.revokeRole(EMERGENCY_ROLE, compromisedAddress)
+
+// 7. If DEFAULT_ADMIN_ROLE compromised, must transfer to new admin
+// For each contract:
+contract.grantRole(DEFAULT_ADMIN_ROLE, newAdminAddress)
+contract.revokeRole(DEFAULT_ADMIN_ROLE, compromisedAddress)
+
+// 8. Unpause after remediation (note: QuarantineVault uses emergencyUnpause)
+CompliantStableCoin.unpause()
+RiskRegistry.unpause()
+ComplianceEngine.unpause()
+FidesCompliance.unpause()
+QuarantineVault.emergencyUnpause()
+```
+
+---
+
+## 4. Recovery Checklist
+
+### Post-Incident Recovery
+
+| # | Step | Status | Notes |
+|---|------|--------|-------|
+| 1 | Incident documented | ⬜ TODO | Post-mortem report |
+| 2 | Root cause identified | ⬜ TODO | Technical analysis |
+| 3 | Fix deployed and verified | ⬜ TODO | On-chain verification |
+| 4 | All tests passing | ⬜ TODO | Regression test suite |
+| 5 | Monitoring restored | ⬜ TODO | All alerts functional |
+| 6 | User communication sent | ⬜ TODO | If applicable |
+| 7 | Bug bounty processed | ⬜ TODO | If applicable |
+| 8 | Security procedures updated | ⬜ TODO | Prevent recurrence |
+| 9 | Team debrief completed | ⬜ TODO | Lessons learned |
+| 10 | Public disclosure published | ⬜ TODO | If applicable |
+
+---
+
+*Document version: 1.0 | Last updated: 2026-06-26*
+*This checklist should be reviewed and updated before every major deployment*

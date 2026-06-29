@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FidesOrigin — 可编程链上合规协议</title>
+  <meta name="description" content="为稳定币、RWA代币化和AI智能体交易提供实时链上风控。将数据与策略上链执行。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
+  <link rel="preload" href="../styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="../styles.css"></noscript>
+  <style>
+    /* CN-specific: none */
+  </style>
+  <script src="../lang-utils.js" defer></script>
+  <script src="../utils.js" defer></script>
+  <script src="../interactions.js" defer></script>
+  <link rel="canonical" href="https://fidesorigin.com/cn/">
+  <meta property="og:title" content="FidesOrigin — 可编程链上合规协议">
+  <meta property="og:description" content="为稳定币、RWA代币化和AI智能体交易提供实时链上风控。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/cn/">
+  <meta property="og:site_name" content="FidesOrigin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://ipapi.co https://api.fidesorigin.com https://rpc.ankr.com https://cloudflare-eth.com;">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
+  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('../sw.js').then(function(registration) {
+          console.log('SW registered:', registration.scope);
+        }).catch(function(error) {
+          console.log('SW registration failed:', error);
+        });
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="nav-overlay" id="navOverlay" onclick="closeNav()"></div>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <mask id="logoMask" maskUnits="userSpaceOnUse">
+                <rect width="100" height="100" fill="white"/>
+                <rect x="38" y="32" width="24" height="6" rx="2" fill="black"/>
+                <rect x="38" y="52" width="24" height="6" rx="2" fill="black"/>
+              </mask>
+            </defs>
+            <path d="M 5,30 Q 5,5 35,5 L 65,5 L 65,75 Q 65,95 35,95 L 5,95 L 5,30 Z" fill="white" mask="url(#logoMask)"/>
+          </svg>
+        </div>
+        <span class="logo-text">FidesOrigin</span>
+      </a>
+      <nav class="nav" id="mainNav">
+        <div class="nav-close">
+          <span>菜单</span>
+          <button class="nav-close-btn" onclick="closeNav()" aria-label="关闭菜单">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <a href="#why-now" onclick="closeNav()">为何现在</a>
+        <a href="#pain" onclick="closeNav()">痛点</a>
+        <a href="#solution" onclick="closeNav()">解决方案</a>
+        <a href="#compare" onclick="closeNav()">差异化</a>
+        <a href="#market" onclick="closeNav()">市场</a>
+        <a href="#demo" onclick="closeNav()">实时演示</a>
+        <div class="lang-dropdown" id="langDropdownNav">
+          <button class="lang-dropdown-toggle" onclick="toggleDropdown('langDropdownNav', event)">
+            <span>🌐</span>
+            <span>简体中文</span>
+            <span>▾</span>
+          </button>
+          <div class="lang-dropdown-menu">
+            <a onclick="switchLang('en')">English</a>
+            <a onclick="switchLang('cn')" class="active">简体中文</a>
+            <a onclick="switchLang('tw')">繁體中文</a>
+          </div>
+        </div>
+      </nav>
+      <button type="button" class="mobile-menu" onclick="openNav()" aria-label="打开菜单">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge fade-in delay-1">
+        <span class="dot"></span>
+        <span>链上金融下一代基础设施</span>
+      </div>
+      <h1 class="fade-in delay-2">
+        实时链上风控<br>
+        <span class="gradient-text">为合规时代而生</span>
+      </h1>
+      <p class="hero-subtitle fade-in delay-3">
+        原生链上执行的可编程合规协议。将数据与策略上链执行——让稳定币、RWA和AI智能体在密码学确定性下自由流动。
+      </p>
+      <div class="hero-cta fade-in delay-3">
+        <a href="#demo" class="btn btn-primary">体验实时演示</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn btn-secondary">在 GitHub 查看</a>
+      </div>
+
+      <div class="pillars">
+        <div class="pillar fade-in stagger-1">
+          <div class="pillar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3>实时拦截</h3>
+          <p>地址级风险验证&lt;50毫秒。每笔交易在执行前就被检查——而不是事后补救。</p>
+        </div>
+        <div class="pillar fade-in stagger-2">
+          <div class="pillar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          </div>
+          <h3>热插拔策略</h3>
+          <p>策略模块无需合约升级即可部署。按客户、按司法管辖区的规则——实时更新。</p>
+        </div>
+        <div class="pillar fade-in stagger-3">
+          <div class="pillar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <h3>AI智能体原生</h3>
+          <p>自主智能体查询风险状态、接收链上决策并执行合规——无需人工守门。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 为何现在 -->
+  <section class="section" id="why-now">
+    <div class="container">
+      <div class="section-header">
+        <h2>为何现在：合规拐点</h2>
+        <p>2025标志着从无监管加密到受监管链上金融的转变。未来十年属于合规资产。</p>
+      </div>
+      <div class="trend-grid">
+        <div class="trend-card fade-in stagger-1">
+          <div class="year">2015 — 2025</div>
+          <h3>野蛮生长</h3>
+          <p>无监管创新：ICO、DeFi、CEX。高风险高回报。Luna/FTX崩盘揭示了零合规的代价。</p>
+        </div>
+        <div class="trend-card active fade-in stagger-2">
+          <div class="year">2025 — 2035 ⭐</div>
+          <h3>合规驱动的融合</h3>
+          <p>受监管稳定币、RWA代币化和股票代币化成为主流。香港金管局"金融科技2030"和GENIUS法案奠定了政策基础。</p>
+        </div>
+        <div class="trend-card fade-in stagger-3">
+          <div class="year">2035 — 未来</div>
+          <h3>下一代金融科技</h3>
+          <p>金融基础设施1:1上链运行。移动信息+区块链原生金融科技成为默认范式。</p>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:40px;">
+        <div style="display:inline-flex; align-items:center; gap:32px; padding:20px 32px; border-radius:12px; background:var(--bg-card); border:1px solid var(--border); flex-wrap:wrap; justify-content:center;">
+          <div style="text-align:center;">
+            <div style="font-size:1.3rem; font-weight:700; color:var(--gold);">HKMA</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">金融科技2030 — 稳定币与RWA</div>
+          </div>
+          <span style="color:var(--border-light);">|</span>
+          <div style="text-align:center;">
+            <div style="font-size:1.3rem; font-weight:700; color:var(--gold);">GENIUS Act</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">美国稳定币框架</div>
+          </div>
+          <span style="color:var(--border-light);">|</span>
+          <div style="text-align:center;">
+            <div style="font-size:1.3rem; font-weight:700; color:var(--gold);">MiCA</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">欧盟加密监管</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 痛点 -->
+  <section class="section" id="pain" style="background:rgba(124,106,242,0.025);">
+    <div class="container">
+      <div class="section-header">
+        <h2>痛点：合规资产为何无法自由流动</h2>
+        <p>现实世界资产和受监管稳定币被困在闭环中。没有实时风控，它们无法进入开放经济。</p>
+      </div>
+      <div class="pain-grid">
+        <div class="pain-card fade-in stagger-1">
+          <div class="pain-icon">🔒</div>
+          <span class="pain-tag">稳定币发行方</span>
+          <h3>困于封闭生态</h3>
+          <p>受监管稳定币被锁定在发行方平台。它们无法跨链、进入DeFi或与第三方钱包集成，否则违反合规。</p>
+          <div class="solution"><strong>FidesOrigin:</strong> 可编程风险框架实现<strong>安全外部流通</strong>——稳定币在保持合规的同时自由流动。</div>
+        </div>
+        <div class="pain-card fade-in stagger-2">
+          <div class="pain-icon">📉</div>
+          <span class="pain-tag">RWA平台</span>
+          <h3>缺乏去中心化组合性</h3>
+          <p>代币化现实世界资产仍依赖中心化交易所交易。无P2P机制、无DeFi集成——流动性被困。</p>
+          <div class="solution"><strong>FidesOrigin:</strong> 嵌入式合规模块让RWA资产在监管边界内获得<strong>去中心化组合性</strong>。</div>
+        </div>
+        <div class="pain-card fade-in stagger-3">
+          <div class="pain-icon">⚠️</div>
+          <span class="pain-tag">Web2金融科技</span>
+          <h3>钱包风险敞口</h3>
+          <p>Web2平台想要Web3钱包但无法承受AML/欺诈风险。一笔坏交易就会污染整个用户群。</p>
+          <div class="solution"><strong>FidesOrigin:</strong> <strong>机构级风控</strong>直接嵌入钱包——Web2体验，Web3安全。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 解决方案 -->
+  <section class="section" id="solution">
+    <div class="container">
+      <div class="section-header">
+        <h2>三层链上风险架构</h2>
+        <p>从数据到决策到执行——每一步都原生链上运行。无API、无延迟、无黑盒。</p>
+      </div>
+      <div class="tech-stack">
+        <div class="tech-layer fade-in stagger-1" data-step="第一层">
+          <h3>AI特征工程</h3>
+          <p>图神经网络和机器学习将链上+链下数据处理为风险标签。7×24自动化流水线。</p>
+          <ul>
+            <li>行为标签</li>
+            <li>交易模式分析</li>
+            <li>名单交叉比对</li>
+            <li>数据匿名化与隐私</li>
+          </ul>
+        </div>
+        <div class="tech-layer fade-in stagger-2" data-step="第二层">
+          <h3>链上检测与拦截</h3>
+          <p>预言机节点将风险标签推送到智能合约。策略引擎在每次交易执行前实时评估。</p>
+          <ul>
+            <li>Merkle证明地址验证</li>
+            <li>四级决策：放行/拦截/标记/暂留</li>
+            <li>原子风险检查+交易执行</li>
+            <li>&lt;50毫秒链上验证</li>
+          </ul>
+        </div>
+        <div class="tech-layer fade-in stagger-3" data-step="第三层">
+          <h3>实时情报</h3>
+          <p>持续监控、事件响应和动态黑名单更新。事件驱动策略自适应。</p>
+          <ul>
+            <li>实时地址监控</li>
+            <li>事件驱动黑名单更新</li>
+            <li>跨协议风险关联</li>
+            <li>取证审计追踪</li>
+          </ul>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:40px;">
+        <p style="color:var(--text-secondary); font-size:0.95rem; max-width:700px; margin:0 auto;">
+          <strong style="color:var(--text);">核心理念：</strong>"将数据与策略上链执行"——风险决策不是从API查询，而是<strong>作为智能合约逻辑执行</strong>。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 差异化 -->
+  <section class="section" id="compare">
+    <div class="container">
+      <div class="section-header">
+        <h2>我们如何不同</h2>
+        <p>不是通用框架。不是API查询工具。FidesOrigin是决定交易通过或失败的嵌入式风险基础设施。</p>
+      </div>
+
+      <table class="ace-table">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>Chainlink ACE</th>
+            <th style="color:var(--accent-light);">FidesOrigin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="维度">定位</td>
+            <td data-label="Chainlink ACE" class="ace-them">通用风控框架——面向开发者的SDK/API</td>
+            <td data-label="FidesOrigin" class="ace-fo">面向场景的事前风控服务——部署即运行</td>
+          </tr>
+          <tr>
+            <td data-label="维度">目标客户</td>
+            <td data-label="Chainlink ACE" class="ace-them">能自行编写风险逻辑的技术团队</td>
+            <td data-label="FidesOrigin" class="ace-fo">需要开箱即用生产级合规的业务团队</td>
+          </tr>
+          <tr>
+            <td data-label="维度">策略能力</td>
+            <td data-label="Chainlink ACE" class="ace-them">"可编程"——客户自行定义所有规则</td>
+            <td data-label="FidesOrigin" class="ace-fo">"可用"——内置策略模板+行业最佳实践</td>
+          </tr>
+          <tr>
+            <td data-label="维度">数据资源</td>
+            <td data-label="Chainlink ACE" class="ace-them">依赖外部预言机数据（价格、链状态）</td>
+            <td data-label="FidesOrigin" class="ace-fo">多源链上+链下数据，含实时地址画像</td>
+          </tr>
+          <tr>
+            <td data-label="维度">交付方式</td>
+            <td data-label="Chainlink ACE" class="ace-them">SDK/API——客户集成并维护</td>
+            <td data-label="FidesOrigin" class="ace-fo">完整风险模块或API——直连智能合约集成，支持热插拔更新</td>
+          </tr>
+          <tr>
+            <td data-label="维度">商业价值</td>
+            <td data-label="Chainlink ACE" class="ace-them">为事前风控系统提供技术标准</td>
+            <td data-label="FidesOrigin" class="ace-fo">赋能机构快速部署合规风控场景（稳定币、RWA、钱包）</td>
+          </tr>
+          <tr>
+            <td data-label="维度">上线时间</td>
+            <td data-label="Chainlink ACE" class="ace-them">预计2026年Q2</td>
+            <td data-label="FidesOrigin" class="ace-fo">演示和MVP预计2026年Q1就绪</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="text-align:center; margin-top:48px; padding:28px; border-radius:var(--radius-md); background:var(--bg-card); border:1px solid var(--border);">
+        <p style="font-size:1.05rem; color:var(--text); font-weight:600; margin-bottom:8px;">升级：从信息产品到基础设施税</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:20px;">
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Chainalysis模式</div>
+            <div style="font-size:0.88rem; color:var(--text-secondary);">信息查询工具<br>定价：每次查询几分钱<br>模式：外部查询</div>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; color:var(--accent-light); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">FidesOrigin模式 ⭐</div>
+            <div style="font-size:0.88rem; color:var(--text);"><strong>决定交易结果的基础设施</strong><br>定价：每笔$0.10-$0.50或0.01-0.05%<br>模式：嵌入式智能合约内核</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 市场 -->
+  <section class="section" id="market" style="background:rgba(124,106,242,0.025);">
+    <div class="container">
+      <div class="section-header">
+        <h2>市场规模：2030年92亿美元收入机会</h2>
+        <p>稳定币支付+RWA代币化创造了一个实时风控不可或缺的组合市场。</p>
+      </div>
+      <div class="market-grid">
+        <div class="market-card fade-in stagger-1">
+          <div class="market-num">$4.2B</div>
+          <div class="market-label">稳定币实时风控收入（2030）</div>
+          <div class="market-detail">B2B：3600亿支付×0.05% | B2C：13.5万亿支付×0.10%</div>
+        </div>
+        <div class="market-card fade-in stagger-2">
+          <div class="market-num">$5B</div>
+          <div class="market-label">RWA实时风控收入（2030）</div>
+          <div class="market-detail">10万亿RWA市场×0.005% + 1.34万亿股票代币化</div>
+        </div>
+        <div class="market-card fade-in stagger-3">
+          <div class="market-num">$13.8B</div>
+          <div class="market-label">FidesOrigin估值（中性情景）</div>
+          <div class="market-detail">10%市场份额×15倍市盈率 | 2030年合并收入：92亿</div>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:40px;">
+        <p style="color:var(--text-secondary); font-size:0.88rem;">
+          <strong style="color:var(--text);">2035展望：</strong>合并市场增长至<strong style="color:var(--accent-light);">375亿</strong>收入，FidesOrigin估值达<strong style="color:var(--accent-light);">563亿</strong>（中性情景）。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 历史类比 -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>历史类比：为何实时风控必胜</h2>
+        <p>全球最大的支付网络通过在交易决策瞬间建立护城河——而不是事后分析欺诈。</p>
+      </div>
+      <div class="history-grid">
+        <div class="history-card fade-in stagger-1">
+          <div class="history-logo" style="color:#1a1f71;">VISA</div>
+          <h3>从Cybersource到Decision Manager</h3>
+          <p>Visa收购Cybersource（2010）以掌控完整反欺诈栈。到2015年，Decision Manager Replay成为行业首个策略优化工具——将风控变为竞争差异化优势。</p>
+          <span class="history-price">战略价值：全栈反欺诈</span>
+        </div>
+        <div class="history-card fade-in stagger-2">
+          <div class="history-logo" style="color:#eb001b;">Mastercard</div>
+          <h3>80亿+投资威胁情报</h3>
+          <p>Mastercard收购Ethoca（4.8亿美元，2018）、RiskRecon、Vyze和Recorded Future（80亿+，2024）——将实时风险评分直接嵌入结账流程。结果：毫秒级"批准/拒绝/降额"决策。</p>
+          <span class="history-price">仅Recorded Future：80亿+（2024）</span>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:32px; padding:20px; border-radius:var(--radius-md); background:var(--gold-dim); border:1px solid var(--gold-glow);">
+        <p style="color:var(--gold); font-size:1rem; font-weight:600;">
+          "实时风险拦截远比事后争议解决更有价值。"
+        </p>
+        <p style="color:var(--text-secondary); font-size:0.82rem; margin-top:8px;">
+          FidesOrigin将同样理念带入链上金融——在交易确认前，而非事后。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI智能体 -->
+  <section class="section ai-agent-section" id="ai-agent">
+    <div class="container">
+      <div class="section-header">
+        <h2>为AI智能体经济而生</h2>
+        <p>当自主智能体7×24交易、借贷和转移资产时，人工合规崩溃。FidesOrigin赋予AI智能体原生链上风险感知。</p>
+      </div>
+      <div class="code-block">
+        <div class="code-header">
+          <span>5分钟集成</span>
+          <span class="lang-tag">Solidity</span>
+        </div>
+        <pre><code><span class="code-comment">// AI智能体每笔交易前调用FidesOrigin</span>
+<span class="code-keyword">function</span> <span class="code-function">executeTrade</span>(<span class="code-keyword">address</span> counterparty, <span class="code-keyword">uint256</span> amount) <span class="code-keyword">external</span> {
+    <span class="code-comment">// 1. 链上查询风险状态</span>
+    <span class="code-keyword">bool</span> isSafe = riskRegistry.verifyAddress(
+        counterparty,
+        expectedRiskScore,
+        <span class="code-string">"BLACK"</span>,
+        merkleProof
+    );
+
+    <span class="code-comment">// 2. 执行策略</span>
+    <span class="code-keyword">require</span>(isSafe, <span class="code-string">"Counterparty blocked by compliance policy"</span>);
+
+    <span class="code-comment">// 3. 在不可篡改审计追踪下执行</span>
+    complianceEngine.recordDecision(<span class="code-keyword">msg.sender</span>, counterparty, amount, <span class="code-number">0</span>);
+    swap.execute(counterparty, amount);
+}</code></pre>
+      </div>
+      <div style="text-align:center; margin-top:24px;">
+        <p style="color:var(--text-secondary); font-size:0.88rem;">
+          智能体永不休息。合规层亦然。每个决策永远记录在链上。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 实时演示 -->
+  <section class="section" id="demo">
+    <div class="container">
+      <div class="section-header">
+        <h2>实时风险扫描演示</h2>
+        <p>输入任意以太坊地址，查看FidesOrigin如何即时评估链上风险。</p>
+      </div>
+      <div class="demo-box">
+        <div class="demo-input-row">
+          <input type="text" class="demo-input" id="demoAddress" placeholder="0x...（以太坊地址）" maxlength="42">
+          <button class="btn btn-primary" onclick="checkRisk()">扫描</button>
+        </div>
+        <div class="demo-result" id="demoResult">
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+            <div id="riskBadge" class="risk-indicator"></div>
+            <span id="riskScore" style="font-family:var(--font-mono); color:var(--text-secondary);"></span>
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-muted); font-family:var(--font-mono);">
+            来源：<span id="riskSource"></span> | 标签：<span id="riskTags"></span>
+          </div>
+        </div>
+        <p style="font-size:0.78rem; color:var(--text-muted); margin-top:12px;">
+          由OFAC、Chainalysis和Etherscan的20,645+风险地址驱动。
+          <a href="address-check.html" style="color:var(--accent-light);">完整数据库 →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 功能 -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>核心能力</h2>
+        <p>构建合规链上金融产品所需的一切。</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card fade-in stagger-1">
+          <div class="num">01</div>
+          <h3>Merkle风险注册表</h3>
+          <p>以密码学确定性存储和验证20,000+风险地址。更新一笔交易即可全球传播。</p>
+        </div>
+        <div class="feature-card fade-in stagger-2">
+          <div class="num">02</div>
+          <h3>四级策略引擎</h3>
+          <p>放行/拦截/标记/暂留决策。可组合规则适配您的风险偏好和司法管辖区。</p>
+        </div>
+        <div class="feature-card fade-in stagger-3">
+          <div class="num">03</div>
+          <h3>热插拔模块</h3>
+          <p>无需升级核心合约即可部署新风险策略。按客户、按地区策略实时更新。</p>
+        </div>
+        <div class="feature-card fade-in stagger-4">
+          <div class="num">04</div>
+          <h3>多链原生</h3>
+          <p>在Ethereum、Polygon、Arbitrum、Optimism、Base、BNB Chain和Tempo L1上以相同接口部署。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 网络 -->
+  <section class="section">
+    <div class="container" style="text-align:center;">
+      <h2 style="font-size:1.2rem; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">支持的网络</h2>
+      <p style="font-size:0.85rem; color:var(--text-muted);">一次部署。处处运行。</p>
+      <div class="chains-grid">
+        <div class="chain-item"><div class="chain-logo">⬡</div><span class="chain-name">Ethereum</span></div>
+        <div class="chain-item"><div class="chain-logo">🔷</div><span class="chain-name">Polygon</span></div>
+        <div class="chain-item"><div class="chain-logo">🔹</div><span class="chain-name">Arbitrum</span></div>
+        <div class="chain-item"><div class="chain-logo">⚡</div><span class="chain-name">Optimism</span></div>
+        <div class="chain-item"><div class="chain-logo">🔵</div><span class="chain-name">Base</span></div>
+        <div class="chain-item"><div class="chain-logo">🟡</div><span class="chain-name">BNB Chain</span></div>
+        <div class="chain-item"><div class="chain-logo">🎵</div><span class="chain-name">Tempo</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 指标 -->
+  <section class="section trust-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>协议指标</h2>
+        <p>为生产构建。设计上可审计。</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item fade-in stagger-1">
+          <div class="stat-num">20,645+</div>
+          <div class="stat-label">覆盖风险地址</div>
+        </div>
+        <div class="stat-item fade-in stagger-2">
+          <div class="stat-num">202</div>
+          <div class="stat-label">测试通过</div>
+        </div>
+        <div class="stat-item fade-in stagger-3">
+          <div class="stat-num">&lt;50ms</div>
+          <div class="stat-label">验证延迟</div>
+        </div>
+        <div class="stat-item fade-in stagger-4">
+          <div class="stat-num">7</div>
+          <div class="stat-label">支持的网络</div>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:40px;">
+        <div style="display:inline-flex; align-items:center; gap:24px; padding:16px 28px; border-radius:var(--radius-md); background:var(--bg-card); border:1px solid var(--border); flex-wrap:wrap; justify-content:center;">
+          <span style="font-size:0.82rem; color:var(--text-muted);">合规就绪：</span>
+          <span style="font-size:0.82rem; color:var(--text); font-weight:600;">🇭🇰 香港稳定币条例</span>
+          <span style="color:var(--border-light);">|</span>
+          <span style="font-size:0.82rem; color:var(--text); font-weight:600;">🇪🇺 MiCA框架</span>
+          <span style="color:var(--border-light);">|</span>
+          <span style="font-size:0.82rem; color:var(--text); font-weight:600;">🇺🇸 GENIUS法案 / OFAC SDN</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-box">
+        <h2>开始构建合规链上产品</h2>
+        <p>开源。生产就绪。5分钟集成。</p>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn">探索协议</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="logo-icon" style="width:28px; height:28px; border-radius:6px;">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;">
+                <defs>
+                  <mask id="footerLogoMask" maskUnits="userSpaceOnUse">
+                    <rect width="100" height="100" fill="white"/>
+                    <rect x="38" y="32" width="24" height="6" rx="2" fill="black"/>
+                    <rect x="38" y="52" width="24" height="6" rx="2" fill="black"/>
+                  </mask>
+                </defs>
+                <path d="M 5,30 Q 5,5 35,5 L 65,5 L 65,75 Q 65,95 35,95 L 5,95 L 5,30 Z" fill="white" mask="url(#footerLogoMask)"/>
+              </svg>
+            </div>
+            <span style="font-weight:700;">FidesOrigin</span>
+          </div>
+          <p>为代币化资产、稳定币和AI智能体交易提供实时链上合规。</p>
+        </div>
+        <div class="footer-col">
+          <h4>产品</h4>
+          <a href="#features">功能</a>
+          <a href="address-check.html">风险扫描</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/tree/main/docs">文档</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>资源</h4>
+          <span style="display:block;color:var(--text-muted);font-size:0.82rem;padding:4px 0;">API参考 — 即将推出</span>
+          <span style="display:block;color:var(--text-muted);font-size:0.82rem;padding:4px 0;">集成指南 — 即将推出</span>
+          <span style="display:block;color:var(--text-muted);font-size:0.82rem;padding:4px 0;">SDK — 即将推出</span>
+          <span style="display:block;color:var(--text-muted);font-size:0.82rem;padding:4px 0;">Subgraph — 即将推出</span>
+        </div>
+        <div class="footer-col">
+          <h4>联系</h4>
+          <a href="mailto:contact@fidesorigin.com">contact@fidesorigin.com</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 FidesOrigin. MIT许可证。</span>
+        <div class="lang-dropdown" id="langDropdownFooter">
+          <button class="lang-dropdown-toggle" onclick="toggleDropdown('langDropdownFooter', event)">
+            <span>🌐</span>
+            <span>简体中文</span>
+            <span>▾</span>
+          </button>
+          <div class="lang-dropdown-menu">
+            <a onclick="switchLang('en')">English</a>
+            <a onclick="switchLang('cn')" class="active">简体中文</a>
+            <a onclick="switchLang('tw')">繁體中文</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Language-specific labels for lang-utils.js
+    window.LANG_INVALID_ADDRESS = '⚠ 无效地址';
+    window.LANG_HIGH_RISK = '🔴 高风险';
+    window.LANG_FLAGGED = '🟡 已标记';
+    window.LANG_SCORE = '分数: ';
+    window.LANG_NOT_IN_DB = '🟢 未在数据库中';
+    window.LANG_NO_RISK = '未检测到风险信号';
+    window.LANG_NONE = '无';
+
+    // Bind demo enter key
+    document.getElementById('demoAddress').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') checkRisk();
+    });
+    // Auto-init language redirect
+    initLangAutoRedirect();
+  </script>
+</body>
+</html>

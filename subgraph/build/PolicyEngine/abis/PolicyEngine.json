@@ -1,0 +1,1695 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_riskRegistry",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "AccessControlBadConfirmation",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "neededRole",
+        "type": "bytes32"
+      }
+    ],
+    "name": "AccessControlUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "DailyLimitExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "version",
+        "type": "uint256"
+      }
+    ],
+    "name": "RollbackToCurrentVersion",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      }
+    ],
+    "name": "RollbackToZeroVersion",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnauthorizedCaller",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "version",
+        "type": "uint256"
+      }
+    ],
+    "name": "VersionNotFound",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fromVersion",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "toVersion",
+        "type": "uint256"
+      }
+    ],
+    "name": "IssuerPolicyRolledBack",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowMediumRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowHighRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockMixer",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireDestinationKYC",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cooldownPeriod",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct IAssetCompliance.IssuerPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "IssuerPolicySet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "version",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowMediumRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowHighRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockMixer",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireDestinationKYC",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cooldownPeriod",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct IAssetCompliance.IssuerPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "IssuerPolicyVersioned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum IAssetCompliance.Decision",
+        "name": "decision",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "PolicyEvaluated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "previousAdminRole",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "newAdminRole",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RoleAdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleGranted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxTokenTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyEthLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyTokenLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockContractCalls",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockUnknownTokens",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireWhitelist",
+            "type": "bool"
+          },
+          {
+            "internalType": "address[]",
+            "name": "allowedDex",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "blockedContracts",
+            "type": "address[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct IWalletCompliance.WalletPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "WalletPolicySet",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "ADMIN_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "COMPLIANCE_ENGINE_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_ADMIN_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "mixer",
+        "type": "address"
+      }
+    ],
+    "name": "addMixer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum IWalletCompliance.OperationType",
+            "name": "opType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWalletCompliance.Operation",
+        "name": "op",
+        "type": "tuple"
+      }
+    ],
+    "name": "analyzeOperationRisk",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "riskScore",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum IAssetCompliance.RiskTier",
+        "name": "tier",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "riskFactors",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "dailySpent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultIssuerPolicy",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxTxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowMediumRisk",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowHighRisk",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockMixer",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireDestinationKYC",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "cooldownPeriod",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultWalletPolicy",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxTxValue",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxTokenTxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyEthLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyTokenLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockContractCalls",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockUnknownTokens",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireWhitelist",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "walletOwner",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum IWalletCompliance.OperationType",
+            "name": "opType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWalletCompliance.Operation",
+        "name": "op",
+        "type": "tuple"
+      },
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      }
+    ],
+    "name": "evaluateOperation",
+    "outputs": [
+      {
+        "internalType": "enum IAssetCompliance.Decision",
+        "name": "decision",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "evaluateTransfer",
+    "outputs": [
+      {
+        "internalType": "enum IAssetCompliance.Decision",
+        "name": "decision",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      }
+    ],
+    "name": "getDailySpent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "version",
+        "type": "uint256"
+      }
+    ],
+    "name": "getIssuerPolicyAtVersion",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowMediumRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowHighRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockMixer",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireDestinationKYC",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cooldownPeriod",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IAssetCompliance.IssuerPolicy",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      }
+    ],
+    "name": "getIssuerPolicyHistorySummary",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "currentVersion",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "updatedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxTxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowHighRisk",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      }
+    ],
+    "name": "getIssuerPolicyVersion",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleAdmin",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "getWalletDailyEthSpent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "grantRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "hasRole",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "issuerPolicies",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxTxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowMediumRisk",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowHighRisk",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockMixer",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireDestinationKYC",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "cooldownPeriod",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "issuerPolicyHistory",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxTxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowMediumRisk",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowHighRisk",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockMixer",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireDestinationKYC",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "cooldownPeriod",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "issuerPolicyUpdatedAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "issuerPolicyVersion",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "knownMixers",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "walletOwner",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum IWalletCompliance.OperationType",
+            "name": "opType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWalletCompliance.Operation",
+        "name": "op",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "name": "recordOperation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "name": "recordTransfer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "mixer",
+        "type": "address"
+      }
+    ],
+    "name": "removeMixer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "callerConfirmation",
+        "type": "address"
+      }
+    ],
+    "name": "renounceRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "riskRegistry",
+    "outputs": [
+      {
+        "internalType": "contract RiskRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "targetVersion",
+        "type": "uint256"
+      }
+    ],
+    "name": "rollbackIssuerPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowMediumRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowHighRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockMixer",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireDestinationKYC",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cooldownPeriod",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IAssetCompliance.IssuerPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "setDefaultIssuerPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxTokenTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyEthLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyTokenLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockContractCalls",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockUnknownTokens",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireWhitelist",
+            "type": "bool"
+          },
+          {
+            "internalType": "address[]",
+            "name": "allowedDex",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "blockedContracts",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct IWalletCompliance.WalletPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "setDefaultWalletPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowMediumRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowHighRisk",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockMixer",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireDestinationKYC",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cooldownPeriod",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IAssetCompliance.IssuerPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "setIssuerPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxTxValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxTokenTxAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyEthLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "dailyTokenLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockContractCalls",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "blockUnknownTokens",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireWhitelist",
+            "type": "bool"
+          },
+          {
+            "internalType": "address[]",
+            "name": "allowedDex",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "blockedContracts",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct IWalletCompliance.WalletPolicy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "setWalletPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "walletDailyEthSpent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "walletDailyTokenSpent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "walletPolicies",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxTxValue",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxTokenTxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyEthLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyTokenLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockContractCalls",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "blockUnknownTokens",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireWhitelist",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

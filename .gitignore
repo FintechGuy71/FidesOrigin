@@ -1,0 +1,31 @@
+/.next/
+/dist/
+/build/
+/node_modules/
+/.turbo/
+/coverage/
+/.vercel/
+*.log
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.tsbuildinfo
+data-publisher/node_modules/
+data-publisher/.env
+data-publisher/dist/
+data-publisher/node_modules/
+*.bak.js
+*.tmp.js
+
+# Deployment artifacts
+deployments/
+
+# Hardhat build artifacts (contain full ABI — information exposure risk)
+apps/contracts/artifacts/
+
+# K8s secrets
+k8s/secret.yaml
+
+# Data sync env
+data-sync/.env

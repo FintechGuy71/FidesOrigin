@@ -1,0 +1,21 @@
+{
+  "name": "@fidesorigin/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FidesOrigin Risk Address Sync API (Vercel Serverless)",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc",
+    "deploy": "vercel --prod",
+    "lint": "eslint . --ext .ts,.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vercel": "^33.0.0"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@fidesorigin/on-chain-sdk",
+  "version": "1.0.0",
+  "description": "FidesOrigin on-chain TypeScript SDK for direct smart contract interaction",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "ethers": "^6.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "ethers": "^6.0.0"
+  },
+  "license": "MIT"
+}

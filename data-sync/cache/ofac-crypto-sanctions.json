@@ -1,0 +1,101 @@
+[
+  {
+    "address": "0x722122df12d4e14e13ac3b6895a86e84145b6967",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Tornado Cash Proxy (2022-08-08)",
+    "tags": ["TORNADO_CASH", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-08-08"
+  },
+  {
+    "address": "0x12d66f87a04a9e2207cec48758f6511208c6b5a3",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Tornado Cash 0.1 ETH Pool",
+    "tags": ["TORNADO_CASH", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-08-08"
+  },
+  {
+    "address": "0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Tornado Cash 1 ETH Pool",
+    "tags": ["TORNADO_CASH", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-08-08"
+  },
+  {
+    "address": "0x910cbd523d972eb0a6f4cae4618ad62622b39db2",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Tornado Cash 10 ETH Pool",
+    "tags": ["TORNADO_CASH", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-08-08"
+  },
+  {
+    "address": "0xdd4c48c0b24039969fc16d1cdf626eab821d3384",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Tornado Cash 100 ETH Pool",
+    "tags": ["TORNADO_CASH", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-08-08"
+  },
+  {
+    "address": "0xa160cdab225685da1d56a342b7840210e4115505",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Tornado Cash 1000 ETH Pool",
+    "tags": ["TORNADO_CASH", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-08-08"
+  },
+  {
+    "address": "0x1da5821544e25c636c1417ba96de4cf6d2f9b5a4",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Blender.io Mixer",
+    "tags": ["BLENDER", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-05-06"
+  },
+  {
+    "address": "0x2f389ce8bd8c8b68a5e32926dda3e29db752f0e8",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Blender.io Mixer",
+    "tags": ["BLENDER", "MIXER", "SANCTIONED"],
+    "addedAt": "2022-05-06"
+  },
+  {
+    "address": "0x19aa5fe80d33a56d56c78e82ea5e50e5d80b4d59",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Lazarus Group Related",
+    "tags": ["LAZARUS", "HACKER", "DPRK", "SANCTIONED"],
+    "addedAt": "2022-04-14"
+  },
+  {
+    "address": "0xe7aa314c7f4c79e3b231a5f6c3d94c2472f107b5",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Lazarus Group Related",
+    "tags": ["LAZARUS", "HACKER", "DPRK", "SANCTIONED"],
+    "addedAt": "2022-04-14"
+  },
+  {
+    "address": "0x7f367cc41522ce07553e823bf3be79a889debe1b",
+    "source": "OFAC_SDN_STATIC",
+    "riskScore": 100,
+    "tier": 3,
+    "reason": "OFAC SDN - Sinbad.io Mixer",
+    "tags": ["SINBAD", "MIXER", "SANCTIONED"],
+    "addedAt": "2023-11-29"
+  }
+]

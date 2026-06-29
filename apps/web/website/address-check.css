@@ -1,0 +1,177 @@
+/* ===== FidesOrigin Address Check Styles ===== */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --fio-bg: #0f172a;
+  --fio-bg-card: #1e293b;
+  --fio-border: #334155;
+  --fio-text: #f8fafc;
+  --fio-text-sec: #94a3b8;
+  --fio-accent: #8b5cf6;
+  --fio-success: #22c55e;
+  --fio-danger: #ef4444;
+  --fio-warning: #f59e0b;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--fio-bg);
+  color: var(--fio-text);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: var(--fio-text-sec);
+}
+
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-box {
+  background: var(--fio-bg-card);
+  border: 1px solid var(--fio-border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-box .num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fio-accent);
+}
+
+.stat-box .label {
+  font-size: 0.8rem;
+  color: var(--fio-text-sec);
+  margin-top: 4px;
+}
+
+.search-box {
+  background: var(--fio-bg-card);
+  border: 1px solid var(--fio-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 14px 18px;
+  background: #0f172a;
+  border: 1px solid var(--fio-border);
+  border-radius: 8px;
+  color: var(--fio-text);
+  font-size: 1rem;
+  font-family: monospace;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--fio-accent);
+}
+
+.search-box button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--fio-accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.result-box {
+  background: var(--fio-bg-card);
+  border: 1px solid var(--fio-border);
+  border-radius: 12px;
+  padding: 24px;
+  display: none;
+}
+
+.result-box.show {
+  display: block;
+}
+
+.result-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.risk-black {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--fio-danger);
+}
+
+.risk-grey {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--fio-text-sec);
+}
+
+.risk-safe {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--fio-success);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--fio-border);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: var(--fio-text-sec);
+}
+
+.detail-value {
+  font-family: monospace;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  color: var(--fio-text-sec);
+  font-size: 0.8rem;
+}
+
+.footer a {
+  color: var(--fio-accent);
+  text-decoration: none;
+}

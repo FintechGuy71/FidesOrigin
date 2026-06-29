@@ -1,0 +1,99 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "timestamp": "2026-06-22T17:22:01.563Z",
+  "deployer": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
+  "version": "v0.2.1",
+  "status": "complete",
+  "contracts": {
+    "RiskRegistry": {
+      "proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+      "implementation": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59",
+      "type": "UUPS Proxy"
+    },
+    "PolicyEngine": {
+      "proxy": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+      "implementation": "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7",
+      "type": "UUPS Proxy"
+    },
+    "ComplianceEngine": {
+      "proxy": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+      "implementation": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807",
+      "type": "UUPS Proxy"
+    },
+    "QuarantineVault": {
+      "address": "0x497176b21CC2EDd90a8725a3023742358311a382",
+      "type": "Direct Deploy"
+    },
+    "FidesCompliance": {
+      "address": "0x7cc76aD60385f77F0e013f5C2771FCa32a6F97A1",
+      "type": "Direct Deploy",
+      "note": "Deployed with constructor args: (ComplianceEngine, RiskRegistry, PolicyEngine, QuarantineVault)"
+    },
+    "CompliantStableCoin": {
+      "address": "0xC6AC4eB3bc328D9482e243e6E2E5C4e0372a6Cca",
+      "type": "Direct Deploy",
+      "note": "fUSD - FidesOrigin USD, 6 decimals"
+    }
+  },
+  "roles": {
+    "ORACLE_ROLE": {
+      "RiskRegistry": {
+        "grantedTo": [
+          "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+          "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"
+        ]
+      }
+    },
+    "COMPLIANCE_ENGINE_ROLE": {
+      "PolicyEngine": {
+        "grantedTo": [
+          "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC"
+        ]
+      }
+    },
+    "OPERATOR_ROLE": {
+      "ComplianceEngine": {
+        "grantedTo": [
+          "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
+          "0x7cc76aD60385f77F0e013f5C2771FCa32a6F97A1"
+        ]
+      }
+    }
+  },
+  "testData": {
+    "riskProfiles": [
+      {
+        "address": "0x1234567890123456789012345678901234567890",
+        "riskScore": 80,
+        "riskTier": 3,
+        "sanctioned": true
+      },
+      {
+        "address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+        "riskScore": 85,
+        "riskTier": 3,
+        "sanctioned": false
+      },
+      {
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "riskScore": 90,
+        "riskTier": 3,
+        "sanctioned": false
+      }
+    ],
+    "mintedTokens": {
+      "token": "fUSD",
+      "amount": "1000000000000",
+      "recipient": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"
+    }
+  },
+  "verification": {
+    "status": "pending",
+    "note": "Etherscan API v1 deprecated, manual verification may be needed via https://sepolia.etherscan.io/verifyContract"
+  },
+  "environment": {
+    "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+    "deployerBalance": "2.554 ETH"
+  }
+}

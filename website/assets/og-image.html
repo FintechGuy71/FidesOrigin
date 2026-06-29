@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1200px;
+  height: 630px;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.1;
+  pointer-events: none;
+}
+.glow-1 {
+  width: 500px; height: 500px;
+  background: #b8945f;
+  top: -200px; right: -150px;
+}
+.glow-2 {
+  width: 400px; height: 400px;
+  background: #3b82f6;
+  bottom: -150px; left: -100px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.logo-icon {
+  width: 64px; height: 64px;
+}
+.logo-text {
+  font-size: 32px;
+  font-weight: 600;
+  color: #f0f0f2;
+  letter-spacing: -0.02em;
+}
+.title {
+  font-size: 48px;
+  font-weight: 600;
+  color: #f0f0f2;
+  text-align: center;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  max-width: 900px;
+}
+.subtitle {
+  font-size: 22px;
+  color: #8b8b94;
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.tagline {
+  position: absolute;
+  bottom: 40px;
+  font-size: 14px;
+  color: #5a5a62;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.line {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #d4af7a, #e8c99a);
+  border-radius: 2px;
+  margin-bottom: 40px;
+}
+</style>
+</head>
+<body>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="logo">
+  <!-- FidesOrigin logo icon SVG -->
+  <svg class="logo-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" rx="12" fill="#111114"/>
+    <path d="M20 44V20h12v4H24v6h7v4h-7v10h-4z" fill="#d4af7a"/>
+    <path d="M36 44V20h4v24h-4z" fill="#d4af7a"/>
+    <circle cx="46" cy="22" r="3" fill="#3eba6d"/>
+    <circle cx="46" cy="32" r="3" fill="#f5a623"/>
+    <circle cx="46" cy="42" r="3" fill="#e5484d"/>
+  </svg>
+  <span class="logo-text">FidesOrigin</span>
+</div>
+
+<div class="line"></div>
+
+<h1 class="title">On-Chain Risk Engine for Digital Assets</h1>
+<p class="subtitle">Deterministic. Transparent. Un-bypassable.</p>
+
+<p class="tagline">fidesorigin.com &middot; Sepolia Testnet Live</p>
+</body>
+</html>

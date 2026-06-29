@@ -1,0 +1,184 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: RiskRegistry
+    network: sepolia
+    source:
+      abi: RiskRegistry
+      # RiskRegistry: on-chain risk scoring and tier assignment for addresses
+      address: "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc"
+      # Sepolia deployment block ~2024-06; safe startBlock for indexing
+      startBlock: 7650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - RiskProfile
+        - RiskProfileUpdate
+        - SanctionedAddress
+      abis:
+        - name: RiskRegistry
+          file: ./abis/RiskRegistry.json
+      eventHandlers:
+        - event: RiskProfileUpdated(indexed address,uint8,uint8,bool)
+          handler: handleRiskProfileUpdated
+        - event: AddressTagged(indexed address,indexed bytes32)
+          handler: handleAddressTagged
+        - event: SanctionAdded(indexed address,string)
+          handler: handleSanctionAdded
+        - event: SanctionRemoved(indexed address)
+          handler: handleSanctionRemoved
+        - event: ContractRegistered(indexed address,bytes32,bool)
+          handler: handleContractRegistered
+      file: ./src/mappings/riskRegistry.ts
+  - kind: ethereum
+    name: ComplianceEngine
+    network: sepolia
+    source:
+      abi: ComplianceEngine
+      # ComplianceEngine: transaction compliance checks, fund holding, emergency mode
+      address: "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC"
+      startBlock: 7650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ComplianceCheck
+        - HoldRecord
+        - OperationLog
+        - ProtocolStats
+        - DailyStats
+        - HourlyStats
+      abis:
+        - name: ComplianceEngine
+          file: ./abis/ComplianceEngine.json
+      eventHandlers:
+        - event: ComplianceCheck(indexed address,indexed address,indexed
+            address,uint256,uint8,string)
+          handler: handleComplianceCheck
+        - event: FundsHeld(indexed bytes32,indexed address,address,uint256)
+          handler: handleFundsHeld
+        - event: FundsReleased(indexed bytes32,indexed address,uint256)
+          handler: handleFundsReleased
+        - event: EmergencyModeActivated(indexed address)
+          handler: handleEmergencyModeActivated
+        - event: EmergencyModeDeactivated(indexed address)
+          handler: handleEmergencyModeDeactivated
+      file: ./src/mappings/complianceEngine.ts
+  - kind: ethereum
+    name: PolicyEngine
+    network: sepolia
+    source:
+      abi: PolicyEngine
+      # PolicyEngine: issuer and wallet policy management
+      address: "0x87089F67A61F9643796AE154663A6a9F21196b38"
+      startBlock: 7650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Policy
+        - PolicyVersion
+      abis:
+        - name: PolicyEngine
+          file: ./abis/PolicyEngine.json
+      eventHandlers:
+        - event: IssuerPolicySet(indexed
+            address,(uint256,uint256,bool,bool,bool,bool,uint256))
+          handler: handleIssuerPolicySet
+        - event: WalletPolicySet(indexed
+            address,(uint256,uint256,uint256,uint256,bool,bool,bool,address[],address[]))
+          handler: handleWalletPolicySet
+        - event: PolicyEvaluated(indexed address,indexed address,indexed
+            address,uint256,uint8,string)
+          handler: handlePolicyEvaluated
+      file: ./src/mappings/policyEngine.ts
+  - kind: ethereum
+    name: FidesCompliance
+    network: sepolia
+    source:
+      abi: FidesCompliance
+      # FidesCompliance: Fides-specific compliance rules and risk profiles
+      address: "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b"
+      # Later deployment than core contracts; startBlock matches deployment
+      startBlock: 11053336
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - FidesRiskProfile
+        - FidesComplianceCheck
+        - FidesTransactionBlocked
+        - FidesAuditLog
+        - FidesRule
+      abis:
+        - name: FidesCompliance
+          file: ./abis/FidesCompliance.json
+      eventHandlers:
+        - event: RiskProfileUpdated(indexed address,uint8,uint256,indexed
+            address,bytes32,uint256)
+          handler: handleRiskProfileUpdated
+        - event: ComplianceCheck(indexed address,indexed address,uint256,bool,indexed
+            bytes32,uint256)
+          handler: handleComplianceCheck
+        - event: TransactionBlocked(indexed address,indexed
+            address,uint256,string,uint256)
+          handler: handleTransactionBlocked
+        - event: AuditLogCreated(indexed uint256,uint8,indexed address,bytes32,uint256)
+          handler: handleAuditLogCreated
+        - event: RuleCreated(indexed bytes32,string,uint8,indexed address,uint256)
+          handler: handleRuleCreated
+        - event: RuleUpdated(indexed bytes32,uint8,indexed address,uint256)
+          handler: handleRuleUpdated
+      file: ./src/mappings/fidesCompliance.ts
+  - kind: ethereum
+    name: CompliantSmartWalletV3
+    network: sepolia
+    source:
+      abi: CompliantSmartWallet
+      # CompliantSmartWalletV3: wallet operations, balance freezing, quarantine
+      address: "0xbe33EBA3e0d6Dc324aBF1DE1aD0E1e65DcA526AB"
+      startBlock: 11053336
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - WalletOperation
+        - BatchExecution
+        - QuarantineRecord
+        - WalletBalance
+      abis:
+        - name: CompliantSmartWallet
+          file: ./abis/CompliantSmartWallet.json
+      eventHandlers:
+        - event: OperationExecuted(indexed bytes32,uint8,address,uint256,bool)
+          handler: handleOperationExecuted
+        - event: BatchExecuted(uint256,uint256,uint256)
+          handler: handleBatchExecuted
+        - event: AutoQuarantineTriggered(indexed address,uint256,indexed bytes32,string)
+          handler: handleAutoQuarantineTriggered
+        - event: BalanceFrozen(indexed address,uint256,string)
+          handler: handleBalanceFrozen
+        - event: BalanceReleased(indexed address,uint256)
+          handler: handleBalanceReleased
+      file: ./src/mappings/compliantSmartWallet.ts
+
+# Network switching guide:
+# To switch from Sepolia to mainnet:
+# 1. Update all `network: sepolia` entries to `network: mainnet`
+# 2. Replace contract addresses with mainnet deployments
+# 3. Update startBlock values to mainnet deployment blocks
+# 4. Ensure ABI files match mainnet contract versions
+# 5. Redeploy the subgraph to the mainnet studio endpoint
+# 6. Re-indexing is required; existing Sepolia data will not be migrated automatically
+
+templates: []

@@ -1,0 +1,39 @@
+{
+  "contractName": "FidesOrigin-v0.2.1",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
+  "deployTime": "2026-06-15T01:51:32Z",
+  "version": "v0.2.1",
+  "contracts": {
+    "RiskRegistry": {
+      "proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+      "implementation": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59",
+      "type": "UUPS Proxy"
+    },
+    "PolicyEngine": {
+      "proxy": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+      "implementation": "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7",
+      "type": "UUPS Proxy"
+    },
+    "ComplianceEngine": {
+      "proxy": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+      "implementation": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807",
+      "type": "UUPS Proxy"
+    },
+    "QuarantineVault": {
+      "address": "0x497176b21CC2EDd90a8725a3023742358311a382",
+      "type": "Direct Deploy"
+    },
+    "FidesCompliance": {
+      "status": "PENDING",
+      "reason": "insufficient balance"
+    },
+    "CompliantStableCoin": {
+      "status": "PENDING",
+      "reason": "insufficient balance"
+    }
+  },
+  "testUSD": "0xeF90F9FdB868EDA98b337CbF54111b8539533ED2",
+  "balance": "0.00402753523606723 ETH"
+}

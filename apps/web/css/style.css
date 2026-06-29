@@ -1,0 +1,141 @@
+@import 'tailwindcss';
+@import './fio-design-system.css';
+
+/* Additional styles */
+@import './additional-styles/utility-patterns.css' layer(components);
+@import './additional-styles/theme.css';
+
+@plugin "@tailwindcss/forms" {
+  strategy: base;
+}
+
+@theme {
+  --font-inter: var(--font-inter), sans-serif;
+  --font-nacelle: var(--font-nacelle), sans-serif;
+
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5384;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5715;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5333;
+  --text-base--letter-spacing: -0.0125em;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.5;
+  --text-lg--letter-spacing: -0.0125em;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.5;
+  --text-xl--letter-spacing: -0.0125em;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.415;
+  --text-2xl--letter-spacing: -0.0268em;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 1.3571;
+  --text-3xl--letter-spacing: -0.0268em;
+  --text-4xl: 2.5rem;
+  --text-4xl--line-height: 1.1;
+  --text-4xl--letter-spacing: -0.0268em;
+  --text-5xl: 3.5rem;
+  --text-5xl--line-height: 1;
+  --text-5xl--letter-spacing: -0.0268em;
+  --text-6xl: 4rem;
+  --text-6xl--line-height: 1;
+  --text-6xl--letter-spacing: -0.0268em;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-7xl--letter-spacing: -0.0268em;
+
+  --animate-shine: shine 5s ease-in-out 500ms infinite;
+  --animate-gradient: gradient 6s linear infinite;
+
+  @keyframes shine {
+    0% {
+      transform: translateY(0) scaleY(5);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.8;
+    }
+    20% {
+      transform: translateY(100vh) scaleY(10);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(100vh) scaleY(1);
+      opacity: 0;
+    }
+  }
+  @keyframes gradient {
+    to {
+      background-position: 200% center;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+/* FidesOrigin Design System - Ensure CSS variables are loaded */
+@layer base {
+  :root {
+    --fio-ink: #070810;
+    --fio-ink-soft: #0c0e16;
+    --fio-surface: #12141d;
+    --fio-surface-2: #181b26;
+    --fio-surface-3: #1e2130;
+    --fio-elevated: #262a3a;
+    --fio-text: #e8eaf0;
+    --fio-text-2: #8a8f9e;
+    --fio-text-3: #5a6070;
+    --fio-text-4: #3a4050;
+    --fio-accent: #8b7ec8;
+    --fio-accent-dim: rgba(139, 126, 200, 0.12);
+    --fio-accent-glow: rgba(139, 126, 200, 0.06);
+    --fio-gold: #c9a96e;
+    --fio-gold-dim: rgba(201, 169, 110, 0.12);
+    --fio-gold-glow: rgba(201, 169, 110, 0.08);
+    --fio-steel: #6b8cae;
+    --fio-steel-dim: rgba(107, 140, 174, 0.12);
+    --fio-success: #4ade80;
+    --fio-warn: #fbbf24;
+    --fio-danger: #f87171;
+    --fio-info: #60a5fa;
+    --font-sans: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: var(--font-serif), 'Playfair Display', Georgia, serif;
+    --font-mono: var(--font-mono), 'JetBrains Mono', 'SF Mono', monospace;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 20px;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    font-family: var(--font-sans);
+    background: var(--fio-ink);
+    color: var(--fio-text);
+    line-height: 1.6;
+  }
+}

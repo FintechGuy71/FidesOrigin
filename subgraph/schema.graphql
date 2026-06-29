@@ -1,0 +1,280 @@
+# FidesOrigin Protocol Subgraph Schema
+# The Graph auto-generates Query fields for each @entity
+
+type RiskProfile @entity {
+  id: ID!                              # 地址
+  riskScore: Int!
+  tier: RiskTier!
+  tags: [String!]!
+  lastUpdated: BigInt!
+  isSanctioned: Boolean!
+  sanctionedAt: BigInt
+  sanctionReason: String
+  updates: [RiskProfileUpdate!]! @derivedFrom(field: "account")
+}
+
+type RiskProfileUpdate @entity {
+  id: ID!                              # txHash-logIndex
+  account: RiskProfile!
+  riskScore: Int!
+  tier: RiskTier!
+  tags: [String!]!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+  oracle: String!
+}
+
+type ComplianceCheck @entity {
+  id: ID!                              # txHash-logIndex
+  operator: String!
+  from: String!
+  to: String!
+  amount: BigInt!
+  decision: Decision!
+  reason: String!
+  assetContract: String
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type Policy @entity {
+  id: ID!                              # issuer地址
+  issuer: String!
+  maxTxAmount: BigInt!
+  dailyLimit: BigInt!
+  allowMediumRisk: Boolean!
+  allowHighRisk: Boolean!
+  blockMixer: Boolean!
+  requireDestinationKYC: Boolean!
+  cooldownPeriod: BigInt!
+  version: Int!
+  updatedAt: BigInt!
+  versions: [PolicyVersion!]! @derivedFrom(field: "policy")
+}
+
+type PolicyVersion @entity {
+  id: ID!                              # policyId-version
+  policy: Policy!
+  version: Int!
+  maxTxAmount: BigInt!
+  dailyLimit: BigInt!
+  allowMediumRisk: Boolean!
+  allowHighRisk: Boolean!
+  blockMixer: Boolean!
+  requireDestinationKYC: Boolean!
+  cooldownPeriod: BigInt!
+  updatedAt: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+  active: Boolean!
+}
+
+type SanctionedAddress @entity {
+  id: ID!                              # 地址
+  account: String!
+  addedAt: BigInt!
+  removedAt: BigInt
+  isActive: Boolean!
+  reason: String
+  addedBy: String!
+}
+
+type HoldRecord @entity {
+  id: ID!                              # holdId
+  owner: String!
+  asset: String!
+  amount: BigInt!
+  timestamp: BigInt!
+  reason: String!
+  released: Boolean!
+  releasedAt: BigInt
+  releasedBy: String
+}
+
+type OperationLog @entity {
+  id: ID!                              # txHash-logIndex
+  timestamp: BigInt!
+  operator: String!
+  operationType: String!
+  result: String!
+  details: String!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type ProtocolStats @entity {
+  id: ID!                              # "stats"
+  totalComplianceChecks: BigInt!
+  totalAllowed: BigInt!                # 允许的交易数
+  totalBlocked: BigInt!
+  totalFlagged: BigInt!
+  totalHeld: BigInt!
+  totalSanctioned: Int!
+  totalFundsHeld: BigInt!
+  lastUpdated: BigInt!
+}
+
+# ========== Time Series Aggregation ==========
+
+type DailyStats @entity {
+  id: ID!                              # YYYY-MM-DD
+  date: String!                        # 2026-05-09
+  totalChecks: BigInt!
+  totalBlocked: BigInt!
+  totalFlagged: BigInt!
+  totalHeld: BigInt!
+  uniqueAddresses: Int!
+  avgRiskScore: Int!  # 放大100倍存整数，如123=1.23（规避AS BigDecimal编译器bug）
+  topDecision: String!                 # "ALLOW" | "BLOCK" | "FLAG" | "HOLD"
+}
+
+type HourlyStats @entity {
+  id: ID!                              # YYYY-MM-DD-HH
+  hour: String!                        # 2026-05-09-14
+  totalChecks: BigInt!
+  totalBlocked: BigInt!
+  totalFlagged: BigInt!
+  totalHeld: BigInt!
+  txCount: BigInt!                     # 交易计数（替代TPS）
+}
+
+# ========== Leaderboard & Ranking ==========
+
+type TopRiskAddress @entity {
+  id: ID!                              # 地址
+  riskScore: Int!
+  tier: RiskTier!
+  checkCount: Int!
+  blockCount: Int!
+  lastActive: BigInt!
+  isSanctioned: Boolean!
+}
+
+enum RiskTier {
+  UNKNOWN
+  LOW
+  MEDIUM
+  HIGH
+}
+
+# ========== CompliantSmartWallet ==========
+
+type WalletOperation @entity {
+  id: ID!                              # opHash
+  wallet: String!                     # 钱包地址
+  opType: String!                     # TRANSFER | TOKEN_TRANSFER | CONTRACT_CALL
+  target: String!
+  value: BigInt!
+  success: Boolean!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type BatchExecution @entity {
+  id: ID!                              # txHash
+  wallet: String!
+  count: BigInt!
+  successCount: BigInt!
+  blockedCount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type QuarantineRecord @entity {
+  id: ID!                              # recordId
+  wallet: String!
+  token: String!
+  amount: BigInt!
+  reason: String!
+  released: Boolean!
+  releasedAt: BigInt
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type WalletBalance @entity {
+  id: ID!                              # wallet-token
+  wallet: String!
+  token: String!
+  totalBalance: BigInt!
+  available: BigInt!
+  frozen: BigInt!
+  pendingRisk: BigInt!
+  updatedAt: BigInt!
+}
+
+# ========== FidesCompliance ==========
+
+type FidesRiskProfile @entity {
+  id: ID!                              # 地址
+  level: RiskLevel!
+  score: BigInt!
+  tags: [String!]!
+  lastUpdated: BigInt!
+  updatedBy: String!
+  reasonHash: String!
+}
+
+type FidesComplianceCheck @entity {
+  id: ID!                              # txHash
+  from: String!
+  to: String!
+  amount: BigInt!
+  result: Boolean!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type FidesTransactionBlocked @entity {
+  id: ID!                              # txHash-logIndex
+  from: String!
+  to: String!
+  amount: BigInt!
+  reason: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type FidesAuditLog @entity {
+  id: ID!                              # logId
+  eventType: String!
+  actor: String!
+  subject: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type FidesRule @entity {
+  id: ID!                              # ruleId
+  name: String!
+  ruleType: String!
+  status: String!
+  priority: BigInt!
+  creator: String!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+enum RiskLevel {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  BLACKLIST
+  WHITELIST
+}
+
+enum Decision {
+  ALLOW
+  BLOCK
+  FLAG
+  HOLD
+}

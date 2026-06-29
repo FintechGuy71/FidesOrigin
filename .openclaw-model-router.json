@@ -1,0 +1,17 @@
+{
+  "name": "fidesorigin-model-router",
+  "version": "2.0.0",
+  "description": "Route FidesOrigin and code tasks to GLM-5.2 via zhipu direct",
+  "modelRouting": {
+    "rules": [
+      {
+        "name": "FidesOrigin & Code Tasks",
+        "pattern": "(?i)(fidesorigin|contract|deploy|solidity|hardhat|test|web3|compliance|quarantine|risk|code|debug|compile|migrate|subnet|graph|typescript|javascript|python)",
+        "model": "zhipu/glm-5.2",
+        "priority": 100,
+        "description": "All code-related tasks use GLM-5.2 (1M context, 65K output)"
+      }
+    ],
+    "defaultModel": "kimi-coding/k2p6"
+  }
+}

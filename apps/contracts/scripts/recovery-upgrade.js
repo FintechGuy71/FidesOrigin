@@ -1,0 +1,63 @@
+const { ethers } = require("hardhat");
+
+const PROXY = process.env.PROXY_ADDRESS;
+if (!PROXY) {
+  console.error('❌ PROXY_ADDRESS env var required');
+  console.error('   Example: PROXY_ADDRESS=0x... npx hardhat run scripts/recovery-upgrade.js --network sepolia');
+  process.exit(1);
+}
+
+// ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
+// Production deployments MUST use a TimelockController with a two-phase process.
+// To bypass this check for testing/emergency, set BYPASS_TIMELOCK=true
+const BYPASS_TIMELOCK = process.env.BYPASS_TIMELOCK === 'true';
+
+async function main() {
+  if (!BYPASS_TIMELOCK) {
+    console.error("❌  SECURITY HALT: Direct upgrade bypasses Timelock protection.");
+    console.error("   Production: Use TimelockController.schedule() + execute()");
+    console.error("   Testing:     Set BYPASS_TIMELOCK=true to proceed");
+    process.exit(1);
+  }
+
+  console.warn("⚠️  BYPASSING TIMELOCK — direct upgradeToAndCall will be used");
+  const [signer] = await ethers.getSigners();
+  console.log('Recovery: deploying fresh V2.0.0 (no reinitializer needed)');
+  console.log('Balance:', ethers.formatEther(await ethers.provider.getBalance(signer.address)), 'ETH');
+
+  // Deploy the original V2.0.0 implementation (same code as before)
+  const RiskRegistryV2 = await ethers.getContractFactory('RiskRegistryV2');
+  
+  // Deploy fresh implementation
+  const impl = await RiskRegistryV2.deploy();
+  await impl.waitForDeployment();
+  const implAddr = await impl.getAddress();
+  console.log('New fresh implementation:', implAddr);
+
+  // Try direct upgrade (no init call)
+  const proxyAbi = ['function upgradeToAndCall(address impl, bytes data) external'];
+  const proxy = new ethers.Contract(PROXY, proxyAbi, signer);
+  
+  console.log('Upgrading to fresh impl...');
+  try {
+    const tx = await proxy.upgradeToAndCall(implAddr, '0x', { gasLimit: 500000 });
+    console.log('Upgrade tx:', tx.hash);
+    const receipt = await tx.wait();
+    console.log('Status:', receipt.status);
+  } catch(e) {
+    console.log('Upgrade failed:', e.message);
+    return;
+  }
+
+  // Test raw call
+  const VERSION_SELECTOR = '0x54fd4d50';
+  const result = await ethers.provider.call({ to: PROXY, data: VERSION_SELECTOR });
+  console.log('VERSION raw:', result);
+
+  // Test isSanctioned
+  const data = '0x9948b18d000000000000000000000000e950dc316b836e4eefb8308bf32bf7c72a1358ff';
+  const result2 = await ethers.provider.call({ to: PROXY, data });
+  console.log('isSanctioned raw:', result2);
+}
+
+main().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });

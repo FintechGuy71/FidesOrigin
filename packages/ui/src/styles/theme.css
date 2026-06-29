@@ -1,0 +1,396 @@
+/**
+ * Theme CSS
+ * Theme-specific overrides and dark mode support for FidesOrigin
+ */
+
+/* ==========================================================================
+   Theme Variables
+   ========================================================================== */
+
+[data-theme="light"],
+:root {
+  /* Background */
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: #f9fafb;
+  --theme-bg-tertiary: #f3f4f6;
+  --theme-bg-elevated: #ffffff;
+  --theme-bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Text */
+  --theme-text-primary: #111827;
+  --theme-text-secondary: #4b5563;
+  --theme-text-tertiary: #6b7280;
+  --theme-text-muted: #9ca3af;
+  --theme-text-inverse: #ffffff;
+
+  /* Border */
+  --theme-border-subtle: #e5e7eb;
+  --theme-border-default: #d1d5db;
+  --theme-border-strong: #9ca3af;
+
+  /* Accent */
+  --theme-accent-primary: #2563eb;
+  --theme-accent-secondary: #3b82f6;
+  --theme-accent-hover: #1d4ed8;
+
+  /* Surface */
+  --theme-surface-default: #ffffff;
+  --theme-surface-hover: #f9fafb;
+  --theme-surface-active: #f3f4f6;
+  --theme-surface-disabled: #f3f4f6;
+
+  /* Status */
+  --theme-status-success: #22c55e;
+  --theme-status-success-bg: #f0fdf4;
+  --theme-status-warning: #eab308;
+  --theme-status-warning-bg: #fefce8;
+  --theme-status-error: #ef4444;
+  --theme-status-error-bg: #fef2f2;
+  --theme-status-info: #3b82f6;
+  --theme-status-info-bg: #eff6ff;
+}
+
+[data-theme="dark"] {
+  /* Background */
+  --theme-bg-primary: #0f172a;
+  --theme-bg-secondary: #1e293b;
+  --theme-bg-tertiary: #334155;
+  --theme-bg-elevated: #1e293b;
+  --theme-bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text */
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #cbd5e1;
+  --theme-text-tertiary: #94a3b8;
+  --theme-text-muted: #64748b;
+  --theme-text-inverse: #0f172a;
+
+  /* Border */
+  --theme-border-subtle: #334155;
+  --theme-border-default: #475569;
+  --theme-border-strong: #64748b;
+
+  /* Accent */
+  --theme-accent-primary: #60a5fa;
+  --theme-accent-secondary: #3b82f6;
+  --theme-accent-hover: #93c5fd;
+
+  /* Surface */
+  --theme-surface-default: #1e293b;
+  --theme-surface-hover: #334155;
+  --theme-surface-active: #475569;
+  --theme-surface-disabled: #1e293b;
+
+  /* Status */
+  --theme-status-success: #4ade80;
+  --theme-status-success-bg: #14532d;
+  --theme-status-warning: #facc15;
+  --theme-status-warning-bg: #713f12;
+  --theme-status-error: #f87171;
+  --theme-status-error-bg: #7f1d1d;
+  --theme-status-info: #60a5fa;
+  --theme-status-info-bg: #1e3a8a;
+}
+
+/* ==========================================================================
+   Theme-Aware Component Classes
+   ========================================================================== */
+
+.theme-card {
+  background-color: var(--theme-surface-default);
+  border: 1px solid var(--theme-border-subtle);
+  border-radius: var(--fio-radius-lg, 0.5rem);
+  transition: background-color var(--fio-transition-fast, 150ms), border-color var(--fio-transition-fast, 150ms);
+}
+
+.theme-card:hover {
+  background-color: var(--theme-surface-hover);
+}
+
+.theme-input {
+  background-color: var(--theme-bg-primary);
+  border: 1px solid var(--theme-border-default);
+  color: var(--theme-text-primary);
+  transition: border-color var(--fio-transition-fast, 150ms), box-shadow var(--fio-transition-fast, 150ms);
+}
+
+.theme-input:focus {
+  outline: none;
+  border-color: var(--theme-accent-primary);
+  box-shadow: 0 0 0 3px var(--theme-accent-primary);
+  opacity: 0.2;
+}
+
+.theme-input::placeholder {
+  color: var(--theme-text-muted);
+}
+
+.theme-button-primary {
+  background-color: var(--theme-accent-primary);
+  color: var(--theme-text-inverse);
+  transition: background-color var(--fio-transition-fast, 150ms), transform var(--fio-transition-fast, 150ms);
+}
+
+.theme-button-primary:hover {
+  background-color: var(--theme-accent-hover);
+}
+
+.theme-button-primary:active {
+  transform: scale(0.98);
+}
+
+.theme-button-secondary {
+  background-color: var(--theme-surface-default);
+  border: 1px solid var(--theme-border-default);
+  color: var(--theme-text-primary);
+  transition: background-color var(--fio-transition-fast, 150ms), border-color var(--fio-transition-fast, 150ms);
+}
+
+.theme-button-secondary:hover {
+  background-color: var(--theme-surface-hover);
+  border-color: var(--theme-border-strong);
+}
+
+/* ==========================================================================
+   Risk Level Theme Classes
+   ========================================================================== */
+
+.theme-risk-low {
+  background-color: var(--theme-status-success-bg);
+  color: var(--theme-status-success);
+  border-color: var(--theme-status-success);
+}
+
+.theme-risk-medium {
+  background-color: var(--theme-status-warning-bg);
+  color: var(--theme-status-warning);
+  border-color: var(--theme-status-warning);
+}
+
+.theme-risk-high {
+  background-color: var(--theme-status-error-bg);
+  color: var(--theme-status-error);
+  border-color: var(--theme-status-error);
+  opacity: 0.8;
+}
+
+.theme-risk-critical {
+  background-color: var(--theme-status-error-bg);
+  color: var(--theme-status-error);
+  border-color: var(--theme-status-error);
+}
+
+/* ==========================================================================
+   Scrollbar Theming
+   ========================================================================== */
+
+.theme-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.theme-scrollbar::-webkit-scrollbar-track {
+  background: var(--theme-bg-secondary);
+  border-radius: var(--fio-radius-full, 9999px);
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--theme-border-strong);
+  border-radius: var(--fio-radius-full, 9999px);
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-text-muted);
+}
+
+/* ==========================================================================
+   Selection Theming
+   ========================================================================== */
+
+::selection {
+  background-color: var(--theme-accent-primary);
+  color: var(--theme-text-inverse);
+  opacity: 0.3;
+}
+
+/* ==========================================================================
+   Focus Ring Theme
+   ========================================================================== */
+
+.theme-focus-ring:focus-visible {
+  outline: 2px solid var(--theme-accent-primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Skeleton Loading
+   ========================================================================== */
+
+.theme-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--theme-bg-secondary) 25%,
+    var(--theme-bg-tertiary) 50%,
+    var(--theme-bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: theme-skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: var(--fio-radius-md, 0.375rem);
+}
+
+@keyframes theme-skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==========================================================================
+   Toast/Notification Theme
+   ========================================================================== */
+
+.theme-toast-success {
+  background-color: var(--theme-status-success-bg);
+  color: var(--theme-status-success);
+  border: 1px solid var(--theme-status-success);
+}
+
+.theme-toast-warning {
+  background-color: var(--theme-status-warning-bg);
+  color: var(--theme-status-warning);
+  border: 1px solid var(--theme-status-warning);
+}
+
+.theme-toast-error {
+  background-color: var(--theme-status-error-bg);
+  color: var(--theme-status-error);
+  border: 1px solid var(--theme-status-error);
+}
+
+.theme-toast-info {
+  background-color: var(--theme-status-info-bg);
+  color: var(--theme-status-info);
+  border: 1px solid var(--theme-status-info);
+}
+
+/* ==========================================================================
+   Modal/Overlay Theme
+   ========================================================================== */
+
+.theme-overlay {
+  background-color: var(--theme-bg-overlay);
+  backdrop-filter: blur(4px);
+}
+
+.theme-modal {
+  background-color: var(--theme-bg-elevated);
+  border: 1px solid var(--theme-border-subtle);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ==========================================================================
+   Code/Monospace Theme
+   ========================================================================== */
+
+.theme-code {
+  font-family: var(--fio-font-mono, ui-monospace, monospace);
+  background-color: var(--theme-bg-secondary);
+  color: var(--theme-text-primary);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--fio-radius-sm, 0.25rem);
+  font-size: 0.875em;
+}
+
+.theme-code-block {
+  font-family: var(--fio-font-mono, ui-monospace, monospace);
+  background-color: var(--theme-bg-secondary);
+  color: var(--theme-text-primary);
+  padding: 1rem;
+  border-radius: var(--fio-radius-lg, 0.5rem);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   Table Theme
+   ========================================================================== */
+
+.theme-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.theme-table th {
+  background-color: var(--theme-bg-secondary);
+  color: var(--theme-text-secondary);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--theme-border-subtle);
+  font-size: 0.875rem;
+}
+
+.theme-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--theme-border-subtle);
+  color: var(--theme-text-primary);
+}
+
+.theme-table tr:hover td {
+  background-color: var(--theme-surface-hover);
+}
+
+/* ==========================================================================
+   Tooltip Theme
+   ========================================================================== */
+
+.theme-tooltip {
+  background-color: var(--theme-bg-tertiary);
+  color: var(--theme-text-primary);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--fio-radius-md, 0.375rem);
+  font-size: 0.875rem;
+  box-shadow: var(--fio-shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--theme-border-subtle);
+}
+
+/* ==========================================================================
+   Badge Theme
+   ========================================================================== */
+
+.theme-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--fio-radius-full, 9999px);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Divider Theme
+   ========================================================================== */
+
+.theme-divider {
+  border: none;
+  border-top: 1px solid var(--theme-border-subtle);
+  margin: 1rem 0;
+}
+
+/* ==========================================================================
+   Link Theme
+   ========================================================================== */
+
+.theme-link {
+  color: var(--theme-accent-primary);
+  text-decoration: none;
+  transition: color var(--fio-transition-fast, 150ms);
+}
+
+.theme-link:hover {
+  color: var(--theme-accent-hover);
+  text-decoration: underline;
+}

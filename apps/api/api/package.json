@@ -1,0 +1,16 @@
+{
+  "name": "fidesorigin-risk-sync",
+  "version": "1.0.0",
+  "description": "FidesOrigin Risk Address Sync API",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vercel": "^33.0.0"
+  }
+}

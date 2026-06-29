@@ -1,0 +1,10 @@
+{
+  "contractName": "TestUSD",
+  "contractAddress": "0xeF90F9FdB868EDA98b337CbF54111b8539533ED2",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
+  "deployTime": "2026-06-14T11:25:48.673Z",
+  "version": "v0.3.0",
+  "phase": "Phase 3 - Timelock + Multisig"
+}

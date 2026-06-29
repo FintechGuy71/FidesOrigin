@@ -1,0 +1,382 @@
+/**
+ * Utility Patterns CSS
+ * Common utility patterns and helper classes for FidesOrigin
+ */
+
+/* ==========================================================================
+   Layout Utilities
+   ========================================================================== */
+
+.fio-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--fio-space-4);
+  padding-right: var(--fio-space-4);
+}
+
+.fio-container-sm {
+  max-width: 640px;
+}
+
+.fio-container-md {
+  max-width: 768px;
+}
+
+.fio-container-lg {
+  max-width: 1024px;
+}
+
+.fio-container-xl {
+  max-width: 1280px;
+}
+
+.fio-container-full {
+  max-width: none;
+}
+
+/* ==========================================================================
+   Flexbox Utilities
+   ========================================================================== */
+
+.fio-flex {
+  display: flex;
+}
+
+.fio-flex-col {
+  flex-direction: column;
+}
+
+.fio-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.fio-items-center {
+  align-items: center;
+}
+
+.fio-items-start {
+  align-items: flex-start;
+}
+
+.fio-items-end {
+  align-items: flex-end;
+}
+
+.fio-justify-center {
+  justify-content: center;
+}
+
+.fio-justify-between {
+  justify-content: space-between;
+}
+
+.fio-justify-end {
+  justify-content: flex-end;
+}
+
+.fio-gap-1 {
+  gap: var(--fio-space-1);
+}
+
+.fio-gap-2 {
+  gap: var(--fio-space-2);
+}
+
+.fio-gap-3 {
+  gap: var(--fio-space-3);
+}
+
+.fio-gap-4 {
+  gap: var(--fio-space-4);
+}
+
+/* ==========================================================================
+   Grid Utilities
+   ========================================================================== */
+
+.fio-grid {
+  display: grid;
+}
+
+.fio-grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fio-grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fio-grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ==========================================================================
+   Spacing Utilities
+   ========================================================================== */
+
+.fio-m-0 { margin: 0; }
+.fio-m-1 { margin: var(--fio-space-1); }
+.fio-m-2 { margin: var(--fio-space-2); }
+.fio-m-3 { margin: var(--fio-space-3); }
+.fio-m-4 { margin: var(--fio-space-4); }
+
+.fio-mt-1 { margin-top: var(--fio-space-1); }
+.fio-mt-2 { margin-top: var(--fio-space-2); }
+.fio-mt-3 { margin-top: var(--fio-space-3); }
+.fio-mt-4 { margin-top: var(--fio-space-4); }
+
+.fio-mb-1 { margin-bottom: var(--fio-space-1); }
+.fio-mb-2 { margin-bottom: var(--fio-space-2); }
+.fio-mb-3 { margin-bottom: var(--fio-space-3); }
+.fio-mb-4 { margin-bottom: var(--fio-space-4); }
+
+.fio-p-1 { padding: var(--fio-space-1); }
+.fio-p-2 { padding: var(--fio-space-2); }
+.fio-p-3 { padding: var(--fio-space-3); }
+.fio-p-4 { padding: var(--fio-space-4); }
+
+/* ==========================================================================
+   Text Utilities
+   ========================================================================== */
+
+.fio-text-center {
+  text-align: center;
+}
+
+.fio-text-left {
+  text-align: left;
+}
+
+.fio-text-right {
+  text-align: right;
+}
+
+.fio-text-xs {
+  font-size: var(--fio-text-xs);
+}
+
+.fio-text-sm {
+  font-size: var(--fio-text-sm);
+}
+
+.fio-text-base {
+  font-size: var(--fio-text-base);
+}
+
+.fio-text-lg {
+  font-size: var(--fio-text-lg);
+}
+
+.fio-text-xl {
+  font-size: var(--fio-text-xl);
+}
+
+.fio-font-medium {
+  font-weight: 500;
+}
+
+.fio-font-semibold {
+  font-weight: 600;
+}
+
+.fio-font-bold {
+  font-weight: 700;
+}
+
+.fio-text-primary {
+  color: var(--fio-text-primary);
+}
+
+.fio-text-secondary {
+  color: var(--fio-text-secondary);
+}
+
+.fio-text-muted {
+  color: var(--fio-text-muted);
+}
+
+/* ==========================================================================
+   Display Utilities
+   ========================================================================== */
+
+.fio-hidden {
+  display: none;
+}
+
+.fio-block {
+  display: block;
+}
+
+.fio-inline {
+  display: inline;
+}
+
+.fio-inline-block {
+  display: inline-block;
+}
+
+/* ==========================================================================
+   Border Utilities
+   ========================================================================== */
+
+.fio-border {
+  border: 1px solid var(--fio-border-color);
+}
+
+.fio-border-t {
+  border-top: 1px solid var(--fio-border-color);
+}
+
+.fio-border-b {
+  border-bottom: 1px solid var(--fio-border-color);
+}
+
+.fio-rounded {
+  border-radius: var(--fio-radius-md);
+}
+
+.fio-rounded-lg {
+  border-radius: var(--fio-radius-lg);
+}
+
+.fio-rounded-full {
+  border-radius: var(--fio-radius-full);
+}
+
+/* ==========================================================================
+   Shadow Utilities
+   ========================================================================== */
+
+.fio-shadow-sm {
+  box-shadow: var(--fio-shadow-sm);
+}
+
+.fio-shadow-md {
+  box-shadow: var(--fio-shadow-md);
+}
+
+.fio-shadow-lg {
+  box-shadow: var(--fio-shadow-lg);
+}
+
+/* ==========================================================================
+   Background Utilities
+   ========================================================================== */
+
+.fio-bg-primary {
+  background-color: var(--fio-bg-primary);
+}
+
+.fio-bg-secondary {
+  background-color: var(--fio-bg-secondary);
+}
+
+.fio-bg-tertiary {
+  background-color: var(--fio-bg-tertiary);
+}
+
+/* ==========================================================================
+   Interactive Utilities
+   ========================================================================== */
+
+.fio-cursor-pointer {
+  cursor: pointer;
+}
+
+.fio-cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+.fio-select-none {
+  user-select: none;
+}
+
+.fio-transition {
+  transition: all var(--fio-transition-normal);
+}
+
+.fio-transition-colors {
+  transition: color var(--fio-transition-fast), background-color var(--fio-transition-fast), border-color var(--fio-transition-fast);
+}
+
+/* ==========================================================================
+   Overflow Utilities
+   ========================================================================== */
+
+.fio-overflow-hidden {
+  overflow: hidden;
+}
+
+.fio-overflow-auto {
+  overflow: auto;
+}
+
+.fio-overflow-x-auto {
+  overflow-x: auto;
+}
+
+.fio-overflow-y-auto {
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   Position Utilities
+   ========================================================================== */
+
+.fio-relative {
+  position: relative;
+}
+
+.fio-absolute {
+  position: absolute;
+}
+
+.fio-fixed {
+  position: fixed;
+}
+
+.fio-sticky {
+  position: sticky;
+}
+
+/* ==========================================================================
+   Responsive Utilities
+   ========================================================================== */
+
+@media (min-width: 640px) {
+  .sm\\:fio-flex {
+    display: flex;
+  }
+  .sm\\:fio-grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sm\\:fio-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\\:fio-flex {
+    display: flex;
+  }
+  .md\\:fio-grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .md\\:fio-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\\:fio-flex {
+    display: flex;
+  }
+  .lg\\:fio-grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .lg\\:fio-hidden {
+    display: none;
+  }
+}

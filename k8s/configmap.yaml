@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fidesorigin-config
+  namespace: fidesorigin
+  labels:
+    app: fidesorigin-data-publisher
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+
+  # [P1 Fix] Contract addresses moved to env vars or external config
+  # RISK_REGISTRY_ADDRESS: "${RISK_REGISTRY_ADDRESS}"
+  # CHAIN_ID: "${CHAIN_ID}"
+  # FATF_RISK_REGISTRY_ADDRESS: "${FATF_RISK_REGISTRY_ADDRESS}"
+
+  # Key Management (choose ONE in the Secret; this ConfigMap sets metadata)
+  KMS_PROVIDER: ""
+  KMS_KEY_ID: ""
+  VAULT_ADDR: ""
+  VAULT_SECRET_PATH: "secret/data/fidesorigin"
+  VAULT_KEY_NAME: "privateKey"
+
+  # Gas
+  GAS_LIMIT: "300000"
+  MAX_FEE_PER_GAS: "50"
+  MAX_PRIORITY_FEE_PER_GAS: "2"
+  BATCH_SIZE: "50"
+  TX_INTERVAL_MS: "2000"
+  DRY_RUN: "false"
+
+  # Data Sources
+  OFAC_ENABLED: "true"
+  OFAC_ENDPOINT: "https://www.treasury.gov/ofac/downloads/sdn.xml"
+  OFAC_WEIGHT: "1.0"
+  OFAC_TIMEOUT: "30000"
+  OFAC_RETRY: "3"
+  OFAC_CRON: "0 0 * * *"
+
+  CHAINALYSIS_ENABLED: "false"
+  CHAINALYSIS_ENDPOINT: "https://api.chainalysis.com/api/v1/"
+  CHAINALYSIS_WEIGHT: "1.0"
+  CHAINALYSIS_TIMEOUT: "30000"
+  CHAINALYSIS_RETRY: "3"
+  CHAINALYSIS_CRON: "0 */6 * * *"
+
+  OPENSANCTIONS_ENABLED: "true"
+  OPENSANCTIONS_ENDPOINT: "https://api.opensanctions.org/"
+  OPENSANCTIONS_WEIGHT: "1.0"
+  OPENSANCTIONS_TIMEOUT: "30000"
+  OPENSANCTIONS_RETRY: "3"
+  OPENSANCTIONS_CRON: "0 0 * * *"
+
+  ETHERSCAN_ENABLED: "false"
+  ETHERSCAN_ENDPOINT: "https://api.etherscan.io/api"
+  ETHERSCAN_WEIGHT: "0.5"
+  ETHERSCAN_TIMEOUT: "30000"
+  ETHERSCAN_RETRY: "3"
+  ETHERSCAN_CRON: "0 0 * * 0"
+
+  # Scheduler
+  FULL_SYNC_CRON: "0 2 * * *"
+  INCREMENTAL_SYNC_CRON: "0 */4 * * *"
+  BATCH_SYNC_CRON: "30 3 * * *"
+
+  # FATF Pipeline
+  FATF_ENABLED: "true"
+  FATF_CRON: "17 3 * * 1"
+  FATF_USE_FALLBACK: "true"
+  FATF_DRY_RUN: "true"
+  OFAC_FETCH_TIMEOUT: "120000"
+  # [P1 Fix] Contract addresses moved to env vars or external config
+  # FATF_RISK_REGISTRY_ADDRESS: "${FATF_RISK_REGISTRY_ADDRESS}"
+  FATF_GAS_LIMIT: "300000"
+
+  # Monitoring
+  MONITOR_ENABLED: "true"
+  MONITOR_PORT: "9090"
+  MONITOR_METRICS_PATH: "/metrics"
+  MONITOR_HEALTH_PATH: "/health"
+
+  # Cluster
+  CLUSTER_ENABLED: "false"
+  REDIS_URL: "redis://redis.fidesorigin.svc.cluster.local:6379"
+  CLUSTER_LOCK_PREFIX: "fidesorigin:lock"
+  CLUSTER_LOCK_TTL: "60000"
+  CLUSTER_HEARTBEAT_INTERVAL: "10000"

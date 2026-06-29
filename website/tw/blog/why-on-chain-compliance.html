@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>為何鏈上：API 合規模式的終結 — FidesOrigin</title>
+    <meta name="description" content="基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="為何鏈上：API 合規模式的終結">
+    <meta name="twitter:description" content="基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。">
+    <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+    <link rel="canonical" href="https://fidesorigin.com/tw/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+
+    <meta property="og:title" content="為何鏈上：API 合規模式的終結">
+    <meta property="og:description" content="基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行。">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "為何鏈上：API 合規模式的終結",
+      "description": "基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。",
+      "url": "https://fidesorigin.com/tw/blog/why-on-chain-compliance.html",
+      "datePublished": "2026-06-01",
+      "author": {
+        "@type": "Organization",
+        "name": "FidesOrigin"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "FidesOrigin",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://fidesorigin.com/assets/logo/logo-full-dark-bg.png"
+        }
+      }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="apple-touch-icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111114;
+            --surface-2: #1a1a1f;
+            --border: rgba(255,255,255,0.04);
+            --gold: #d4af7a;
+            --gold-bright: #e8c99a;
+            --text-primary: #f0f0f2;
+            --text-secondary: #8b8b94;
+            --text-muted: #5a5a62;
+            --red: #e5484d;
+            --amber: #f5a623;
+            --green: #3eba6d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+        body.grain::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 180px;
+        }
+        .gold { color: var(--gold); }
+        .nav-bar { background: rgba(10,10,10,0.75); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px); }
+        .h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 600; line-height: 1.1; letter-spacing: -0.03em; color: var(--text-primary); }
+        .h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+        .h3 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+        .lead { font-size: 1.0625rem; color: var(--text-secondary); line-height: 1.7; font-weight: 400; }
+        .body-text { font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.7; }
+        .micro { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--gold); color: var(--bg);
+            padding: 0.625rem 1.25rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { background: var(--gold-bright); transform: translateY(-1px); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: transparent; color: var(--text-secondary);
+            padding: 0.625rem 1.25rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+        .glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; }
+        .hr-fade { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); margin: 0 auto; max-width: 800px; }
+        .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .code-header { background: var(--surface-2); padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .code-body { padding: 1rem; overflow-x: auto; }
+        .code-body pre { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.7; color: var(--text-secondary); margin: 0; }
+        .tk-keyword { color: #c586c0; }
+        .tk-type { color: #4ec9b0; }
+        .tk-func { color: #dcdcaa; }
+        .tk-comment { color: #6a9955; }
+        .tk-string { color: #ce9178; }
+        .article { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
+        .article p { margin-bottom: 1.5rem; }
+        .article h2 { color: var(--text-primary); font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+        .article h3 { color: var(--text-primary); font-size: 1.125rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; letter-spacing: -0.01em; }
+        .article ul { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+        .article ul li { margin-bottom: 0.5rem; }
+        .article a { color: var(--gold); text-decoration: none; }
+        .article a:hover { text-decoration: underline; }
+        .article blockquote { border-left: 2px solid var(--gold); padding-left: 1.25rem; margin: 1.5rem 0; color: var(--text-primary); font-weight: 500; }
+        .article strong { color: var(--text-primary); font-weight: 600; }
+        .article em { color: var(--gold); font-style: italic; }
+        .article .callout { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+        .article .callout p:last-child { margin-bottom: 0; }
+        .article .pull-quote { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; margin: 2rem 0; text-align: center; }
+        .lang-dropdown { position: relative; display: inline-block; }
+        .lang-dropdown-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6875rem; font-weight: 500; padding: 0.35rem 0.6rem; border-radius: 6px; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease; cursor: pointer; }
+        .lang-dropdown-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.07); }
+        .lang-dropdown-btn svg { width: 10px; height: 10px; transition: transform 0.2s ease; }
+        .lang-dropdown.open .lang-dropdown-btn svg { transform: rotate(180deg); }
+        .lang-dropdown-menu { position: absolute; top: calc(100% + 4px); right: 0; min-width: 100px; background: rgba(16,16,20,0.96); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: all 0.2s ease; z-index: 100; backdrop-filter: blur(8px); }
+        .lang-dropdown.open .lang-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .lang-dropdown-menu a { display: block; padding: 0.4rem 0.7rem; font-size: 0.6875rem; font-weight: 500; color: var(--text-muted); border-radius: 4px; transition: all 0.15s ease; }
+        .lang-dropdown-menu a:hover { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+        .lang-dropdown-menu a.active { color: var(--gold-bright); background: rgba(184,148,95,0.1); }
+    </style>
+
+    <style>
+        /* Mobile touch-target fixes */
+        .lang-dropdown-btn { min-height: 44px; padding: 0.5rem 0.75rem; }
+        .btn-primary, .btn-secondary { min-height: 44px; }
+        .uc-pain, .uc-fix { min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+        .code-body pre { white-space: pre-wrap; word-break: break-all; }
+        @media (max-width: 640px) {
+            .uc-row { padding: 1.25rem; }
+            .uc-pain, .uc-fix { padding-left: 0.75rem; }
+            .arch-layer { padding: 0.875rem 1rem; }
+            .addr-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+        }
+    </style>
+</head>
+<body class="grain">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-8 w-auto">
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="/" class="btn-secondary text-xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    返回首頁
+                </a>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-dropdown-btn" onclick="toggleLang()">
+                        繁中
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="lang-dropdown-menu">
+                        <a href="/blog/why-on-chain-compliance.html">English</a>
+                        <a href="/cn/blog/why-on-chain-compliance.html">简体中文</a>
+                        <a href="/tw/blog/why-on-chain-compliance.html" class="active">繁體中文</a>
+                        <a href="/jp/blog/why-on-chain-compliance.html">日本語</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero / Header -->
+    <section class="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
+        <div class="glow w-[400px] h-[400px] bg-[#b8945f] -top-40 -right-20"></div>
+        <div class="max-w-3xl mx-auto px-6 relative z-10">
+            <p class="micro mb-6">部落格 — 2026 年 6 月</p>
+            <h1 class="h1 mb-6">
+                為何鏈上：<br>
+                <span class="gold">API 合規模式的終結</span>
+            </h1>
+            <p class="lead max-w-2xl">
+                現在所有做加密合規的人，都在犯同一個架構錯誤。他們在做錯的事，而且他們自己也知道。
+            </p>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Article Body -->
+    <article class="article max-w-3xl mx-auto px-6 py-16 md:py-20">
+        <p>有一件事沒人願意說出口：今天所有主流的加密合規方案，都建立在一個根本錯誤的 premise 之上。你發起一筆交易，它打到某個中心化 API，那個 API 去維吉尼亞的某個資料庫查一下，然後——希望如此，最終——告訴你這筆轉帳該不該攔。</p>
+
+        <p>想一秒鐘。區塊鏈的全部承諾就是<em>去中心化、透明、抗審查</em>。而你的合規方案是維吉尼亞的一個中心化 API。</p>
+
+        <p>這不是功能。這是你要花錢買的 bug。</p>
+
+        <p>我不是說做這些系統的人傻。Chainalysis、Elliptic、TRM——他們有聰明的工程師，也有好的資料。但他們用錯了架構來解決錯的問題。他們想把 Web2 的合規硬套到 Web3 的基礎設施上，結果造出一個科學怪人，兩邊最糟糕的東西它都繼承了。</p>
+
+        <h2>API 模式是錯的</h2>
+
+        <p>我們來具體說說 API 模式為什麼錯，因為空泛的批評沒用。</p>
+
+        <p><strong>延遲。</strong>每一次 API 呼叫都會在交易流程中增加毫秒，有時是秒。在 DeFi 裡，這就是永恆。MEV 機器人不會等你合規 API 回應。DEX 上換代幣的用戶也不會。延遲不只是煩人——它是經濟層面的破壞。你在要求一個為即時確定性設計的系統停下來，等維吉尼亞阿什本的人查一條資料庫記錄。</p>
+
+        <p><strong>單點故障。</strong>API 掛了怎麼辦？你的合規服務商當機了怎麼辦？他們的 DNS 掛了？他們的限流觸發了？我見過——一家大交易所因為 KYT 供應商的 API 掛了，不得不暫停提領。整個合規棧就是一個包在 SLA 裡的單點故障。SLA 在正式上線時屁用沒有。</p>
+
+        <p><strong>信任假設。</strong>你得相信 API 回傳的是正確答案。相信資料庫是最新的。相信供應商沒被黑。相信回應在傳輸過程中沒被竄改。在一個「無需信任」就是全部意義的世界裡，你搭了一個合規系統，要求你完全信任第三方。而且關於合規這塊，它不是「無需信任」——它是<em>特別</em>需要信任。</p>
+
+        <p><strong>繞過路徑。</strong>API 檢查發生在交易<em>外圍</em>，而不是<em>內部</em>。如果 API 說「攔」，前端可以直接……不攔。智能合約不知道。區塊鏈不知道。合規檢查只是一個建議，不是規則。一個有決心的參與者完全可以繞過它。這種事我們見多了——制裁篩查只適用於用戶看到的介面，不適用於底層智能合約。這是表演。</p>
+
+        <p>Chainalysis KYT 是典型例子。它的工作方式是：你的交易打到你的後端，你的後端呼叫 Chainalysis，Chainalysis 回傳結果，你的後端決定怎麼做。區塊鏈是最後一個知道的。合規層是一個 gatekeeper，住在它本該保護的系統之外。</p>
+
+        <p>然後還有 Chainlink Functions。比純 API 好一些，但仍然錯。它推的是預言機模式：你發起請求，預言機網路抓取資料，預言機把資料回傳到鏈上。但現在你得付預言機 gas，等預言機延遲，還要信任預言機網路的安全模型。這是改進，但仍然是往返。合規檢查不是執行環境的原生部分。它是一個訪客。</p>
+
+        <h2>正確的方式：鏈上原生執行</h2>
+
+        <p>正確的方式應該是這樣的。風險資料在鏈上。策略引擎在鏈上。評估發生在同一筆交易、同一個區塊、同一個執行上下文裡。沒有 API 呼叫。沒有延遲。沒有繞過。沒有信任假設。</p>
+
+        <p>當用戶試圖轉帳一個代幣，智能合約本身檢查接收方的風險畫像。如果接收方被制裁，交易回滾。如果風險分太高，交易被隔離。如果一切乾淨，交易繼續。所有這些都發生在<em>一筆原子交易</em>中。區塊鏈不會向伺服器請求許可。它知道答案，因為答案已經在鏈上了。</p>
+
+        <p>這不是一個小改進。這是一個典範轉移。</p>
+
+        <p>有五個真正重要的優勢：</p>
+
+        <p><strong>1. 確定性。</strong>同樣的輸入永遠產生同樣的輸出。如果地址 A 被制裁，它<em>永遠</em>被制裁。沒有競態條件，沒有過期資料，沒有「API 正在更新的時候交易剛好發生了」。風險畫像是一個共識事實。網路中的每個節點都同意它。</p>
+
+        <p><strong>2. 零延遲。</strong>風險檢查是交易執行的一部分。它消耗的 gas 跟任何其他儲存讀取一樣。沒有網路往返。沒有 HTTP 逾時。沒有連線池耗盡。檢查速度跟讀取本地變數一樣快——因為它就是。</p>
+
+        <p><strong>3. 無法繞過。</strong>檢查發生在智能合約內部。如果檢查失敗，交易回滾。沒有繞過的方式。你無法直接呼叫合約跳過合規層，因為合規層<em>就是</em>合約。安全邊界就是執行邊界。這是守衛和牆的區別。</p>
+
+        <p><strong>4. 透明且可稽核。</strong>每一次風險檢查都記錄在鏈上。任何人都能看到發生了什麼，以及為什麼。你不需要信任供應商的黑箱演算法。你不需要 SOC-2 報告來驗證合規。合規就是交易歷史。監管者可以直接驗證。稽核師可以直接驗證。你的用戶可以直接驗證。透明不是你要添加的功能——它是預設的。</p>
+
+        <p><strong>5. 協議級整合。</strong>因為風險引擎是一個智能合約，任何其他智能合約都可以繼承它。你的穩定幣、你的錢包、你的 DEX、你的 RWA 代幣——它們都呼叫同一個鏈上註冊表。整合不是「接入我們的 SDK 然後呼叫 API」。整合是「引入我們的合約，繼承檢查」。三行 Solidity。這是依賴和協議的區別。</p>
+
+        <div class="callout">
+            <p><strong>類比：</strong>基於 API 的合規就像把資料庫約束寫在一個單獨的微服務裡。每次插入都呼叫一個 REST API 來檢查資料是否合法。API 掛了，你要麼停止所有寫入，要麼冒著髒資料的風險。鏈上合規就像資料庫觸發器。約束在交易內部執行。如果失敗，交易失敗。沒有網路呼叫。沒有單獨的服務。沒有繞過方式。</p>
+        </div>
+
+        <p>這是從<em>後端 API</em>到<em>資料庫觸發器</em>的轉移。不是讓 API 更快或更可靠。而是意識到 API 根本不應該存在。</p>
+
+        <h2>FidesOrigin 怎麼做</h2>
+
+        <p>FidesOrigin 就是基於這個原則構建的。風險資料同步到鏈上。策略引擎是智能合約。評估發生在轉帳 hook 裡。</p>
+
+        <p>實務上是這樣的。你有一個穩定幣。你希望每筆轉帳都經過制裁名單和風險畫像的篩查。你繼承合規合約。你改寫 <code>_update</code> hook。在那個 hook 裡，你呼叫鏈上風險引擎。如果轉帳違反了策略，交易回滾。就這樣。</p>
+
+        <div class="code-block my-6">
+            <div class="code-header">
+                <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+            </div>
+            <div class="code-body">
+<pre><span class="tk-comment">// 你的穩定幣繼承鏈上風險篩查</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+        <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+        <span class="tk-keyword">uint256</span> amount
+    ) <span class="tk-keyword">internal override</span> {
+        <span class="tk-comment">// 在轉帳執行前評估</span>
+        (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) =
+            fides.<span class="tk-func">evaluateTransaction</span>(
+                from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>)
+            );
+
+        <span class="tk-keyword">if</span> (!allowed)
+            <span class="tk-keyword">revert</span> <span class="tk-func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+            </div>
+        </div>
+
+        <p>沒有 API key。沒有限流。沒有服務依賴。合規邏輯和轉帳本身在同一個執行上下文裡。交易要麼合法，要麼不合法。沒有「也許」。</p>
+
+        <p>資料層是自治的。OFAC SDN、Chainalysis、OpenSanctions——資料被持續拉取並同步到鏈上。但同步是背景程序，不是交易依賴。交易只讀取鏈上已有的資料。讀取是瞬間的。寫入是非同步的。系統把資料新鮮度與交易執行解耦了。</p>
+
+        <p>這是<em>問</em>和<em>知道</em>的區別。API 模式問。鏈上模式知道。</p>
+
+        <h2>定義這個品類：鏈上風險執行</h2>
+
+        <p>我們需要一個新名字。「合規 API」是錯的。「基於預言機的合規」是錯的。我們在構建的是<em>鏈上風險執行</em>。</p>
+
+        <p>風險執行，不是風險篩查。篩查是你看著什麼東西然後決定。執行是系統自己決定。篩查是可選的。執行是強制的。</p>
+
+        <p>鏈上，不是鏈下。不是混合。不是橋接。執行邏輯運行在被它治理的交易的同一層。風險資料是共識資料。策略執行是共識執行。結果是共識事實。</p>
+
+        <p>這是一個新品類。它不會完全取代合規 API——調查工具、鑑識分析和報告永遠有需求。但對於即時轉帳策略的執行，API 是錯的工具。它們是方枘圓鑿，而且這個洞每天都在變大。</p>
+
+        <p>真正重要的平台——穩定幣發行方、智能合約錢包、RWA 代幣化、代理支付軌道——無法承受為核心風險控制依賴外部 API。一個每筆轉帳都要停下來等 KYT 回應的穩定幣，不是穩定幣。它是 banking API 多此一舉。一個把合規委託給第三方服務的智能錢包，不是智能錢包。它是帶後門的介面。</p>
+
+        <p>未來是合約自己執行規則。協議自己篩查交易。錢包不需要請求許可，因為它們已經知道答案。</p>
+
+        <p>這就是 FidesOrigin 構建的東西。不是合規 API。不是預言機。一個運行在交易內部的鏈上風險引擎。確定性。零延遲。透明。無法繞過。協議原生。</p>
+
+        <p>如果你在構建下一代鏈上金融，你不需要一個合規供應商。你需要一個合規協議。</p>
+
+        <p>加密合規的 API 時代正在終結。執行時代正在開始。</p>
+    </article>
+
+    <div class="hr-fade"></div>
+
+    <!-- CTA -->
+    <section class="py-16 md:py-20">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <h2 class="h2 mb-4">構建鏈上風險執行</h2>
+            <p class="lead mb-8">
+                FidesOrigin 是一個原生鏈上風險引擎，面向穩定幣、智能錢包、RWA 平台和代理支付軌道。
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="/" class="btn-primary">
+                    探索 FidesOrigin
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="mailto:contact@fidesorigin.com" class="btn-secondary">聯繫我們</a>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/[0.04] py-8">
+        <div class="max-w-3xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="/" class="flex items-center">
+                    <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-6 w-auto opacity-60">
+                </a>
+                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <span>Sepolia 測試網</span>
+                </div>
+            </div>
+            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
+                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin。面向數位資產的鏈上風險引擎。</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function toggleLang() {
+            document.getElementById('langDropdown').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('langDropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

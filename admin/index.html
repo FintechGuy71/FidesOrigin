@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/chart.js@4.4.1 https://cdn.jsdelivr.net/npm/ethers@6.8.0; style-src 'self' 'nonce-2726c7f26c' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://fidesorigin.com; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+    <title>FidesOrigin Admin - 运营后台 v0.4.0 (Sepolia)</title>
+    <meta name="description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
+    <meta name="theme-color" content="#0f172a">
+    <meta property="og:title" content="FidesOrigin Admin - 运营后台">
+    <meta property="og:description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
+    <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fidesorigin.com/admin/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+    <meta name="twitter:site" content="@fidesorigin">
+    <link rel="canonical" href="https://fidesorigin.com/admin/">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --bg-hover: #475569;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-pink: #ec4899;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --border: rgba(148, 163, 184, 0.2);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100dvh;
+        }
+        
+        .layout {
+            display: flex;
+            min-height: 100dvh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            position: fixed;
+            height: 100dvh;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 20px 30px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .logo-text { font-size: 1.25rem; font-weight: 700; }
+        .logo-sub { font-size: 0.75rem; color: var(--text-secondary); }
+        .version { font-size: 0.65rem; color: var(--accent-purple); margin-top: 2px; }
+        
+        .nav-section {
+            padding: 0 12px;
+            margin-bottom: 24px;
+        }
+        
+        .nav-title {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            border-left: 3px solid var(--accent-purple);
+            padding-left: 9px;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 24px 32px;
+            min-height: 100dvh;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .header-title h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .header-title p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .wallet-status.connected {
+            border: 1px solid var(--success);
+        }
+        
+        .wallet-status.disconnected {
+            border: 1px solid var(--danger);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.connected { background: var(--success); }
+        .status-dot.disconnected { background: var(--danger); }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--accent-purple);
+            color: white;
+        }
+        
+        .btn-primary:hover { background: #7c3aed; }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover { background: var(--bg-hover); }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: var(--bg-primary);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .stat-change {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .chart-container.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        
+        th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .address-cell {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+        
+        /* Tags */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .tag-vip {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .tag-grey {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-secondary);
+        }
+        
+        .tag-black {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .tag-normal {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+        
+        .tag-admin {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+        
+        .tag-operator {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+        }
+        
+        .tag-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--border);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        
+        /* Page Sections */
+        .page-section {
+            display: none;
+        }
+        
+        .page-section.active {
+            display: block;
+        }
+        
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+        }
+        
+        .timeline-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .timeline-content {
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-warning:hover { background: #d97706; }
+        
+        /* Custom Checkbox */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            vertical-align: middle;
+            transition: all 0.2s;
+        }
+        input[type="checkbox"]:checked {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        input[type="checkbox"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Responsive form inputs */
+        @media (max-width: 768px) {
+            #customerSearch { width: 100% !important; }
+            #currentPolicyDisplay { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 60px 16px 16px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 16px; align-items: flex-start; }
+            .mobile-header { display: flex !important; }
+            .sidebar.mobile-open { display: block !important; position: fixed; z-index: 999; top: 0; left: 0; height: 100dvh; }
+            .overlay.show { display: block; }
+        }
+        .mobile-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+        }
+        .mobile-header .hamburger {
+            background: none; border: none; color: var(--text-primary);
+            font-size: 1.4rem; cursor: pointer; padding: 8px 12px;
+            min-width: 44px; min-height: 44px; touch-action: manipulation;
+        }
+        .mobile-header span { font-weight: 700; font-size: 1rem; }
+        .overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+        }
+
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast {
+            position: fixed; top: 20px; right: 20px;
+            padding: 12px 20px; border-radius: 8px; font-size: 0.9rem;
+            z-index: 10000; display: none; max-width: 400px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .toast.show { display: block; }
+        .toast-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+        .toast-info { background: rgba(6,182,212,0.15); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+        .toast-success { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+        .table-loading { text-align: center; color: var(--text-secondary); padding: 24px; }
+        .table-loading .spinner { margin-bottom: 8px; width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+    <div class="toast toast-error" id="toast"></div>
+    <div class="layout">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button type="button" class="hamburger" aria-label="切换侧边栏">☰</button>
+            <span>FidesOrigin Admin</span>
+            <div style="width:36px;"></div>
+        </div>
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <a href="/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
+                <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width:100%;height:100%;"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" /><stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" /></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#grad)"/><text x="50" y="65" font-family="Inter, sans-serif" font-size="45" font-weight="700" fill="white" text-anchor="middle">F</text></svg></div>
+                <div>
+                    <div class="logo-text">FidesOrigin</div>
+                    <div class="logo-sub">运营后台</div>
+                    <div class="version">v0.4.0 Sepolia</div>
+                </div>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">概览</div>
+                <a class="nav-item active" href="#" data-page="dashboard">
+                    <span>📊</span> 数据看板
+                </a>
+                <a class="nav-item" href="#" data-page="monitor">
+                    <span>📡</span> 实时监控
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">管理</div>
+                <a class="nav-item" href="#" data-page="customers">
+                    <span>👥</span> 客户管理
+                </a>
+                <a class="nav-item" href="#" data-page="tags">
+                    <span>🏷️</span> 标签管理
+                </a>
+                <a class="nav-item" href="#" data-page="limits">
+                    <span>⚙️</span> 限额配置
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">隔离风控 (P2P Protection)</div>
+                <a class="nav-item" href="#" data-page="quarantine">
+                    <span>🔒</span> 隔离资金管理
+                </a>
+                <a class="nav-item" href="#" data-page="incomingBlocks">
+                    <span>🚫</span> 收款拦截记录
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">安全 (Phase 3)</div>
+                <a class="nav-item" href="#" data-page="timelock">
+                    <span>⏱️</span> 时间锁管理
+                </a>
+                <a class="nav-item" href="#" data-page="multisig">
+                    <span>🔏</span> 多签管理
+                </a>
+                <a class="nav-item" href="#" data-page="emergency">
+                    <span>🚨</span> 紧急暂停
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">系统</div>
+                <a class="nav-item" href="#" data-page="policies">
+                    <span>📜</span> 策略配置
+                </a>
+                <a class="nav-item" href="#" data-page="complianceLogs">
+                    <span>📋</span> 合规日志
+                </a>
+                <a class="nav-item" href="#" data-page="settings">
+                    <span>🔧</span> 系统设置
+                </a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page-section active">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>数据看板</h1>
+                        <p>实时监控平台运行状态与链上数据</p>
+                    </div>
+                    <div class="header-actions">
+                        <span id="networkBadge" class="badge" style="background: var(--text-muted); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; margin-right: 8px;">未连接</span>
+                        <div id="walletStatus" class="wallet-status disconnected">
+                            <span class="status-dot disconnected"></span>
+                            <span id="walletAddress">未连接钱包</span>
+                        </div>
+                        <button type="button" id="connectBtn" class="btn btn-primary">
+                            🔗 连接 MetaMask
+                        </button>
+                        <button class="btn btn-secondary">📅 今日</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">总供应量</div>
+                        <div class="stat-value" id="totalSupply">--</div>
+                        <div class="stat-change positive">TUSD</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">标签地址总数</div>
+                        <div class="stat-value" id="totalTagged">--</div>
+                        <div class="stat-change positive">
+                            <span>VIP:</span> <span id="vipCount">--</span>
+                            <span style="margin-left: 8px;">黑名单:</span> <span id="blackCount">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">待执行操作</div>
+                        <div class="stat-value" id="pendingOps" style="color: var(--warning);">--</div>
+                        <div class="stat-change">时间锁保护中</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">合约状态</div>
+                        <div class="stat-value" id="contractStatus">--</div>
+                        <div class="stat-change" id="signerStatus">签名者: --</div>
+                    </div>
+                </div>
+
+                <!-- Subgraph Stats -->
+                <div class="stats-grid" style="margin-top: 16px;">
+                    <div class="stat-card">
+                        <div class="stat-label">Subgraph 总检查数</div>
+                        <div class="stat-value" id="subgraphTotalChecks">--</div>
+                        <div class="stat-change positive">The Graph 实时索引</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">已拦截交易</div>
+                        <div class="stat-value" id="subgraphBlocked">--</div>
+                        <div class="stat-change positive">链上自动执行</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">制裁地址数</div>
+                        <div class="stat-value" id="subgraphSanctioned">--</div>
+                        <div class="stat-change positive">风险档案</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">冻结资金</div>
+                        <div class="stat-value" id="subgraphHeld">--</div>
+                        <div class="stat-change positive">ComplianceEngine</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">风险分布</div>
+                        <div class="chart-wrapper">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">角色分布</div>
+                        <div class="chart-wrapper">
+                            <canvas id="roleChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container full-width">
+                        <div class="chart-title">交易监控 (24小时)</div>
+                        <div class="chart-wrapper">
+                            <canvas id="txChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">最近拦截记录</div>
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">时间</th>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">标签</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">金额</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blockedTable">
+                                <tr><td colspan="5" class="table-loading"><div class="spinner"></div><div>连接钱包后查看数据</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monitor Page -->
+            <div id="monitor" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>实时监控</h1>
+                        <p>链上交易实时追踪与风控拦截</p>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container full-width">
+                        <div class="chart-title">实时交易流量</div>
+                        <div class="chart-wrapper">
+                            <canvas id="realtimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">实时风控拦截</div>
+                        <div>
+                            <span class="tag tag-success" style="margin-right: 8px;">自动拦截已启用</span>
+                            <button type="button" class="btn btn-sm btn-secondary">刷新</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">交易哈希</th>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额</th>
+                                    <th scope="col">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monitorTable">
+                                <tr><td colspan="6" class="table-loading"><div class="spinner"></div><div>等待数据...</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div id="customers" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>客户管理</h1>
+                        <p>管理用户地址与风控标签</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-primary">+ 新增客户</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">客户列表</div>
+                        <input type="text" class="form-input" style="width: 300px;" placeholder="搜索地址..." id="customerSearch">
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">风险等级</th>
+                                    <th scope="col">日限额</th>
+                                    <th scope="col">已用额度</th>
+                                    <th scope="col">余额</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTable">
+                                <tr><td colspan="6" class="table-loading"><div class="spinner"></div><div>连接钱包后查看数据</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags Page -->
+            <div id="tags" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>标签管理</h1>
+                        <p>管理地址风险标签和风控策略</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-primary">+ 新增标签</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">标签列表</div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">标签</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">操作人</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tagsTable">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Limits Page -->
+            <div id="limits" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>限额配置</h1>
+                        <p>管理各风险等级的交易限额</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">当前限额配置</div>
+                        <button type="button" class="btn btn-primary">保存修改</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">标签</th>
+                                    <th scope="col">单日限额 (TUSD)</th>
+                                    <th scope="col">单笔限额 (TUSD)</th>
+                                    <th scope="col">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="limitsTable">
+                                <tr>
+                                    <td><span class="tag tag-vip">VIP</span></td>
+                                    <td><input type="number" class="form-input" id="vipDaily" value="100000"></td>
+                                    <td><input type="number" class="form-input" id="vipSingle" value="50000"></td>
+                                    <td><input type="checkbox" checked id="vipEnabled"></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="tag tag-normal">普通</span></td>
+                                    <td><input type="number" class="form-input" id="normalDaily" value="10000"></td>
+                                    <td><input type="number" class="form-input" id="normalSingle" value="5000"></td>
+                                    <td><input type="checkbox" checked id="normalEnabled"></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="tag tag-grey">灰名单</span></td>
+                                    <td><input type="number" class="form-input" id="greyDaily" value="1000"></td>
+                                    <td><input type="number" class="form-input" id="greySingle" value="500"></td>
+                                    <td><input type="checkbox" checked id="greyEnabled"></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="tag tag-black">黑名单</span></td>
+                                    <td><input type="number" class="form-input" id="blackDaily" value="0" disabled></td>
+                                    <td><input type="number" class="form-input" id="blackSingle" value="0" disabled></td>
+                                    <td><input type="checkbox" disabled id="blackEnabled"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timelock Page -->
+            <div id="timelock" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>时间锁管理</h1>
+                        <p>管理交易延迟执行与待处理操作</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-primary">⚙️ 配置延迟时间</button>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">时间锁状态</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">当前延迟时间</label>
+                                <div style="font-size: 1.5rem; font-weight: 600;" id="currentDelay">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">最小延迟</label>
+                                <div>1 天</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">最大延迟</label>
+                                <div>30 天</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">宽限期</label>
+                                <div>14 天</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">快速统计</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">待执行操作</label>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--warning);" id="pendingCount">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">已执行</label>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);" id="executedCount">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">已取消</label>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--danger);" id="cancelledCount">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">待执行操作队列</div>
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">操作ID</th>
+                                    <th scope="col">类型</th>
+                                    <th scope="col">目标</th>
+                                    <th scope="col">执行时间</th>
+                                    <th scope="col">状态</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingOpsTable">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multisig Page -->
+            <div id="multisig" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>多签管理</h1>
+                        <p>管理签名者与多签阈值</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-primary">+ 添加签名者</button>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">多签配置</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">当前签名者数量</label>
+                                <div style="font-size: 1.5rem; font-weight: 600;" id="signerCount">--</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">所需签名数</label>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="number" class="form-input" id="requiredSigs" value="2" style="width: 100px;">
+                                    <button type="button" class="btn btn-secondary">更新</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">您的角色</label>
+                                <div id="userRole" style="color: var(--accent-cyan);">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">安全提示</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <strong>⚠️ 重要提醒</strong><br>
+                                多签机制确保关键操作需要多方确认。请确保签名者分布安全，避免单点故障。
+                            </div>
+                            <ul style="margin-top: 16px; padding-left: 20px; color: var(--text-secondary);">
+                                <li>至少保持 2 个签名者</li>
+                                <li>建议签名者使用不同设备</li>
+                                <li>定期审核签名者列表</li>
+                                <li>新签名者需完成身份验证</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">签名者列表</div>
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">角色</th>
+                                    <th scope="col">状态</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="signersTable">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quarantine Page -->
+            <div id="quarantine" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>隔离资金管理</h1>
+                        <p>查看和管理被自动隔离的污染资金</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                        <span class="tag tag-operator">Operator</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">总隔离金额</div>
+                        <div class="stat-value" id="totalQuarantined">--</div>
+                        <div class="stat-change">所有代币汇总</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">隔离记录数</div>
+                        <div class="stat-value" id="recordCount">--</div>
+                        <div class="stat-change">待处理 / 已释放</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">待释放</div>
+                        <div class="stat-value" id="pendingRelease" style="color: var(--warning);">--</div>
+                        <div class="stat-change">合规审核中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">永久冻结</div>
+                        <div class="stat-value" id="permanentlyFrozen" style="color: var(--danger);">--</div>
+                        <div class="stat-change">不可恢复</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">隔离记录列表</div>
+                        <div style="display: flex; gap: 8px;">
+                            <select class="form-select" id="filterStatus" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="active">待处理</option>
+                                <option value="released">已释放</option>
+                                <option value="frozen">永久冻结</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">记录ID</th>
+                                    <th scope="col">原主人</th>
+                                    <th scope="col">代币</th>
+                                    <th scope="col">数量</th>
+                                    <th scope="col">隔离时间</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">状态</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quarantineTable">
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incoming Blocks Page -->
+            <div id="incomingBlocks" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>收款拦截记录</h1>
+                        <p>被 receive() 自动拦截的 ETH 转账记录</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>说明</strong><br>
+                    以下记录来自智能合约钱包的 receive() / fallback() 拦截事件。
+                    当黑名单或高风险地址向用户钱包发送 ETH 时，交易会被自动 revert，资金不会到账。
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">拦截记录</div>
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">时间</th>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额 (ETH)</th>
+                                    <th scope="col">拦截原因</th>
+                                    <th scope="col">交易哈希</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incomingBlocksTable">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Page -->
+            <div id="emergency" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>🚨 紧急暂停</h1>
+                        <p>紧急情况下暂停合约功能</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger" style="font-size: 1rem;">
+                    <strong>⚠️ 警告</strong><br>
+                    紧急暂停功能用于应对安全事件。暂停后，所有转账、铸造等操作将被阻止，只有管理员可以解除暂停。
+                    <br><br>
+                    此操作需要多签确认，且会通过时间锁执行。
+                </div>
+
+                <div class="grid-2" style="margin-top: 24px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">当前状态</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="pauseStatus" style="text-align: center; padding: 40px;">
+                                <div style="font-size: 4rem; margin-bottom: 16px;">✅</div>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">合约运行正常</div>
+                                <div style="color: var(--text-secondary); margin-top: 8px;">所有功能正常运行</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">操作面板</div>
+                        </div>
+                        <div class="card-body">
+                            <div style="text-align: center; padding: 20px;">
+                                <button type="button" class="btn btn-danger" style="padding: 16px 32px; font-size: 1.1rem;">
+                                    🛑 紧急暂停合约
+                                </button>
+                                <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
+                                    此操作将通过时间锁执行，需要多签确认
+                                </div>
+                            </div>
+                            <div style="text-align: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px;">
+                                <button type="button" class="btn btn-success" style="padding: 16px 32px; font-size: 1.1rem;">
+                                    ✅ 解除暂停
+                                </button>
+                                <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
+                                    只有管理员可以解除暂停
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policies Page -->
+            <div id="policies" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>策略配置</h1>
+                        <p>管理发行方合规策略与版本历史</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                        <button type="button" class="btn btn-primary">+ 新建策略</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">当前策略</div>
+                    </div>
+                    <div class="card-body">
+                        <div id="currentPolicyDisplay" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                            <div class="stat-card">
+                                <div class="stat-label">单笔限额</div>
+                                <div class="stat-value" id="policyMaxTx">--</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">日累计限额</div>
+                                <div class="stat-value" id="policyDailyLimit">--</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">中风险地址</div>
+                                <div class="stat-value" id="policyAllowMedium">--</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">高风险地址</div>
+                                <div class="stat-value" id="policyAllowHigh">--</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">拦截混币器</div>
+                                <div class="stat-value" id="policyBlockMixer">--</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">要求 KYC</div>
+                                <div class="stat-value" id="policyRequireKYC">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">版本历史</div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">版本</th>
+                                    <th scope="col">单笔限额</th>
+                                    <th scope="col">日限额</th>
+                                    <th scope="col">允许中风险</th>
+                                    <th scope="col">允许高风险</th>
+                                    <th scope="col">更新时间</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="policyHistoryTable">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">连接钱包后查看数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Logs Page -->
+            <div id="complianceLogs" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>合规日志</h1>
+                        <p>The Graph 实时索引的链上合规检查记录</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-secondary">刷新</button>
+                        <span class="badge" style="background: var(--success); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem;">The Graph 实时</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">最近合规检查</div>
+                        <div style="display: flex; gap: 8px;">
+                            <select class="form-select" id="filterDecision" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="ALLOW">允许</option>
+                                <option value="BLOCK">拦截</option>
+                                <option value="FLAG">标记</option>
+                                <option value="HOLD">冻结</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额</th>
+                                    <th scope="col">决策</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complianceLogsTable">
+                                <tr><td colspan="6" class="table-loading"><div class="spinner"></div><div>点击刷新加载数据</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings" class="page-section">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>系统设置</h1>
+                        <p>配置合约连接与网络</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">合约配置</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">合约地址</label>
+                            <input type="text" class="form-input" id="contractAddress" value="0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">网络</label>
+                            <select class="form-select" id="networkSelect">
+                                <option value="sepolia">Sepolia Testnet</option>
+                                <option value="goerli">Goerli Testnet</option>
+                                <option value="localhost">Localhost</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">RPC URL</label>
+                            <input type="text" class="form-input" id="rpcUrl" value="https://ethereum-sepolia-rpc.publicnode.com">
+                        </div>
+                        <button type="button" class="btn btn-primary">保存设置</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">确认操作</div>
+            <p id="confirmMessage" style="color: var(--text-secondary); margin-bottom: 24px;">
+                确定要执行此操作吗？
+            </p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div id="addCustomerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">新增客户</div>
+            <div class="form-group">
+                <label class="form-label">钱包地址</label>
+                <input type="text" class="form-input" id="newCustomerAddress" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">风险等级</label>
+                <select class="form-select" id="newCustomerRisk">
+                    <option value="1">VIP (低风险)</option>
+                    <option value="2" selected>普通</option>
+                    <option value="3">灰名单 (中风险)</option>
+                    <option value="4">黑名单 (高风险)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">日限额 (TUSD)</label>
+                <input type="number" class="form-input" id="newCustomerLimit" value="10000">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">取消</button>
+                <button type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connect Wallet Modal -->
+    <div id="connectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">连接钱包</div>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                请连接 MetaMask 钱包以管理 FidesOrigin 合约
+            </p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">取消</button>
+                <button type="button" class="btn btn-primary">连接 MetaMask</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Tag Modal -->
+    <div id="tagModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">新增地址标签</div>
+            <div class="form-group">
+                <label class="form-label">地址</label>
+                <input type="text" class="form-input" id="tagAddress" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">风险等级</label>
+                <select class="form-select" id="tagLevel">
+                    <option value="1">VIP</option>
+                    <option value="2">普通</option>
+                    <option value="3">灰名单</option>
+                    <option value="4">黑名单</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">原因</label>
+                <input type="text" class="form-input" id="tagReason" placeholder="标注原因...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">取消</button>
+                <button type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Signer Modal -->
+    <div id="signerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">添加签名者</div>
+            <div class="form-group">
+                <label class="form-label">签名者地址</label>
+                <input type="text" class="form-input" id="signerAddress" placeholder="0x...">
+            </div>
+            <div class="alert alert-warning">
+                添加签名者需要多签确认并通过时间锁执行
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">取消</button>
+                <button type="button" class="btn btn-primary">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timelock Config Modal -->
+    <div id="timelockConfigModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">配置时间锁延迟</div>
+            <div class="form-group">
+                <label class="form-label">延迟时间（天）</label>
+                <input type="number" class="form-input" id="timelockDays" value="2" min="1" max="30">
+            </div>
+            <div class="alert alert-warning">
+                修改时间锁延迟将通过时间锁执行，需要多签确认
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">取消</button>
+                <button type="button" class="btn btn-primary">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Policy Modal -->
+    <div id="policyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">新建策略</div>
+            <div class="form-group">
+                <label class="form-label">单笔最大金额 (fUSD)</label>
+                <input type="number" class="form-input" id="policyMaxTxInput" value="1000000" placeholder="1000000">
+            </div>
+            <div class="form-group">
+                <label class="form-label">日累计限额 (fUSD)</label>
+                <input type="number" class="form-input" id="policyDailyLimitInput" value="500000" placeholder="500000">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                <input type="checkbox" id="policyAllowMediumInput" checked style="width: 20px; height: 20px;">
+                <label class="form-label" style="margin-bottom: 0;">允许中风险地址</label>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                <input type="checkbox" id="policyAllowHighInput" style="width: 20px; height: 20px;">
+                <label class="form-label" style="margin-bottom: 0;">允许高风险地址</label>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                <input type="checkbox" id="policyBlockMixerInput" checked style="width: 20px; height: 20px;">
+                <label class="form-label" style="margin-bottom: 0;">拦截混币器</label>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+                <input type="checkbox" id="policyRequireKYCInput" style="width: 20px; height: 20px;">
+                <label class="form-label" style="margin-bottom: 0;">要求 KYC</label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">取消</button>
+                <button type="button" class="btn btn-primary">保存策略</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-config.js"></script>
+    <script src="admin-secure-dom.js"></script>
+    <script src="admin-events.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

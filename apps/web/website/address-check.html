@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin - 地址风险查询</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="address-check.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>FidesOrigin 地址风险查询</h1>
+            <p>实时查询 20,645+ 个风险地址数据库</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="num" id="totalCount">20,645</div>
+                <div class="label">总地址数</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="blackCount">19,323</div>
+                <div class="label">黑名单</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="greyCount">1,322</div>
+                <div class="label">灰名单</div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="addressInput" placeholder="输入以太坊地址 (0x...)" maxlength="42">
+            <button onclick="checkAddress()">查询风险等级</button>
+        </div>
+
+        <div class="result-box" id="resultBox">
+            <div class="result-header">
+                <div class="risk-badge" id="riskBadge">查询中...</div>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">地址</span>
+                <span class="detail-value" id="resultAddr">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">风险分数</span>
+                <span class="detail-value" id="resultScore">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">风险等级</span>
+                <span class="detail-value" id="resultTier">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">来源</span>
+                <span class="detail-value" id="resultSource">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">标签</span>
+                <span class="detail-value" id="resultTags">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">实体名称</span>
+                <span class="detail-value" id="resultEntity">-</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>数据来源: OFAC, Chainalysis, Etherscan, Uniswap, PoolTogether 等</p>
+            <p>Merkle Root: <code id="merkleRoot">0xc58ee...6bed4</code></p>
+            <p><a href="https://fidesorigin.com">fidesorigin.com</a> | <a href="admin/index.html">运营后台</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Load database from local JSON (in production, this would be served via API)
+        let addressDB = null;
+        let addressMap = new Map();
+
+        async function loadDatabase() {
+            try {
+                // In a real deployment, this would fetch from a CDN or API
+                // For now, we'll use a minimal demo dataset
+                const response = await fetch('./data-sync/cache/address-labels-v11.json');
+                if (response.ok) {
+                    addressDB = await response.json();
+                    for (const entry of addressDB.addressLabels) {
+                        addressMap.set(entry.address.toLowerCase(), entry);
+                    }
+                    console.log('Database loaded:', addressMap.size, 'addresses');
+                }
+            } catch (e) {
+                console.log('Database not loaded, using fallback');
+            }
+        }
+
+        function checkAddress() {
+            const input = document.getElementById('addressInput').value.trim().toLowerCase();
+            const resultBox = document.getElementById('resultBox');
+            const badge = document.getElementById('riskBadge');
+
+            if (!input || !input.match(/^0x[a-f0-9]{40}$/)) {
+                badge.className = 'risk-badge risk-grey';
+                badge.textContent = '无效地址';
+                resultBox.classList.add('show');
+                return;
+            }
+
+            resultBox.classList.add('show');
+            document.getElementById('resultAddr').textContent = input;
+
+            const entry = addressMap.get(input);
+            if (entry) {
+                document.getElementById('resultScore').textContent = entry.riskScore || 'N/A';
+                document.getElementById('resultTier').textContent = entry.riskTier || 'N/A';
+                document.getElementById('resultSource').textContent = entry.source || 'N/A';
+                document.getElementById('resultTags').textContent = (entry.tags || []).join(', ');
+                document.getElementById('resultEntity').textContent = entry.entity || 'N/A';
+
+                if (entry.riskTier === 'BLACK') {
+                    badge.className = 'risk-badge risk-black';
+                    badge.textContent = '⚠️ 高风险 - 黑名单';
+                } else {
+                    badge.className = 'risk-badge risk-grey';
+                    badge.textContent = '⚡ 灰名单 - 需注意';
+                }
+            } else {
+                badge.className = 'risk-badge risk-safe';
+                badge.textContent = '✅ 未在数据库中';
+                document.getElementById('resultScore').textContent = '-';
+                document.getElementById('resultTier').textContent = 'UNKNOWN';
+                document.getElementById('resultSource').textContent = '-';
+                document.getElementById('resultTags').textContent = '-';
+                document.getElementById('resultEntity').textContent = '-';
+            }
+        }
+
+        // Load on page load
+        loadDatabase();
+
+        // Enter key support
+        document.getElementById('addressInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAddress();
+        });
+    </script>
+</body>
+</html>

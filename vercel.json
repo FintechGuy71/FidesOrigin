@@ -1,0 +1,28 @@
+{
+  "builds": [
+    { "src": "website/**", "use": "@vercel/static" },
+    { "src": "admin/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/blog/(.*)", "dest": "/website/blog/$1" },
+    { "src": "/cn/blog/(.*)", "dest": "/website/cn/blog/$1" },
+    { "src": "/tw/blog/(.*)", "dest": "/website/tw/blog/$1" },
+    { "src": "/jp/blog/(.*)", "dest": "/website/jp/blog/$1" },
+    { "src": "/cn", "dest": "/website/cn/index.html" },
+    { "src": "/cn/", "dest": "/website/cn/index.html" },
+    { "src": "/tw", "dest": "/website/tw/index.html" },
+    { "src": "/tw/", "dest": "/website/tw/index.html" },
+    { "src": "/jp", "dest": "/website/jp/index.html" },
+    { "src": "/jp/", "dest": "/website/jp/index.html" },
+    { "src": "/admin", "dest": "/admin/index.html" },
+    { "src": "/admin/", "dest": "/admin/index.html" },
+    { "src": "/admin/(.*)", "dest": "/admin/$1" },
+    { "src": "/address-check", "dest": "/admin/address-check.html" },
+    { "src": "/address-check.html", "dest": "/admin/address-check.html" },
+    { "src": "/assets/(.*)", "dest": "/website/assets/$1" },
+    { "src": "/(.*\\.js)", "dest": "/website/$1" },
+    { "src": "/(.*\\.css)", "dest": "/website/$1" },
+    { "src": "/(.*)", "dest": "/website/$1" },
+    { "src": "/", "dest": "/website/index.html" }
+  ]
+}

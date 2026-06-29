@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "FidesOrigin PostgreSQL",
+      "Group": "FidesOrigin",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "fidesorigin",
+      "Username": "fidesorigin",
+      "SSLMode": "prefer",
+      "Comment": "FidesOrigin 区块链风险分析数据库"
+    }
+  }
+}

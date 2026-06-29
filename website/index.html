@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>FidesOrigin — Programmable On-Chain Compliance</title>
+    <meta name="description" content="Native on-chain risk control engine. Screen every transaction, quarantine suspicious flows, and enforce policies deterministically — with zero off-chain dependency. Built for stablecoins, smart wallets, RWA, and agentic payments.">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta property="og:title" content="FidesOrigin — Programmable On-Chain Compliance">
+    <meta property="og:description" content="Native on-chain risk control engine. Screen every transaction, quarantine suspicious flows, and enforce policies deterministically — with zero off-chain dependency.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FidesOrigin — Programmable On-Chain Compliance">
+    <meta name="twitter:description" content="Native on-chain risk control engine. Screen every transaction, quarantine suspicious flows, and enforce policies deterministically — with zero off-chain dependency.">
+    <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+    <link rel="canonical" href="https://fidesorigin.com/">
+    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
+    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
+    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
+    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/">
+    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="apple-touch-icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="stylesheet" href="/styles.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "FidesOrigin",
+          "url": "https://fidesorigin.com",
+          "logo": "https://fidesorigin.com/assets/logo/logo-full-dark-bg.png",
+          "sameAs": ["https://github.com/FintechGuy71/FidesOrigin"]
+        },
+        {
+          "@type": "WebSite",
+          "name": "FidesOrigin",
+          "url": "https://fidesorigin.com",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://fidesorigin.com/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Page-specific overrides */
+    </style>
+</head>
+<body class="grain">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-8 w-auto" loading="lazy">
+            </a>
+            <div class="hidden md:flex items-center gap-7">
+                <a href="#how" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">How it works</a>
+                <a href="#use-cases" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">Use cases</a>
+                <a href="#trust" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">Trust</a>
+                <a href="#security" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">Security</a>
+                <a href="#contracts" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">Contracts</a>
+                <a href="#docs" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">Docs</a>
+                <a href="/blog/why-on-chain-compliance.html" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">Blog</a>
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary text-xs">Get in touch</a>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-dropdown-btn" onclick="toggleLang()" aria-expanded="false" aria-haspopup="true" aria-controls="langMenu">
+                        EN
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="lang-dropdown-menu" id="langMenu">
+                        <a href="/" class="active">English</a>
+                        <a href="/cn/">简体中文</a>
+                        <a href="/tw/">繁體中文</a>
+                        <a href="/jp/">日本語</a>
+                    </div>
+                </div>
+            </div>
+            <button class="md:hidden text-[#8b8b94]" id="mobileMenuBtn" aria-label="Menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero -->
+    <section class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+        <div class="glow w-[500px] h-[500px] bg-[#b8945f] -top-60 -right-40"></div>
+        <div class="glow w-[400px] h-[400px] bg-[#3b82f6] top-40 -left-40"></div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <div class="reveal">
+                <h1 class="display mb-7">
+                    Risk control,<br>
+                    <span class="gold">running natively on-chain.</span>
+                </h1>
+                <p class="lead max-w-xl mb-9">
+                    FidesOrigin is a native on-chain risk engine for digital asset infrastructure. Screen every transaction, quarantine suspicious flows, and enforce policies deterministically — with zero off-chain dependency. Built for stablecoins, smart wallets, RWA platforms, and agentic payment rails.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+                        Request access
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                    <a href="/admin/" class="btn-secondary">
+                        View dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Use Cases -->
+    <section id="use-cases" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Built For</p>
+                <h2 class="h2 mb-4">Who needs this, and why</h2>
+                <p class="lead max-w-lg">If you move digital assets on-chain, compliance can't be an afterthought bolted on via API.</p>
+            </div>
+            <div class="space-y-5 reveal">
+
+                <!-- Stablecoin -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="h3">Stablecoin Payment Rails</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">Today</p>
+                            <p class="body-text">Issuers screen addresses via off-chain API calls to Chainalysis KYT or TRM Labs. Integration takes weeks. Every transfer depends on an external service being online.</p>
+                            <p class="uc-label uc-label-pain mt-3">Problem</p>
+                            <p class="body-text">API latency adds 200–500ms per transaction. If the API goes down, transfers either stall or bypass screening. Sanctioned addresses can move funds during outages.</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">With FidesOrigin</p>
+                            <p class="body-text">Risk profiles live on-chain. Every transfer is screened in the <code class="text-[#d4af7a] text-xs font-mono">_update()</code> hook — zero added latency, zero bypass path. Sanctioned addresses are blocked at the protocol level, not at the application layer.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Contract Wallets -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h3 class="h3">Smart Contract Wallets</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">Today</p>
+                            <p class="body-text">Wallets like Safe and Argent rely on off-chain middleware or relayer services to screen transactions. The wallet UI checks an API, then decides whether to submit.</p>
+                            <p class="uc-label uc-label-pain mt-3">Problem</p>
+                            <p class="body-text">The screening layer is decoupled from execution. A sophisticated user or a competing frontend can bypass the wallet's API check and interact with the contract directly — the wallet has no enforcement power.</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">With FidesOrigin</p>
+                            <p class="body-text">Risk checks are embedded in the wallet contract itself via <code class="text-[#d4af7a] text-xs font-mono">FidesCompliance</code>. Every transaction — regardless of origin — is evaluated before execution. No bypass path exists, even via raw contract calls.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RWA Tokenization -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                        <h3 class="h3">RWA Tokenization</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">Today</p>
+                            <p class="body-text">Tokenized assets (real estate, treasuries, private credit) rely on a centralized allowlist managed by the issuer. Transfers are approved off-chain and recorded on a separate registry.</p>
+                            <p class="uc-label uc-label-pain mt-3">Problem</p>
+                            <p class="body-text">The allowlist and the token are separate contracts. If the issuer's admin key is compromised or the allowlist falls out of sync, non-compliant transfers execute anyway. Recovery requires manual intervention.</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">With FidesOrigin</p>
+                            <p class="body-text">Jurisdiction rules, investor accreditation, and sanctions screening are enforced in the token's transfer logic itself. Non-compliant transfers revert on-chain. The policy engine is upgradeable, but the enforcement is permanent.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agentic Payment -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 class="h3">Agentic Payment</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">Today</p>
+                            <p class="body-text">AI payment agents operate via off-chain risk rules hardcoded in application logic. Spend limits and address allowlists live in a backend server the agent calls before executing.</p>
+                            <p class="uc-label uc-label-pain mt-3">Problem</p>
+                            <p class="body-text">If the agent is compromised, the backend is bypassed, or the prompt is manipulated, there is no protocol-level guardrail. The agent can drain funds to any address — including sanctioned ones.</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">With FidesOrigin</p>
+                            <p class="body-text">Spend limits, risk thresholds, and sanctions screening are enforced at the smart contract level. Even a compromised agent cannot transfer to a high-risk address — the transaction reverts on-chain. The guardrail is cryptographic, not advisory.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- How It Works -->
+    <section id="how" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Architecture</p>
+                <h2 class="h2 mb-4">Engine, not oracle</h2>
+                <p class="lead max-w-lg">Every transaction is screened by smart contracts running on the same chain. No external API calls. No off-chain latency. No bypass path.</p>
+            </div>
+
+            <div class="space-y-3 reveal">
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">Data Layer</span>
+                        <span class="text-[11px] text-[#3a3a42] font-mono">autonomous sync</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">OFAC SDN</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">Chainalysis</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">OpenSanctions</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">Custom feeds</span>
+                    </div>
+                </div>
+
+                <div class="text-center arch-arrow">↓</div>
+
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">Programmable On-Chain Compliance</span>
+                        <span class="text-[11px] text-[#3a3a42] font-mono">Solidity 0.8.26</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">RiskRegistry</div>
+                            <div class="text-[10px] text-[#3a3a42]">Address profiles</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">PolicyEngine</div>
+                            <div class="text-[10px] text-[#3a3a42]">Rule evaluation</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">ComplianceEngine</div>
+                            <div class="text-[10px] text-[#3a3a42]">Transfer checks</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">QuarantineVault</div>
+                            <div class="text-[10px] text-[#3a3a42]">Fund isolation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center arch-arrow">↓</div>
+
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">Transaction Outcome</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="badge badge-pass">ALLOW</span>
+                        <span class="badge badge-hold">QUARANTINE</span>
+                        <span class="badge badge-block">BLOCK</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Code Example -->
+    <section class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal">
+                    <p class="micro mb-4">Integration</p>
+                    <h2 class="h2 mb-5">Three lines to wire in</h2>
+                    <p class="body-text mb-6">
+                        Inherit the risk engine at the smart contract level. Every token transfer is automatically screened against on-chain risk profiles — no SDK calls, no API latency, no bypass.
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">01</span>
+                            <p class="text-[13px] text-[#8b8b94]">Inherit <code class="text-[#d4af7a] text-xs font-mono">CompliantStableCoin</code> or wire <code class="text-[#d4af7a] text-xs font-mono">FidesCompliance</code> into your transfer hook</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">02</span>
+                            <p class="text-[13px] text-[#8b8b94]">Configure risk thresholds and policies via the admin dashboard or directly on-chain</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">03</span>
+                            <p class="text-[13px] text-[#8b8b94]">Every transfer is screened, enforced, and logged — deterministically on-chain</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal" style="transition-delay: 0.15s">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                            <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+                        </div>
+                        <div class="code-body">
+<pre><span class="tk-comment">// Your stablecoin inherits on-chain risk screening</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+        <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+        <span class="tk-keyword">uint256</span> amount
+    ) <span class="tk-keyword">internal override</span> {
+        <span class="tk-comment">// Evaluate before transfer executes</span>
+        (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) =
+            fides.<span class="tk-func">evaluateTransaction</span>(
+                from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>)
+            );
+
+        <span class="tk-keyword">if</span> (!allowed)
+            <span class="tk-keyword">revert</span> <span class="tk-func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Contracts -->
+    <section id="contracts" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Contracts</p>
+                <h2 class="h2 mb-4">Deployed on Sepolia</h2>
+                <p class="lead max-w-lg">All contracts verified and open source. UUPS proxy pattern for upgradeability.</p>
+            </div>
+            <div class="space-y-1 reveal">
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">RiskRegistry</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc">0x7a41...AC52bc</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS Proxy</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">PolicyEngine</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x8708...96b38">0x8708...96b38</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS Proxy</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">ComplianceEngine</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x50aA...fB0AC">0x50aA...fB0AC</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS Proxy</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">QuarantineVault</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x4971...1a382">0x4971...1a382</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">Direct</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">FidesCompliance</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x7cc7...6F97A1">0x7cc7...6F97A1</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">Direct</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">CompliantStableCoin</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0xC6AC...2a6Cca">0xC6AC...2a6Cca</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">Direct</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Security -->
+    <section id="security" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Security</p>
+                <h2 class="h2 mb-4">Designed to be uncompromising</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">No off-chain dependency</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">All risk checks execute on-chain. No oracle latency, no API downtime, no third-party trust assumptions.</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">Role-based access control</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">Granular permissions: ORACLE, RULE_MANAGER, COMPLIANCE_ENGINE, RELEASE_ROLE. Each role independently assignable and revocable.</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">Quarantine, not destruction</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">Suspicious funds are isolated in a controlled vault, not burned. Reviewable, recoverable, and auditable.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Live Status -->
+    <section id="status" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">System Health</p>
+                <h2 class="h2 mb-4">Live, not “trust me”</h2>
+                <p class="lead max-w-lg">Risk data freshness is verifiable on-chain. No opaque APIs, no “we promise it's up to date.”</p>
+            </div>
+            <div class="grid md:grid-cols-5 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">ONLINE</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">Network</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">Sepolia Testnet</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">Chain ID 11155111</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">SYNCED</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">Risk Registry</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">v1.2.1</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">UUPS upgradeable</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot idle"></span>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">DEV MODE</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">Data Publisher</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">DRY_RUN</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">OFAC + OpenSanctions</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">VERIFIED</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">Contracts</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">6 deployed</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">Etherscan verified</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">FRESH</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">Last Updated</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">2026-06-26</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">OpenSanctions OFAC SDN</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-0.5 font-mono">~2,635 addresses (106 OFAC + 2,529 ScamSniffer)</p>
+                </div>
+            </div>
+            <div class="mt-6 reveal">
+                <a href="/admin/" class="doc-card flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-[#f0f0f2] font-medium">View Admin Dashboard</p>
+                        <p class="text-[11px] text-[#5a5a62] mt-0.5">Check real-time risk profiles, data sync status, and contract events</p>
+                    </div>
+                    <svg class="w-4 h-4 text-[#5a5a62] shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Trust & Audits -->
+    <section id="trust" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Trust & Security</p>
+                <h2 class="h2 mb-4">Open source. Audited design. No black boxes.</h2>
+                <p class="lead max-w-lg">Risk infrastructure must be verifiable. Our code is open, our contracts are verified, and third-party audits are in progress.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <h3 class="h3">Open Source</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">Full contract source code on GitHub. Every function, every modifier, every test — public and auditable. No proprietary black boxes.</p>
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-3 text-[11px] text-[#d4af7a] hover:text-[#e8c99a] transition-colors">
+                        View repository
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <h3 class="h3">Verified on Etherscan</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">All 6 contracts verified on Sepolia Etherscan. Read-only proxy implementation. Anyone can inspect, anyone can verify bytecode matches source.</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#f5a623]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <h3 class="h3">Third-Party Audit</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">Independent security audit scheduled before mainnet deployment. OpenZeppelin / Trail of Bits / Certik under evaluation. Report will be published here.</p>
+                    <span class="inline-block mt-3 text-[10px] text-[#f5a623] font-mono px-2 py-0.5 rounded bg-[#f5a623]/10">IN PROGRESS</span>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <h3 class="h3">Upgradeable & Recoverable</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">UUPS proxy pattern allows contract upgrades without migration. Suspicious funds are quarantined, not burned — reviewable and recoverable through governed release roles.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Docs & Blog -->
+    <section id="docs" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Resources</p>
+                <h2 class="h2 mb-4">Read the code, not the marketing</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 reveal">
+                <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/contracts</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">Contract Source Code</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">Solidity 0.8.26, 6 contracts, 139 tests passing. Full test suite in Hardhat.</p>
+                </a>
+                <a href="https://github.com/FintechGuy71/FidesOrigin/tree/main/data-publisher" target="_blank" rel="noopener" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/data-publisher</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">Data Publisher Service</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">TypeScript service that syncs OFAC and OpenSanctions data to RiskRegistry. Docker-ready, Redis cluster support.</p>
+                </a>
+                <a href="/admin/" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/admin</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">Admin Dashboard</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">Live dashboard for risk profiles, contract state, and sync status. Sepolia testnet.</p>
+                </a>
+            </div>
+
+            <!-- Blog -->
+            <div class="mt-12 reveal">
+                <p class="micro mb-4">Latest Writing</p>
+                <a href="/blog/why-on-chain-compliance.html" class="blog-card flex items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-[10px] text-[#d4af7a] font-mono px-2 py-0.5 rounded bg-[#b8945f]/10">CATEGORY DEFINITION</span>
+                            <span class="text-[10px] text-[#3a3a42]">Jun 2026</span>
+                        </div>
+                        <h3 class="h3 mb-1">Why On-Chain: The End of API-Based Compliance</h3>
+                        <p class="text-[13px] text-[#8b8b94]">Why screening transactions through off-chain APIs is structurally broken — and what “on-chain risk enforcement” means for digital asset infrastructure.</p>
+                    </div>
+                    <svg class="w-5 h-5 text-[#5a5a62] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- CTA -->
+    <section class="py-20 md:py-28">
+        <div class="max-w-2xl mx-auto px-6 text-center reveal">
+            <h2 class="h2 mb-5">Build with on-chain risk control</h2>
+            <p class="lead mb-8">
+                If you're issuing a stablecoin, building a smart wallet, tokenizing real-world assets, or designing autonomous payment infrastructure — let's talk about how deterministic risk screening changes the equation.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+                    Request access
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="/admin/" class="btn-secondary">View dashboard</a>
+            </div>
+            <div class="flex items-center justify-center gap-6 text-[11px] text-[#3a3a42]">
+                <span>Sepolia testnet live</span>
+                <span class="w-1 h-1 rounded-full bg-[#3a3a42]"></span>
+                <span>GitHub open source</span>
+                <span class="w-1 h-1 rounded-full bg-[#3a3a42]"></span>
+                <span>Etherscan verified</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Demo / See it in action -->
+    <section id="demo" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">Live Demo</p>
+                <h2 class="h2 mb-4">Every transfer is screened before it reaches the chain.</h2>
+                <p class="lead max-w-lg">What happens when a sanctioned address tries to receive funds? The transaction reverts — at the protocol level.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 reveal">
+                <!-- Code example -->
+                <div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                            <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+                        </div>
+                        <div class="code-body">
+<pre><span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+    <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+    <span class="tk-keyword">uint256</span> amount
+) <span class="tk-keyword">internal override</span> {
+    <span class="tk-comment">// Check if recipient is sanctioned</span>
+    <span class="tk-keyword">if</span> (fides.<span class="tk-func">isSanctioned</span>(to))
+        <span class="tk-keyword">revert</span> <span class="tk-func">SanctionedAddress</span>(to);
+
+    <span class="tk-comment">// Proceed with normal transfer</span>
+    <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ASCII flow -->
+                <div class="flex flex-col justify-center">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="text-[11px] text-[#3a3a42] font-mono">Flow</span>
+                        </div>
+                        <div class="code-body">
+<pre style="text-align: center; color: var(--text-muted); line-height: 1.8;">
+  User        Transfer      Compliance        Result
+   │             │             Check            │
+   ▼             ▼               ▼              ▼
+┌──────┐     ┌──────┐      ┌──────┐      ┌─────────┐
+│ Init │  →  │  TX  │  →   │Screen│  →   │  ALLOW  │
+│      │     │      │      │      │      │  BLOCK  │
+└──────┘     └──────┘      └──────┘      └─────────┘</pre>
+                        </div>
+                    </div>
+                    <a href="https://sepolia.etherscan.io/address/0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc#writeContract" target="_blank" rel="noopener" class="doc-card flex items-center justify-between mt-4">
+                        <div>
+                            <p class="text-sm text-[#f0f0f2] font-medium">Try it on Sepolia</p>
+                            <p class="text-[11px] text-[#5a5a62] mt-0.5">Interact with the RiskRegistry contract on Etherscan</p>
+                        </div>
+                        <svg class="w-4 h-4 text-[#5a5a62] shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/[0.04] py-8">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="/" class="flex items-center">
+                    <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-6 w-auto opacity-60" loading="lazy">
+                </a>
+                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <a href="/blog/why-on-chain-compliance.html" class="hover:text-[#8b8b94] transition-colors">Blog</a>
+                    <span class="text-[#3a3a42]">Sepolia Testnet</span>
+                </div>
+            </div>
+            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
+                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin. On-chain risk engine for digital assets.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed inset-0 z-50 bg-[#08080a]/95 backdrop-blur-xl">
+        <div class="flex flex-col items-center justify-center h-full gap-8">
+            <a href="#use-cases" class="text-lg text-[#8b8b94]">Use cases</a>
+            <a href="#security" class="text-lg text-[#8b8b94]">Security</a>
+            <a href="#contracts" class="text-lg text-[#8b8b94]">Contracts</a>
+            <a href="#how" class="text-lg text-[#8b8b94]">How it works</a>
+            <a href="#trust" class="text-lg text-[#8b8b94]">Trust</a>
+            <a href="#docs" class="text-lg text-[#8b8b94]">Docs</a>
+            <a href="/blog/why-on-chain-compliance.html" class="text-lg text-[#8b8b94]">Blog</a>
+            <div class="flex items-center gap-4 text-sm text-[#5a5a62]">
+                <a href="/" class="text-[#d4af7a]">EN</a>
+                <a href="/cn/">CN</a>
+                <a href="/tw/">TW</a>
+                <a href="/jp/">JP</a>
+            </div>
+            <a href="mailto:contact@fidesorigin.com" class="btn-primary">Get in touch</a>
+            <button id="mobileMenuClose" class="mt-8 text-[#3a3a42]">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lang dropdown toggle
+        function toggleLang() {
+            var dd = document.getElementById('langDropdown');
+            dd.classList.toggle('open');
+            var btn = dd.querySelector('button');
+            btn.setAttribute('aria-expanded', dd.classList.contains('open'));
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var dd = document.getElementById('langDropdown');
+                if (dd && dd.classList.contains('open')) {
+                    dd.classList.remove('open');
+                    dd.querySelector('button').setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('langDropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+        });
+
+        // Mobile menu
+        const mm = document.getElementById('mobileMenu');
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => mm.classList.add('active'));
+        document.getElementById('mobileMenuClose')?.addEventListener('click', () => mm.classList.remove('active'));
+        mm?.querySelectorAll('a').forEach(l => l.addEventListener('click', () => mm.classList.remove('active')));
+
+        // Scroll reveal
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+        (function() {
+            var STORAGE_KEY = 'fides_lang';
+            var path = window.location.pathname;
+            if (localStorage.getItem(STORAGE_KEY)) return;
+            if (path === '/' || path === '/index.html') {
+                fetch('https://ipapi.io/json/')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || !data.country_code) return;
+                        var code = data.country_code.toUpperCase();
+                        var target = null;
+                        if (code === 'CN') target = '/cn/';
+                        else if (code === 'TW' || code === 'HK' || code === 'MO') target = '/tw/';
+                        else if (code === 'JP') target = '/jp/';
+                        if (target) {
+                            localStorage.setItem(STORAGE_KEY, target);
+                            window.location.href = target;
+                        }
+                    })
+                    .catch(function() { });
+            }
+        })();
+    </script>
+</body>
+</html>

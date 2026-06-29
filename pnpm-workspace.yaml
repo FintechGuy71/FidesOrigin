@@ -1,0 +1,23 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  msw: true
+
+onlyBuiltDependencies:
+  - sharp
+  - "@napi-rs/canvas"
+  - secp256k1
+  - keccak
+  - bcrypt
+  - esbuild
+  - protobufjs
+  - msw
+
+overrides:
+  "@chainlink/contracts": "1.3.0"
+
+settings:
+  fetchTimeout: 600000
+  networkConcurrency: 3

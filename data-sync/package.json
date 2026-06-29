@@ -1,0 +1,31 @@
+{
+  "name": "@fidesorigin/risk-sync",
+  "version": "1.0.0",
+  "description": "FidesOrigin Risk Data Synchronization System",
+  "main": "risk-sync-master.js",
+  "scripts": {
+    "sync": "node risk-sync-master.js --full",
+    "check": "node risk-sync-master.js --check",
+    "sanctions": "node sanctions-sync.js",
+    "cl:save": "node chainlink-automation.js --save-source",
+    "cl:sync": "node chainlink-automation.js --sanctions",
+    "cl:check": "node chainlink-automation.js --check",
+    "test": "echo 'No tests yet'"
+  },
+  "dependencies": {
+    "ethers": "^6.10.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "sanctions",
+    "ofac",
+    "compliance",
+    "chainlink",
+    "web3"
+  ],
+  "author": "FidesOrigin",
+  "license": "MIT"
+}

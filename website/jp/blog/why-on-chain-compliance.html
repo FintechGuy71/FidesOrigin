@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>なぜオンチェーンか：API ベースコンプライアンスの終焉 — FidesOrigin</title>
+    <meta name="description" content="API ベースのコンプライアンスはアーキテクチャ的な誤りだ。未来はオンチェーンリスクエンフォースメント：決定論的、ゼロレイテンシー、迂回不可能。">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="なぜオンチェーンか：API ベースコンプライアンスの終焉">
+    <meta name="twitter:description" content="API ベースのコンプライアンスはアーキテクチャのミスだ。未来はオンチェーンリスク執行に属する：決定論的、ゼロレイテンシー、迂回不可能。">
+    <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+    <link rel="canonical" href="https://fidesorigin.com/jp/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+
+    <meta property="og:title" content="为何オンチェーンか：API ベースコンプライアンスの終焉">
+    <meta property="og:description" content="API ベースのコンプライアンスはアーキテクチャ的な誤りだ。未来はオンチェーンリスクエンフォースメントだ。">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "なぜオンチェーンか：API ベースコンプライアンスの終焉",
+      "description": "API ベースのコンプライアンスはアーキテクチャのミスだ。未来はオンチェーンリスク執行に属する：決定論的、ゼロレイテンシー、迂回不可能。",
+      "url": "https://fidesorigin.com/jp/blog/why-on-chain-compliance.html",
+      "datePublished": "2026-06-01",
+      "author": {
+        "@type": "Organization",
+        "name": "FidesOrigin"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "FidesOrigin",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://fidesorigin.com/assets/logo/logo-full-dark-bg.png"
+        }
+      }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="apple-touch-icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111114;
+            --surface-2: #1a1a1f;
+            --border: rgba(255,255,255,0.04);
+            --gold: #d4af7a;
+            --gold-bright: #e8c99a;
+            --text-primary: #f0f0f2;
+            --text-secondary: #8b8b94;
+            --text-muted: #5a5a62;
+            --red: #e5484d;
+            --amber: #f5a623;
+            --green: #3eba6d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+        body.grain::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 180px;
+        }
+        .gold { color: var(--gold); }
+        .nav-bar { background: rgba(10,10,10,0.75); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px); }
+        .h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 600; line-height: 1.1; letter-spacing: -0.03em; color: var(--text-primary); }
+        .h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+        .h3 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+        .lead { font-size: 1.0625rem; color: var(--text-secondary); line-height: 1.7; font-weight: 400; }
+        .body-text { font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.7; }
+        .micro { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--gold); color: var(--bg);
+            padding: 0.625rem 1.25rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { background: var(--gold-bright); transform: translateY(-1px); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: transparent; color: var(--text-secondary);
+            padding: 0.625rem 1.25rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+        .glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; }
+        .hr-fade { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); margin: 0 auto; max-width: 800px; }
+        .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .code-header { background: var(--surface-2); padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .code-body { padding: 1rem; overflow-x: auto; }
+        .code-body pre { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.7; color: var(--text-secondary); margin: 0; }
+        .tk-keyword { color: #c586c0; }
+        .tk-type { color: #4ec9b0; }
+        .tk-func { color: #dcdcaa; }
+        .tk-comment { color: #6a9955; }
+        .tk-string { color: #ce9178; }
+        .article { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
+        .article p { margin-bottom: 1.5rem; }
+        .article h2 { color: var(--text-primary); font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+        .article h3 { color: var(--text-primary); font-size: 1.125rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; letter-spacing: -0.01em; }
+        .article ul { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+        .article ul li { margin-bottom: 0.5rem; }
+        .article a { color: var(--gold); text-decoration: none; }
+        .article a:hover { text-decoration: underline; }
+        .article blockquote { border-left: 2px solid var(--gold); padding-left: 1.25rem; margin: 1.5rem 0; color: var(--text-primary); font-weight: 500; }
+        .article strong { color: var(--text-primary); font-weight: 600; }
+        .article em { color: var(--gold); font-style: italic; }
+        .article .callout { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+        .article .callout p:last-child { margin-bottom: 0; }
+        .article .pull-quote { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; margin: 2rem 0; text-align: center; }
+        .lang-dropdown { position: relative; display: inline-block; }
+        .lang-dropdown-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6875rem; font-weight: 500; padding: 0.35rem 0.6rem; border-radius: 6px; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease; cursor: pointer; }
+        .lang-dropdown-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.07); }
+        .lang-dropdown-btn svg { width: 10px; height: 10px; transition: transform 0.2s ease; }
+        .lang-dropdown.open .lang-dropdown-btn svg { transform: rotate(180deg); }
+        .lang-dropdown-menu { position: absolute; top: calc(100% + 4px); right: 0; min-width: 100px; background: rgba(16,16,20,0.96); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: all 0.2s ease; z-index: 100; backdrop-filter: blur(8px); }
+        .lang-dropdown.open .lang-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .lang-dropdown-menu a { display: block; padding: 0.4rem 0.7rem; font-size: 0.6875rem; font-weight: 500; color: var(--text-muted); border-radius: 4px; transition: all 0.15s ease; }
+        .lang-dropdown-menu a:hover { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+        .lang-dropdown-menu a.active { color: var(--gold-bright); background: rgba(184,148,95,0.1); }
+    </style>
+
+    <style>
+        /* Mobile touch-target fixes */
+        .lang-dropdown-btn { min-height: 44px; padding: 0.5rem 0.75rem; }
+        .btn-primary, .btn-secondary { min-height: 44px; }
+        .uc-pain, .uc-fix { min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+        .code-body pre { white-space: pre-wrap; word-break: break-all; }
+        @media (max-width: 640px) {
+            .uc-row { padding: 1.25rem; }
+            .uc-pain, .uc-fix { padding-left: 0.75rem; }
+            .arch-layer { padding: 0.875rem 1rem; }
+            .addr-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+        }
+    </style>
+</head>
+<body class="grain">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-8 w-auto">
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="/" class="btn-secondary text-xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    ホームに戻る
+                </a>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-dropdown-btn" onclick="toggleLang()">
+                        日本語
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="lang-dropdown-menu">
+                        <a href="/blog/why-on-chain-compliance.html">English</a>
+                        <a href="/cn/blog/why-on-chain-compliance.html">简体中文</a>
+                        <a href="/tw/blog/why-on-chain-compliance.html">繁體中文</a>
+                        <a href="/jp/blog/why-on-chain-compliance.html" class="active">日本語</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero / Header -->
+    <section class="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
+        <div class="glow w-[400px] h-[400px] bg-[#b8945f] -top-40 -right-20"></div>
+        <div class="max-w-3xl mx-auto px-6 relative z-10">
+            <p class="micro mb-6">Blog — 2026年6月</p>
+            <h1 class="h1 mb-6">
+                为何オンチェーンか：<br>
+                <span class="gold">API ベースコンプライアンスの終焉</span>
+            </h1>
+            <p class="lead max-w-2xl">
+                今、暗号通貨のコンプライアンスに取り組む全員が、同じアーキテクチャ的誤りを犯している。彼らは間違ったことをやっている。そして、彼ら自身もそれを知っている。
+            </p>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Article Body -->
+    <article class="article max-w-3xl mx-auto px-6 py-16 md:py-20">
+        <p>誰も大声で言いたがらない事実がある。今日の暗号通貨コンプライアンスの主要スタックはすべて、根本的に破綻した前提の上に構築されている。トランザクションを実行すると、それは中央集権的な API にヒットし、その API はバージニア州のどこかにあるデータベースを確認し、それから——うまくいけば、いつか——送金をブロックすべきかどうかを伝える。</p>
+
+        <p>一秒考えてみろ。ブロックチェーンの約束は<em>非中央集権化、透明性、検閲抵抗</em>だ。そして、あなたのコンプライアンス・ソリューションはバージニア州の中央集権的 API である。</p>
+
+        <p>それはフィーチャーではない。あなたが金を払って買っているバグだ。</p>
+
+        <p>これらのシステムを構築している人々が愚かだと言っているわけではない。Chainalysis、Elliptic、TRM——彼らには優秀なエンジニアと良いデータがある。だが、彼らは間違った問題を間違ったアーキテクチャで解こうとしている。Web2 のコンプライアンスを Web3 のインフラにボルトで止めようとしている。その結果は、両方の世界の最悪を継承したフランケンシュタインだ。</p>
+
+        <h2>API モデルは間違っている</h2>
+
+        <p>API モデルが間違っている理由を具体的に説明しよう。手を振るだけでは役に立たない。</p>
+
+        <p><strong>レイテンシー。</strong> API コールごとに、トランザクションフローにミリ秒、時に数秒が追加される。DeFi において、それは永遠だ。MEV ボットはあなたのコンプライアンス API が応答するのを待たない。DEX でトークンをスワップしようとしているユーザーも同様だ。その遅延は面倒なだけではない——経済的に破壊的だ。即時のファイナリティのために構築されたシステムに、バージニア州アシュバーンの誰かがデータベースの行を調べるのを待つように求めている。</p>
+
+        <p><strong>単一障害点。</strong> API がダウンしたらどうなる？ コンプライアンス・プロバイダーが停止したら？ 彼らの DNS が失敗したら？ レート制限が発動したら？ 私はそれを目の当たりりにした——大手取引所は、KYT プロバイダーの API がダウンしたため、出金を停止しなければならなかった。コンプライアンス・スタック全体は、SLA に包まれた単一障害点だった。SLA はライブの時に役に立たない。</p>
+
+        <p><strong>信頼の仮定。</strong> API が正しい答えを返すことを信頼しなければならない。データベースが最新であることを。プロバイダーが侵害されていないことを。転送中に応答が改竄されていないことを。トラストレスネスが全てのポイントである世界で、あなたは完全にサードパーティを信頼する必要があるコンプライアンス・システムを構築した。それはコンプライアンスについてすらトラストレスではない——<em>特に</em>コンプライアンスについて信頼しているのだ。</p>
+
+        <p><strong>迂回経路。</strong> API チェックはトランザクションの<em>周り</em>で行われ、トランザクションの<em>内側</em>ではない。API が「ブロック」と言っても、フロントエンドは単に……ブロックしないこともできる。スマートコントラクトは知らない。ブロックチェーンは知らない。コンプライアンス・チェックはルールではなく提案だ。決意のある行為者はそれを完全に迂回できる。私たちはこれを何度も見てきた——制裁スクリーニングが、ユーザーフェイシング UI にのみ適用され、基礎となるスマートコントラクトには適用されない。それは茶番劇だ。</p>
+
+        <p>Chainalysis KYT は代表的な例だ。動作はこうだ：トランザクションがバックエンドにヒットし、バックエンドが Chainalysis を呼び出し、Chainalysis が応答し、バックエンドがどうするかを決定する。ブロックチェーンが最後に知る。コンプライアンス・レイヤーは、保護すべきシステムの外にいる門番だ。</p>
+
+        <p>そして Chainlink Functions もある。生の API よりは良いが、まだ間違っている。オラクル・モデルを押し付ける：リクエストを行い、オラクルネットワークがデータを取得し、オラクルがオンチェーンで返す。だが今、あなたはオラクルのガスを支払い、オラクルのレイテンシーを待ち、オラクルネットワークのセキュリティ・モデルを信頼している。改善だが、それでもラウンドトリップだ。コンプライアンス・チェックは実行環境にネイティブではない。訪問者だ。</p>
+
+        <h2>正しい方法：オンチェーン・ネイティブ実行</h2>
+
+        <p>正しい方法がどう見えるかを示そう。リスクデータはオンチェーンに存在する。ポリシー・エンジンはオンチェーンに存在する。評価は同じトランザクション内で、同じブロック内で、同じ実行コンテキストで行われる。API コールはない。レイテンシーはない。迂回はない。信頼の仮定はない。</p>
+
+        <p>ユーザーがトークンを転送しようとすると、スマートコントラクト自身が受取人のリスク・プロファイルを確認する。受取人が制裁対象なら、転送はリバートする。リスク・スコアが高すぎれば、転送は隔離される。すべてがクリーンなら、転送は進む。これはすべて<em>一つの不可分トランザクション</em>で行われる。ブロックチェーンはサーバーに許可を求めない。答えは既にオンチェーンにあるから、それを知っている。</p>
+
+        <p>これは小さな改善ではない。パラダイム・シフトだ。</p>
+
+        <p>重要な利点は五つある：</p>
+
+        <p><strong>1. 決定論性。</strong> 同じ入力は常に同じ出力を生む。アドレス A が制裁対象なら、それは<em>常に</em>制裁対象だ。競合状態もなく、古いデータもなく、「API がトランザクション中に更新されていた」ということもない。リスク・プロファイルはコンセンサス的事実だ。ネットワーク上の全ノードがそれに同意する。</p>
+
+        <p><strong>2. ゼロレイテンシー。</strong> リスク・チェックはトランザクション実行の一部だ。ローカル変数から読み取るのと同じガスコストだ。ネットワークのラウンドトリップはない。HTTP タイムアウトはない。接続プールの枯渇はない。チェックはローカル変数から読み取るのと同じくらい速い——それがそうだからだ。</p>
+
+        <p><strong>3. 迂回不可能。</strong> チェックはスマートコントラクト内で行われる。チェックが失敗すれば、トランザクションはリバートする。それを迂回する方法はない。コンプライアンス・レイヤーを飛ばしてコントラクトを直接呼び出すことはできない。コンプライアンス・レイヤー<em>が</em>コントラクトだ。セキュリティ境界は実行境界だ。これは警備員と壁の違いだ。</p>
+
+        <p><strong>4. 透明性と監査可能性。</strong> すべてのリスク・チェックはオンチェーンに記録される。誰でも何が起こり、なぜ起こったかを見ることができる。プロバイダーのブラックボックス・アルゴリズムを信頼する必要はない。コンプライアンスを検証するために SOC-2 レポートは必要ない。コンプライアンスはトランザクション履歴だ。規制当局は直接検証できる。監査人は直接検証できる。あなたのユーザーも直接検証できる。透明性は追加するフィーチャーではない——デフォルトだ。</p>
+
+        <p><strong>5. プロトコルレベルの統合。</strong> リスク・エンジンがスマートコントラクトなので、他のどのスマートコントラクトもそれを継承できる。あなたのステーブルコイン、あなたのウォレット、あなたの DEX、あなたの RWA トークン——すべてが同じオンチェーン・レジストリを呼び出す。統合は「SDK を追加して API コールを行う」ことではない。統合は「コントラクトをインポートしてチェックを継承する」ことだ。Solidity で三行だ。依存関係とプロトコルの違いだ。</p>
+
+        <div class="callout">
+            <p><strong>類推：</strong> API ベースのコンプライアンスは、データベースの制約を別のマイクロサービスに書くようなものだ。すべての挿入は、データが有効かどうかを確認するために REST API を呼び出す。API がダウンすれば、すべての書き込みを停止するか、ダーティデータをリスクするかのどちらかだ。オンチェーン・コンプライアンスはデータベース・トリガーのようなものだ。制約はトランザクション内で実行される。失敗すれば、トランザクションは失敗する。ネットワークコールはない。別のサービスはない。それを迂回する方法はない。</p>
+        </div>
+
+        <p>これは<em>バックエンド API</em>から<em>データベース・トリガー</em>へのシフトだ。API をより速くまたはより信頼できるようにすることではない。API がそもそも存在すべきではないことを気づくことだ。</p>
+
+        <h2>FidesOrigin の実装</h2>
+
+        <p>FidesOrigin はこの原則に基づいて構築されている。リスクデータはチェーンに同期される。ポリシー・エンジンはスマートコントラクトだ。評価は転送フック内で行われる。</p>
+
+        <p>実際にどう見えるかを示そう。ステーブルコインがある。すべての転送を制裁リストとリスク・プロファイルに照らしてスクリーニングしたい。コンプライアンス・コントラクトを継承する。<code>_update</code> フックをオーバーライドする。そのフック内で、オンチェーン・リスク・エンジンを呼び出す。転送がポリシーに違反すれば、リバートする。以上だ。</p>
+
+        <div class="code-block my-6">
+            <div class="code-header">
+                <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+            </div>
+            <div class="code-body">
+<pre><span class="tk-comment">// ステーブルコインはオンチェーン・リスク・スクリーニングを継承</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+        <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+        <span class="tk-keyword">uint256</span> amount
+    ) <span class="tk-keyword">internal override</span> {
+        <span class="tk-comment">// 転送実行前に評価</span>
+        (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) =
+            fides.<span class="tk-func">evaluateTransaction</span>(
+                from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>)
+            );
+
+        <span class="tk-keyword">if</span> (!allowed)
+            <span class="tk-keyword">revert</span> <span class="tk-func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+            </div>
+        </div>
+
+        <p>API キーはない。レート制限はない。サービス依存はない。コンプライアンス・ロジックは転送自体と同じ実行コンテキスト内にある。トランザクションは有効か、そうでないかだ。「たぶん」はない。</p>
+
+        <p>データ・レイヤーは自律的だ。OFAC SDN、Chainalysis、OpenSanctions——フィードは継続的にチェーンに同期される。だが、同期はバックグラウンド・プロセスであり、トランザクションの依存ではない。トランザクションはオンチェーンに既にあるものだけを読む。その読み取りは瞬時だ。書き込みは非同期だ。システムはデータの鮮度をトランザクション実行から切り離す。</p>
+
+        <p>これは<em>問う</em>ことと<em>知る</em>ことの違いだ。API モデルは問う。オンチェーン・モデルは知る。</p>
+
+        <h2>カテゴリーの定義：オンチェーンリスクエンフォースメント</h2>
+
+        <p>これには新しい名前が必要だ。「コンプライアンス API」は間違っている。「オラクルベース・コンプライアンス」も間違っている。私たちが構築しているものは<em>オンチェーンリスクエンフォースメント</em>だ。</p>
+
+        <p>リスク・スクリーニングではなく、リスク・エンフォースメントだ。スクリーニングは、何かを見て決定することだ。エンフォースメントは、システム自身が決定することだ。スクリーニングはオプションだ。エンフォースメントは必須だ。</p>
+
+        <p>オンチェーンであり、オフチェーンではない。ハイブリッドでもない。ブリッジでもない。エンフォースメント・ロジックは、それが統制するトランザクションと同じレイヤーで実行される。リスクデータはコンセンサス・データだ。ポリシー実行はコンセンサス実行だ。結果はコンセンサス的事実だ。</p>
+
+        <p>これは新しいカテゴリーだ。コンプライアンス API 全体を完全に置き換えるわけではない——調査ツール、フォレンジック分析、レポーティングのニーズは常に存在する。だが、転送ポリシーのリアルタイム執行において、API は間違ったツールだ。四角い穴に丸い杭を打ち込むようなものだ。その穴は日々大きくなっている。</p>
+
+        <p>重要なプラットフォーム——ステーブルコイン発行体、スマートコントラクト・ウォレット、RWA トークン化、エージェンティック・ペイメント・レール——は、コアリスク・コントロールを外部 API に依存することを許容できない。KYT 応答を待つ間、すべての転送を停止するステーブルコインはステーブルコインではない。それは手順が増えた銀行 API だ。コンプライアンスをサードパーティ・サービスに委任するスマートウォレットはスマートウォレットではない。バックドアのあるフロントエンドだ。</p>
+
+        <p>未来は、自身のルールを執行するコントラクトだ。自身のトランザクションをスクリーニングするプロトコルだ。許可を求めないウォレット——既に答えを知っているからだ。</p>
+
+        <p>これが FidesOrigin が構築するものだ。コンプライアンス API ではない。オラクルでもない。トランザクション内で実行されるオンチェーン・リスク・エンジンだ。決定論的。ゼロレイテンシー。透明。迂回不可能。プロトコル・ネイティブ。</p>
+
+        <p>次世代のオンチェーン・ファイナンスを構築しているなら、コンプライアンス・ベンダーは必要ない。コンプライアンス・プロトコルが必要だ。</p>
+
+        <p>暗号通貨コンプライアンスの API 時代は終わりを告げている。エンフォースメントの時代が始まっている。</p>
+    </article>
+
+    <div class="hr-fade"></div>
+
+    <!-- CTA -->
+    <section class="py-16 md:py-20">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <h2 class="h2 mb-4">オンチェーンリスクエンフォースメントで構築</h2>
+            <p class="lead mb-8">
+                FidesOrigin は、ステーブルコイン、スマートウォレット、RWA プラットフォーム、エージェンティック・ペイメント・レールのためのネイティブ・オンチェーン・リスク・エンジンだ。
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="/" class="btn-primary">
+                    FidesOrigin を探る
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="mailto:contact@fidesorigin.com" class="btn-secondary">お問い合わせ</a>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/[0.04] py-8">
+        <div class="max-w-3xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="/" class="flex items-center">
+                    <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-6 w-auto opacity-60">
+                </a>
+                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <span>Sepolia Testnet</span>
+                </div>
+            </div>
+            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
+                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin. デジタル資産のためのオンチェーン・リスク・エンジン。</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function toggleLang() {
+            document.getElementById('langDropdown').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('langDropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

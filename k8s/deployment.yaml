@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fidesorigin-data-publisher
+  namespace: fidesorigin
+  labels:
+    app: fidesorigin-data-publisher
+    tier: backend
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: fidesorigin-data-publisher
+  template:
+    metadata:
+      labels:
+        app: fidesorigin-data-publisher
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: fidesorigin-publisher
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: publisher
+          image: fidesorigin/data-publisher:latest
+          imagePullPolicy: Always
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: fidesorigin-config
+          env:
+            # Private key injected from Secret (do NOT commit to ConfigMap)
+            # D2-018 fix: set optional: false for critical secrets
+            - name: PUBLISHER_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fidesorigin-keys
+                  key: publisher-private-key
+                  optional: false
+            # AWS KMS credentials
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: fidesorigin-keys
+                  key: aws-access-key-id
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fidesorigin-keys
+                  key: aws-secret-access-key
+                  optional: true
+            # Vault token
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: fidesorigin-keys
+                  key: vault-token
+                  optional: true
+            # FATF oracle key
+            - name: FATF_ORACLE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fidesorigin-keys
+                  key: fatf-oracle-private-key
+                  optional: false
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              # D1-AUDIT1-092 fix: increased from 512Mi for large OFAC sync data
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: logs
+          emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - fidesorigin-data-publisher
+                topologyKey: kubernetes.io/hostname

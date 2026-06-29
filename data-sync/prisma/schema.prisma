@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// ==================== 数据库配置说明 ====================
+// 开发环境使用 SQLite，生产环境使用 PostgreSQL
+// 生产环境 DATABASE_URL 应指向 PostgreSQL 实例
+// 建议通过环境变量 DATABASE_URL 配置连接字符串
+//
+// 生产环境 PostgreSQL 连接示例：
+// DATABASE_URL="postgresql://user:password@localhost:5432/fidesorigin?schema=public&sslmode=require"
+//
+// 数据库约束说明：
+// - 唯一索引：确保关键字段不重复（地址、配置名等）
+// - 外键约束：确保数据一致性（同步日志关联地址等）
+// - 检查约束：确保数据有效性（风险评分范围等）
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 风险地址主表
+model RiskAddress {
+  id          String   @id @default(cuid())
+  address     String   @unique // 区块链地址 (小写存储)
+  chain       String   @default("ethereum") // 链类型
+  category    String   // 分类: BLACKLIST/GRAYLIST/WHITELIST/UNKNOWN
+  label       String   // 标签: high_risk/medium_risk/low_risk/unknown
+  riskScore   Int      @default(0) // 综合风险评分 0-100
+  tags        String   // 风险标签列表 (JSON数组)
+  sources     String   // 数据来源 (JSON数组)
+  metadata    String?  // 各数据源的原始元数据 (JSON)
+
+  // 同步状态
+  syncedToChain Boolean @default(false)
+  syncedAt      DateTime?
+
+  // 关联：该地址的同步历史
+  syncHistory SyncHistory[]
+
+  // 关联：该地址的变更记录
+  changeLogs  AddressChangeLog[]
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 唯一索引：确保地址+链组合唯一
+  @@unique([address, chain], name: "unique_address_chain")
+  @@index([category])
+  @@index([syncedToChain])
+  @@index([riskScore])
+  @@index([chain])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("risk_addresses")
+}
+
+// 同步日志（增强版）
+model SyncHistory {
+  id            String   @id @default(cuid())
+  timestamp     DateTime @default(now())
+  source        String   // 数据源名称
+  addressesCount Int
+  newCount      Int      // 新增数量
+  updatedCount  Int      // 更新数量
+  status        String   // SUCCESS/FAILED/ERROR/PARTIAL
+  details       String?
+  merkleRoot    String?  // 本次同步的 Merkle Root
+  txHash        String?  // 链上交易哈希
+
+  // 外键关联：关联的风险地址
+  riskAddresses RiskAddress[]
+
+  // 关联：数据源配置
+  dataSource    DataSourceConfig? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId  String?
+
+  @@index([timestamp])
+  @@index([source])
+  @@index([status])
+  @@index([dataSourceId])
+  @@map("sync_histories")
+}
+
+// 地址变更记录（审计追踪）
+model AddressChangeLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  action    String   // CREATE/UPDATE/DELETE/SYNC
+  oldValue  String?  // 旧值 (JSON)
+  newValue  String?  // 新值 (JSON)
+  reason    String?  // 变更原因
+
+  // 外键关联：变更的地址
+  riskAddress   RiskAddress @relation(fields: [riskAddressId], references: [id], onDelete: Cascade)
+  riskAddressId String
+
+  @@index([riskAddressId])
+  @@index([timestamp])
+  @@index([action])
+  @@map("address_change_logs")
+}
+
+// 数据源配置
+model DataSourceConfig {
+  id        String   @id @default(cuid())
+  name      String   @unique // chainalysis/ofac/open_source
+  enabled   Boolean  @default(true)
+  apiKey    String?
+  apiUrl    String?
+  lastSync  DateTime?
+  requestCount Int @default(0) // 今日请求计数
+
+  // 关联：同步历史
+  syncHistories SyncHistory[]
+
+  updatedAt DateTime @updatedAt
+
+  @@map("data_source_configs")
+}
+
+// 备份记录
+model BackupRecord {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  backupType  String   // FULL/INCREMENTAL
+  status      String   // SUCCESS/FAILED/RUNNING
+  filePath    String?  // 备份文件路径
+  fileSize    Int?     // 备份文件大小 (bytes)
+  checksum    String?  // 备份文件校验和
+  durationMs  Int?     // 备份耗时 (毫秒)
+  details     String?  // 详细信息
+
+  @@index([timestamp])
+  @@index([backupType])
+  @@index([status])
+  @@map("backup_records")
+}
+
+// 系统配置
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique // 配置键
+  value     String   // 配置值
+  category  String   @default("general") // 配置分类
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("system_configs")
+}

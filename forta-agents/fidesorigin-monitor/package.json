@@ -1,0 +1,20 @@
+{
+  "name": "fidesorigin-forta-agent",
+  "version": "0.0.1",
+  "description": "FidesOrigin chain monitoring agent for Forta Network",
+  "chainIds": [11155111],
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && forta-agent run",
+    "publish": "forta-agent publish",
+    "push": "forta-agent push"
+  },
+  "dependencies": {
+    "@fortanetwork/forta-agent": "^0.1.48",
+    "ethers": "^6.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

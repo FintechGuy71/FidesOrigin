@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why On-Chain: The End of API-Based Compliance — FidesOrigin</title>
+    <meta name="description" content="API-based compliance is an architectural mistake. The future is on-chain risk enforcement: deterministic, zero-latency, and impossible to bypass.">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Why On-Chain: The End of API-Based Compliance">
+    <meta name="twitter:description" content="API-based compliance is an architectural mistake. The future is on-chain risk enforcement.">
+    <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+    <link rel="canonical" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/why-on-chain-compliance.html">
+    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/why-on-chain-compliance.html">
+    <meta property="og:description" content="API-based compliance is an architectural mistake. The future is on-chain risk enforcement.">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Why On-Chain: The End of API-Based Compliance",
+      "description": "API-based compliance is an architectural mistake. The future is on-chain risk enforcement: deterministic, zero-latency, and impossible to bypass.",
+      "url": "https://fidesorigin.com/blog/why-on-chain-compliance.html",
+      "datePublished": "2026-06-01",
+      "author": {
+        "@type": "Organization",
+        "name": "FidesOrigin"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "FidesOrigin",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://fidesorigin.com/assets/logo/logo-full-dark-bg.png"
+        }
+      }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="apple-touch-icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111114;
+            --surface-2: #1a1a1f;
+            --border: rgba(255,255,255,0.04);
+            --gold: #d4af7a;
+            --gold-bright: #e8c99a;
+            --text-primary: #f0f0f2;
+            --text-secondary: #8b8b94;
+            --text-muted: #5a5a62;
+            --red: #e5484d;
+            --amber: #f5a623;
+            --green: #3eba6d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+        body.grain::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 180px;
+        }
+        .gold { color: var(--gold); }
+        .nav-bar { background: rgba(10,10,10,0.75); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px); }
+        .h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 600; line-height: 1.1; letter-spacing: -0.03em; color: var(--text-primary); }
+        .h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+        .h3 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+        .lead { font-size: 1.0625rem; color: var(--text-secondary); line-height: 1.7; font-weight: 400; }
+        .body-text { font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.7; }
+        .micro { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--gold); color: var(--bg);
+            padding: 0.625rem 1.25rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { background: var(--gold-bright); transform: translateY(-1px); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: transparent; color: var(--text-secondary);
+            padding: 0.625rem 1.25rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+        .glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; }
+        .hr-fade { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); margin: 0 auto; max-width: 800px; }
+        .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .code-header { background: var(--surface-2); padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .code-body { padding: 1rem; overflow-x: auto; }
+        .code-body pre { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.7; color: var(--text-secondary); margin: 0; }
+        .tk-keyword { color: #c586c0; }
+        .tk-type { color: #4ec9b0; }
+        .tk-func { color: #dcdcaa; }
+        .tk-comment { color: #6a9955; }
+        .tk-string { color: #ce9178; }
+        .article { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
+        .article p { margin-bottom: 1.5rem; }
+        .article h2 { color: var(--text-primary); font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+        .article h3 { color: var(--text-primary); font-size: 1.125rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; letter-spacing: -0.01em; }
+        .article ul { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+        .article ul li { margin-bottom: 0.5rem; }
+        .article a { color: var(--gold); text-decoration: none; }
+        .article a:hover { text-decoration: underline; }
+        .article blockquote { border-left: 2px solid var(--gold); padding-left: 1.25rem; margin: 1.5rem 0; color: var(--text-primary); font-weight: 500; }
+        .article strong { color: var(--text-primary); font-weight: 600; }
+        .article em { color: var(--gold); font-style: italic; }
+        .article .callout { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+        .article .callout p:last-child { margin-bottom: 0; }
+        .article .pull-quote { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; margin: 2rem 0; text-align: center; }
+        .lang-dropdown { position: relative; display: inline-block; }
+        .lang-dropdown-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6875rem; font-weight: 500; padding: 0.35rem 0.6rem; border-radius: 6px; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease; cursor: pointer; }
+        .lang-dropdown-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.07); }
+        .lang-dropdown-btn svg { width: 10px; height: 10px; transition: transform 0.2s ease; }
+        .lang-dropdown.open .lang-dropdown-btn svg { transform: rotate(180deg); }
+        .lang-dropdown-menu { position: absolute; top: calc(100% + 4px); right: 0; min-width: 100px; background: rgba(16,16,20,0.96); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: all 0.2s ease; z-index: 100; backdrop-filter: blur(8px); }
+        .lang-dropdown.open .lang-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .lang-dropdown-menu a { display: block; padding: 0.4rem 0.7rem; font-size: 0.6875rem; font-weight: 500; color: var(--text-muted); border-radius: 4px; transition: all 0.15s ease; }
+        .lang-dropdown-menu a:hover { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+        .lang-dropdown-menu a.active { color: var(--gold-bright); background: rgba(184,148,95,0.1); }
+    </style>
+
+    <style>
+        /* Mobile touch-target fixes */
+        .lang-dropdown-btn { min-height: 44px; padding: 0.5rem 0.75rem; }
+        .btn-primary, .btn-secondary { min-height: 44px; }
+        .uc-pain, .uc-fix { min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+        .code-body pre { white-space: pre-wrap; word-break: break-all; }
+        @media (max-width: 640px) {
+            .uc-row { padding: 1.25rem; }
+            .uc-pain, .uc-fix { padding-left: 0.75rem; }
+            .arch-layer { padding: 0.875rem 1rem; }
+            .addr-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+        }
+    </style>
+</head>
+<body class="grain">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-8 w-auto">
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="/" class="btn-secondary text-xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Back to home
+                </a>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-dropdown-btn" onclick="toggleLang()">
+                        EN
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="lang-dropdown-menu">
+                        <a href="/blog/why-on-chain-compliance.html" class="active">English</a>
+                        <a href="/cn/blog/why-on-chain-compliance.html">简体中文</a>
+                        <a href="/tw/blog/why-on-chain-compliance.html">繁體中文</a>
+                        <a href="/jp/blog/why-on-chain-compliance.html">日本語</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero / Header -->
+    <section class="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
+        <div class="glow w-[400px] h-[400px] bg-[#b8945f] -top-40 -right-20"></div>
+        <div class="max-w-3xl mx-auto px-6 relative z-10">
+            <p class="micro mb-6">Blog — June 2026</p>
+            <h1 class="h1 mb-6">
+                Why On-Chain:<br>
+                <span class="gold">The End of API-Based Compliance</span>
+            </h1>
+            <p class="lead max-w-2xl">
+                Everyone building in crypto compliance right now is making the same architectural mistake. They're doing the wrong thing, and they know it.
+            </p>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Article Body -->
+    <article class="article max-w-3xl mx-auto px-6 py-16 md:py-20">
+        <p>Here's the thing nobody wants to say out loud: every major compliance stack in crypto today is built on a fundamentally broken premise. You run a transaction, it hits a centralized API, that API checks a database somewhere in Virginia, and then — hopefully, eventually — it tells you whether to block the transfer.</p>
+
+        <p>Think about that for a second. The entire promise of blockchain is <em>decentralization, transparency, and censorship resistance</em>. And your compliance solution is a centralized API in Virginia.</p>
+
+        <p>That's not a feature. That's a bug you pay for.</p>
+
+        <p>I'm not saying the people building these systems are stupid. Chainalysis, Elliptic, TRM — they have smart engineers and good data. But they're solving the wrong problem with the wrong architecture. They're trying to bolt Web2 compliance onto Web3 infrastructure, and the result is a Frankenstein that inherits the worst of both worlds.</p>
+
+        <h2>The API Model Is Wrong</h2>
+
+        <p>Let's be specific about why the API model is wrong, because hand-waving isn't helpful.</p>
+
+        <p><strong>Latency.</strong> Every API call adds milliseconds, sometimes seconds, to a transaction flow. In DeFi, that's an eternity. An MEV bot doesn't wait for your compliance API to respond. Neither does a user trying to swap tokens on a DEX. The delay is not just annoying — it's economically destructive. You're asking a system built for instant finality to pause while someone in Ashburn, Virginia looks up a database row.</p>
+
+        <p><strong>Single point of failure.</strong> What happens when the API is down? When your compliance provider has an outage? When their DNS fails? When their rate limit kicks in? I've seen it happen — a major exchange had to halt withdrawals because their KYT provider's API went down. The entire compliance stack was a single point of failure wrapped in an SLA. SLAs don't help when you're live.</p>
+
+        <p><strong>Trust assumptions.</strong> You have to trust that the API returns the right answer. That the database is up to date. That the provider hasn't been compromised. That the response hasn't been tampered with in transit. In a world where trustlessness is the whole point, you've built a compliance system that requires you to trust a third party completely. It's not even trustless about compliance — it's <em>especially</em> trusting about compliance.</p>
+
+        <p><strong>Bypass paths.</strong> The API check happens <em>around</em> the transaction, not <em>inside</em> it. If the API says "block," the frontend can just... not block. The smart contract doesn't know. The blockchain doesn't know. The compliance check is a suggestion, not a rule. A determined actor can route around it entirely. We've seen this over and over — sanctions screening that only applies to the user-facing UI, not the underlying smart contract. It's theater.</p>
+
+        <p>Chainalysis KYT is the canonical example. It works like this: your transaction hits your backend, your backend calls Chainalysis, Chainalysis responds, your backend decides what to do. The blockchain is the last thing to know. The compliance layer is a gatekeeper that lives outside the system it's supposed to protect.</p>
+
+        <p>And then there's Chainlink Functions. Better than a raw API, but still wrong. It pushes the oracle model: you make a request, the oracle network fetches data, the oracle returns it on-chain. But now you're paying for oracle gas, waiting for oracle latency, and trusting the oracle network's security model. It's an improvement, but it's still a round-trip. The compliance check is not native to the execution environment. It's a visitor.</p>
+
+        <h2>The Right Way: On-Chain Native Execution</h2>
+
+        <p>Here's what the right way looks like. The risk data lives on-chain. The policy engine lives on-chain. The evaluation happens in the same transaction, in the same block, in the same execution context. There is no API call. There is no latency. There is no bypass. There is no trust assumption.</p>
+
+        <p>When a user tries to transfer a token, the smart contract itself checks the risk profile of the recipient. If the recipient is sanctioned, the transfer reverts. If the risk score is too high, the transfer is quarantined. If everything is clean, the transfer proceeds. All of this happens in <em>one atomic transaction</em>. The blockchain doesn't ask permission from a server. It knows the answer because the answer is already on-chain.</p>
+
+        <p>This is not a small improvement. This is a paradigm shift.</p>
+
+        <p>There are five advantages that matter:</p>
+
+        <p><strong>1. Determinism.</strong> The same input always produces the same output. If address A is sanctioned, it is <em>always</em> sanctioned. No race conditions, no stale data, no "the API was updating while the transaction happened." The risk profile is a consensus fact. Every node on the network agrees on it.</p>
+
+        <p><strong>2. Zero latency.</strong> The risk check is part of the transaction execution. It costs the same gas as any other storage read. There is no network round-trip. No HTTP timeout. No connection pool exhaustion. The check is as fast as reading from a local variable — because that's what it is.</p>
+
+        <p><strong>3. Un-bypassable.</strong> The check happens in the smart contract. If the check fails, the transaction reverts. There is no way to route around it. You cannot call the contract directly and skip the compliance layer because the compliance layer <em>is</em> the contract. The security boundary is the execution boundary. This is the difference between a guard and a wall.</p>
+
+        <p><strong>4. Transparent and auditable.</strong> Every risk check is recorded on-chain. Anyone can see what happened and why. You don't need to trust the provider's black-box algorithm. You don't need a SOC-2 report to verify compliance. The compliance is the transaction history. Regulators can verify it directly. Auditors can verify it directly. Your users can verify it directly. Transparency is not a feature you add — it's the default.</p>
+
+        <p><strong>5. Protocol-level integration.</strong> Because the risk engine is a smart contract, any other smart contract can inherit it. Your stablecoin, your wallet, your DEX, your RWA token — they all call the same on-chain registry. Integration is not "add our SDK and make API calls." Integration is "import our contract and inherit the checks." It's three lines of Solidity. The difference between a dependency and a protocol.</p>
+
+        <div class="callout">
+            <p><strong>The analogy:</strong> API-based compliance is like writing your database constraints in a separate microservice. Every insert calls a REST API to check if the data is valid. If the API is down, you either halt all writes or risk dirty data. On-chain compliance is like a database trigger. The constraint runs inside the transaction. If it fails, the transaction fails. No network calls. No separate service. No way to bypass it.</p>
+        </div>
+
+        <p>This is the shift from <em>backend API</em> to <em>database trigger</em>. It's not about making the API faster or more reliable. It's about realizing that the API shouldn't exist at all.</p>
+
+        <h2>How FidesOrigin Does It</h2>
+
+        <p>FidesOrigin is built on this principle. The risk data is synced to the chain. The policy engine is a smart contract. The evaluation happens in the transfer hook.</p>
+
+        <p>Here's what it looks like in practice. You have a stablecoin. You want every transfer to be screened against sanctions lists and risk profiles. You inherit the compliance contract. You override the <code>_update</code> hook. In that hook, you call the on-chain risk engine. If the transfer violates a policy, it reverts. That's it.</p>
+
+        <div class="code-block my-6">
+            <div class="code-header">
+                <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+            </div>
+            <div class="code-body">
+<pre><span class="tk-comment">// Your stablecoin inherits on-chain risk screening</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+        <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+        <span class="tk-keyword">uint256</span> amount
+    ) <span class="tk-keyword">internal override</span> {
+        <span class="tk-comment">// Evaluate before transfer executes</span>
+        (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) =
+            fides.<span class="tk-func">evaluateTransaction</span>(
+                from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>)
+            );
+
+        <span class="tk-keyword">if</span> (!allowed)
+            <span class="tk-keyword">revert</span> <span class="tk-func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+            </div>
+        </div>
+
+        <p>No API key. No rate limit. No service dependency. The compliance logic is in the same execution context as the transfer itself. The transaction is either valid or it is not. There is no "maybe."</p>
+
+        <p>The data layer is autonomous. OFAC SDN, Chainalysis, OpenSanctions — the feeds are pulled and synced to the chain continuously. But the sync is a background process, not a transaction dependency. The transaction only reads from what is already on-chain. The read is instant. The write is asynchronous. The system decouples data freshness from transaction execution.</p>
+
+        <p>This is the difference between <em>asking</em> and <em>knowing</em>. The API model asks. The on-chain model knows.</p>
+
+        <h2>Defining the Category: On-Chain Risk Enforcement</h2>
+
+        <p>We need a new name for this. "Compliance API" is wrong. "Oracle-based compliance" is wrong. What we're building is <em>On-Chain Risk Enforcement</em>.</p>
+
+        <p>Risk enforcement, not risk screening. Screening is what you do when you look at something and decide. Enforcement is what you do when the system itself decides. Screening is optional. Enforcement is mandatory.</p>
+
+        <p>On-chain, not off-chain. Not hybrid. Not bridged. The enforcement logic executes on the same layer as the transaction it governs. The risk data is consensus data. The policy execution is consensus execution. The result is a consensus fact.</p>
+
+        <p>This is a new category. It doesn't replace compliance APIs entirely — there will always be a need for investigative tools, forensic analysis, and reporting. But for the real-time enforcement of transfer policies, APIs are the wrong tool. They're a round peg in a square hole, and the hole is getting bigger every day.</p>
+
+        <p>The platforms that matter — stablecoin issuers, smart contract wallets, RWA tokenization, agentic payment rails — cannot afford to rely on external APIs for their core risk controls. A stablecoin that pauses every transfer while it waits for a KYT response is not a stablecoin. It's a banking API with extra steps. A smart wallet that delegates compliance to a third-party service is not a smart wallet. It's a frontend with a backdoor.</p>
+
+        <p>The future is contracts that enforce their own rules. Protocols that screen their own transactions. Wallets that don't ask permission because they already know the answer.</p>
+
+        <p>This is what FidesOrigin builds. Not a compliance API. Not an oracle. An on-chain risk engine that runs inside the transaction. Deterministic. Zero-latency. Transparent. Un-bypassable. Protocol-native.</p>
+
+        <p>If you're building the next generation of on-chain finance, you don't need a compliance vendor. You need a compliance protocol.</p>
+
+        <p>The API era of crypto compliance is ending. The enforcement era is beginning.</p>
+    </article>
+
+    <div class="hr-fade"></div>
+
+    <!-- CTA -->
+    <section class="py-16 md:py-20">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <h2 class="h2 mb-4">Build with on-chain risk enforcement</h2>
+            <p class="lead mb-8">
+                FidesOrigin is a native on-chain risk engine for stablecoins, smart wallets, RWA platforms, and agentic payment rails.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="/" class="btn-primary">
+                    Explore FidesOrigin
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="mailto:contact@fidesorigin.com" class="btn-secondary">Get in touch</a>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/[0.04] py-8">
+        <div class="max-w-3xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="/" class="flex items-center">
+                    <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-6 w-auto opacity-60">
+                </a>
+                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <span>Sepolia Testnet</span>
+                </div>
+            </div>
+            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
+                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin. On-chain risk engine for digital assets.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function toggleLang() {
+            document.getElementById('langDropdown').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('langDropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

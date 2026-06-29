@@ -1,0 +1,45 @@
+name: Publish SDK to npm
+
+on:
+  # 推送 tag 时触发（推荐：打 tag v1.0.0 自动发布）
+  push:
+    tags:
+      - 'sdk-v*'      # 如: sdk-v1.0.0, sdk-v1.1.0
+      - 'v*'          # 也兼容普通版本 tag
+    paths:
+      - 'sdk/**'      # 只有 sdk/ 目录变更时才触发
+
+  # 也可以手动触发（用于测试）
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./sdk
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SDK
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Notify success
+        if: success()
+        run: echo "✅ @fidesorigin/sdk published successfully!"

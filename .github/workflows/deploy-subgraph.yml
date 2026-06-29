@@ -1,0 +1,30 @@
+name: Deploy Subgraph
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/subgraph/**'
+      - '.github/workflows/deploy-subgraph.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Generate Subgraph Code
+        run: pnpm --filter=subgraph codegen
+      - name: Build Subgraph
+        run: pnpm --filter=subgraph build
+      - name: Deploy to The Graph Studio
+        run: pnpm --filter=subgraph deploy
+        env:
+          SUBGRAPH_ACCESS_TOKEN: ${{ secrets.SUBGRAPH_ACCESS_TOKEN }}

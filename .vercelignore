@@ -1,0 +1,18 @@
+# Vercel 构建忽略列表
+# 这些文件不会被包含在部署包中
+
+cache/
+artifacts/
+node_modules/
+.env
+.env.local
+.env.*
+*.log
+coverage/
+typechain-types/
+subgraph/build/
+subgraph/node_modules/
+data-sync/cache/
+scripts/debug/
+.gas-report.txt
+coverage.json

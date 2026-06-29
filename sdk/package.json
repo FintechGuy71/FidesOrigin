@@ -1,0 +1,62 @@
+{
+  "name": "@fidesorigin/sdk",
+  "version": "1.0.1",
+  "description": "FidesOrigin on-chain risk intelligence SDK — 3 lines of code to integrate blockchain risk control",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:post",
+    "build:esm": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:post": "echo '{\"type\": \"module\"}' > dist/esm/package.json && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "fidesorigin",
+    "risk",
+    "compliance",
+    "sanctions",
+    "blockchain",
+    "ethereum",
+    "on-chain",
+    "kyt",
+    "aml"
+  ],
+  "author": "FidesOrigin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fidesorigin/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/fidesorigin/sdk/issues"
+  },
+  "homepage": "https://github.com/fidesorigin/sdk#readme",
+  "peerDependencies": {
+    "ethers": "^6.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "ethers": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

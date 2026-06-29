@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin — 可程式設計鏈上合規協議</title>
+    <meta name="description" content="鏈上原生風控引擎。每筆交易即時篩查、可疑資金隔離、策略確定性執行——零鏈外依賴。為穩定幣、智能錢包、RWA 平台和自主支付基礎設施而生。">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FidesOrigin — 可程式設計鏈上合規協議">
+    <meta name="twitter:description" content="鏈上原生風控引擎。每筆交易即時篩查、可疑資金隔離、策略確定性執行——零鏈外依賴。">
+    <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+    <link rel="canonical" href="https://fidesorigin.com/tw/">
+    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
+    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
+    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
+    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/">
+    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/">
+
+    <meta property="og:title" content="FidesOrigin — 可程式設計鏈上合規協議">
+    <meta property="og:description" content="鏈上原生風控引擎。每筆交易即時篩查、可疑資金隔離、策略確定性執行——零鏈外依賴。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "FidesOrigin",
+          "url": "https://fidesorigin.com",
+          "logo": "https://fidesorigin.com/assets/logo/logo-full-dark-bg.png",
+          "sameAs": ["https://github.com/FintechGuy71/FidesOrigin"]
+        },
+        {
+          "@type": "WebSite",
+          "name": "FidesOrigin",
+          "url": "https://fidesorigin.com/tw/",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://fidesorigin.com/tw/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="apple-touch-icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="grain">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-8 w-auto" loading="lazy">
+            </a>
+            <div class="hidden md:flex items-center gap-7">
+                <a href="#how" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">運作原理</a>
+                <a href="#use-cases" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">應用場景</a>
+                <a href="#trust" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">信任與安全</a>
+                <a href="#security" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">安全</a>
+                <a href="#contracts" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">合約</a>
+                <a href="#docs" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">文件</a>
+                <a href="/tw/blog/why-on-chain-compliance.html" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">部落格</a>
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary text-xs">聯繫我們</a>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-dropdown-btn" onclick="toggleLang()" aria-expanded="false" aria-haspopup="true" aria-controls="langMenu">
+                        繁中
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="lang-dropdown-menu" id="langMenu">
+                        <a href="/">English</a>
+                        <a href="/cn/">简体中文</a>
+                        <a href="/tw/" class="active">繁體中文</a>
+                        <a href="/jp/">日本語</a>
+                    </div>
+                </div>
+            </div>
+            <button class="md:hidden text-[#8b8b94]" id="mobileMenuBtn" aria-label="Menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero -->
+    <section class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+        <div class="glow w-[500px] h-[500px] bg-[#b8945f] -top-60 -right-40"></div>
+        <div class="glow w-[400px] h-[400px] bg-[#3b82f6] top-40 -left-40"></div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <div class="reveal">
+                <h1 class="display mb-7">
+                    鏈上原生風控，<br>
+                    <span class="gold">每筆交易都在協議層執行。</span>
+                </h1>
+                <p class="lead max-w-xl mb-9">
+                    FidesOrigin 是數字資產基礎設施的鏈上原生風險引擎。每筆交易即時篩查、可疑資金隔離、策略確定性執行——零鏈外依賴。為穩定幣、智能錢包、RWA 平台和自主支付基礎設施而生。
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+                        申請接入
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                    <a href="/admin/" class="btn-secondary">
+                        查看控制台
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Use Cases -->
+    <section id="use-cases" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">應用場景</p>
+                <h2 class="h2 mb-4">誰需要這個，為什麼</h2>
+                <p class="lead max-w-lg">如果你正在鏈上轉移數字資產，合規不該是通過 API 事後嫁接的補丁。</p>
+            </div>
+            <div class="space-y-5 reveal">
+
+                <!-- Stablecoin -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="h3">穩定幣支付通道</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現狀</p>
+                            <p class="body-text">發行方通過鏈下 API 呼叫 Chainalysis KYT 或 TRM Labs 篩查地址。整合需要數週時間。每筆轉帳都依賴一個外部服務上線。</p>
+                            <p class="uc-label uc-label-pain mt-3">痛點</p>
+                            <p class="body-text">API 延遲每筆增加 200–500ms。如果 API 當機，轉帳要麼卡住，要麼繞過篩查。制裁地址可以在服務中斷期間轉移資金。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin 方案</p>
+                            <p class="body-text">風險畫像上鏈儲存。每筆轉帳在 <code class="text-[#d4af7a] text-xs font-mono">_update()</code> hook 中自動篩查——零額外延遲，零繞過路徑。制裁地址在協議層被阻斷，而非應用層。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 智能合約錢包 -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h3 class="h3">智能合約錢包</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現狀</p>
+                            <p class="body-text">Safe、Argent 等錢包依賴鏈下中間件或中繼服務來篩查交易。錢包前端呼叫 API，然後決定是否提交。</p>
+                            <p class="uc-label uc-label-pain mt-3">痛點</p>
+                            <p class="body-text">篩查層與執行層解耦。高級用戶或競爭前端可以繞過錢包的 API 檢查直接與合約互動——錢包沒有執行權力。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin 方案</p>
+                            <p class="body-text">風險檢查通過 <code class="text-[#d4af7a] text-xs font-mono">FidesCompliance</code> 嵌入錢包合約本身。每筆交易——無論來源——在執行前都被評估。即使通過原始合約呼叫也無法繞過。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RWA 資產代幣化 -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                        <h3 class="h3">RWA 資產代幣化</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現狀</p>
+                            <p class="body-text">代幣化資產（房地產、國債、私募信貸）依賴發行方管理的中心化白名單。轉帳在鏈下審批，記錄在單獨註冊表中。</p>
+                            <p class="uc-label uc-label-pain mt-3">痛點</p>
+                            <p class="body-text">白名單和代幣是兩個獨立的合約。如果發行方的管理員密鑰被攻破或白名單同步失敗，不合規轉帳仍然會執行。恢復需要人工干預。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin 方案</p>
+                            <p class="body-text">司法管轄規則、投資者資質和制裁篩查在代幣轉帳邏輯本身中執行。不合規轉帳在鏈上回滾。策略引擎可升級，但執行是永久性的。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自主支付（AI Agent） -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 class="h3">自主支付（AI Agent）</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現狀</p>
+                            <p class="body-text">AI 支付代理通過硬編碼在應用邏輯中的鏈下風險規則運行。支出限額和地址白名單存在於代理執行前呼叫的後端伺服器中。</p>
+                            <p class="uc-label uc-label-pain mt-3">痛點</p>
+                            <p class="body-text">如果代理被攻破、後端被繞過或提示詞被操縱，沒有協議級護欄。代理可以將資金轉移到任何地址——包括被制裁的地址。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin 方案</p>
+                            <p class="body-text">支出限額、風險閾值和制裁篩查在智能合約層面強制執行。即使代理被攻破，也無法向高風險地址轉帳——交易在鏈上回滾。護欄是密碼學的，不是建議性的。</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- How It Works -->
+    <section id="how" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">架構</p>
+                <h2 class="h2 mb-4">原生引擎，非預言機</h2>
+                <p class="lead max-w-lg">每筆交易由同鏈運行的智能合約篩查。無外部 API 呼叫。無鏈下延遲。無繞過路徑。</p>
+            </div>
+
+            <div class="space-y-3 reveal">
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">資料層</span>
+                        <span class="text-[11px] text-[#3a3a42] font-mono">自動同步</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">OFAC SDN</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">Chainalysis</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">OpenSanctions</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">自定義數據源</span>
+                    </div>
+                </div>
+
+                <div class="text-center arch-arrow">↓</div>
+
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">鏈上風險引擎</span>
+                        <span class="text-[11px] text-[#3a3a42] font-mono">Solidity 0.8.26</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">RiskRegistry</div>
+                            <div class="text-[10px] text-[#3a3a42]">地址畫像</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">PolicyEngine</div>
+                            <div class="text-[10px] text-[#3a3a42]">規則評估</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">ComplianceEngine</div>
+                            <div class="text-[10px] text-[#3a3a42]">轉帳檢查</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">QuarantineVault</div>
+                            <div class="text-[10px] text-[#3a3a42]">資金隔離</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center arch-arrow">↓</div>
+
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">交易結果</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="badge badge-pass">ALLOW</span>
+                        <span class="badge badge-hold">QUARANTINE</span>
+                        <span class="badge badge-block">BLOCK</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Code Example -->
+    <section class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal">
+                    <p class="micro mb-4">整合</p>
+                    <h2 class="h2 mb-5">三行代碼接入</h2>
+                    <p class="body-text mb-6">
+                        在智能合約層面繼承風險引擎。每筆代幣轉帳自動對照鏈上風險畫像篩查——無需 SDK 呼叫，無 API 延遲，無繞過路徑。
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">01</span>
+                            <p class="text-[13px] text-[#8b8b94]">繼承 <code class="text-[#d4af7a] text-xs font-mono">CompliantStableCoin</code> 或在轉帳 hook 中接入 <code class="text-[#d4af7a] text-xs font-mono">FidesCompliance</code></p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">02</span>
+                            <p class="text-[13px] text-[#8b8b94]">通過管理後台或直接在鏈上配置風險閾值和策略</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">03</span>
+                            <p class="text-[13px] text-[#8b8b94]">每筆轉帳被篩查、執行並記錄——確定性地在鏈上</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal" style="transition-delay: 0.15s">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                            <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+                        </div>
+                        <div class="code-body">
+<pre><span class="tk-comment">// 你的穩定幣繼承了鏈上風險篩查</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+        <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+        <span class="tk-keyword">uint256</span> amount
+    ) <span class="tk-keyword">internal override</span> {
+        <span class="tk-comment">// 在轉帳執行前評估</span>
+        (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) =
+            fides.<span class="tk-func">evaluateTransaction</span>(
+                from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>)
+            );
+
+        <span class="tk-keyword">if</span> (!allowed)
+            <span class="tk-keyword">revert</span> <span class="tk-func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- 合約 -->
+    <section id="contracts" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">合約</p>
+                <h2 class="h2 mb-4">已部署於 Sepolia</h2>
+                <p class="lead max-w-lg">所有合約已驗證並開源。UUPS 代理模式支持升級。</p>
+            </div>
+            <div class="space-y-1 reveal">
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">RiskRegistry</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc">0x7a41...AC52bc</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS 代理</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">PolicyEngine</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x8708...96b38">0x8708...96b38</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS 代理</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">ComplianceEngine</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x50aA...fB0AC">0x50aA...fB0AC</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS 代理</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">QuarantineVault</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x4971...1a382">0x4971...1a382</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">直連</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">FidesCompliance</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x7cc7...6F97A1">0x7cc7...6F97A1</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">直連</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">CompliantStableCoin</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0xC6AC...2a6Cca">0xC6AC...2a6Cca</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">直連</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- 安全 -->
+    <section id="security" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">安全</p>
+                <h2 class="h2 mb-4">不留妥協空間的設計</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">無鏈外依賴</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">所有風險檢查在鏈上執行。無預言機延遲，無 API 當機，無第三方信任假設。</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">基於角色的權限控制</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">細粒度權限：ORACLE、RULE_MANAGER、COMPLIANCE_ENGINE、RELEASE_ROLE。每個角色可獨立分配和撤銷。</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">隔離，而非銷毀</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">可疑資金被隔離在受控金庫中，而非銷毀。可審查、可恢復、可審計。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Live Status -->
+    <section id="status" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">系統狀態</p>
+                <h2 class="h2 mb-4">即時透明，不是"相信我"</h2>
+                <p class="lead max-w-lg">風險資料新鮮度可鏈上驗證。無不透明 API，無"我們保證資料是最新的"。</p>
+            </div>
+            <div class="grid md:grid-cols-5 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">上線</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">網絡</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">Sepolia Testnet</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">鏈 ID 11155111</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">已同步</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">風險註冊表</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">v1.2.1</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">UUPS 可升級</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot idle"></span>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">開發模式</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">資料發布者</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">DRY_RUN</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">OFAC + OpenSanctions</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">已驗證</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">合約</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">已部署 6 個</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">Etherscan 已驗證</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">最新</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">最後更新</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">2026-06-26</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">OpenSanctions OFAC SDN</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-0.5 font-mono">~2,635 地址 (106 OFAC + 2,529 ScamSniffer)</p>
+                </div>
+            </div>
+            <div class="mt-6 reveal">
+                <a href="/admin/" class="doc-card flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-[#f0f0f2] font-medium">查看管理後台</p>
+                        <p class="text-[11px] text-[#5a5a62] mt-0.5">查看即時風險畫像、資料同步狀態和合約事件</p>
+                    </div>
+                    <svg class="w-4 h-4 text-[#5a5a62] shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- 信任與安全 & 安全審計 -->
+    <section id="trust" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">信任與安全</p>
+                <h2 class="h2 mb-4">開源。審計中。沒有黑盒。</h2>
+                <p class="lead max-w-lg">風險基礎設施必須可驗證。我們的程式碼是開放的，合約已驗證，第三方審計正在進行中。</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <h3 class="h3">開源</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">完整的合約源代碼在 GitHub 上。每個函數、每個修飾器、每個測試——公開可審計。沒有專有黑盒。</p>
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-3 text-[11px] text-[#d4af7a] hover:text-[#e8c99a] transition-colors">
+                        查看倉庫
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <h3 class="h3">Etherscan 已驗證</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">全部 6 個合約在 Sepolia Etherscan 上已驗證。唯讀代理實現。任何人都可以檢查，任何人都可以驗證位元組碼與源碼一致。</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#f5a623]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <h3 class="h3">第三方審計</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">主網上線前計劃進行獨立安全審計。正在評估 OpenZeppelin / Trail of Bits / Certik。審計報告將在此發布。</p>
+                    <span class="inline-block mt-3 text-[10px] text-[#f5a623] font-mono px-2 py-0.5 rounded bg-[#f5a623]/10">進行中</span>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <h3 class="h3">可升級 & 可恢復</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">UUPS 代理模式允許無遷移合約升級。可疑資金被隔離而非銷毀——可通過治理釋放角色審查和恢復。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- 文件 & 部落格 -->
+    <section id="docs" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">資源</p>
+                <h2 class="h2 mb-4">讀代碼，別看營銷文案</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 reveal">
+                <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/contracts</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">合約源代碼</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">Solidity 0.8.26，6 個合約，139 個測試通過。完整的 Hardhat 測試套件。</p>
+                </a>
+                <a href="https://github.com/FintechGuy71/FidesOrigin/tree/main/data-publisher" target="_blank" rel="noopener" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/data-publisher</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">資料發布者 Service</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">TypeScript 服務，同步 OFAC 和 OpenSanctions 資料到 RiskRegistry。Docker 就緒，支持 Redis 集群。</p>
+                </a>
+                <a href="/admin/" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/admin</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">管理後台</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">即時控制台，展示風險畫像、合約狀態和同步狀態。Sepolia 測試網。</p>
+                </a>
+            </div>
+
+            <!-- 部落格 -->
+            <div class="mt-12 reveal">
+                <p class="micro mb-4">最新文章</p>
+                <a href="/tw/blog/why-on-chain-compliance.html" class="blog-card flex items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-[10px] text-[#d4af7a] font-mono px-2 py-0.5 rounded bg-[#b8945f]/10">品類定義</span>
+                            <span class="text-[10px] text-[#3a3a42]">2026年6月</span>
+                        </div>
+                        <h3 class="h3 mb-1">為何鏈上：API 合規模式的終結</h3>
+                        <p class="text-[13px] text-[#8b8b94]">為何通過鏈下 API 篩查交易在結構上是錯誤的——以及"鏈上風險執行"對數字資產基礎設施意味著什麼。</p>
+                    </div>
+                    <svg class="w-5 h-5 text-[#5a5a62] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- CTA -->
+    <section class="py-20 md:py-28">
+        <div class="max-w-2xl mx-auto px-6 text-center reveal">
+            <h2 class="h2 mb-5">構建鏈上風控</h2>
+            <p class="lead mb-8">
+                如果你正在發行穩定幣、構建智能錢包、實現實物資產代幣化，或設計自主支付基礎設施——讓我們聊聊確定性風險篩查如何改變遊戲規則。
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+                    申請接入
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="/admin/" class="btn-secondary">查看控制台</a>
+            </div>
+            <div class="flex items-center justify-center gap-6 text-[11px] text-[#3a3a42]">
+                <span>Sepolia 測試網運行中</span>
+                <span class="w-1 h-1 rounded-full bg-[#3a3a42]"></span>
+                <span>GitHub 開源</span>
+                <span class="w-1 h-1 rounded-full bg-[#3a3a42]"></span>
+                <span>Etherscan 已驗證</span>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/[0.04] py-8">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="/" class="flex items-center">
+                    <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-6 w-auto opacity-60" loading="lazy">
+                </a>
+                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <a href="/tw/blog/why-on-chain-compliance.html" class="hover:text-[#8b8b94] transition-colors">部落格</a>
+                    <span class="text-[#3a3a42]">Sepolia Testnet</span>
+                </div>
+            </div>
+            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
+                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin. 數字資產的鏈上風控引擎。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed inset-0 z-50 bg-[#08080a]/95 backdrop-blur-xl">
+        <div class="flex flex-col items-center justify-center h-full gap-8">
+            <a href="#use-cases" class="text-lg text-[#8b8b94]">應用場景</a>
+            <a href="#how" class="text-lg text-[#8b8b94]">運作原理</a>
+            <a href="#trust" class="text-lg text-[#8b8b94]">信任與安全</a>
+            <a href="#security" class="text-lg text-[#8b8b94]">安全</a>
+            <a href="#contracts" class="text-lg text-[#8b8b94]">合約</a>
+            <a href="#docs" class="text-lg text-[#8b8b94]">文件</a>
+            <a href="/tw/blog/why-on-chain-compliance.html" class="text-lg text-[#8b8b94]">部落格</a>
+            <div class="flex items-center gap-4 text-sm text-[#5a5a62]">
+                <a href="/">EN</a>
+                <a href="/cn/">CN</a>
+                <a href="/tw/" class="text-[#d4af7a]">TW</a>
+                <a href="/jp/">JP</a>
+            </div>
+            <a href="mailto:contact@fidesorigin.com" class="btn-primary">聯繫我們</a>
+            <button id="mobileMenuClose" class="mt-8 text-[#3a3a42]">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lang dropdown toggle
+        function toggleLang() {
+            document.getElementById('langDropdown').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('langDropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+        });
+
+        // Mobile menu
+        const mm = document.getElementById('mobileMenu');
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => mm.classList.add('active'));
+        document.getElementById('mobileMenuClose')?.addEventListener('click', () => mm.classList.remove('active'));
+        mm?.querySelectorAll('a').forEach(l => l.addEventListener('click', () => mm.classList.remove('active')));
+
+        // Scroll reveal
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+        (function() {
+            var STORAGE_KEY = 'fides_lang';
+            var path = window.location.pathname;
+            if (localStorage.getItem(STORAGE_KEY)) return;
+            if (path === '/' || path === '/index.html') {
+                fetch('https://ipapi.io/json/')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || !data.country_code) return;
+                        var code = data.country_code.toUpperCase();
+                        var target = null;
+                        if (code === 'CN') target = '/cn/';
+                        else if (code === 'TW' || code === 'HK' || code === 'MO') target = '/tw/';
+                        else if (code === 'JP') target = '/jp/';
+                        if (target) {
+                            localStorage.setItem(STORAGE_KEY, target);
+                            window.location.href = target;
+                        }
+                    })
+                    .catch(function() { });
+            }
+        })();
+    </script>
+</body>
+</html>

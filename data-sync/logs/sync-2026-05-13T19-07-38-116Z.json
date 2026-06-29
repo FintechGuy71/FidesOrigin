@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-05-13T19:07:38.116Z",
+  "dryRun": false,
+  "stats": {
+    "ofac": 11,
+    "local": 22,
+    "chainalysis": 0,
+    "merged": 22,
+    "unique": 22
+  },
+  "merkle": {
+    "root": "0x6d26e070050e4486a11b26fe91cf0b2f2a59188393bdd3a5ca0a555947fb8474",
+    "leaves": 22
+  },
+  "chain": {
+    "batches": 1,
+    "results": [
+      {
+        "batch": 1,
+        "hash": "0xe7b3ceaa30ed84049b9040cad389ba42c2d6a0b532c4ff6afaca497ed9cf5ab6",
+        "block": 10846739,
+        "gasUsed": "1119187",
+        "status": 1
+      }
+    ]
+  },
+  "duration": 11135
+}

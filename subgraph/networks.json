@@ -1,0 +1,38 @@
+{
+  "sepolia": {
+    "RiskRegistry": {
+      "address": "0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3",
+      "startBlock": 10819500
+    },
+    "ComplianceEngine": {
+      "address": "0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa",
+      "startBlock": 10819500
+    },
+    "PolicyEngine": {
+      "address": "0xF8f89120f5628aE3De747f55e7d00D79633002c4",
+      "startBlock": 10819500
+    },
+    "FidesCompliance": {
+      "address": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b",
+      "startBlock": 11053336
+    },
+    "CompliantSmartWalletV3": {
+      "address": "0xbe33EBA3e0d6Dc324aBF1DE1aD0E1e65DcA526AB",
+      "startBlock": 11053336
+    }
+  },
+  "mainnet": {
+    "RiskRegistry": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 22000000
+    },
+    "ComplianceEngine": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 22000000
+    },
+    "PolicyEngine": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 22000000
+    }
+  }
+}

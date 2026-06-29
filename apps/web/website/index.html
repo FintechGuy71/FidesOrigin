@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin — 链上合规基础设施</title>
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="description" content="FidesOrigin 为 Web3 企业提供机构级合规基础设施，包括地址风险扫描、交易监控、合规报告与监管对接。">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="FidesOrigin — 链上合规基础设施">
+    <meta property="og:description" content="为 Web3 企业提供机构级合规基础设施。实时风险扫描、自动交易拦截、一键监管报告。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fidesorigin.com/">
+    <meta property="og:site_name" content="FidesOrigin">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237c6af2'/%3E%3Ctext y='.85em' x='50%25' text-anchor='middle' font-size='60' fill='white' font-family='Arial'%3EF%3C/text%3E%3C/svg%3E">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind-config.js"></script>
+    <style>
+        /* Brand Color System - Synced with tailwind-config.js */
+        :root {
+            --accent-purple: #7c6af2;
+            --accent-purple-light: #a78bfa;
+            --accent-cyan: #06b6d4;
+            --accent-pink: #ec4899;
+            --accent-gold: #ffd700;
+            --bg-dark: #0a0a0f;
+            --bg-dark-800: #13131f;
+            --bg-dark-700: #1a1a2e;
+        }
+        
+        /* Respect user's motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .hero-bg { animation: none; }
+            .particle { display: none; }
+            .reveal { opacity: 1; transform: none; }
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        /* Animated gradient background */
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124,106,242,0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(6,182,212,0.1), transparent),
+                radial-gradient(ellipse 50% 30% at 20% 80%, rgba(236,72,153,0.08), transparent);
+            animation: bgPulse 8s ease-in-out infinite;
+        }
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(124,106,242,0.4);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+        
+        /* Gradient text - synced with brand colors */
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa, #06b6d4, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Glow effects - synced */
+        .glow-purple { box-shadow: 0 0 40px rgba(124,106,242,0.3); }
+        .glow-cyan { box-shadow: 0 0 40px rgba(6,182,212,0.3); }
+        
+        /* Card hover - synced */
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(124,106,242,0.3);
+            box-shadow: 0 20px 60px rgba(124,106,242,0.15);
+        }
+        
+        /* Step connector - synced */
+        .step-connector {
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 1rem);
+            width: calc(100% - 2rem);
+            height: 2px;
+            background: linear-gradient(90deg, rgba(124,106,242,0.5), rgba(6,182,212,0.5));
+            transform: translateY(-50%);
+        }
+        
+        /* Scroll animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Button shine - synced */
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #7c6af2, #a78bfa);
+            transition: all 0.3s;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(124,106,242,0.4);
+        }
+        
+        /* Security grid pattern - synced */
+        .security-grid {
+            background-image: 
+                linear-gradient(rgba(124,106,242,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124,106,242,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+        
+        /* Compliance badge - synced */
+        .compliance-badge {
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .compliance-badge:hover {
+            border-color: rgba(6,182,212,0.5);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(6,182,212,0.2);
+        }
+        
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+        
+        /* Nav blur */
+        .nav-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        /* Language switcher */
+        .lang-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.875rem;
+            color: #9ca3af;
+            transition: all 0.2s;
+        }
+        .lang-switch:hover {
+            border-color: rgba(124,106,242,0.5);
+            color: white;
+        }
+        
+        /* Mobile menu */
+        .mobile-menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 40;
+        }
+        .mobile-menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .mobile-menu-panel {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .mobile-menu-panel.open { transform: translateX(0); }
+        
+        @media (max-width: 768px) {
+            .step-connector { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-blur bg-[#13131f]/80 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3" onclick="return false;">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c6af2] to-[#06b6d4] flex items-center justify-center text-white font-bold text-lg">F</div>
+                <span class="font-bold text-xl tracking-tight">FidesOrigin</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features" class="text-sm text-gray-400 hover:text-white transition">功能</a>
+                <a href="#how-it-works" class="text-sm text-gray-400 hover:text-white transition">工作原理</a>
+                <a href="#security" class="text-sm text-gray-400 hover:text-white transition">安全</a>
+                <a href="#compliance" class="text-sm text-gray-400 hover:text-white transition">合规</a>
+                <a href="/admin/" class="text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-[#7c6af2]/50 hover:bg-[#7c6af2]/10 transition">运营后台</a>
+                <a href="#contact" class="btn-primary text-sm px-5 py-2.5 rounded-lg text-white font-medium">预约演示</a>
+            </div>
+            <button class="md:hidden text-white" aria-label="打开菜单" aria-expanded="false" aria-controls="mobileMenu" id="mobileMenuBtn">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 w-72 h-full bg-[#13131f] border-l border-white/10 md:hidden" role="dialog" aria-label="移动端导航" aria-modal="true">
+            <div class="p-6">
+                <button class="absolute top-4 right-4 text-gray-400" id="mobileMenuClose">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <div class="mt-12 flex flex-col gap-6">
+                    <a href="#features" class="text-lg text-gray-300 hover:text-white">功能</a>
+                    <a href="#how-it-works" class="text-lg text-gray-300 hover:text-white">工作原理</a>
+                    <a href="#security" class="text-lg text-gray-300 hover:text-white">安全</a>
+                    <a href="#compliance" class="text-lg text-gray-300 hover:text-white">合规</a>
+                    <a href="/admin/" class="text-lg text-[#7c6af2]">运营后台 →</a>
+                    <a href="#contact" class="btn-primary text-center px-5 py-3 rounded-lg text-white font-medium mt-4">预约演示</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+        <div class="hero-bg"></div>
+        <div class="particles" id="particles" aria-hidden="true"></div>
+        
+        <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 reveal">
+                <span class="w-2 h-2 rounded-full bg-[#06b6d4] animate-pulse"></span>
+                <span class="text-sm text-gray-300">已保护 <span class="text-white font-semibold">$2.4B+</span> 链上资产</span>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 reveal" style="transition-delay: 0.1s">
+                让合规成为<br>
+                <span class="gradient-text">Web3 的竞争优势</span>
+            </h1>
+            
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 reveal" style="transition-delay: 0.2s">
+                FidesOrigin 为稳定币发行商、交易所和机构提供端到端的链上合规基础设施。
+                实时风险扫描、自动交易拦截、一键监管报告。
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 reveal" style="transition-delay: 0.3s">
+                <a href="#contact" class="btn-primary px-8 py-4 rounded-xl text-white font-semibold text-lg">
+                    开始免费试用 →
+                </a>
+                <a href="#how-it-works" class="px-8 py-4 rounded-xl border border-white/20 text-white font-medium hover:bg-white/5 transition">
+                    了解工作原理
+                </a>
+            </div>
+            
+            <!-- Trust badges -->
+            <div class="mt-16 pt-8 border-t border-white/5 reveal" style="transition-delay: 0.4s">
+                <p class="text-sm text-gray-500 mb-6">受到领先 Web3 企业信任</p>
+                <div class="flex flex-wrap items-center justify-center gap-8 opacity-50">
+                    <div class="text-2xl font-bold text-gray-600">富途</div>
+                    <div class="text-2xl font-bold text-gray-600">HashKey</div>
+                    <div class="text-2xl font-bold text-gray-600">Circle</div>
+                    <div class="text-2xl font-bold text-gray-600">Tether</div>
+                    <div class="text-2xl font-bold text-gray-600">Fireblocks</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">核心功能</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">从地址风险扫描到监管报告生成，覆盖合规全流程</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Feature 1 -->
+                <div class="feature-card bg-[#13131f] rounded-2xl p-8 reveal">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#7c6af2]/20 to-[#7c6af2]/5 flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-[#7c6af2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">地址风险扫描</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">实时扫描 50+ 风险维度，覆盖制裁名单、混币器、暗网关联、盗窃地址等。毫秒级返回风险评分。</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="feature-card bg-[#13131f] rounded-2xl p-8 reveal" style="transition-delay: 0.1s">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#06b6d4]/20 to-[#06b6d4]/5 flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-[#06b6d4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">实时交易拦截</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">智能合约级自动拦截。高风险交易在链上被实时阻止，无需人工介入。支持自定义风控规则。</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="feature-card bg-[#13131f] rounded-2xl p-8 reveal" style="transition-delay: 0.2s">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ec4899]/20 to-[#ec4899]/5 flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-[#ec4899]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">一键监管报告</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">自动生成 FATF 标准合规报告。支持 FinCEN、MAS、HKMA 等格式。审计追踪不可篡改。</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="feature-card bg-[#13131f] rounded-2xl p-8 reveal" style="transition-delay: 0.3s">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">资金隔离保护</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">自动隔离可疑资金。污染资金进入隔离池，合规资金正常流通。保护用户资产安全。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-24 bg-[#13131f]/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">工作原理</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">四步实现链上合规自动化</p>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-8 relative">
+                <!-- Step 1 -->
+                <div class="relative text-center reveal">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7c6af2] to-[#06b6d4] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">1</div>
+                    <h3 class="text-lg font-semibold mb-2">集成 SDK</h3>
+                    <p class="text-gray-400 text-sm">一行代码接入 FidesOrigin SDK，支持 Ethereum、Polygon、BSC 等主流链</p>
+                    <div class="hidden md:block step-connector"></div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="relative text-center reveal" style="transition-delay: 0.15s">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#06b6d4] to-[#ec4899] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">2</div>
+                    <h3 class="text-lg font-semibold mb-2">风险扫描</h3>
+                    <p class="text-gray-400 text-sm">每笔交易自动触发 50+ 维度风险扫描，毫秒级返回风险评分</p>
+                    <div class="hidden md:block step-connector"></div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="relative text-center reveal" style="transition-delay: 0.3s">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ec4899] to-yellow-500 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">3</div>
+                    <h3 class="text-lg font-semibold mb-2">智能决策</h3>
+                    <p class="text-gray-400 text-sm">基于预设策略自动执行：允许、拦截、标记或冻结。支持人工复核</p>
+                    <div class="hidden md:block step-connector"></div>
+                </div>
+                
+                <!-- Step 4 -->
+                <div class="relative text-center reveal" style="transition-delay: 0.45s">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-[#7c6af2] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">4</div>
+                    <h3 class="text-lg font-semibold mb-2">合规报告</h3>
+                    <p class="text-gray-400 text-sm">自动生成监管报告，完整审计追踪，一键导出 FATF 标准文件</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section id="security" class="py-24 security-grid relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="reveal">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6">机构级安全架构</h2>
+                    <p class="text-gray-400 mb-8">多层安全机制确保资产与数据安全。从智能合约审计到多签管理，每一层都经过严格验证。</p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-[#7c6af2]/10 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#7c6af2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1">多签时间锁</h4>
+                                <p class="text-gray-400 text-sm">关键操作需多签确认 + 2天时间锁延迟，防止单点故障</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-[#06b6d4]/10 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#06b6d4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1">智能合约审计</h4>
+                                <p class="text-gray-400 text-sm">通过 CertiK、Trail of Bits 等顶级审计机构安全审计</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-[#ec4899]/10 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#ec4899]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1">紧急暂停机制</h4>
+                                <p class="text-gray-400 text-sm">异常情况下可立即暂停合约，保护用户资产</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1">资金隔离</h4>
+                                <p class="text-gray-400 text-sm">可疑资金自动隔离，合规资金正常流通，保护用户资产</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reveal" style="transition-delay: 0.2s">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-gradient-to-r from-[#7c6af2]/20 to-[#06b6d4]/20 rounded-3xl blur-3xl"></div>
+                        <div class="relative bg-[#13131f] rounded-3xl p-8 border border-white/5">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <span class="text-xs text-gray-500">Security Dashboard</span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-[#1a1a2e] rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">合约审计</div>
+                                            <div class="text-xs text-gray-500">CertiK 通过</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded">已通过</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-[#1a1a2e] rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">多签配置</div>
+                                            <div class="text-xs text-gray-500">3/5 签名者</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded">活跃</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-[#1a1a2e] rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">时间锁</div>
+                                            <div class="text-xs text-gray-500">48小时延迟</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded">已启用</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-[#1a1a2e] rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">紧急暂停</div>
+                                            <div class="text-xs text-gray-500">随时可用</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded">就绪</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compliance Section -->
+    <section id="compliance" class="py-24 bg-[#13131f]/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">全球合规认证</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">符合主要司法管辖区的监管要求</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal">
+                    <div class="text-3xl mb-3">🇺🇸</div>
+                    <h4 class="font-semibold mb-1">FinCEN</h4>
+                    <p class="text-xs text-gray-500">美国金融犯罪执法网络</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.1s">
+                    <div class="text-3xl mb-3">🇪🇺</div>
+                    <h4 class="font-semibold mb-1">MiCA</h4>
+                    <p class="text-xs text-gray-500">欧盟加密资产市场法规</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.2s">
+                    <div class="text-3xl mb-3">🇸🇬</div>
+                    <h4 class="font-semibold mb-1">MAS</h4>
+                    <p class="text-xs text-gray-500">新加坡金融管理局</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.3s">
+                    <div class="text-3xl mb-3">🇭🇰</div>
+                    <h4 class="font-semibold mb-1">HKMA</h4>
+                    <p class="text-xs text-gray-500">香港金融管理局</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.15s">
+                    <div class="text-3xl mb-3">🇬🇧</div>
+                    <h4 class="font-semibold mb-1">FCA</h4>
+                    <p class="text-xs text-gray-500">英国金融行为监管局</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.25s">
+                    <div class="text-3xl mb-3">🇯🇵</div>
+                    <h4 class="font-semibold mb-1">JVCEA</h4>
+                    <p class="text-xs text-gray-500">日本加密资产交易协会</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.35s">
+                    <div class="text-3xl mb-3">🌐</div>
+                    <h4 class="font-semibold mb-1">FATF</h4>
+                    <p class="text-xs text-gray-500">反洗钱金融行动特别工作组</p>
+                </div>
+                
+                <div class="compliance-badge bg-[#13131f] rounded-2xl p-6 text-center reveal" style="transition-delay: 0.45s">
+                    <div class="text-3xl mb-3">🔗</div>
+                    <h4 class="font-semibold mb-1">Chainalysis</h4>
+                    <p class="text-xs text-gray-500">链上数据合作伙伴</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="py-24 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-[#7c6af2]/10 via-transparent to-[#06b6d4]/10"></div>
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">准备好让合规成为<br><span class="gradient-text">竞争优势了吗？</span></h2>
+            <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">加入领先 Web3 企业的行列，用 FidesOrigin 构建可信的链上金融基础设施。</p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary px-8 py-4 rounded-xl text-white font-semibold text-lg">
+                    预约产品演示 →
+                </a>
+                <a href="/admin/" class="px-8 py-4 rounded-xl border border-white/20 text-white font-medium hover:bg-white/5 transition">
+                    查看运营后台
+                </a>
+            </div>
+            
+            <div class="flex items-center justify-center gap-8 text-sm text-gray-500">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    14天免费试用
+                </span>
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    无需信用卡
+                </span>
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    专属技术支持
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-16">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c6af2] to-[#06b6d4] flex items-center justify-center text-white font-bold">F</div>
+                        <span class="font-bold text-xl">FidesOrigin</span>
+                    </div>
+                    <p class="text-gray-500 text-sm">为 Web3 企业提供机构级合规基础设施</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">产品</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="#features" class="hover:text-white transition">风险扫描</a></li>
+                        <li><a href="#features" class="hover:text-white transition">交易监控</a></li>
+                        <li><a href="#features" class="hover:text-white transition">合规报告</a></li>
+                        <li><a href="#" class="hover:text-white transition">API 文档</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">公司</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">关于我们</a></li>
+                        <li><a href="#" class="hover:text-white transition">博客</a></li>
+                        <li><a href="#" class="hover:text-white transition">招聘</a></li>
+                        <li><a href="#" class="hover:text-white transition">联系我们</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">法律</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">隐私政策</a></li>
+                        <li><a href="#" class="hover:text-white transition">服务条款</a></li>
+                        <li><a href="#" class="hover:text-white transition">Cookie 政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-gray-500">© 2026 FidesOrigin. All rights reserved.</p>
+                <div class="flex items-center gap-6">
+                    <a href="#" class="text-gray-500 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="website-events.js"></script>
+</body>
+</html>

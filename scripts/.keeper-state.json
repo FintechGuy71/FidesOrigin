@@ -1,0 +1,11 @@
+{
+  "processedTx": [],
+  "lastBlock": 10855874,
+  "stats": {
+    "totalChecked": 0,
+    "totalQuarantined": 0,
+    "totalSkipped": 0,
+    "errors": 0
+  },
+  "knownWallets": []
+}

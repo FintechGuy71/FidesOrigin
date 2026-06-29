@@ -1,0 +1,15 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
+  "deployedAt": "2026-06-13T19:37:42.847Z",
+  "contracts": {
+    "FidesCompliance": {
+      "proxy": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b",
+      "implementation": "0x74c63D64a548262B0E1508Ac397C7Afc45e4d7cC"
+    },
+    "CompliantSmartWalletV3": {
+      "address": "0xbe33EBA3e0d6Dc324aBF1DE1aD0E1e65DcA526AB"
+    }
+  }
+}

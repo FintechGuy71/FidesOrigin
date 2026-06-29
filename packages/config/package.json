@@ -1,0 +1,22 @@
+{
+  "name": "@fidesorigin/config",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Shared configuration for FidesOrigin monorepo packages",
+  "main": "./eslint.config.js",
+  "exports": {
+    "./tsconfig": "./tsconfig.json",
+    "./eslint": "./eslint.config.js",
+    "./tailwind": "./tailwind.config.js",
+    "./postcss": "./postcss.config.js"
+  },
+  "files": [
+    "tsconfig.json",
+    "eslint.config.js",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ],
+  "scripts": {
+    "clean": "echo 'No build artifacts'"
+  }
+}

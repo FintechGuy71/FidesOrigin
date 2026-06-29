@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin - 地址風險查詢</title>
+    <meta name="description" content="即時查詢以太坊地址風險。FidesOrigin掃描超過20,000個風險地址，涵蓋OFAC、Chainalysis等來源。">
+    <meta name="theme-color" content="#0f172a">
+    <meta property="og:title" content="FidesOrigin - 地址風險查詢">
+    <meta property="og:description" content="即時查詢以太坊地址風險。FidesOrigin掃描超過20,000個風險地址，涵蓋OFAC、Chainalysis等來源。">
+    <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fidesorigin.com/tw/address-check.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+    <meta name="twitter:site" content="@fidesorigin">
+    <link rel="canonical" href="https://fidesorigin.com/tw/address-check.html">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a; --bg-card: #1e293b; --border: #334155;
+            --text: #f8fafc; --text-sec: #94a3b8;
+            --accent: #8b5cf6; --success: #22c55e; --danger: #ef4444; --warning: #f59e0b;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 2rem; margin-bottom: 8px; }
+        .header p { color: var(--text-sec); }
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 600px) {
+            .stats-bar { grid-template-columns: 1fr; }
+        }
+        .stat-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; text-align: center;
+        }
+        .stat-box .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .stat-box .label { font-size: 0.8rem; color: var(--text-sec); margin-top: 4px; }
+        .search-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; margin-bottom: 24px;
+        }
+        .search-box input {
+            width: 100%; padding: 14px 18px; background: #0f172a;
+            border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text); font-size: 1rem; font-family: monospace;
+        }
+        .search-box input:focus { outline: none; border-color: var(--accent); }
+        .search-box button {
+            width: 100%; margin-top: 12px; padding: 14px;
+            background: var(--accent); color: white; border: none;
+            border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .search-box button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .result-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; display: none;
+        }
+        .result-box.show { display: block; }
+        .risk-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 20px;
+            font-weight: 600; font-size: 0.9rem;
+        }
+        .risk-black { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .risk-grey { background: rgba(148,163,184,0.2); color: var(--text-sec); }
+        .risk-safe { background: rgba(34,197,94,0.2); color: var(--success); }
+        .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-sec); }
+        .detail-value { font-family: monospace; }
+        .footer { text-align: center; margin-top: 40px; color: var(--text-sec); font-size: 0.8rem; }
+        .footer a { color: var(--accent); text-decoration: none; }
+
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            padding: 12px 20px; border-radius: 8px; font-size: 0.9rem;
+            z-index: 1000; display: none; max-width: 90%;
+        }
+        .toast.show { display: block; }
+        .toast-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+        .toast-info { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px 16px; padding-top: 72px; }
+            .header-bar { padding: 10px 12px; }
+            .header-bar a[href="/"] span { font-size: 0.85rem; }
+            .header-bar > div > a[href="/"] { display: none; }
+            .lang-dropdown-menu { right: auto; left: 0; }
+            .header h1 { font-size: 1.5rem; }
+            .search-box { padding: 16px; }
+            .search-box input { font-size: 16px; padding: 12px 14px; }
+            .search-box button { padding: 12px; font-size: 0.9rem; }
+            .result-box { padding: 16px; }
+            .detail-row { flex-direction: column; gap: 4px; }
+            .detail-value { word-break: break-all; }
+        }
+    </style>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "FidesOrigin 地址風險查詢",
+      "description": "即時查詢以太坊地址風險，覆蓋超過20,000個已知風險地址。",
+      "url": "https://fidesorigin.com/tw/address-check.html",
+      "inLanguage": "zh-TW",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "FidesOrigin",
+        "url": "https://fidesorigin.com"
+      }
+    }
+    </script>
+</head>
+<body>
+    <div class="header-bar" style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,23,42,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <a href="/tw/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);font-weight:700;font-size:1rem;">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#c9a96e 100%);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <span>FidesOrigin</span>
+        </a>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <a href="/tw/" style="color:var(--text-sec);text-decoration:none;font-size:0.85rem;">返回首頁</a>
+            <div class="lang-dropdown" id="langDropdownNav" style="position:relative;">
+                <button onclick="toggleDropdown('langDropdownNav',event)" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-size:0.85rem;cursor:pointer;">
+                    <span>🌐</span><span>繁體中文</span><span>▾</span>
+                </button>
+                <div class="lang-dropdown-menu" style="position:absolute;top:calc(100% + 6px);right:0;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+                    <a href="/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;">English</a>
+                    <a href="/cn/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;">简体中文</a>
+                    <a href="/tw/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;background:rgba(99,102,241,0.15);color:#818cf8;font-weight:600;">繁體中文</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast toast-error" id="errorToast"></div>
+
+    <div class="container" style="padding-top:80px;">
+        <div class="header">
+            <h1>FidesOrigin 地址風險查詢</h1>
+            <p>即時查詢 20,645+ 個風險地址資料庫</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="num" id="totalCount">--</div>
+                <div class="label">總地址數</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="blackCount">--</div>
+                <div class="label">黑名單</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="greyCount">--</div>
+                <div class="label">灰名單</div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="addressInput" placeholder="輸入以太坊地址 (0x...)" maxlength="42" autocomplete="off" spellcheck="false" autocorrect="off">
+            <button onclick="checkAddress()" id="checkBtn">
+                <span id="btnText">查詢風險等級</span>
+            </button>
+        </div>
+
+        <div class="result-box" id="resultBox">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div class="risk-badge" id="riskBadge">查詢中...</div>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">地址</span>
+                <span class="detail-value" id="resultAddr">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">風險分數</span>
+                <span class="detail-value" id="resultScore">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">風險等級</span>
+                <span class="detail-value" id="resultTier">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">來源</span>
+                <span class="detail-value" id="resultSource">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">標籤</span>
+                <span class="detail-value" id="resultTags">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">實體名稱</span>
+                <span class="detail-value" id="resultEntity">-</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><a href="/tw/" style="color:var(--accent);text-decoration:none;">← 返回 FidesOrigin 首頁</a></p>
+            <p>資料來源: OFAC, Chainalysis, Etherscan, Uniswap, PoolTogether 等</p>
+            <p>Merkle Root: <code id="merkleRoot">--</code></p>
+            <p><a href="https://fidesorigin.com">fidesorigin.com</a> | <a href="/admin/">運營後台</a></p>
+        </div>
+    </div>
+
+    <script>
+    function toggleDropdown(id, event) {
+      event.stopPropagation();
+      const dropdown = document.getElementById(id);
+      const isOpen = dropdown.classList.contains('open');
+      document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
+      if (!isOpen) dropdown.classList.add('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.lang-dropdown')) {
+        document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
+      }
+    });
+    </script>
+    <script>
+        let addressDB = null;
+        let addressMap = new Map();
+        const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3';
+        const BACKEND_API = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+            ? 'http://localhost:8000'
+            : '';
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('errorToast');
+            toast.textContent = message;
+            toast.className = 'toast toast-' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 5000);
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('checkBtn');
+            const text = document.getElementById('btnText');
+            btn.disabled = loading;
+            if (loading) {
+                text.innerHTML = '<div class="spinner"></div> 查詢中...';
+            } else {
+                text.textContent = '查詢風險等級';
+            }
+        }
+
+        async function loadStatsFromSubgraph() {
+            try {
+                const query = `query {
+                    protocolStats(id: "stats") {
+                        totalComplianceChecks
+                        totalBlocked
+                        totalFlagged
+                        totalHeld
+                        totalSanctioned
+                    }
+                    sanctionedAddresses(where: {isActive: true}) {
+                        id
+                    }
+                }`;
+                const res = await fetch(SUBGRAPH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await res.json();
+                if (data.data && data.data.protocolStats) {
+                    const s = data.data.protocolStats;
+                    const total = Number(s.totalComplianceChecks || 0);
+                    const black = Number(s.totalBlocked || 0) + Number(s.totalSanctioned || 0);
+                    const grey = Number(s.totalFlagged || 0) + Number(s.totalHeld || 0);
+                    document.getElementById('totalCount').textContent = total.toLocaleString();
+                    document.getElementById('blackCount').textContent = black.toLocaleString();
+                    document.getElementById('greyCount').textContent = grey.toLocaleString();
+                }
+            } catch (e) {
+                console.error('Stats load failed:', e);
+                if (addressMap.size > 0) {
+                    let black = 0, grey = 0;
+                    addressMap.forEach(e => {
+                        if (e.riskTier === 'BLACK') black++;
+                        else if (e.riskTier === 'GREY') grey++;
+                    });
+                    document.getElementById('totalCount').textContent = addressMap.size.toLocaleString();
+                    document.getElementById('blackCount').textContent = black.toLocaleString();
+                    document.getElementById('greyCount').textContent = grey.toLocaleString();
+                }
+            }
+        }
+
+        async function loadDatabase() {
+            try {
+                const response = await fetch('../data-sync/cache/address-labels-v11.json');
+                if (response.ok) {
+                    addressDB = await response.json();
+                    for (const entry of addressDB.addressLabels) {
+                        addressMap.set(entry.address.toLowerCase(), entry);
+                    }
+                    console.log('Database loaded:', addressMap.size, 'addresses');
+                    loadStatsFromSubgraph();
+                }
+            } catch (e) {
+                console.log('Database not loaded, using fallback');
+            }
+        }
+
+        async function fetchBackendRisk(address) {
+            const apiBase = BACKEND_API || (window.location.origin);
+            const url = `${apiBase}/api/v1/address/${address}/risk`;
+            try {
+                const res = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    signal: AbortSignal.timeout(8000)
+                });
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error('API key required');
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } catch (e) {
+                console.log('Backend API unavailable:', e.message);
+                return null;
+            }
+        }
+
+        async function fetchSubgraphRisk(address) {
+            const query = `query {
+                riskProfile(id: "${address.toLowerCase()}") {
+                    id
+                    riskScore
+                    tier
+                    isSanctioned
+                    tags
+                }
+            }`;
+            try {
+                const res = await fetch(SUBGRAPH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                const data = await res.json();
+                if (data.data && data.data.riskProfile) {
+                    return data.data.riskProfile;
+                }
+            } catch (e) {
+                console.log('Subgraph query failed:', e.message);
+            }
+            return null;
+        }
+
+        async function checkAddress() {
+            const input = document.getElementById('addressInput').value.trim().toLowerCase();
+            const resultBox = document.getElementById('resultBox');
+            const badge = document.getElementById('riskBadge');
+
+            if (!input || !input.match(/^0x[a-f0-9]{40}$/)) {
+                badge.className = 'risk-badge risk-grey';
+                badge.textContent = '無效地址';
+                resultBox.classList.add('show');
+                return;
+            }
+
+            setLoading(true);
+            resultBox.classList.add('show');
+            document.getElementById('resultAddr').textContent = input;
+            badge.className = 'risk-badge risk-grey';
+            badge.textContent = '查詢中...';
+
+            let apiData = await fetchBackendRisk(input);
+            let subgraphData = null;
+            let entry = addressMap.get(input);
+
+            if (!apiData) {
+                subgraphData = await fetchSubgraphRisk(input);
+                if (!subgraphData && !entry) {
+                    showToast('後端 API 暫不可用，顯示緩存數據', 'info');
+                }
+            }
+
+            if (apiData) {
+                const score = apiData.risk_score ?? 0;
+                const level = apiData.risk_level || 'UNKNOWN';
+                const factors = apiData.risk_factors || [];
+                const tags = apiData.tags || [];
+
+                document.getElementById('resultScore').textContent = score;
+                document.getElementById('resultTier').textContent = level;
+                document.getElementById('resultSource').textContent = 'FidesOrigin 後端';
+                document.getElementById('resultTags').textContent = tags.join(', ') || '-';
+                document.getElementById('resultEntity').textContent = factors.map(f => f.name || f.type).join(', ') || '-';
+
+                if (level === 'HIGH' || level === 'CRITICAL' || score >= 80) {
+                    badge.className = 'risk-badge risk-black';
+                    badge.textContent = '⚠️ 高風險';
+                } else if (level === 'MEDIUM' || score >= 40) {
+                    badge.className = 'risk-badge risk-grey';
+                    badge.textContent = '⚡ 中風險';
+                } else {
+                    badge.className = 'risk-badge risk-safe';
+                    badge.textContent = '✅ 低風險';
+                }
+            } else if (subgraphData) {
+                const tier = subgraphData.tier;
+                const score = subgraphData.riskScore;
+                const tags = subgraphData.tags || [];
+
+                document.getElementById('resultScore').textContent = score;
+                document.getElementById('resultTier').textContent = tier;
+                document.getElementById('resultSource').textContent = 'FidesOrigin Subgraph (The Graph)';
+                document.getElementById('resultTags').textContent = tags.join(', ') || '-';
+                document.getElementById('resultEntity').textContent = subgraphData.isSanctioned ? '已制裁' : '-';
+
+                if (tier === 'HIGH' || subgraphData.isSanctioned) {
+                    badge.className = 'risk-badge risk-black';
+                    badge.textContent = '⚠️ 高風險 - ' + (subgraphData.isSanctioned ? '已制裁' : tier);
+                } else if (tier === 'MEDIUM') {
+                    badge.className = 'risk-badge risk-grey';
+                    badge.textContent = '⚡ 中風險';
+                } else {
+                    badge.className = 'risk-badge risk-safe';
+                    badge.textContent = '✅ 低風險';
+                }
+            } else if (entry) {
+                document.getElementById('resultScore').textContent = entry.riskScore || 'N/A';
+                document.getElementById('resultTier').textContent = entry.riskTier || 'N/A';
+                document.getElementById('resultSource').textContent = entry.source || '本地資料庫';
+                document.getElementById('resultTags').textContent = (entry.tags || []).join(', ') || '-';
+                document.getElementById('resultEntity').textContent = entry.entity || '-';
+
+                if (entry.riskTier === 'BLACK') {
+                    badge.className = 'risk-badge risk-black';
+                    badge.textContent = '⚠️ 高風險 - 黑名單';
+                } else {
+                    badge.className = 'risk-badge risk-grey';
+                    badge.textContent = '⚡ 灰名單 - 需注意';
+                }
+            } else {
+                badge.className = 'risk-badge risk-safe';
+                badge.textContent = '✅ 未在資料庫中';
+                document.getElementById('resultScore').textContent = '-';
+                document.getElementById('resultTier').textContent = 'UNKNOWN';
+                document.getElementById('resultSource').textContent = '-';
+                document.getElementById('resultTags').textContent = '-';
+                document.getElementById('resultEntity').textContent = '-';
+            }
+
+            setLoading(false);
+        }
+
+        loadDatabase();
+        document.getElementById('addressInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAddress();
+        });
+    </script>
+</body>
+</html>

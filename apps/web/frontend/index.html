@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin - 合规管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); }
+        .card { @apply bg-white rounded-lg shadow-md p-6 mb-6; }
+        .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition; }
+        .btn-secondary { @apply bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition; }
+        .btn-danger { @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded transition; }
+        .btn-success { @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition; }
+        .input { @apply w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500; }
+        .status-badge { @apply px-2 py-1 text-xs font-semibold rounded; }
+        .loading { @apply animate-spin; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-shield-alt text-2xl"></i>
+                    <h1 class="text-2xl font-bold">FidesOrigin</h1>
+                    <span class="text-sm opacity-75">合规管理后台</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="networkBadge" class="hidden px-3 py-1 bg-white/20 rounded-full text-sm">
+                        <i class="fas fa-circle text-green-400 mr-2"></i>
+                        <span id="networkName">Unknown</span>
+                    </div>
+                    <button id="connectBtn" class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition">
+                        <i class="fas fa-wallet mr-2"></i>连接钱包
+                    </button>
+                    <div id="walletInfo" class="hidden bg-white/10 px-4 py-2 rounded-lg">
+                        <span id="walletAddress" class="font-mono"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- 警告提示 -->
+        <div id="warningBox" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+            <p class="font-bold">警告</p>
+            <p id="warningText"></p>
+        </div>
+
+        <!-- 合约配置 -->
+        <div class="card">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-cog text-blue-600 mr-2"></i>合约配置
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">合约地址</label>
+                    <div class="flex">
+                        <input type="text" id="contractAddress" class="input flex-1" 
+                            placeholder="0x..." 
+                            value="0xE2644e41389C291c71e297DD86aF703B9d3F65F7">
+                        <button onclick="loadContract()" class="btn-primary ml-2">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">网络</label>
+                    <select id="networkSelect" class="input">
+                        <option value="11155111">Sepolia 测试网</option>
+                        <option value="1">Ethereum 主网</option>
+                        <option value="137">Polygon</option>
+                        <option value="42161">Arbitrum</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计概览 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="statsSection" style="display: none;">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">风险档案数</p>
+                        <p class="text-2xl font-bold" id="statRiskProfiles">-</p>
+                    </div>
+                    <i class="fas fa-users text-blue-500 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">活跃规则</p>
+                        <p class="text-2xl font-bold" id="statActiveRules">-</p>
+                    </div>
+                    <i class="fas fa-gavel text-green-500 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">审计日志</p>
+                        <p class="text-2xl font-bold" id="statAuditLogs">-</p>
+                    </div>
+                    <i class="fas fa-history text-purple-500 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">合约状态</p>
+                        <p class="text-lg font-bold" id="statContractStatus">-</p>
+                    </div>
+                    <i class="fas fa-circle text-gray-500 text-3xl" id="statusIcon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主功能区 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 风险档案管理 -->
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-user-shield text-blue-600 mr-2"></i>风险档案管理
+                </h2>
+                
+                <!-- 查询风险档案 -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold mb-3">查询风险档案</h3>
+                    <div class="flex">
+                        <input type="text" id="queryAddress" class="input flex-1" placeholder="输入地址 0x...">
+                        <button onclick="queryRiskProfile()" class="btn-primary ml-2">查询</button>
+                    </div>
+                    <div id="riskProfileResult" class="mt-4 hidden">
+                        <table class="w-full text-sm">
+                            <tr><td class="font-medium py-1">风险等级:</td><td id="rpLevel"></td></tr>
+                            <tr><td class="font-medium py-1">风险评分:</td><td id="rpScore"></td></tr>
+                            <tr><td class="font-medium py-1">标签:</td><td id="rpTags"></td></tr>
+                            <tr><td class="font-medium py-1">更新时间:</td><td id="rpUpdated"></td></tr>
+                            <tr><td class="font-medium py-1">更新者:</td><td id="rpUpdater"></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 更新风险档案 -->
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold mb-3">更新风险档案</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="updateAddress" class="input" placeholder="目标地址 0x...">
+                        <select id="riskLevel" class="input">
+                            <option value="0">UNKNOWN - 未分类</option>
+                            <option value="1">WHITELIST - 白名单</option>
+                            <option value="2">LOW - 低风险</option>
+                            <option value="3">MEDIUM - 中风险</option>
+                            <option value="4">HIGH - 高风险</option>
+                            <option value="5">BLACKLIST - 黑名单（禁止）</option>
+                        </select>
+                        <input type="number" id="riskScore" class="input" placeholder="风险评分 0-10000" min="0" max="10000" value="5000">
+                        <input type="text" id="riskTags" class="input" placeholder="标签 (逗号分隔，如: sanction,high_risk)">
+                        <input type="text" id="reasonHash" class="input" placeholder="原因哈希 (可选) 0x...">
+                        <button onclick="updateRiskProfile()" class="btn-primary w-full">
+                            <i class="fas fa-save mr-2"></i>更新风险档案
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 制裁地址管理 -->
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-ban text-red-600 mr-2"></i>制裁地址管理
+                </h2>
+                
+                <!-- 添加制裁地址 -->
+                <div class="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <h3 class="font-semibold mb-3 text-red-700">添加制裁地址</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="sanctionAddress" class="input" placeholder="制裁地址 0x...">
+                        <input type="text" id="sanctionReason" class="input" placeholder="制裁原因">
+                        <button onclick="addSanctionAddress()" class="btn-danger w-full">
+                            <i class="fas fa-ban mr-2"></i>添加制裁
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 移除制裁 -->
+                <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h3 class="font-semibold mb-3 text-green-700">移除制裁 / 设为白名单</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="unsanctionAddress" class="input" placeholder="地址 0x...">
+                        <select id="newStatus" class="input">
+                            <option value="0">设为 UNKNOWN</option>
+                            <option value="1">设为 WHITELIST</option>
+                            <option value="2">设为 LOW RISK</option>
+                        </select>
+                        <button onclick="removeSanction()" class="btn-success w-full">
+                            <i class="fas fa-check mr-2"></i>解除制裁
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 批量操作 -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold mb-3">批量更新 (最多100个)</h3>
+                    <textarea id="batchAddresses" class="input h-24" placeholder="每行一个地址..."></textarea>
+                    <button onclick="batchUpdateRisk()" class="btn-primary w-full mt-2">
+                        <i class="fas fa-tasks mr-2"></i>批量更新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 合规检查 -->
+        <div class="card mt-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-search text-blue-600 mr-2"></i>交易合规检查
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="checkFrom" class="input" placeholder="发送方地址 0x...">
+                <input type="text" id="checkTo" class="input" placeholder="接收方地址 0x...">
+                <input type="number" id="checkAmount" class="input" placeholder="金额 (wei)">
+                <button onclick="evaluateTransaction()" class="btn-primary">
+                    <i class="fas fa-check-circle mr-2"></i>检查合规性
+                </button>
+            </div>
+            <div id="complianceResult" class="mt-4 hidden"></div>
+        </div>
+
+        <!-- 审计日志 -->
+        <div class="card mt-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-list-alt text-purple-600 mr-2"></i>审计日志
+            </h2>
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex space-x-2">
+                    <button onclick="loadAuditLogs(1, 10)" class="btn-secondary text-sm">
+                        <i class="fas fa-sync mr-1"></i>刷新
+                    </button>
+                    <select id="logFilter" class="input text-sm py-1">
+                        <option value="all">全部类型</option>
+                        <option value="0">风险档案更新</option>
+                        <option value="5">合规检查</option>
+                        <option value="6">交易拦截</option>
+                        <option value="9">配置更新</option>
+                    </select>
+                </div>
+                <div class="text-sm text-gray-500">
+                    显示 <span id="logStart">0</span> - <span id="logEnd">0</span> 条
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-2 text-left">ID</th>
+                            <th class="px-4 py-2 text-left">类型</th>
+                            <th class="px-4 py-2 text-left">操作者</th>
+                            <th class="px-4 py-2 text-left">主题</th>
+                            <th class="px-4 py-2 text-left">时间</th>
+                            <th class="px-4 py-2 text-left">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogTable">
+                        <tr><td colspan="6" class="text-center py-8 text-gray-500">点击刷新加载日志</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-center mt-4 space-x-2">
+                <button onclick="prevPage()" class="btn-secondary text-sm">上一页</button>
+                <span class="px-4 py-2">第 <span id="currentPage">1</span> 页</span>
+                <button onclick="nextPage()" class="btn-secondary text-sm">下一页</button>
+            </div>
+        </div>
+
+        <!-- 合约配置信息 -->
+        <div class="card mt-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-info-circle text-blue-600 mr-2"></i>合约配置信息
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="configInfo">
+                <div class="p-4 bg-gray-50 rounded">
+                    <h4 class="font-semibold mb-2">交易限制</h4>
+                    <table class="w-full text-sm">
+                        <tr><td class="py-1">单笔最大金额:</td><td id="maxTxAmount">-</td></tr>
+                        <tr><td class="py-1">每日最大交易量:</td><td id="maxDailyVolume">-</td></tr>
+                        <tr><td class="py-1">速度窗口:</td><td id="velocityWindow">-</td></tr>
+                        <tr><td class="py-1">严格模式:</td><td id="strictMode">-</td></tr>
+                    </table>
+                </div>
+                <div class="p-4 bg-gray-50 rounded">
+                    <h4 class="font-semibold mb-2">当前链配置</h4>
+                    <table class="w-full text-sm">
+                        <tr><td class="py-1">链ID:</td><td id="chainId">-</td></tr>
+                        <tr><td class="py-1">链名称:</td><td id="chainName">-</td></tr>
+                        <tr><td class="py-1">是否支持:</td><td id="chainSupported">-</td></tr>
+                        <tr><td class="py-1">需要KYC:</td><td id="chainKYC">-</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交易确认弹窗 -->
+    <div id="txModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-bold mb-4">交易确认</h3>
+            <div id="txModalContent" class="mb-4"></div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeTxModal()" class="btn-secondary">取消</button>
+                <button id="txConfirmBtn" class="btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

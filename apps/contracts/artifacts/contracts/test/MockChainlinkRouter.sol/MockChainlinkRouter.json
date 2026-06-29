@@ -1,0 +1,28 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockChainlinkRouter",
+  "sourceName": "contracts/test/MockChainlinkRouter.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getAllowListId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bytecode": "0x6080604052346016576040516081601b8239608190f35b5f80fdfe608060405260043610156018575b36156016575f80fd5b005b5f3560e01c63aab396bd03600d576037565b5f910312603357565b5f80fd5b346033576044366004602a565b605c604c606d565b6040519182918290815260200190565b0390f35b606a606a606a9290565b90565b606a5f606056fea164736f6c634300081a000a",
+  "deployedBytecode": "0x608060405260043610156018575b36156016575f80fd5b005b5f3560e01c63aab396bd03600d576037565b5f910312603357565b5f80fd5b346033576044366004602a565b605c604c606d565b6040519182918290815260200190565b0390f35b606a606a606a9290565b90565b606a5f606056fea164736f6c634300081a000a",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

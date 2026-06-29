@@ -1,0 +1,46 @@
+{
+  "name": "@fidesorigin/data-publisher",
+  "version": "1.0.0",
+  "description": "Self-hosted on-chain data publisher for FidesOrigin — replaces Chainlink Functions with autonomous data pipeline",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "start": "node dist/src/index.js",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest",
+    "docker:build": "docker build -t fidesorigin/data-publisher .",
+    "docker:run": "docker run --env-file .env fidesorigin/data-publisher"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0",
+    "node-cron": "^3.0.3",
+    "axios": "^1.7.0",
+    "winston": "^3.13.0",
+    "dotenv": "^16.4.0",
+    "prom-client": "^15.1.0",
+    "express": "^4.19.0",
+    "redis": "^4.6.0",
+    "csv-parser": "^3.0.0",
+    "@aws-sdk/client-kms": "^3.600.0",
+    "@azure/identity": "^4.2.0",
+    "@azure/keyvault-keys": "^4.8.0",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/express": "^4.17.21",
+    "@types/xml2js": "^0.4.14",
+    "@types/jest": "^29.5.0",
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.0",
+    "eslint": "^9.5.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

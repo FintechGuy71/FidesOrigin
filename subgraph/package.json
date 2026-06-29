@@ -1,0 +1,18 @@
+{
+  "name": "fidesorigin-subgraph",
+  "version": "0.1.0",
+  "description": "FidesOrigin Protocol Subgraph - Event indexing for RiskRegistry, PolicyEngine, ComplianceEngine",
+  "license": "MIT",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ fidesorigin",
+    "create-local": "graph create --node http://localhost:8020/ fidesorigin",
+    "remove-local": "graph remove --node http://localhost:8020/ fidesorigin",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 fidesorigin"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.73.0",
+    "@graphprotocol/graph-ts": "^0.35.1"
+  }
+}

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FidesOrigin — プログラマブル・オンチェーン・コンプライアンス</title>
+    <meta name="description" content="オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。ステーブルコイン、スマートウォレット、RWA プラットフォーム、自動化決済基盤のために構築。">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FidesOrigin — プログラマブル・オンチェーン・コンプライアンス">
+    <meta name="twitter:description" content="オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。">
+    <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+    <link rel="canonical" href="https://fidesorigin.com/jp/">
+    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
+    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
+    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
+    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/">
+    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/">
+
+    <meta property="og:title" content="FidesOrigin — プログラマブル・オンチェーン・コンプライアンス">
+    <meta property="og:description" content="オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "FidesOrigin",
+          "url": "https://fidesorigin.com",
+          "logo": "https://fidesorigin.com/assets/logo/logo-full-dark-bg.png",
+          "sameAs": ["https://github.com/FintechGuy71/FidesOrigin"]
+        },
+        {
+          "@type": "WebSite",
+          "name": "FidesOrigin",
+          "url": "https://fidesorigin.com/jp/",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://fidesorigin.com/jp/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="apple-touch-icon" href="/assets/logo/logo-icon-dark-bg.png">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="grain">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-8 w-auto" loading="lazy">
+            </a>
+            <div class="hidden md:flex items-center gap-7">
+                <a href="#how" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">仕組み</a>
+                <a href="#use-cases" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">ユースケース</a>
+                <a href="#trust" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">信頼と安全</a>
+                <a href="#security" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">セキュリティ</a>
+                <a href="#contracts" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">コントラクト</a>
+                <a href="#docs" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">ドキュメント</a>
+                <a href="/jp/blog/why-on-chain-compliance.html" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">ブログ</a>
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary text-xs">お問い合わせ</a>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-dropdown-btn" onclick="toggleLang()" aria-expanded="false" aria-haspopup="true" aria-controls="langMenu">
+                        日本語
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="lang-dropdown-menu" id="langMenu">
+                        <a href="/">English</a>
+                        <a href="/cn/">简体中文</a>
+                        <a href="/tw/">繁體中文</a>
+                        <a href="/jp/" class="active">日本語</a>
+                    </div>
+                </div>
+            </div>
+            <button class="md:hidden text-[#8b8b94]" id="mobileMenuBtn" aria-label="Menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero -->
+    <section class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+        <div class="glow w-[500px] h-[500px] bg-[#b8945f] -top-60 -right-40"></div>
+        <div class="glow w-[400px] h-[400px] bg-[#3b82f6] top-40 -left-40"></div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <div class="reveal">
+                <h1 class="display mb-7">
+                    オンチェーンでネイティブに<br>
+                    <span class="gold">動くリスクコントロール。</span>
+                </h1>
+                <p class="lead max-w-xl mb-9">
+                    FidesOrigin はデジタルアセットインフラのプログラマブル・オンチェーン・コンプライアンスです。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。ステーブルコイン、スマートウォレット、RWA プラットフォーム、自動化決済基盤のために構築。
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+                        アクセス申請
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                    <a href="/admin/" class="btn-secondary">
+                        ダッシュボード
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Use Cases -->
+    <section id="use-cases" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">対象</p>
+                <h2 class="h2 mb-4">対象と理由</h2>
+                <p class="lead max-w-lg">デジタルアセットをオンチェーンで移動するなら、コンプライアンスは API で後付けする対象ではない。</p>
+            </div>
+            <div class="space-y-5 reveal">
+
+                <!-- Stablecoin -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="h3">ステーブルコイン決済レール</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現状</p>
+                            <p class="body-text">発行者は Chainalysis KYT や TRM Labs へのオフチェーン API コールでアドレスをスクリーニング。統合には数週間かかる。すべての送金は外部サービスの稼働に依存する。</p>
+                            <p class="uc-label uc-label-pain mt-3">問題点</p>
+                            <p class="body-text">API レイテンシーは1取引あたり200-500ms追加。API がダウンすると送金は停止するか、スクリーニングを迂回する。制裁アドレスは障害中に資金を移動できる。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin による解決</p>
+                            <p class="body-text">リスクプロファイルはオンチェーンに保存。<code class="text-[#d4af7a] text-xs font-mono">_update()</code> hook で自動スクリーニング——追加レイテンシーゼロ、迂回パスゼロ。制裁アドレスはプロトコルレベルでブロック。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- スマートコントラクトウォレット -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h3 class="h3">スマートコントラクトウォレット</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現状</p>
+                            <p class="body-text">Safe や Argent などのウォレットはオフチェーンのミドルウェアやリレーサービスに依存して取引をスクリーニングする。ウォレット UI が API を確認し、送信するかどうかを決定する。</p>
+                            <p class="uc-label uc-label-pain mt-3">問題点</p>
+                            <p class="body-text">スクリーニング層は実行層から分離されている。高度なユーザーや競合フロントエンドはウォレットの API チェックを迂回して直接コントラクトとやり取りできる——ウォレットに執行権限はない。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin による解決</p>
+                            <p class="body-text">リスクチェックは <code class="text-[#d4af7a] text-xs font-mono">FidesCompliance</code> によってウォレットコントラクト自体に埋め込まれる。すべての取引——出所に関係なく——実行前に評価される。生のコントラクトコールでも迂回は不可能。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RWA トークン化 -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                        <h3 class="h3">RWA トークン化</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現状</p>
+                            <p class="body-text">トークン化資産（不動産、国債、私募信用）は、発行者が管理する集中型ホワイトリストに依存する。送金はオフチェーンで承認され、別のレジストリに記録される。</p>
+                            <p class="uc-label uc-label-pain mt-3">問題点</p>
+                            <p class="body-text">ホワイトリストとトークンは別々のコントラクト。発行者の管理者キーが侵害されたり、ホワイトリストの同期が失敗した場合、非コンプライアント送金が実行される。復旧には手動介入が必要。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin による解決</p>
+                            <p class="body-text">司法管轄規則、投資家資格、制裁スクリーニングはトークンの送金ロジック自体で実行される。非コンプライアント送金はオンチェーンでリバートする。ポリシーエンジンはアップグレード可能だが、執行は永久的。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自動化決済（AI Agent） -->
+                <div class="uc-row">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded bg-[#b8945f]/10 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 class="h3">自動化決済（AI Agent）</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div class="uc-pain">
+                            <p class="uc-label uc-label-pain">現状</p>
+                            <p class="body-text">AI 決済エージェントは、アプリケーションロジックにハードコードされたオフチェーンリスクルールを通じて動作する。支出上限とアドレスホワイトリストは、エージェントが実行前に呼び出すバックエンドサーバーに存在する。</p>
+                            <p class="uc-label uc-label-pain mt-3">問題点</p>
+                            <p class="body-text">エージェントが侵害されたり、バックエンドが迂回されたり、プロンプトが操作された場合、プロトコルレベルのガードレールはない。エージェントは制裁対象を含むあらゆるアドレスに資金を流出できる。</p>
+                        </div>
+                        <div class="uc-fix">
+                            <p class="uc-label uc-label-fix">FidesOrigin による解決</p>
+                            <p class="body-text">支出上限、リスク閾値、制裁スクリーニングはスマートコントラクトレベルで強制実行される。侵害されたエージェントでも高リスクアドレスに送金できない——取引はオンチェーンでリバートする。ガードレールは暗号学的で、助言ではない。</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- How It Works -->
+    <section id="how" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">アーキテクチャ</p>
+                <h2 class="h2 mb-4">エンジン、オラクルではない</h2>
+                <p class="lead max-w-lg">すべての取引は同じチェーンで実行されるスマートコントラクトによってスクリーニングされる。外部 API コールなし、オフチェーンレイテンシーなし、迂回パスなし。</p>
+            </div>
+
+            <div class="space-y-3 reveal">
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">データ層</span>
+                        <span class="text-[11px] text-[#3a3a42] font-mono">自動同期</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">OFAC SDN</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">Chainalysis</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">OpenSanctions</span>
+                        <span class="text-xs text-[#8b8b94] bg-white/[0.03] px-2.5 py-1 rounded font-mono">カスタムフィード</span>
+                    </div>
+                </div>
+
+                <div class="text-center arch-arrow">↓</div>
+
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">プログラマブル・オンチェーン・コンプライアンス</span>
+                        <span class="text-[11px] text-[#3a3a42] font-mono">Solidity 0.8.26</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">RiskRegistry</div>
+                            <div class="text-[10px] text-[#3a3a42]">アドレスプロファイル</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">PolicyEngine</div>
+                            <div class="text-[10px] text-[#3a3a42]">ルール評価</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">ComplianceEngine</div>
+                            <div class="text-[10px] text-[#3a3a42]">送金チェック</div>
+                        </div>
+                        <div class="text-center py-2 px-1">
+                            <div class="text-[11px] font-mono text-[#d4af7a] mb-1">QuarantineVault</div>
+                            <div class="text-[10px] text-[#3a3a42]">資金隔離</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center arch-arrow">↓</div>
+
+                <div class="arch-layer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="micro">取引結果</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="badge badge-pass">ALLOW</span>
+                        <span class="badge badge-hold">QUARANTINE</span>
+                        <span class="badge badge-block">BLOCK</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Code Example -->
+    <section class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal">
+                    <p class="micro mb-4">統合</p>
+                    <h2 class="h2 mb-5">3行で接続</h2>
+                    <p class="body-text mb-6">
+                        スマートコントラクトレベルでリスクエンジンを継承。すべてのトークン送金はオンチェーンリスクプロファイルに対して自動スクリーニング——SDK コール不要、API レイテンシーなし、迂回なし。
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">01</span>
+                            <p class="text-[13px] text-[#8b8b94]"><code class="text-[#d4af7a] text-xs font-mono">CompliantStableCoin</code> を継承するか、<code class="text-[#d4af7a] text-xs font-mono">FidesCompliance</code> を送金 hook に接続</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">02</span>
+                            <p class="text-[13px] text-[#8b8b94]">管理ダッシュボードまたは直接オンチェーンでリスク閾値とポリシーを設定</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-[11px] font-mono text-[#3a3a42] mt-0.5">03</span>
+                            <p class="text-[13px] text-[#8b8b94]">すべての送金がスクリーニングされ、実行され、記録される——決定論的にオンチェーンで</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal" style="transition-delay: 0.15s">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="text-[11px] text-[#3a3a42] font-mono">CompliantStableCoin.sol</span>
+                            <span class="text-[10px] text-[#3a3a42]">Solidity 0.8.26</span>
+                        </div>
+                        <div class="code-body">
+<pre><span class="tk-comment">// ステーブルコインはオンチェーンリスクスクリーニングを継承</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(
+        <span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to,
+        <span class="tk-keyword">uint256</span> amount
+    ) <span class="tk-keyword">internal override</span> {
+        <span class="tk-comment">// 送金実行前に評価</span>
+        (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) =
+            fides.<span class="tk-func">evaluateTransaction</span>(
+                from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>)
+            );
+
+        <span class="tk-keyword">if</span> (!allowed)
+            <span class="tk-keyword">revert</span> <span class="tk-func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- コントラクト -->
+    <section id="contracts" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">コントラクト</p>
+                <h2 class="h2 mb-4">Sepolia にデプロイ済み</h2>
+                <p class="lead max-w-lg">すべてのコントラクトは検証済みでオープンソース。アップグレード可能な UUPS プロキシパターン。</p>
+            </div>
+            <div class="space-y-1 reveal">
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">RiskRegistry</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc">0x7a41...AC52bc</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS プロキシ</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">PolicyEngine</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x8708...96b38">0x8708...96b38</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS プロキシ</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">ComplianceEngine</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x50aA...fB0AC">0x50aA...fB0AC</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">UUPS プロキシ</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">QuarantineVault</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x4971...1a382">0x4971...1a382</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">ダイレクト</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">FidesCompliance</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0x7cc7...6F97A1">0x7cc7...6F97A1</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">ダイレクト</span>
+                </div>
+                <div class="addr-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-[11px] font-mono text-[#d4af7a] shrink-0">CompliantStableCoin</span>
+                        <span class="text-[11px] font-mono text-[#5a5a62] truncate" title="0xC6AC...2a6Cca">0xC6AC...2a6Cca</span>
+                    </div>
+                    <span class="text-[11px] text-[#3a3a42] font-mono shrink-0">ダイレクト</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- セキュリティ -->
+    <section id="security" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">セキュリティ</p>
+                <h2 class="h2 mb-4">妥協のない設計</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">オフチェーン依存なし</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">すべてのリスクチェックはオンチェーンで実行。オラクルレイテンシーなし、API ダウンタイムなし、第三者信頼仮定なし。</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">ロールベースアクセス制御</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">細粒度権限：ORACLE、RULE_MANAGER、COMPLIANCE_ENGINE、RELEASE_ROLE。各ロールは独立して割り当て可能・取り消し可能。</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="w-8 h-8 rounded bg-[#3eba6d]/10 flex items-center justify-center mb-4">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <h3 class="h3 mb-2">隔離、非破壊</h3>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">疑わしい資金は管理された金庫に隔離され、焼却されない。検証可能、回復可能、監査可能。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- Live Status -->
+    <section id="status" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">システム状態</p>
+                <h2 class="h2 mb-4">リアルタイム透明、"信じて"ではない</h2>
+                <p class="lead max-w-lg">リスクデータの鮮度はオンチェーンで検証可能。不透明な API なし、"最新であることを保証"なし。</p>
+            </div>
+            <div class="grid md:grid-cols-5 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">オンライン</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">ネットワーク</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">Sepolia Testnet</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">チェーン ID 11155111</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">同期済み</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">リスクレジストリ</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">v1.2.1</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">UUPS アップグレード可能</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot idle"></span>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">開発モード</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">データパブリッシャー</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">DRY_RUN</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">OFAC + OpenSanctions</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">検証済み</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">コントラクト</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">6 個デプロイ済み</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">Etherscan 検証済み</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="status-dot live"></span>
+                        <span class="text-[11px] text-[#3eba6d] font-mono">最新</span>
+                    </div>
+                    <p class="text-[11px] text-[#5a5a62] mb-1">最終更新</p>
+                    <p class="text-sm text-[#f0f0f2] font-mono">2026-06-26</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-1 font-mono">OpenSanctions OFAC SDN</p>
+                    <p class="text-[10px] text-[#3a3a42] mt-0.5 font-mono">~2,635 アドレス (106 OFAC + 2,529 ScamSniffer)</p>
+                </div>
+            </div>
+            <div class="mt-6 reveal">
+                <a href="/admin/" class="doc-card flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-[#f0f0f2] font-medium">管理ダッシュボードを見る</p>
+                        <p class="text-[11px] text-[#5a5a62] mt-0.5">リアルタイムのリスクプロファイル、データ同期状況、コントラクトイベントを確認</p>
+                    </div>
+                    <svg class="w-4 h-4 text-[#5a5a62] shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- 信頼と安全 & セキュリティ監査 -->
+    <section id="trust" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">信頼と安全</p>
+                <h2 class="h2 mb-4">オープンソース。監査対象。ブラックボックスなし。</h2>
+                <p class="lead max-w-lg">リスクインフラは検証可能でなければならない。コードはオープン、コントラクトは検証済み、第三者監査が進行中だ。</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4 reveal">
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <h3 class="h3">オープンソース</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">GitHub 上の完全なコントラクトソースコード。すべての関数、修飾子、テスト——公開され監査可能。プロプライエタリなブラックボックスなし。</p>
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-3 text-[11px] text-[#d4af7a] hover:text-[#e8c99a] transition-colors">
+                        リポジトリを見る
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <h3 class="h3">Etherscan 検証済み</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">Sepolia Etherscan ですべての 6 コントラクトが検証済み。読み取り専用プロキシ実装。誰でも検査でき、誰でもバイトコードとソースが一致することを検証できる。</p>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#f5a623]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <h3 class="h3">第三者監査</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">メインネットデプロイ前に独立セキュリティ監査を予定。OpenZeppelin / Trail of Bits / Certik を評価中。監査レポートはここに公開される。</p>
+                    <span class="inline-block mt-3 text-[10px] text-[#f5a623] font-mono px-2 py-0.5 rounded bg-[#f5a623]/10">進行中</span>
+                </div>
+                <div class="p-5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-[#3eba6d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <h3 class="h3">アップグレード可能 & 回復可能</h3>
+                    </div>
+                    <p class="text-[13px] text-[#8b8b94] leading-relaxed">UUPS プロキシパターンにより、移行なしでコントラクトをアップグレード可能。疑わしい資金は隔離され、焼却されない——ガバナンスによるリリースロールで検証・回復可能。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- ドキュメント & ブログ -->
+    <section id="docs" class="py-20 md:py-28">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="mb-14 reveal">
+                <p class="micro mb-4">リソース</p>
+                <h2 class="h2 mb-4">コードを読む、マーケティングは見ない</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 reveal">
+                <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/contracts</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">コントラクトソースコード</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">Solidity 0.8.26、6 コントラクト、139 テスト通過。完全な Hardhat テストスイート。</p>
+                </a>
+                <a href="https://github.com/FintechGuy71/FidesOrigin/tree/main/data-publisher" target="_blank" rel="noopener" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/data-publisher</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">データパブリッシャー Service</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">TypeScript サービス、OFAC と OpenSanctions データを RiskRegistry に同期。Docker 対応、Redis クラスター対応。</p>
+                </a>
+                <a href="/admin/" class="doc-card">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-[#d4af7a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span class="text-[11px] text-[#8b8b94] font-mono">/admin</span>
+                    </div>
+                    <p class="text-sm text-[#f0f0f2] font-medium">管理ダッシュボード</p>
+                    <p class="text-[11px] text-[#5a5a62] mt-1">リアルタイムダッシュボード、リスクプロファイル、コントラクト状態、同期状況を表示。Sepolia テストネット。</p>
+                </a>
+            </div>
+
+            <!-- ブログ -->
+            <div class="mt-12 reveal">
+                <p class="micro mb-4">最新記事</p>
+                <a href="/jp/blog/why-on-chain-compliance.html" class="blog-card flex items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-[10px] text-[#d4af7a] font-mono px-2 py-0.5 rounded bg-[#b8945f]/10">カテゴリー定義</span>
+                            <span class="text-[10px] text-[#3a3a42]">2026年6月</span>
+                        </div>
+                        <h3 class="h3 mb-1">なぜオンチェーンか：API ベースコンプライアンスの終焉</h3>
+                        <p class="text-[13px] text-[#8b8b94]">なぜオフチェーン API を通じた取引スクリーニングは構造的に壊れているか——そして"オンチェーンリスク執行"がデジタルアセットインフラにとって何を意味するか。</p>
+                    </div>
+                    <svg class="w-5 h-5 text-[#5a5a62] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <!-- CTA -->
+    <section class="py-20 md:py-28">
+        <div class="max-w-2xl mx-auto px-6 text-center reveal">
+            <h2 class="h2 mb-5">オンチェーンリスクコントロールで構築</h2>
+            <p class="lead mb-8">
+                ステーブルコインを発行し、スマートウォレットを構築し、実物資産をトークン化し、または自動化決済インフラを設計している場合——決定論的リスクスクリーニングが等式をどう変えるか話し合いましょう。
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+                <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+                    アクセス申請
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="/admin/" class="btn-secondary">ダッシュボード</a>
+            </div>
+            <div class="flex items-center justify-center gap-6 text-[11px] text-[#3a3a42]">
+                <span>Sepolia テストネット稼働中</span>
+                <span class="w-1 h-1 rounded-full bg-[#3a3a42]"></span>
+                <span>GitHub オープンソース</span>
+                <span class="w-1 h-1 rounded-full bg-[#3a3a42]"></span>
+                <span>Etherscan 検証済み</span>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/[0.04] py-8">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="/" class="flex items-center">
+                    <img src="/assets/logo/logo-full-dark-bg.png" alt="FidesOrigin" class="h-6 w-auto opacity-60" loading="lazy">
+                </a>
+                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
+                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <a href="/jp/blog/why-on-chain-compliance.html" class="hover:text-[#8b8b94] transition-colors">ブログ</a>
+                    <span class="text-[#3a3a42]">Sepolia Testnet</span>
+                </div>
+            </div>
+            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
+                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin. デジタルアセットのプログラマブル・オンチェーン・コンプライアンス。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed inset-0 z-50 bg-[#08080a]/95 backdrop-blur-xl">
+        <div class="flex flex-col items-center justify-center h-full gap-8">
+            <a href="#use-cases" class="text-lg text-[#8b8b94]">ユースケース</a>
+            <a href="#how" class="text-lg text-[#8b8b94]">仕組み</a>
+            <a href="#trust" class="text-lg text-[#8b8b94]">信頼と安全</a>
+            <a href="#security" class="text-lg text-[#8b8b94]">セキュリティ</a>
+            <a href="#contracts" class="text-lg text-[#8b8b94]">コントラクト</a>
+            <a href="#docs" class="text-lg text-[#8b8b94]">ドキュメント</a>
+            <a href="/jp/blog/why-on-chain-compliance.html" class="text-lg text-[#8b8b94]">ブログ</a>
+            <div class="flex items-center gap-4 text-sm text-[#5a5a62]">
+                <a href="/">EN</a>
+                <a href="/cn/">CN</a>
+                <a href="/tw/">TW</a>
+                <a href="/jp/" class="text-[#d4af7a]">JP</a>
+            </div>
+            <a href="mailto:contact@fidesorigin.com" class="btn-primary">お問い合わせ</a>
+            <button id="mobileMenuClose" class="mt-8 text-[#3a3a42]">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lang dropdown toggle
+        function toggleLang() {
+            document.getElementById('langDropdown').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('langDropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+        });
+
+        // Mobile menu
+        const mm = document.getElementById('mobileMenu');
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => mm.classList.add('active'));
+        document.getElementById('mobileMenuClose')?.addEventListener('click', () => mm.classList.remove('active'));
+        mm?.querySelectorAll('a').forEach(l => l.addEventListener('click', () => mm.classList.remove('active')));
+
+        // Scroll reveal
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+        (function() {
+            var STORAGE_KEY = 'fides_lang';
+            var path = window.location.pathname;
+            if (localStorage.getItem(STORAGE_KEY)) return;
+            if (path === '/' || path === '/index.html') {
+                fetch('https://ipapi.io/json/')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data || !data.country_code) return;
+                        var code = data.country_code.toUpperCase();
+                        var target = null;
+                        if (code === 'CN') target = '/cn/';
+                        else if (code === 'TW' || code === 'HK' || code === 'MO') target = '/tw/';
+                        else if (code === 'JP') target = '/jp/';
+                        if (target) {
+                            localStorage.setItem(STORAGE_KEY, target);
+                            window.location.href = target;
+                        }
+                    })
+                    .catch(function() { });
+            }
+        })();
+    </script>
+</body>
+</html>

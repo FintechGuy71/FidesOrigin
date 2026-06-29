@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fidesorigin
+  labels:
+    name: fidesorigin
+    app.kubernetes.io/part-of: fidesorigin

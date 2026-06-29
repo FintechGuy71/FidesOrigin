@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-05-13T18:30:00.657Z",
+  "dryRun": true,
+  "stats": {
+    "ofac": 11,
+    "local": 11,
+    "chainalysis": 0,
+    "merged": 11,
+    "unique": 11
+  },
+  "merkle": {
+    "root": "0xdd2207826187f072cc5d25d11f1537bcb9ac886206c98c0fb67f51c2bfd33fee",
+    "leaves": 11
+  },
+  "chain": {
+    "skipped": true
+  },
+  "duration": 8638
+}

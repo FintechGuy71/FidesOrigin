@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FidesOrigin SDK - Browser Example</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    h1 {
+      color: #1a1a1a;
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 10px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #4a5568;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    button:hover {
+      background: #2563eb;
+    }
+    
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      background: #f8fafc;
+      display: none;
+    }
+    
+    .result.show {
+      display: block;
+    }
+    
+    .risk-level {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .risk-low { background: #d1fae5; color: #065f46; }
+    .risk-medium { background: #fef3c7; color: #92400e; }
+    .risk-high { background: #fee2e2; color: #991b1b; }
+    .risk-critical { background: #fecaca; color: #7f1d1d; }
+    
+    .flags {
+      margin-top: 15px;
+    }
+    
+    .flag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin: 5px 0;
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid #e2e8f0;
+    }
+    
+    .flag-severity-high { border-left-color: #ef4444; }
+    .flag-severity-medium { border-left-color: #f59e0b; }
+    .flag-severity-low { border-left-color: #10b981; }
+    
+    .error {
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+    
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    
+    .code-example {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛡️ FidesOrigin SDK Browser Example</h1>
+  
+  <div class="card">
+    <h3>Configuration</h3>
+    <div class="form-group">
+      <label for="apiKey">API Key:</label>
+      <input type="password" id="apiKey" placeholder="Enter your API key">
+    </div>
+    <div class="form-group">
+      <label for="baseUrl">Base URL:</label>
+      <input type="text" id="baseUrl" value="https://api.fidesorigin.com" placeholder="https://api.fidesorigin.com">
+    </div>
+  </div>
+  
+  <div class="card">
+    <h3>Risk Check</h3>
+    <div class="form-group">
+      <label for="address">Wallet Address:</label>
+      <input type="text" id="address" placeholder="0x..." value="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb">
+    </div>
+    <div class="form-group">
+      <label for="chain">Chain:</label>
+      <select id="chain">
+        <option value="ethereum">Ethereum</option>
+        <option value="bitcoin">Bitcoin</option>
+        <option value="polygon">Polygon</option>
+        <option value="bsc">BSC</option>
+        <option value="arbitrum">Arbitrum</option>
+        <option value="base">Base</option>
+      </select>
+    </div>
+    
+    <button onclick="checkRisk()" id="checkBtn">Check Risk</button>
+    
+    <div id="result" class="result"></div>
+  </div>
+  
+  <div class="card code-example">
+    <h3>Code Example</h3>
+    <pre><code>// Initialize client
+const client = new FidesOrigin.FidesOriginClient({
+  baseUrl: 'https://api.fidesorigin.com',
+  apiKey: 'your-api-key'
+});
+
+// Check single address
+const risk = await client.checkAddress('0x742d...', { 
+  chain: 'ethereum' 
+});
+
+console.log(risk.risk.level);  // 'low' | 'medium' | 'high' | 'critical'
+console.log(risk.risk.score);  // 0-100
+
+// Check batch addresses
+const batch = await client.checkBatchAddresses({
+  addresses: ['0x123...', '0x456...'],
+  chain: 'ethereum'
+});
+</code></pre>
+  </div>
+
+  <!-- Load FidesOrigin SDK -->
+  <script src="../dist/umd/fidesorigin.min.js"></script>
+  
+  <script>
+    async function checkRisk() {
+      const apiKey = document.getElementById('apiKey').value;
+      const baseUrl = document.getElementById('baseUrl').value;
+      const address = document.getElementById('address').value;
+      const chain = document.getElementById('chain').value;
+      const resultDiv = document.getElementById('result');
+      const checkBtn = document.getElementById('checkBtn');
+      
+      if (!address) {
+        alert('Please enter an address');
+        return;
+      }
+      
+      // Show loading
+      checkBtn.disabled = true;
+      checkBtn.innerHTML = '<span class="loading"><span class="spinner"></span> Checking...</span>';
+      resultDiv.classList.remove('show');
+      
+      try {
+        // Initialize client
+        const client = new FidesOrigin.FidesOriginClient({
+          baseUrl: baseUrl,
+          apiKey: apiKey,
+          debug: true
+        });
+        
+        // Check address risk
+        const risk = await client.checkAddress(address, { chain });
+        
+        // Display result
+        const riskClass = `risk-${risk.risk.level}`;
+        let flagsHtml = '';
+        
+        if (risk.flags && risk.flags.length > 0) {
+          flagsHtml = `
+            <div class="flags">
+              <strong>Risk Flags:</strong>
+              ${risk.flags.map(flag => `
+                <div class="flag flag-severity-${flag.severity}">
+                  <span>${flag.name}</span>
+                  <span style="color: #6b7280; font-size: 12px;">${flag.category}</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+        
+        resultDiv.innerHTML = `
+          <div>
+            <strong>Risk Level: </strong>
+            <span class="risk-level ${riskClass}">${risk.risk.level.toUpperCase()}</span>
+          </div>
+          <div style="margin-top: 10px;">
+            <strong>Risk Score: </strong>${risk.risk.score}/100
+          </div>
+          <div style="margin-top: 10px;">
+            <strong>Address Type: </strong>${risk.type}
+          </div>
+          ${flagsHtml}
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <strong>Raw Response:</strong>
+            <pre style="margin-top: 10px;">${JSON.stringify(risk, null, 2)}</pre>
+          </div>
+        `;
+        resultDiv.classList.add('show');
+        
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${error.message || error}
+            <br><br>
+            <strong>Code:</strong> ${error.code || 'UNKNOWN'}
+          </div>
+        `;
+        resultDiv.classList.add('show');
+      } finally {
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Check Risk';
+      }
+    }
+  </script>
+</body>
+</html>
