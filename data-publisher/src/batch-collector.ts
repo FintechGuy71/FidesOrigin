@@ -676,7 +676,7 @@ async function publishBatches(
       const validScores = validIndices.map(idx => batchScores[idx]);
       const validTiers = validIndices.map(idx => batchTiers[idx]);
       const validSanc = validIndices.map(idx => batchSanc[idx]);
-      const validTags = batch.tags.slice(i, end).filter((_t, idx) => validIndices.includes(idx)).map(tagArr =>
+      const validTags = validIndices.map(idx => batch.tags[i + idx]).map(tagArr =>
         tagArr.map(t => ethers.encodeBytes32String(t))
       );
 
@@ -796,7 +796,7 @@ export async function runBatchSync(options: BatchSyncOptions = {}): Promise<{
   // Connect
   const provider = new ethers.JsonRpcProvider(config.publisher.rpcUrl, config.publisher.chainId);
   // Use key-manager for secure key handling (KMS/Vault/Plain)
-  const { createKeyManager } = await import('./key-manager');
+  const { createKeyManager } = await import('./kms-key-manager');
   const keyManager = await createKeyManager(provider);
   const wallet = await keyManager.getSigner() as ethers.Wallet;
   const walletAddress = await keyManager.getAddress();
@@ -972,10 +972,10 @@ Options:
   --help, -h            Show this help
 
 Examples:
-  npx ts-node batch-collector.ts --incremental --days=3
-  npx ts-node batch-collector.ts --dry-run
-  npx ts-node batch-collector.ts --incremental --days=14 --dry-run
-  npx ts-node batch-collector.ts --retry-failed
+  npx ts-node src/batch-collector.ts --incremental --days=3
+  npx ts-node src/batch-collector.ts --dry-run
+  npx ts-node src/batch-collector.ts --incremental --days=14 --dry-run
+  npx ts-node src/batch-collector.ts --retry-failed
 `);
       process.exit(0);
     }

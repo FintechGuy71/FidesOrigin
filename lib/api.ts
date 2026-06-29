@@ -3,11 +3,19 @@
  * 统一错误处理、请求/响应拦截器、自动重试机制（指数退避 + 抖动）
  *
  * Security Fixes:
- * - [Critical] SSRF 防护：URL 白名单/协议校验
+ * - [Critical] SSRF 防护：URL 白名单/协议校验 + allowedHosts 豁免
  * - [Critical] 敏感头/密钥脱敏，防止经错误链路泄露
  * - [High] 请求超时控制
  * - [High] parseJson 运行时校验支持
  */
+
+// 扩展 RequestInit 支持 SSRF 选项
+export interface ApiFetchOptions extends RequestInit {
+  /** 是否要求同源（仅允许相对路径）。默认 true。设为 false 时允许绝对 URL，但仍检查私有地址。 */
+  requireSameOrigin?: boolean;
+  /** 明确允许的主机名列表（在 requireSameOrigin=false 时作为额外白名单） */
+  allowedHosts?: string[];
+}
 
 // 拦截器类型定义
 export type RequestInterceptor = (url: string, options: RequestInit) => RequestInit | Promise<RequestInit>;
@@ -68,8 +76,9 @@ const PRIVATE_HOST_PATTERNS = [
  * 校验 URL 安全性，防止 SSRF
  * @param rawUrl 原始 URL 字符串
  * @param requireSameOrigin 是否要求同源（仅允许相对路径）
+ * @param allowedHosts 明确允许的主机名白名单（绝对 URL 模式下）
  */
-function assertSafeUrl(rawUrl: string, requireSameOrigin = true): void {
+function assertSafeUrl(rawUrl: string, requireSameOrigin = true, allowedHosts?: string[]): void {
   if (requireSameOrigin) {
     // 仅允许以 / 开头的相对路径
     if (
@@ -102,6 +111,11 @@ function assertSafeUrl(rawUrl: string, requireSameOrigin = true): void {
 
   if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
     throw new Error(`Disallowed protocol: ${parsed.protocol}`);
+  }
+
+  // 明确白名单的主机直接放行
+  if (allowedHosts?.includes(parsed.hostname)) {
+    return;
   }
 
   if (PRIVATE_HOST_PATTERNS.some((re) => re.test(parsed.hostname))) {
@@ -270,11 +284,11 @@ async function applyErrorInterceptors(error: Error, url: string, options: Reques
 // 核心 fetch 封装
 export async function apiFetch(
   url: string,
-  options: RequestInit = {},
+  options: ApiFetchOptions = {},
   retryConfig: Partial<RetryConfig> = {}
 ): Promise<Response> {
   // [Critical] SSRF 防护
-  assertSafeUrl(url, true);
+  assertSafeUrl(url, options.requireSameOrigin ?? true, options.allowedHosts);
 
   const config = { ...defaultRetryConfig, ...retryConfig };
 
@@ -373,11 +387,11 @@ export async function apiFetch(
 }
 
 // 便捷方法
-export async function apiGet(url: string, options: RequestInit = {}): Promise<Response> {
+export async function apiGet(url: string, options: ApiFetchOptions = {}): Promise<Response> {
   return apiFetch(url, { ...options, method: "GET" });
 }
 
-export async function apiPost(url: string, body: unknown, options: RequestInit = {}): Promise<Response> {
+export async function apiPost(url: string, body: unknown, options: ApiFetchOptions = {}): Promise<Response> {
   return apiFetch(url, {
     ...options,
     method: "POST",
@@ -389,7 +403,7 @@ export async function apiPost(url: string, body: unknown, options: RequestInit =
   });
 }
 
-export async function apiPut(url: string, body: unknown, options: RequestInit = {}): Promise<Response> {
+export async function apiPut(url: string, body: unknown, options: ApiFetchOptions = {}): Promise<Response> {
   return apiFetch(url, {
     ...options,
     method: "PUT",
@@ -401,7 +415,7 @@ export async function apiPut(url: string, body: unknown, options: RequestInit = 
   });
 }
 
-export async function apiDelete(url: string, options: RequestInit = {}): Promise<Response> {
+export async function apiDelete(url: string, options: ApiFetchOptions = {}): Promise<Response> {
   return apiFetch(url, { ...options, method: "DELETE" });
 }
 

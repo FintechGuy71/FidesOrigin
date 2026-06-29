@@ -95,10 +95,13 @@ export const AddressInput: React.FC<AddressInputProps> = ({
             type="text"
             value={value}
             onChange={(e) => {
-              onChange(e.target.value.trim());
+              onChange(e.target.value);
               if (!touched) setTouched(true);
             }}
-            onBlur={() => setTouched(true)}
+            onBlur={() => {
+              setTouched(true);
+              onChange(value.trim());
+            }}
             placeholder={placeholder}
             disabled={disabled}
             className={[

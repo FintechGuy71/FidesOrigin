@@ -39,7 +39,8 @@ class HealthCheckServer {
   start() {
     this.server = http.createServer(async (req, res) => {
       const parsedUrl = url.parse(req.url, true);
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      const isDev = process.env.NODE_ENV === 'development';
+      res.setHeader('Access-Control-Allow-Origin', isDev ? '*' : 'http://localhost:3000');
 
       try {
         if (parsedUrl.pathname === '/health') {

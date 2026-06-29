@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/ComplianceEngine.sol": {
-      "lastModificationDate": 1782724441405,
-      "contentHash": "f3f7c1010521b56bd0d3f6d2fc79be65",
+      "lastModificationDate": 1782736789745,
+      "contentHash": "35c480cd504789763e69286ee839cddc",
       "sourceName": "contracts/ComplianceEngine.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -63,8 +63,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/interfaces/IComplianceEngine.sol": {
-      "lastModificationDate": 1782664171367,
-      "contentHash": "e4d840ca855d172e53cd7b625050eca5",
+      "lastModificationDate": 1782736519063,
+      "contentHash": "7dcfbf65b5fbe20938ee91d5fb4800a8",
       "sourceName": "contracts/interfaces/IComplianceEngine.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -165,8 +165,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/RiskRegistry.sol": {
-      "lastModificationDate": 1782662848551,
-      "contentHash": "02a67775cf8b47d37ac50647afad55ac",
+      "lastModificationDate": 1782736238064,
+      "contentHash": "be06eceefbd907485673c76574d90eea",
       "sourceName": "contracts/RiskRegistry.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -222,8 +222,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/interfaces/IAssetCompliance.sol": {
-      "lastModificationDate": 1782489580724,
-      "contentHash": "774682f9d1672ef7dbc853571fbe572c",
+      "lastModificationDate": 1782736541580,
+      "contentHash": "e5fb0501b72fd6fdc65eaf282f2d4ddf",
       "sourceName": "contracts/interfaces/IAssetCompliance.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -272,8 +272,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/PolicyEngine.sol": {
-      "lastModificationDate": 1782717479331,
-      "contentHash": "2db0b3842bc41a991ff97af87ae509ee",
+      "lastModificationDate": 1782736576471,
+      "contentHash": "63ababc777fea892f2474f000fce2dfa",
       "sourceName": "contracts/PolicyEngine.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -1367,8 +1367,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/QuarantineVault.sol": {
-      "lastModificationDate": 1782717654313,
-      "contentHash": "a135521afffbe893fe4d4cd1d2acb181",
+      "lastModificationDate": 1782736587051,
+      "contentHash": "8a31f5bfe2c88416f6d9d71bf9e3de97",
       "sourceName": "contracts/QuarantineVault.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -2719,8 +2719,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/examples/CompliantSmartWallet.sol": {
-      "lastModificationDate": 1782278248942,
-      "contentHash": "e0701619596798839087346e3b4d48ea",
+      "lastModificationDate": 1782736499246,
+      "contentHash": "0c9ab5db668fd39817cfbe4282c9bdc4",
       "sourceName": "contracts/examples/CompliantSmartWallet.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -2773,8 +2773,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/examples/CompliantSmartWalletBase.sol": {
-      "lastModificationDate": 1782717816901,
-      "contentHash": "6586c209bf2a830003073d9669fe203c",
+      "lastModificationDate": 1782736485951,
+      "contentHash": "0bea14ead2ed4634fcfc8fa3d9330819",
       "sourceName": "contracts/examples/CompliantSmartWalletBase.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -2933,8 +2933,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/MerkleRiskRegistry.sol": {
-      "lastModificationDate": 1782236000712,
-      "contentHash": "a905c25d91529448182ab138b4846345",
+      "lastModificationDate": 1782736682919,
+      "contentHash": "fac6c92c9ddbbbbb8e9485193170aeef",
       "sourceName": "contracts/MerkleRiskRegistry.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -3251,8 +3251,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/examples/CompliantStableCoin.sol": {
-      "lastModificationDate": 1782724481804,
-      "contentHash": "1a009b5e831cef748d8f290047672854",
+      "lastModificationDate": 1782736529754,
+      "contentHash": "070877a2a67a0039ac753b88b7e6f28d",
       "sourceName": "contracts/examples/CompliantStableCoin.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -3358,8 +3358,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/RiskOracle.sol": {
-      "lastModificationDate": 1782724525176,
-      "contentHash": "cb187c0499fb1ccbe6679566c2e9009c",
+      "lastModificationDate": 1782736832424,
+      "contentHash": "e72d961b7e3d8e1bd68e3adf0cb1fffa",
       "sourceName": "contracts/RiskOracle.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -3930,8 +3930,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/RiskRegistryV2.sol": {
-      "lastModificationDate": 1782717766411,
-      "contentHash": "170fe5ed3ed8b14a76a03d0e16fed2f6",
+      "lastModificationDate": 1782736795964,
+      "contentHash": "fae3851e746a79332030e51f72158fb3",
       "sourceName": "contracts/RiskRegistryV2.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -3985,8 +3985,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/FidesBridgeReceiver.sol": {
-      "lastModificationDate": 1782724039903,
-      "contentHash": "973d93fd8cc1c9446340c26804f84d35",
+      "lastModificationDate": 1782736659346,
+      "contentHash": "3d9334c68fa2085d325f4bb9637e340f",
       "sourceName": "contracts/FidesBridgeReceiver.sol",
       "solcConfig": {
         "version": "0.8.26",
@@ -4148,8 +4148,8 @@
       ]
     },
     "/root/.openclaw/workspace/fidesorigin-demo/apps/contracts/contracts/FidesOriginTimelock.sol": {
-      "lastModificationDate": 1782718153061,
-      "contentHash": "453b954a8350a91e838f5188bac356fa",
+      "lastModificationDate": 1782736596148,
+      "contentHash": "17580190b2b15494ea827a3e90457f51",
       "sourceName": "contracts/FidesOriginTimelock.sol",
       "solcConfig": {
         "version": "0.8.26",

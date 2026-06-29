@@ -116,7 +116,7 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
     function _messageHash(bytes32 leaf, uint256 nonce) internal view returns (bytes32) {
         return MessageHashUtils.toEthSignedMessageHash(
             keccak256(
-                abi.encodePacked(
+                abi.encode(
                     "MerkleRiskRegistry v",
                     VERSION,
                     leaf,

@@ -186,6 +186,10 @@ export const useRulesStore = create<RulesState & RulesActions>()(
                   typeof r.name === "string" &&
                   typeof r.enabled === "boolean" &&
                   typeof r.threshold === "number" &&
+                  r.threshold >= 0 &&
+                  r.threshold <= 100 &&
+                  Array.isArray(r.conditions) &&
+                  r.conditions.every((c: any) => typeof c === "string") &&
                   validActions.includes(r.action)
               );
               if (validRules.length > 0) {

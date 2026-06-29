@@ -49,6 +49,7 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
         uint256 timestamp;
         bool fulfilled;
         bool success;
+        bool deferred;
         bytes result;
         bytes error;
     }
@@ -220,6 +221,7 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
     event FulfillmentDeferred(bytes32 indexed requestId);
     event SmartContractWhitelisted(address indexed contractAddr, bool whitelisted);
     event OwnershipRolesSynced(address indexed previousOwner, address indexed newOwner);
+    event QueueDropped(address indexed account, uint256 timestamp);
 
     // ============ Errors ============
 
@@ -307,12 +309,6 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
     }
 
     // ============ Ownership Sync (H-3) ============
-
-    /**
-     * @notice H-3 修复: 接受所有权并同时同步 AccessControl 角色
-     * @dev ConfirmedOwnerWithProposal.acceptOwnership() 不是 virtual，无法被 override。
-     *      因此提供独立函数 acceptOwnershipWithRoleSync()，由新 owner 候选人在
-     *      transferOwnership 后调用，内部会调用父合约 acceptOwnership() 并完成角色同步。
 
     /**
      * @notice 独立角色同步函数（若已通过标准 acceptOwnership 完成所有权转移，
@@ -553,7 +549,8 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
             emit RiskProfileUpdated(bytes32(0), upd.account, uint8(upd.score), upd.tier, upd.isSanctioned);
         }
 
-        // 从队列中移除已处理项
+        // GAS-03: Shift remaining elements. For large queues, consider using a mapping-based circular buffer.
+        // Current implementation is O(n) per batch, acceptable for batchSize <= 10.
         for (uint256 i = 0; i < pendingRiskQueue.length - count; i++) {
             pendingRiskQueue[i] = pendingRiskQueue[i + count];
         }
@@ -631,6 +628,7 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
             timestamp: block.timestamp,
             fulfilled: false,
             success: false,
+            deferred: false,
             result: "",
             error: ""
         });
@@ -658,19 +656,27 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
         if (info.requester == address(0)) revert RequestNotFound();
         if (info.fulfilled) revert AlreadyFulfilled();
 
-        info.fulfilled = true;
-        info.success = err.length == 0;
-        info.result = response;
-        info.error = err;
-
-        // M-3: 暂停期间不处理，但仍标记为 fulfilled 避免卡死
+        // M-05 FIX: 暂停期间仍标记 fulfilled=true，使用 deferred 标记供后续手动处理
+        // Chainlink 不会对同一 requestId 重发回调，fulfilled=false 会导致请求永久丢失
         if (!paused() && err.length == 0 && response.length > 0) {
+            info.fulfilled = true;
+            info.success = true;
+            info.result = response;
+            info.error = err;
             _processRiskResponse(info.requestType, response, info.requester);
             emit RiskUpdateFulfilled(requestId, true, block.timestamp);
         } else if (paused()) {
-            info.fulfilled = false; // 允许后续手动重新处理
+            // Mark as fulfilled but deferred — result stored for later processing
+            info.fulfilled = true;
+            info.deferred = true;
+            info.result = response;
+            info.error = err;
             emit FulfillmentDeferred(requestId);
         } else {
+            info.fulfilled = true;
+            info.success = err.length == 0;
+            info.result = response;
+            info.error = err;
             emit RiskUpdateFulfilled(requestId, false, block.timestamp);
         }
     }
@@ -717,6 +723,9 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable 
                             tags: new bytes32[](0),
                             queuedAt: block.timestamp
                         }));
+                    } else {
+                        // L-08 FIX: Emit event when address is dropped due to full queue
+                        emit QueueDropped(sanctionedAddrs[i], block.timestamp);
                     }
                 }
             }

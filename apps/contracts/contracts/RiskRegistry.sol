@@ -603,7 +603,7 @@ contract RiskRegistry is
      */
     function getRiskTier(address addr) external view returns (RiskTier) {
         if (riskProfiles[addr].sanctioned) {
-            return RiskTier.HIGH;
+            return RiskTier.CRITICAL;
         }
         return RiskTier(riskProfiles[addr].riskTier);
     }

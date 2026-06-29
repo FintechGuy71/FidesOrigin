@@ -1,12 +1,17 @@
 const { ethers } = require("hardhat");
 
-const PROXY = proxyAddress;
+const PROXY = process.env.PROXY_ADDRESS;
 if (!PROXY) {
   console.error('❌ PROXY_ADDRESS env var required');
   console.error('   Example: PROXY_ADDRESS=0x... npx hardhat run scripts/upgrade-proxy.js --network sepolia');
   process.exit(1);
 }
-const V2_IMPL = v2Impl ;
+const V2_IMPL = process.env.V2_IMPL;
+if (!V2_IMPL) {
+  console.error('❌ V2_IMPL env var required');
+  console.error('   Example: V2_IMPL=0x... npx hardhat run scripts/upgrade-proxy.js --network sepolia');
+  process.exit(1);
+}
 
 // ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
 // Production deployments MUST use a TimelockController with a two-phase process.

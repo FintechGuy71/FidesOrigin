@@ -277,14 +277,30 @@ export function validateAddress(address: string): string {
  */
 const KNOWN_CHAIN_IDS = new Set<number>([
   // Mainnets
-  1, 10, 56, 137, 42161, 43114, 8453, 7777777, 324, 59144, 5000, 42220,
+  1, 10, 25, 56, 137, 250, 42161, 43114, 8453, 7777777, 324, 59144, 5000, 42220, 33139,
   // Testnets
   5, 11155111, 80001, 421613, 84532, 17000, 1440002,
 ]);
 
+// ─── Chain Name → Chain ID Mapping (C-02 fix) ──────────────────────────────
+
+const CHAIN_NAME_TO_ID: Record<string, number> = {
+  ethereum: 1,
+  polygon: 137,
+  bsc: 56,
+  arbitrum: 42161,
+  optimism: 10,
+  base: 8453,
+};
+
 export function isValidChainId(chainId: number | string): boolean {
   let id: number;
   if (typeof chainId === "string") {
+    // Check known chain names first
+    const lower = chainId.toLowerCase();
+    if (CHAIN_NAME_TO_ID[lower] !== undefined) {
+      return CHAIN_NAME_TO_ID[lower] > 0;
+    }
     // 仅允许纯数字字符串
     if (!/^\d+$/.test(chainId)) return false;
     id = Number(chainId);
@@ -306,7 +322,14 @@ export function validateChainId(chainId: number | string): number {
   if (!isValidChainId(chainId)) {
     throw new FidesOriginError("Invalid chain ID", "INVALID_CHAIN_ID");
   }
-  return typeof chainId === "string" ? Number(chainId) : chainId;
+  if (typeof chainId === "string") {
+    const lower = chainId.toLowerCase();
+    if (CHAIN_NAME_TO_ID[lower] !== undefined) {
+      return CHAIN_NAME_TO_ID[lower];
+    }
+    return Number(chainId);
+  }
+  return chainId;
 }
 
 export function isValidAmount(amount: string): boolean {
@@ -350,7 +373,7 @@ export class FidesOriginClient {
       ...config.retryConfig,
     };
     this.wsUrl = this.baseUrl.replace(/^https/i, "wss").replace(/^http/i, "ws");
-    this.timeoutMs = config.timeoutMs ?? 15000;
+    this.timeoutMs = config.timeoutMs ?? config.timeout ?? 30000;
     this.allowBrowserUsage = config.allowBrowserUsage === true;
 
     // [H-01 修复] 浏览器/Worker 环境下，禁止使用服务端 Secret API Key（除非显式声明）

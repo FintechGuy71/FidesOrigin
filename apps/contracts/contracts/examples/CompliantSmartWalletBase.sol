@@ -357,18 +357,13 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
         availableBalances[token] -= amount;
         _recordSpending(0, token, amount);
 
-        // [3] 再转账
-        (bool success, ) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, amount));
-        if (!success) {
-            // 回滚本地记账
-            availableBalances[token] += amount;
-            _refundSpending(0, token, amount);
-            revert ContractCallFailed();
-        }
+        // [3] 再转账 (M-06 FIX: use SafeERC20 instead of raw call)
+        IERC20(token).safeTransfer(to, amount);
+        // safeTransfer reverts on failure, no need to check return value
 
         // [4] 合规后置回调
         if (complianceEnabled) {
-            _postComplianceCheck(owner, op, success);
+            _postComplianceCheck(owner, op, true);
         }
 
         uint256 nonce = operationNonce++;
@@ -377,10 +372,10 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
             IWalletCompliance.OperationType.TOKEN_TRANSFER,
             to,
             amount,
-            success
+            true
         );
 
-        return success;
+        return true;
     }
 
     /**
@@ -534,16 +529,16 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
     ) internal returns (bytes memory) {
         _enforcePolicy(op);
 
-        _recordSpending(op.value, op.token, op.tokenAmount);
-
+        // M-07 FIX: Check balance BEFORE recording spending (check-effect-interact)
         if (op.token != address(0) && op.tokenAmount > 0) {
             _syncAvailableBalance(op.token);
             if (availableBalances[op.token] < op.tokenAmount) {
-                _refundSpending(op.value, op.token, op.tokenAmount);
                 revert InsufficientAvailableBalance();
             }
             availableBalances[op.token] -= op.tokenAmount;
         }
+
+        _recordSpending(op.value, op.token, op.tokenAmount);
 
         (bool success, bytes memory returnData) = op.target.call{value: op.value}(op.data);
         if (!success) {
@@ -915,8 +910,11 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
         
         address target = msg.sender;
         
+        // M-08 FIX: Limit forwarded gas to prevent gas-griefing attacks
+        uint256 _gasLimit = gasleft() > 100000 ? 100000 : gasleft();
+        
         // 使用普通 call 而非 delegatecall，防止被攻击协议覆盖 storage
-        (bool success, bytes memory returnData) = target.call{value: msg.value}(msg.data);
+        (bool success, bytes memory returnData) = target.call{value: msg.value, gas: _gasLimit}(msg.data);
         if (!success) {
             assembly {
                 revert(add(returnData, 0x20), mload(returnData))

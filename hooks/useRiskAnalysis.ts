@@ -93,7 +93,7 @@ async function fetchSubgraphRiskData(address: string, signal?: AbortSignal): Pro
     const response = await apiPost(url, {
       query,
       variables: { address: address.toLowerCase() },
-    }, { signal });
+    }, { requireSameOrigin: false, signal });
     const json = await response.json();
     if (json.errors || !json.data?.riskProfile) return null;
 

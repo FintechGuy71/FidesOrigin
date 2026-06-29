@@ -607,8 +607,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         (uint256 toScore_, , , uint8 toTier_, , ,,) = riskRegistry.getProfile(to);
         RiskRegistry.RiskTier rawTier = uint8(fromTier_) > uint8(toTier_) ? RiskRegistry.RiskTier(fromTier_) : RiskRegistry.RiskTier(toTier_);
 
-        // getRiskScore 不存在，由 getRiskLevel 推导代表性评分
-        riskScore = _tierToRiskScore(rawTier);
+        // M-01 FIX: Use actual riskScore from RiskRegistry instead of tier-derived approximation
+        riskScore = uint8(fromScore_) > uint8(toScore_) ? fromScore_ : toScore_;
 
         // M-05: 直接 cast — 两枚举底屋值一致
         tier = IAssetCompliance.RiskTier(uint8(rawTier));
@@ -750,5 +750,5 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     /**
      * @dev 留空以预留存储槽，便于未来存储布局扩展（I-03）
      */
-    uint256[40] private __gap;
+    uint256[50] private __gap;
 }

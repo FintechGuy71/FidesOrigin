@@ -177,7 +177,7 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
     redisUrl: getEnv('REDIS_URL', 'redis://localhost:6379'),
     lockPrefix: getEnv('CLUSTER_LOCK_PREFIX', 'fidesorigin:lock'),
     lockTtl: getEnvInt('CLUSTER_LOCK_TTL', 60000),
-    instanceId: getEnv('INSTANCE_ID', `instance-${Date.now()}`),
+    instanceId: getEnv('INSTANCE_ID', `instance-${require('os').hostname()}-${process.pid}`),
     heartbeatInterval: getEnvInt('CLUSTER_HEARTBEAT_INTERVAL', 10000),
   },
 

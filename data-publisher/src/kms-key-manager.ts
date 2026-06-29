@@ -41,8 +41,18 @@ class KMSAbstractSigner extends AbstractSigner {
   }
 
   async signTransaction(tx: any): Promise<string> {
-    const unsignedHash = ethers.Transaction.from(tx).unsignedHash;
-    return this.signFn(unsignedHash);
+    const populated = await this.populateTransaction(tx);
+    const txObj = ethers.Transaction.from(populated);
+    const unsignedHash = txObj.unsignedHash;
+    const flatSig = await this.signFn(unsignedHash);
+    // flatSig is 0x{r:64hex}{s:64hex}{v:2hex}
+    const sig = ethers.Signature.from({
+      r: flatSig.slice(0, 66),
+      s: '0x' + flatSig.slice(66, 130),
+      v: parseInt(flatSig.slice(130, 132), 16),
+    });
+    txObj.signature = sig;
+    return txObj.serialized;
   }
 
   async signMessage(message: string | Uint8Array): Promise<string> {

@@ -293,9 +293,9 @@
               "type": "uint256"
             },
             {
-              "internalType": "bytes32[]",
+              "internalType": "address[]",
               "name": "blockedTokens",
-              "type": "bytes32[]"
+              "type": "address[]"
             }
           ],
           "internalType": "struct IComplianceEngine.IssuerPolicy",

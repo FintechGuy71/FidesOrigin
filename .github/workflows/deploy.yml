@@ -3,8 +3,9 @@ name: Deploy to Vercel
 on:
   push:
     branches: [main, master]
-  pull_request:
-    branches: [main, master]
+  # [High Fix] PR should NOT trigger production deploy — remove pull_request trigger
+  # pull_request:
+  #   branches: [main, master]
 
 jobs:
   deploy:

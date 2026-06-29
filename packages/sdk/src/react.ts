@@ -65,6 +65,28 @@ function isOptionsEqual(a: ClientOptions, b: ClientOptions): boolean {
  * return <RiskScore risk={data} />;
  * ```
  */
+const CHAIN_TO_CHAIN_ID: Record<Chain, number> = {
+  ethereum: 1,
+  polygon: 137,
+  bsc: 56,
+  arbitrum: 42161,
+  optimism: 10,
+  base: 8453,
+  bitcoin: 0,   // Not EVM — will throw
+  solana: 0,    // Not EVM — will throw
+};
+
+function resolveChainId(chain: Chain): number {
+  const id = CHAIN_TO_CHAIN_ID[chain];
+  if (id === 0) {
+    throw new FidesOriginError(
+      `Chain '${chain}' is not supported by the EVM risk check API`,
+      'INVALID_CHAIN_ID'
+    );
+  }
+  return id;
+}
+
 export function useRiskCheck(options: ClientOptions = {}): UseRiskCheckResult {
   const clientRef = useRef<FidesOriginClient | null>(null);
   const optionsRef = useRef(options);
@@ -92,7 +114,7 @@ export function useRiskCheck(options: ClientOptions = {}): UseRiskCheckResult {
     queryRef.current = { address, chain };
 
     try {
-      const result = await clientRef.current!.checkRisk({ address, chainId: chain });
+      const result = await clientRef.current!.checkRisk({ address, chainId: resolveChainId(chain) });
       // [High Fix] Discard stale responses from earlier requests
       if (requestId !== requestIdRef.current) return;
       setState({ data: result, loading: false, error: null });
@@ -188,11 +210,16 @@ export function useBatchRiskCheck(options: ClientOptions = {}): UseBatchRiskChec
     }
   }, [options]);
 
+  const requestIdRef = useRef(0);
+
   const check = useCallback(async (addresses: string[], chainId: string | number) => {
+    const requestId = ++requestIdRef.current;
     setState((prev) => ({ ...prev, loading: true, error: null, errors: [] }));
 
     try {
       const result = await clientRef.current!.batchCheckRisk({ addresses, chainId });
+      // [High Fix] Discard stale responses from earlier requests
+      if (requestId !== requestIdRef.current) return;
       setState({
         data: result.results.map((r: any) => ({
           address: r.address || '',
@@ -211,6 +238,7 @@ export function useBatchRiskCheck(options: ClientOptions = {}): UseBatchRiskChec
         errors: (result.errors || []).map((e: any) => ({ address: e.address || '', error: e.error || '' })),
       });
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       const error = err instanceof FidesOriginError
         ? err
         : new FidesOriginError(
@@ -273,13 +301,19 @@ export function useComplianceCheck(options: ClientOptions = {}): UseComplianceCh
     }
   }, [options]);
 
+  const requestIdRef = useRef(0);
+
   const check = useCallback(async (address: string, chain: Chain) => {
+    const requestId = ++requestIdRef.current;
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const result = await clientRef.current!.checkRisk({ address, chainId: chain });
+      const result = await clientRef.current!.checkRisk({ address, chainId: resolveChainId(chain) });
+      // [High Fix] Discard stale responses from earlier requests
+      if (requestId !== requestIdRef.current) return;
       setState({ data: result, loading: false, error: null });
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       const error = err instanceof FidesOriginError
         ? err
         : new FidesOriginError(

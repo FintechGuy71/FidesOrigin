@@ -15,9 +15,10 @@ services:
     environment:
       - NODE_ENV=development
       - REDIS_URL=redis://redis:6379
-    volumes:
-      - ./data-publisher/logs:/app/logs
-      - ./data-publisher/data:/app/data
+    # [P1-fix] Production: Do NOT mount host source code — build image with code baked in
+    # volumes:
+    #   - ./data-publisher/logs:/app/logs
+    #   - ./data-publisher/data:/app/data
     depends_on:
       redis:
         condition: service_healthy

@@ -55,17 +55,17 @@ describe('FidesOriginClient', () => {
         json: () => Promise.resolve(mockResponse),
       } as any);
 
-      const result = await client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' });
+      const result = await client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 });
       expect(result.address).toBe('0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee');
       expect(result.overallScore).toBe(75);
     });
 
     it('should reject invalid ethereum address', async () => {
-      await expect(client.checkRisk({ address: 'invalid', chainId: 'ethereum' })).rejects.toThrow(FidesOriginError);
+      await expect(client.checkRisk({ address: 'invalid', chainId: 1 })).rejects.toThrow(FidesOriginError);
     });
 
     it('should reject empty address', async () => {
-      await expect(client.checkRisk({ address: '', chainId: 'ethereum' })).rejects.toThrow(FidesOriginError);
+      await expect(client.checkRisk({ address: '', chainId: 1 })).rejects.toThrow(FidesOriginError);
     });
   });
 
@@ -79,7 +79,7 @@ describe('FidesOriginClient', () => {
       } as any);
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('Invalid parameters');
     });
 
@@ -92,7 +92,7 @@ describe('FidesOriginClient', () => {
       } as any);
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('Invalid API key');
     });
 
@@ -105,7 +105,7 @@ describe('FidesOriginClient', () => {
       } as any);
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('Address not found');
     });
 
@@ -118,7 +118,7 @@ describe('FidesOriginClient', () => {
       } as any);
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('Server error');
     });
 
@@ -131,7 +131,7 @@ describe('FidesOriginClient', () => {
       } as any);
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('HTTP 502: Bad Gateway');
     });
 
@@ -139,7 +139,7 @@ describe('FidesOriginClient', () => {
       mockFetch.mockRejectedValueOnce(new TypeError('fetch failed'));
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('Network error');
     });
 
@@ -147,7 +147,7 @@ describe('FidesOriginClient', () => {
       mockFetch.mockRejectedValueOnce(new DOMException('The operation was aborted', 'AbortError'));
 
       await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 'ethereum' })
+        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
       ).rejects.toThrow('Request timed out');
     });
   });
@@ -178,7 +178,7 @@ describe('FidesOriginClient', () => {
         json: () => Promise.resolve(mockResponse),
       } as any);
 
-      const result = await client.batchCheckRisk({ addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee'], chainId: 'ethereum' });
+      const result = await client.batchCheckRisk({ addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee'], chainId: 1 });
       expect(result.results).toHaveLength(1);
     });
   });

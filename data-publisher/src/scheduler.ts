@@ -103,6 +103,14 @@ export class JobScheduler {
     };
 
     this.jobs.set(jobId, job);
+    // [Fix] Prevent unbounded memory growth: keep only last 100 jobs
+    const jobKeys = Array.from(this.jobs.keys());
+    if (jobKeys.length > 100) {
+      const toRemove = jobKeys.slice(0, jobKeys.length - 100);
+      for (const key of toRemove) {
+        this.jobs.delete(key);
+      }
+    }
 
     // Try to acquire distributed lock (if cluster mode)
     if (this.cluster) {

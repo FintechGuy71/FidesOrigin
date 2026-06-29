@@ -49,7 +49,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     login: (user) =>
       set((state) => {
         // [Fix] Validate user structure before accepting
-        if (!user || typeof user !== 'object' || typeof user.address !== 'string' || !user.role) {
+        if (!user || typeof user !== 'object' || typeof user.address !== 'string' || !user.role || typeof user.id !== 'string') {
           state.error = 'Invalid user data';
           return;
         }

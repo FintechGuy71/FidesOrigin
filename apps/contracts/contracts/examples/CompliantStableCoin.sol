@@ -102,7 +102,7 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
             blockMixer: true,
             requireDestinationKYC: false,
             cooldownPeriod: 0,
-            blockedTokens: new bytes32[](0)
+            blockedTokens: new address[](0)
         });
     }
     
@@ -308,6 +308,12 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
 
         if (policy.requireDestinationKYC && !kycVerified[to]) {
             return (false, IAssetCompliance.Decision.BLOCK, "Not KYC verified");
+        }
+
+        // M-10 FIX: Check dailySpent limit for simulation consistency
+        uint256 currentDay = block.timestamp / 1 days;
+        if (dailySpent[from][currentDay] + amount > policy.dailyLimit) {
+            return (false, IAssetCompliance.Decision.BLOCK, "Exceeds daily limit");
         }
         
         if (address(complianceEngine) == address(0)) {

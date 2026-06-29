@@ -145,7 +145,7 @@ export function formatAddress(
  * @param chain - The blockchain network
  * @returns Normalized address
  */
-export function normalizeAddress(address: string, chain: Chain): string {
+export function normalizeAddress(address: string, chain: Chain = 'ethereum'): string {
   const trimmed = address.trim();
 
   // EVM chains: lowercase

@@ -29,3 +29,6 @@ k8s/secret.yaml
 
 # Data sync env
 data-sync/.env
+
+# Wallet files (contain sensitive mnemonic phrases)
+.wallet-*.json

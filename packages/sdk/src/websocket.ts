@@ -6,6 +6,7 @@
 import type { TransactionEvent, WebSocketMessage } from '@fidesorigin/shared';
 import { WEBSOCKET_CONFIG } from '@fidesorigin/shared';
 import { FidesOriginError } from './error';
+import type { WebSocketEventType } from './types';
 
 // [P1 Fix] Lazy-load WebSocket implementation for SSR compatibility
 let _WebSocketImpl: typeof WebSocket | null = null;
@@ -118,7 +119,6 @@ export class FidesOriginWebSocket {
 
       this.isManualClose = false;
 
-      // [High Fix] Send auth after connection instead of exposing apiKey in URL
       // [High Fix] Force wss:// to prevent plaintext API Key transmission
       const connectUrl = this.options.url.replace(/^ws:/, 'wss:');
       if (!connectUrl.startsWith('wss:')) {
@@ -134,7 +134,19 @@ export class FidesOriginWebSocket {
 
       this.ws = new (getWebSocketImpl())(connectUrl) as WebSocket;
 
+      // [High Fix] Connection timeout to prevent Promise hanging
+      const connectionTimeout = setTimeout(() => {
+        const err = new FidesOriginError(
+          'WebSocket connection timeout (10s)',
+          'TIMEOUT'
+        );
+        this.errorCallbacks.forEach((cb) => cb(err));
+        this.ws?.close();
+        reject(err);
+      }, 10000);
+
       this.ws.onopen = () => {
+        clearTimeout(connectionTimeout);
         if (this.options.debug) {
           console.log('[FidesOriginWebSocket] Connected');
         }
@@ -157,6 +169,7 @@ export class FidesOriginWebSocket {
       };
 
       this.ws.onerror = (error) => {
+        clearTimeout(connectionTimeout);
         const err = new FidesOriginError(
           'WebSocket connection error',
           'NETWORK_ERROR',
@@ -167,6 +180,7 @@ export class FidesOriginWebSocket {
       };
 
       this.ws.onclose = () => {
+        clearTimeout(connectionTimeout);
         this.stopHeartbeat();
         this.disconnectCallbacks.forEach((cb) => cb());
 
@@ -197,6 +211,20 @@ export class FidesOriginWebSocket {
     if (this.options.debug) {
       console.log('[FidesOriginWebSocket] Disconnected');
     }
+  }
+
+  /**
+   * Subscribe to server-side event types
+   */
+  subscribe(eventTypes: WebSocketEventType[]): void {
+    this.send('subscribe', { eventTypes });
+  }
+
+  /**
+   * Unsubscribe from server-side event types
+   */
+  unsubscribe(eventTypes: WebSocketEventType[]): void {
+    this.send('unsubscribe', { eventTypes });
   }
 
   /**

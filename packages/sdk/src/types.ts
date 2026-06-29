@@ -20,7 +20,7 @@ export type RuleStatus = 'active' | 'inactive' | 'draft';
 export type RuleOperator = 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains' | 'in' | 'not_in';
 
 /** WebSocket event types */
-export type WebSocketEventType = 'risk.update' | 'alert.new' | 'rule.match' | 'connection.established' | 'connection.closed' | 'error';
+export type WebSocketEventType = 'transaction' | 'risk_alert' | 'compliance_alert' | 'connect' | 'disconnect' | 'error';
 
 /** SDK Client configuration */
 export interface FidesOriginConfig {
@@ -89,6 +89,8 @@ export interface RiskScore {
   level: RiskLevel;
   /** Confidence level (0-1) */
   confidence: number;
+  /** Risk category (e.g., 'funds', 'behavior', 'compliance') */
+  category?: string;
 }
 
 /** Complete address risk assessment */
@@ -496,9 +498,9 @@ export interface FidesOriginClient {
 /** FidesOriginWebSocket interface */
 export interface FidesOriginWebSocket {
   /** WebSocket connection state */
-  readonly isConnected: boolean;
+  isConnected(): boolean;
   /** Connect to WebSocket */
-  connect(): void;
+  connect(): Promise<void>;
   /** Disconnect from WebSocket */
   disconnect(): void;
   /** Subscribe to events */

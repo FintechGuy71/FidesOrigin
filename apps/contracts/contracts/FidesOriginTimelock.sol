@@ -56,6 +56,9 @@ contract FidesOriginTimelock is TimelockController {
     /**
      * @notice 启用紧急模式标记
      * @dev 紧急模式下，建议通过标准 Timelock 流程更新延迟期
+     * @dev L-06 NOTE: Emergency mode toggle has no timelock. Production should
+     *      require multi-sig for emergencyOperators or wrap this contract behind
+     *      a governance timelock.
      */
     function enableEmergencyMode() external {
         if (!emergencyOperators[msg.sender]) revert NotEmergencyOperator(msg.sender);
@@ -100,7 +103,13 @@ contract FidesOriginTimelock is TimelockController {
     // ============ Override Functions ============
     
     /**
-     * @notice [H-5] 修复: 紧急模式下缩短最小延迟期
+     * @notice [M-04 FIX] 紧急模式下返回 EMERGENCY_DELAY
+     * @dev ⚠️ 注意：此 override 会影响已 schedule 操作的执行时间检查。
+     *      TimelockController.execute() 内部检查 block.timestamp >= getMinDelay() + when。
+     *      紧急模式缩短延迟后，已 schedule 的操作可能提前执行。
+     *      **安全建议**：仅在需要紧急执行新操作时短暂启用紧急模式，
+     *      执行完毕后立即关闭。不要在非紧急场景下长时间保持紧急模式。
+     *      生产环境建议使用多签 + 紧急多签双重确认。
      */
     function getMinDelay() public view virtual override returns (uint256) {
         return emergencyMode ? EMERGENCY_DELAY : MIN_DELAY;

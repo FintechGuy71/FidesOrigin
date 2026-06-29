@@ -25,6 +25,7 @@ async function deployFidesOriginFixture() {
   await policyEngine.waitForDeployment();
 
   // 3. Deploy RiskOracle (mock router address)
+  // L-14 NOTE: mockRouter is a random address; real Chainlink tests need MockChainlinkRouter
   const mockRouter = ethers.Wallet.createRandom().address;
   // 使用动态生成的 donId 和 subscriptionId，避免硬编码测试值
   const donId = ethers.encodeBytes32String('test-don-' + Math.floor(Math.random() * 10000));
@@ -96,7 +97,7 @@ async function deployFidesOriginFixture() {
   await complianceEngine.connect(owner).grantRole(CE_OPERATOR_ROLE, owner.address);
   await complianceEngine.connect(owner).grantRole(CE_OPERATOR_ROLE, operator.address);
 
-  // 8. Deploy example contracts
+  // 8. Deploy CompliantStableCoin
   const CompliantStableCoin = await ethers.getContractFactory('CompliantStableCoin');
   const stableCoin = await CompliantStableCoin.deploy(
     'CompliantUSD',
@@ -105,12 +106,12 @@ async function deployFidesOriginFixture() {
   );
   await stableCoin.waitForDeployment();
 
-  // 8. Deploy QuarantineVault (mock)
+  // 9. Deploy QuarantineVault
   const QuarantineVault = await ethers.getContractFactory('QuarantineVault');
   const quarantineVault = await QuarantineVault.deploy();
   await quarantineVault.waitForDeployment();
 
-  // 8a. Deploy FidesCompliance (NOT upgradeable - has constructor with args)
+  // 10. Deploy FidesCompliance (NOT upgradeable - has constructor with args)
   const FidesCompliance = await ethers.getContractFactory('FidesCompliance');
   const fidesCompliance = await FidesCompliance.deploy(
     await complianceEngine.getAddress(),
@@ -120,6 +121,10 @@ async function deployFidesOriginFixture() {
   );
   await fidesCompliance.waitForDeployment();
 
+  // 10-1. C-01 FIX: Grant FidesCompliance the OPERATOR_ROLE on ComplianceEngine
+  await complianceEngine.connect(owner).grantRole(CE_OPERATOR_ROLE, await fidesCompliance.getAddress());
+
+  // 11. Deploy CompliantSmartWallet
   const CompliantSmartWallet = await ethers.getContractFactory('CompliantSmartWallet');
   const smartWallet = await CompliantSmartWallet.deploy(
     walletOwner.address,
@@ -130,54 +135,17 @@ async function deployFidesOriginFixture() {
   );
   await smartWallet.waitForDeployment();
 
-  // 8b. Set default wallet policy for CompliantSmartWallet in PolicyEngine
-  // NOTE: PolicyEngine v1.2.0 does not have setWalletPolicy/setIssuerPolicy functions.
-  // These were part of an earlier design. Tests that depend on these should be updated.
-  // For now, we skip these calls and rely on default policy behavior.
-  
-  /*
-  const defaultWalletPolicy = {
-    maxTxValue: ethers.parseEther('100'),
-    maxTokenTxAmount: ethers.parseEther('1000000'),
-    dailyEthLimit: ethers.parseEther('500'),
-    dailyTokenLimit: ethers.parseEther('5000000'),
-    blockContractCalls: false,
-    blockUnknownTokens: false,
-    requireWhitelist: false,
-    allowedDex: [],
-    blockedContracts: [],
-    whitelistedContracts: [],
-  };
-  await policyEngine.setWalletPolicy(await smartWallet.getAddress(), defaultWalletPolicy);
-  await policyEngine.setWalletPolicy(owner.address, defaultWalletPolicy);
-  
-  const issuerPolicy = {
-    maxTxAmount: ethers.parseEther('1000'),
-    dailyLimit: ethers.parseEther('5000'),
-    allowMediumRisk: false,
-    allowHighRisk: false,
-    blockMixer: true,
-    requireDestinationKYC: false,
-    cooldownPeriod: 0,
-    blockedTokens: [],
-  };
-  await policyEngine.setIssuerPolicy(issuer.address, issuerPolicy);
-  await policyEngine.setIssuerPolicy(await stableCoin.getAddress(), issuerPolicy);
-  */
-
-  // 9. Deploy TestUSD (legacy)
+  // 12. Deploy TestUSD
   const TestUSD = await ethers.getContractFactory('TestUSD');
   const testUSD = await TestUSD.deploy();
   await testUSD.waitForDeployment();
 
-  // 10. (QuarantineVault already deployed at step 8)
-
-  // 10a. Grant QUARANTINE_ROLE to user1 for testing deposit
+  // 13. Grant QUARANTINE_ROLE
   const QUARANTINE_ROLE = await quarantineVault.QUARANTINE_ROLE();
   await quarantineVault.connect(owner).grantRole(QUARANTINE_ROLE, user1.address);
   await quarantineVault.connect(owner).grantRole(QUARANTINE_ROLE, user2.address);
 
-  // 11. Deploy FidesOriginTimelock
+  // 14. Deploy FidesOriginTimelock
   const minDelay = 2 * 24 * 60 * 60; // 2 days
   const proposers = [owner.address];
   const executors = [owner.address];

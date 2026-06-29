@@ -255,6 +255,8 @@ contract RiskRegistryV2 is
     /**
      * @notice 批量更新风险档案
      * @dev V2.3 fix H1: 添加 tags 参数，批量发布的地址也带上标签
+     * @dev L-04 NOTE: Batch updates intentionally skip MIN_UPDATE_INTERVAL for efficiency.
+     *      This is consistent with emergency sanction behavior.
      * @param accounts 目标地址数组
      * @param riskScores 风险评分数组
      * @param tiers 风险等级数组
@@ -335,6 +337,8 @@ contract RiskRegistryV2 is
         address[] calldata accounts,
         string calldata reason
     ) external onlyRole(ADMIN_ROLE) {
+        // L-03: Emergency sanctions intentionally bypass MIN_UPDATE_INTERVAL for immediate response.
+        // This is a design decision: sanctioned addresses must be flagged without delay.
         for (uint256 i = 0; i < accounts.length; i++) {
             if (accounts[i] == address(0)) continue;
 
@@ -421,6 +425,9 @@ contract RiskRegistryV2 is
     }
 
     function _updateTags(address account, bytes32[] calldata newTags) internal {
+        // GAS-02 NOTE: This function is O(n*m) where n = old tags, m = entityAddresses for each tag.
+        // For addresses with many tags, consider limiting tag count or using a different data structure.
+        // Current MAX_TAGS_PER_ADDRESS = 10 limits the blast radius.
         // H4 fix: clean entityAddresses for old tags before clearing
         for (uint256 i = 0; i < _addressTagList[account].length; i++) {
             bytes32 oldTag = _addressTagList[account][i];

@@ -267,13 +267,16 @@ export function useWebSocket(config: WebSocketConfig = {}) {
   }, [disconnect, connect]);
 
   // 组件挂载时自动连接，卸载时断开
-  // [Fix] Add connect to dependency array so config changes trigger reconnection
+  // [Fix] Use ref to avoid dependency loop from Zustand selector reference changes
+  const connectRef = useRef(connect);
+  connectRef.current = connect;
+
   useEffect(() => {
-    connect();
+    connectRef.current();
     return () => {
       disconnect();
     };
-  }, [connect]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     connect,

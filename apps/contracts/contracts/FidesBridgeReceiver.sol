@@ -27,6 +27,9 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     mapping(uint256 => mapping(address => bool)) public authorizedSenders;
 
     /// @notice 最后同步时间
+    /// @dev L-09 NOTE: This is set to block.timestamp (local chain) on sync, but compared
+    ///      against the source-chain `timestamp` param. Cross-chain block time drift may
+    ///      cause false positives in StaleUpdate checks. Consider adding tolerance.
     uint256 public lastSyncTime;
 
     /// @notice 最后同步的 Merkle Root

@@ -205,6 +205,8 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     
     /**
      * @notice 检查地址合规性
+     * @dev GAS-01 NOTE: Each call writes to checkHistory + counters. Consider batching
+     *      or moving statistics to off-chain indexing for high-throughput scenarios.
      * @param addr 目标地址
      * @return isCompliant 是否合规
      * @return riskScore 风险分数
@@ -413,6 +415,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
                 });
                 quarantineList.push(quarantineId);
                 quarantinedTransactions++;
+                
+                // L-01 FIX: Update lastTransferTime even for HOLD to prevent perpetual holding
+                lastTransferTime[from] = block.timestamp;
                 
                 decision = IComplianceEngine.Decision.HOLD;
                 reason = "Cooldown period active";

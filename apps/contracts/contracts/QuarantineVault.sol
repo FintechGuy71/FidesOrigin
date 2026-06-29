@@ -143,6 +143,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         _grantRole(AUDITOR_ROLE, msg.sender);
         _grantRole(RELEASE_ROLE, msg.sender);
         _grantRole(EMERGENCY_ROLE, msg.sender);
+        // L-05 NOTE: Deployer should renounce DEFAULT_ADMIN_ROLE after setup:
+        //   renounceRole(DEFAULT_ADMIN_ROLE, msg.sender)
+        //   Or grant DEFAULT_ADMIN to a Timelock/multisig first, then renounce.
     }
 
     // ============ External API (兼容层) ============

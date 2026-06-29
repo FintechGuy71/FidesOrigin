@@ -43,7 +43,7 @@ interface IComplianceEngine {
         bool blockMixer;               // 是否阻止混币器
         bool requireDestinationKYC;    // 是否要求收款方KYC
         uint256 cooldownPeriod;        // 冷却期(秒)
-        bytes32[] blockedTokens;       // 阻止的代币列表 [PolicyEngine-P1]
+        address[] blockedTokens;       // 阻止的代币列表 (M-11 FIX: bytes32[] → address[])
     }
     
     /// @notice 转账前合规检查 (view函数，不消耗gas)

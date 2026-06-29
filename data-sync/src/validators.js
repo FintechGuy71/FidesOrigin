@@ -28,8 +28,8 @@ function validateUrl(urlStr) {
   } catch (e) {
     throw new ValidationError(`无效的 URL: ${urlStr}`);
   }
-  if (!['https:', 'http:'].includes(parsed.protocol))
-    throw new ValidationError(`不允许的协议: ${parsed.protocol}`);
+  if (parsed.protocol !== 'https:')
+    throw new ValidationError(`仅允许 HTTPS 协议: ${parsed.protocol}`);
 
   const hostname = parsed.hostname.toLowerCase();
   const blocked = [

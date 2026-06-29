@@ -95,7 +95,7 @@ export class DataCollector {
     const response = await axios.get(config.endpoint, {
       timeout: config.timeout,
       responseType: 'text',
-      maxRedirects: 0, // Prevent SSRF
+      maxRedirects: 5, // Allow HTTPS upgrade redirects with limit
       validateStatus: (status) => status === 200,
     });
 
@@ -154,7 +154,7 @@ export class DataCollector {
     const response = await axios.get(`${config.endpoint}api/v1/risk`, {
       headers: { 'Authorization': `Bearer ${config.apiKey}` },
       timeout: config.timeout,
-      maxRedirects: 0,
+      maxRedirects: 5, // Allow HTTPS upgrade redirects with limit
       validateStatus: (status) => status === 200,
     });
 
@@ -194,7 +194,7 @@ export class DataCollector {
     const response = await axios.get(`${config.endpoint}entities/?schema=Person&limit=1000`, {
       headers,
       timeout: config.timeout,
-      maxRedirects: 0,
+      maxRedirects: 5, // Allow HTTPS upgrade redirects with limit
       validateStatus: (status) => status === 200,
     });
 

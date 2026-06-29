@@ -123,6 +123,11 @@ export class DataProcessor {
       logger.warn(`Invalid address format skipped: ${address}`);
       return null;
     }
+    // [Fix] Reject zero address
+    if (address === '0x0000000000000000000000000000000000000000') {
+      logger.warn(`Zero address skipped`);
+      return null;
+    }
 
     // Validate score
     let score = Math.min(100, Math.max(0, item.riskScore || 0));

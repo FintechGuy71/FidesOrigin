@@ -1,8 +1,26 @@
 const { ethers } = require("hardhat");
 
-const PROXY = proxyAddress ;
+const PROXY = process.env.PROXY_ADDRESS;
+if (!PROXY) {
+  console.error('❌ PROXY_ADDRESS env var required');
+  console.error('   Example: PROXY_ADDRESS=0x... npx hardhat run scripts/recovery-v220.js --network sepolia');
+  process.exit(1);
+}
+
+// ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
+// Production deployments MUST use a TimelockController with a two-phase process.
+// To bypass this check for testing/emergency, set BYPASS_TIMELOCK=true
+const BYPASS_TIMELOCK = process.env.BYPASS_TIMELOCK === 'true';
 
 async function main() {
+  if (!BYPASS_TIMELOCK) {
+    console.error("❌  SECURITY HALT: Direct upgrade bypasses Timelock protection.");
+    console.error("   Production: Use TimelockController.schedule() + execute()");
+    console.error("   Testing:     Set BYPASS_TIMELOCK=true to proceed");
+    process.exit(1);
+  }
+
+  console.warn("⚠️  BYPASSING TIMELOCK — direct upgradeToAndCall will be used");
   const [signer] = await ethers.getSigners();
   console.log('Recovery: deploying fresh V2.2.0 (no reinitializer needed)');
   console.log('Signer:', signer.address);
@@ -38,8 +56,12 @@ async function main() {
   console.log('VERSION raw:', result);
 
   // Test isSanctioned
-  const testAddr = testAddr ;
-  const data = '0x9948b18d000000000000000000000000' + testAddr.slice(2);
+  const TEST_ADDRESS = process.env.TEST_ADDRESS;
+  if (!TEST_ADDRESS) {
+    console.error('❌ TEST_ADDRESS env var required');
+    process.exit(1);
+  }
+  const data = '0x9948b18d000000000000000000000000' + TEST_ADDRESS.slice(2);
   const result2 = await ethers.provider.call({ to: PROXY, data });
   console.log('isSanctioned raw:', result2);
 }

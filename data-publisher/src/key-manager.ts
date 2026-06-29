@@ -96,7 +96,9 @@ class AWSKMSKeyManager implements KeyManager {
 
       // Override sign methods
       (wallet as any).signTransaction = async (tx: any) => {
-        const txBytes = ethers.Transaction.from(tx).unsignedHash;
+        const populated = await wallet.populateTransaction(tx);
+        const txObj = ethers.Transaction.from(populated);
+        const txBytes = txObj.unsignedHash;
         const signResponse = await client.send(new SignCommand({
           KeyId: this.keyId,
           Message: Buffer.from(txBytes.slice(2), 'hex'),
@@ -124,14 +126,10 @@ class AWSKMSKeyManager implements KeyManager {
         const rHex = '0x' + r.toString('hex').padStart(64, '0');
         const sNormHex = '0x' + sNormalized.toString(16).padStart(64, '0');
 
-        // Determine recovery id by trying both possibilities against derived address
-        // [P1-fix] Try canonical v values (27/28) first, then EIP-155 chain-specific values.
-        // For chainId=0 (legacy/non-EIP155), only 27/28 are valid.
         const network = await this.provider.getNetwork();
         const chainId = BigInt(network.chainId);
         let recId: bigint | null = null;
 
-        // Try canonical v values (27/28) — works for all chains including legacy
         for (const v of [27n, 28n]) {
           try {
             const recovered = ethers.recoverAddress(txBytes, { r: rHex, s: sNormHex, v });
@@ -144,7 +142,6 @@ class AWSKMSKeyManager implements KeyManager {
           }
         }
 
-        // If canonical values didn't match, try EIP-155 chain-specific values
         if (recId === null && chainId > 0n) {
           const baseV = chainId * 2n + 35n;
           for (let v = 0n; v <= 1n; v++) {
@@ -164,9 +161,14 @@ class AWSKMSKeyManager implements KeyManager {
           throw new Error('Unable to determine signature recovery ID — address mismatch');
         }
 
-        const signature = rHex + sNormHex.slice(2) + recId.toString(16).padStart(2, '0');
-
-        return signature;
+        const flatSig = rHex + sNormHex.slice(2) + recId.toString(16).padStart(2, '0');
+        const sig = ethers.Signature.from({
+          r: flatSig.slice(0, 66),
+          s: '0x' + flatSig.slice(66, 130),
+          v: parseInt(flatSig.slice(130, 132), 16),
+        });
+        txObj.signature = sig;
+        return txObj.serialized;
       };
 
       // Cache the signer for reuse
@@ -230,13 +232,14 @@ class AzureKeyVaultManager implements KeyManager {
 
       (wallet as any).getAddress = async () => address;
       (wallet as any).signTransaction = async (tx: any) => {
-        const txBytes = ethers.Transaction.from(tx).unsignedHash;
+        const populated = await wallet.populateTransaction(tx);
+        const txObj = ethers.Transaction.from(populated);
+        const txBytes = txObj.unsignedHash;
         const signResult = await cryptoClient.sign('ES256K', Buffer.from(txBytes.slice(2), 'hex'));
         
         const r = '0x' + Buffer.from(signResult.result).slice(0, 32).toString('hex');
         const s = '0x' + Buffer.from(signResult.result).slice(32).toString('hex');
 
-        // [P1-fix] Try canonical v values (27/28) first, then EIP-155 chain-specific values
         const network = await this.provider.getNetwork();
         const chainId = BigInt(network.chainId);
         let recId: bigint | null = null;
@@ -272,7 +275,14 @@ class AzureKeyVaultManager implements KeyManager {
           throw new Error('Azure Key Vault: unable to recover valid recovery id');
         }
 
-        return r + s.slice(2) + recId.toString(16).padStart(2, '0');
+        const flatSig = r + s.slice(2) + recId.toString(16).padStart(2, '0');
+        const sig = ethers.Signature.from({
+          r: flatSig.slice(0, 66),
+          s: '0x' + flatSig.slice(66, 130),
+          v: parseInt(flatSig.slice(130, 132), 16),
+        });
+        txObj.signature = sig;
+        return txObj.serialized;
       };
 
       // Cache the signer for reuse

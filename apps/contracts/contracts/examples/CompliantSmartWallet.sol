@@ -84,7 +84,7 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
         bytes calldata signature,
         uint256 deadline,
         bytes32 salt
-    ) external notEmergency returns (bytes memory) {
+    ) external notEmergency nonReentrant returns (bytes memory) {
         if (block.timestamp > deadline) revert SignatureExpired();
 
         // [H-01] 修复：加入 block.chainid 防止跨链重放
@@ -120,6 +120,17 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
             complianceEngine.preExecutionHook(owner, op);
         }
 
-        return _executeOperation(op);
+        bytes memory result = _executeOperation(op);
+
+        // M-09 FIX: Add post-execution hook for symmetric compliance lifecycle
+        if (complianceEnabled && address(complianceEngine) != address(0)) {
+            try complianceEngine.postExecutionHook(owner, op, true) {
+                // post-hook success, ignore
+            } catch {
+                // post-hook failure should not revert the execution
+            }
+        }
+
+        return result;
     }
 }

@@ -1,8 +1,26 @@
 const { ethers } = require("hardhat");
 
-const PROXY = proxyAddress ;
+const PROXY = process.env.PROXY_ADDRESS;
+if (!PROXY) {
+  console.error('❌ PROXY_ADDRESS env var required');
+  console.error('   Example: PROXY_ADDRESS=0x... npx hardhat run scripts/upgrade-v2.2.js --network sepolia');
+  process.exit(1);
+}
+
+// ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
+// Production deployments MUST use a TimelockController with a two-phase process.
+// To bypass this check for testing/emergency, set BYPASS_TIMELOCK=true
+const BYPASS_TIMELOCK = process.env.BYPASS_TIMELOCK === 'true';
 
 async function main() {
+  if (!BYPASS_TIMELOCK) {
+    console.error("❌  SECURITY HALT: Direct upgrade bypasses Timelock protection.");
+    console.error("   Production: Use TimelockController.schedule() + execute()");
+    console.error("   Testing:     Set BYPASS_TIMELOCK=true to proceed");
+    process.exit(1);
+  }
+
+  console.warn("⚠️  BYPASSING TIMELOCK — direct upgradeToAndCall will be used");
   const [signer] = await ethers.getSigners();
   console.log('Deploying V2.2.0...');
   console.log('Signer:', signer.address);
@@ -40,7 +58,13 @@ async function main() {
   console.log('totalProfiles:', (await v2.totalProfiles()).toString());
   console.log('totalHighRisk:', (await v2.totalHighRisk()).toString());
   console.log('totalSanctioned:', (await v2.totalSanctioned()).toString());
-  console.log('isSanctioned(OFAC):', await v2.isSanctioned(process.env.TEST_ADDRESS));
+
+  const TEST_ADDRESS = process.env.TEST_ADDRESS;
+  if (!TEST_ADDRESS) {
+    console.error('❌ TEST_ADDRESS env var required');
+    process.exit(1);
+  }
+  console.log('isSanctioned(OFAC):', await v2.isSanctioned(TEST_ADDRESS));
 
   // Test a ScamSniffer address too
   console.log('isSanctioned(Scam):', await v2.isSanctioned('0x101ce0cedd142f199c9ef61739ae59b6611a0fc0'));

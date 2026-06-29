@@ -23,20 +23,26 @@ const sensitiveKeys = ['privateKey', 'apiKey', 'secret', 'password', 'token', 'v
 function deepRedact(obj: any, seen = new WeakSet()): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj !== 'object') return obj;
-  if (seen.has(obj)) return obj; // circular reference guard
+  if (seen.has(obj)) return '[Circular]';
   seen.add(obj);
   
   if (Array.isArray(obj)) {
     return obj.map(item => deepRedact(item, seen));
   }
   
-  const redacted = { ...obj };
-  for (const key of Object.keys(redacted)) {
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj instanceof Error) return { message: obj.message, name: obj.name, stack: obj.stack ? '[STACK REDACTED]' : undefined };
+  if (obj instanceof Buffer || obj instanceof Uint8Array) return '[BINARY REDACTED]';
+  
+  const redacted: any = {};
+  for (const key of Object.keys(obj)) {
     const lowerKey = key.toLowerCase();
     if (sensitiveKeys.some(sk => lowerKey.includes(sk.toLowerCase()))) {
       redacted[key] = '***REDACTED***';
-    } else if (typeof redacted[key] === 'object' && redacted[key] !== null) {
-      redacted[key] = deepRedact(redacted[key], seen);
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      redacted[key] = deepRedact(obj[key], seen);
+    } else {
+      redacted[key] = obj[key];
     }
   }
   return redacted;

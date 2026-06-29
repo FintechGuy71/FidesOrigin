@@ -105,6 +105,7 @@ class QuarantineKeeper {
         this.provider = null;
         this.signer = null;
         this.fidesCompliance = null;
+        this.batchScanLock = false; // [High Fix] Concurrency lock for batch scanning
     }
 
     async init() {
@@ -375,21 +376,32 @@ class QuarantineKeeper {
      * 批量扫描模式（定时巡检）
      */
     async runBatchScan(walletAddresses, tokenAddresses) {
-        console.log(`\n🔍 Batch scan started (${walletAddresses.length} wallets, ${tokenAddresses.length} tokens)`);
-        
-        for (const walletAddress of walletAddresses) {
-            try {
-                const toQuarantine = await this.scanWallet(walletAddress, tokenAddresses);
-                
-                for (const item of toQuarantine) {
-                    await this.executeQuarantine(item.wallet, item.token, item.amount);
-                }
-            } catch (e) {
-                console.error(`❌ Error scanning ${walletAddress}:`, e.message);
-            }
+        // [High Fix] Prevent concurrent batch scans
+        if (this.batchScanLock) {
+            console.log('⏭️ Batch scan skipped: previous scan still running');
+            return;
         }
-        
-        console.log('✅ Batch scan complete\n');
+        this.batchScanLock = true;
+
+        try {
+            console.log(`\n🔍 Batch scan started (${walletAddresses.length} wallets, ${tokenAddresses.length} tokens)`);
+            
+            for (const walletAddress of walletAddresses) {
+                try {
+                    const toQuarantine = await this.scanWallet(walletAddress, tokenAddresses);
+                    
+                    for (const item of toQuarantine) {
+                        await this.executeQuarantine(item.wallet, item.token, item.amount);
+                    }
+                } catch (e) {
+                    console.error(`❌ Error scanning ${walletAddress}:`, e.message);
+                }
+            }
+            
+            console.log('✅ Batch scan complete\n');
+        } finally {
+            this.batchScanLock = false;
+        }
     }
 
     /**
