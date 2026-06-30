@@ -6,18 +6,30 @@ import type { NextRequest } from "next/server";
 /**
  * Content Security Policy (CSP) directives.
  *
+ * [HIGH Fix #3] Removed 'unsafe-eval' and 'unsafe-inline' from script-src.
+ * TODO: Generate a per-request nonce and add 'nonce-<value>' to script-src.
+ *   In Next.js, use the `headers()` API to generate nonces:
+ *   ```
+ *   import { headers } from 'next/headers';
+ *   const nonce = (await headers()).get('x-nonce') ?? '';
+ *   ```
+ * Until nonce-based CSP is fully implemented, 'strict-dynamic' is used to
+ * allow scripts loaded by already-trusted scripts.
+ * See: https://www.w3.org/TR/CSP3/#strict-dynamic-usage
+ *
  * Allows:
  * - Self-origin scripts, styles, and connections
  * - WebSocket connections (wss: and ws:)
  * - Images from self, data URIs, https, and blob
  * - Fonts from self and data URIs
  * - Inline styles (required by Tailwind / styled-components patterns)
- * - Unsafe eval (required by some bundler outputs; tighten in production)
  */
 const CSP_DIRECTIVES: Record<string, string[]> = {
   "default-src": ["'self'"],
-  "script-src": ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
-  "style-src": ["'self'", "'unsafe-inline'"],
+  // [HIGH Fix #3] Removed 'unsafe-eval' and 'unsafe-inline'.
+  // TODO: Replace with nonce-based CSP: `'nonce-${nonce}' 'strict-dynamic'`
+  "script-src": ["'self'", "'strict-dynamic'"],
+  "style-src": ["'self'", "'unsafe-inline'"], // Tailwind requires inline styles
   "img-src": ["'self'", "data:", "https:", "blob:"],
   "font-src": ["'self'", "data:"],
   "connect-src": [
@@ -55,8 +67,16 @@ interface CORSConfig {
   allowCredentials: boolean;
 }
 
+// [Medium Fix #8] Replaced wildcard "*" with explicit production origins.
+// Set CORS_ALLOWED_ORIGINS env var to override (comma-separated).
 const DEFAULT_CORS_CONFIG: CORSConfig = {
-  allowedOrigins: ["*"], // Restrict in production via env
+  allowedOrigins: [
+    "https://fidesorigin.com",
+    "https://www.fidesorigin.com",
+    "https://admin.fidesorigin.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+  ],
   allowedMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-API-Key", "X-Request-ID"],
   maxAge: 86400,

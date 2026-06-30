@@ -115,6 +115,12 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
     container.get_risk_engine = mock_get_risk_engine
     
     # 覆盖 API Key 认证（测试环境跳过认证）
+    # [High Fix #36] TODO: Add a dedicated authentication test suite that verifies:
+    #   1. Requests without API key are rejected (401)
+    #   2. Requests with invalid API key are rejected (401)
+    #   3. Requests with valid API key are accepted (200)
+    #   4. Rate limiting is enforced per API key
+    # GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
     from app.core.security import get_current_api_key
     original_get_current_api_key = get_current_api_key
     
@@ -132,13 +138,24 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
     
     security_module.request_signature_middleware = mock_request_signature_middleware
     
+    # [HIGH Fix #7] CSRF 中间件在 main.py 中通过 @app.middleware 注册，
+    # 注册时已捕获原始函数引用，无法通过替换模块属性来 mock。
+    # 因此测试客户端需要注入 Authorization header 以跳过 CSRF 检查。
+    # 这与生产环境中 API Key 模式的行为一致。
+    
     # 使用 LifespanManager 管理应用生命周期
     try:
         from asgi_lifespan import LifespanManager
         
         async with LifespanManager(app) as manager:
             transport = ASGITransport(app=manager.app)
-            async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # [HIGH Fix #7] 测试客户端注入 Authorization header 以跳过 CSRF 检查
+            # 这与生产环境中 API Key 模式的行为一致（API Key 请求不需要 CSRF token）
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://test",
+                headers={"Authorization": "Bearer test-api-key"}
+            ) as client:
                 yield client
     except ImportError:
         # 如果没有 asgi_lifespan，手动管理 lifespan
@@ -150,7 +167,11 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
         
         async with manual_lifespan():
             transport = ASGITransport(app=app)
-            async with AsyncClient(transport=transport, base_url="http://test") as client:
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://test",
+                headers={"Authorization": "Bearer test-api-key"}
+            ) as client:
                 yield client
     
     # 恢复原始状态

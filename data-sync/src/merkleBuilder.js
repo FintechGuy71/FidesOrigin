@@ -21,14 +21,21 @@ function buildMerkleTree(addresses) {
   const leaves = addresses
     .map((a) => a.address)
     .sort()
-    .map((addr) => ethers.keccak256(ethers.toUtf8Bytes(addr)));
+    // [Audit-Fix #17] Add 0x00 prefix for leaf domain separation.
+    .map((addr) => ethers.keccak256(ethers.concat([ethers.toUtf8Bytes('\x00'), ethers.toUtf8Bytes(addr)])));
 
   if (leaves.length === 0) {
     return { root: ethers.ZeroHash, leaves: [], layers: [], count: 0 };
   }
 
   if (leaves.length === 1) {
-    return { root: leaves[0], leaves, layers: [leaves], count: 1 };
+    // [Audit-Fix #17] Add domain separation prefix for single-leaf trees.
+    // Without this, a single-leaf Merkle root equals the leaf hash itself,
+    // which creates an ambiguity: the same hash could appear as an internal node.
+    // Prefix 0x00 for leaf nodes vs 0x01 for internal nodes prevents second-preimage attacks.
+    const leafPrefix = ethers.toUtf8Bytes('\x00');
+    const leafHash = ethers.keccak256(ethers.concat([leafPrefix, ethers.toUtf8Bytes(addresses[0].address)]));
+    return { root: leafHash, leaves: [leafHash], layers: [[leafHash]], count: 1 };
   }
 
   // 补齐到 2 的幂次

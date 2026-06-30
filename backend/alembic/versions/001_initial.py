@@ -29,21 +29,23 @@ def upgrade() -> None:
     risk_status_enum.create(op.get_bind())
     
     # 创建 address_risks 表
+    # [MEDIUM Fix #16] id 类型改为 BigInteger 以匹配 models.py
     op.create_table('address_risks',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('address', sa.String(42), nullable=False),
-        sa.Column('chain', sa.String(20), nullable=False, server_default='ethereum'),
-        sa.Column('risk_score', sa.Float(), nullable=False, server_default='0.0'),
-        sa.Column('risk_level', risk_level_enum, nullable=False, server_default='low'),
+        sa.Column('id', sa.BigInteger(), nullable=False),
+        sa.Column('address', sa.String(255), nullable=False),
+        sa.Column('chain', sa.String(50), nullable=False, server_default='ethereum'),
+        sa.Column('risk_score', sa.Numeric(5, 2), nullable=False, server_default='0.0'),
+        sa.Column('risk_level', sa.String(20), nullable=False, server_default='LOW'),
         sa.Column('risk_factors', sa.JSON(), nullable=True),
-        sa.Column('status', risk_status_enum, nullable=False, server_default='pending'),
-        sa.Column('tags', postgresql.ARRAY(sa.String()), nullable=True),
+        sa.Column('status', sa.String(50), nullable=False, server_default='PENDING'),
+        sa.Column('tags', sa.JSON(), nullable=True),
         sa.Column('report_count', sa.Integer(), nullable=False, server_default='0'),
         sa.Column('first_seen_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('last_updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('address')
+        sa.UniqueConstraint('address', 'chain', name='uix_address_risk_address_chain')
     )
     
     # 创建索引
@@ -53,28 +55,37 @@ def upgrade() -> None:
     op.create_index('ix_address_risks_status', 'address_risks', ['status'])
     
     # 创建 transactions 表
+    # [MEDIUM Fix #16] id 类型改为 BigInteger，字段名对齐 models.py
     op.create_table('transactions',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('tx_hash', sa.String(66), nullable=False),
-        sa.Column('chain', sa.String(20), nullable=False, server_default='ethereum'),
-        sa.Column('address', sa.String(42), nullable=False),
-        sa.Column('from_address', sa.String(42), nullable=False),
-        sa.Column('to_address', sa.String(42), nullable=False),
-        sa.Column('value', sa.String(50), nullable=False),
-        sa.Column('gas_price', sa.String(50), nullable=True),
-        sa.Column('gas_used', sa.BigInteger(), nullable=True),
+        sa.Column('id', sa.BigInteger(), nullable=False),
+        sa.Column('tx_hash', sa.String(255), nullable=False),
+        sa.Column('chain', sa.String(50), nullable=False, server_default='ethereum'),
+        sa.Column('from_address', sa.String(255), nullable=False),
+        sa.Column('to_address', sa.String(255), nullable=False),
+        sa.Column('from_address_id', sa.BigInteger(), nullable=True),
+        sa.Column('to_address_id', sa.BigInteger(), nullable=True),
+        sa.Column('address', sa.String(255), nullable=True),
+        sa.Column('value', sa.Numeric(36, 18), nullable=False),
+        sa.Column('value_usd', sa.Numeric(24, 8), nullable=True),
+        sa.Column('token_symbol', sa.String(50), nullable=True),
+        sa.Column('token_address', sa.String(255), nullable=True),
         sa.Column('block_number', sa.BigInteger(), nullable=False),
-        sa.Column('block_timestamp', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('risk_score', sa.Float(), nullable=False, server_default='0.0'),
-        sa.Column('risk_level', risk_level_enum, nullable=False, server_default='low'),
+        sa.Column('block_hash', sa.String(255), nullable=True),
+        sa.Column('block_timestamp', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('risk_score', sa.Numeric(5, 2), nullable=False, server_default='0.0'),
+        sa.Column('risk_level', risk_level_enum, nullable=False, server_default='UNKNOWN'),
+        sa.Column('risk_factors', sa.JSON(), nullable=True),
         sa.Column('risk_indicators', sa.JSON(), nullable=True),
-        sa.Column('status', sa.String(20), nullable=False, server_default='pending'),
-        sa.Column('raw_data', sa.JSON(), nullable=True),
+        sa.Column('gas_used', sa.BigInteger(), nullable=True),
+        sa.Column('gas_price', sa.Numeric(36, 18), nullable=True),
+        sa.Column('tx_fee_usd', sa.Numeric(24, 8), nullable=True),
+        sa.Column('status', sa.String(50), nullable=False, server_default='confirmed'),
+        sa.Column('is_suspicious', sa.Boolean(), nullable=False, server_default='false'),
         sa.Column('analyzed_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('tx_hash'),
-        sa.ForeignKeyConstraint(['address'], ['address_risks.address'])
+        sa.UniqueConstraint('tx_hash', 'chain', name='uix_tx_hash_chain')
     )
     
     # 创建索引
@@ -86,20 +97,24 @@ def upgrade() -> None:
     op.create_index('ix_transactions_block_timestamp', 'transactions', ['block_timestamp'])
     
     # 创建 risk_rules 表
+    # [MEDIUM Fix #16] id 类型改为 BigInteger
     op.create_table('risk_rules',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('name', sa.String(100), nullable=False, unique=True),
+        sa.Column('id', sa.BigInteger(), nullable=False),
+        sa.Column('name', sa.String(255), nullable=False, unique=True),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('rule_type', sa.String(50), nullable=False),
-        sa.Column('category', sa.String(50), nullable=False),
-        sa.Column('condition', sa.JSON(), nullable=False),
-        sa.Column('risk_weight', sa.Float(), nullable=False, server_default='1.0'),
-        sa.Column('risk_score_impact', sa.Float(), nullable=False, server_default='0.0'),
+        sa.Column('category', sa.String(100), nullable=True),
+        sa.Column('pattern', sa.String(500), nullable=True),
+        sa.Column('threshold_value', sa.Numeric(24, 8), nullable=True),
+        sa.Column('risk_score_increment', sa.Numeric(5, 2), server_default='0', nullable=True),
+        sa.Column('condition', sa.JSON(), nullable=True),
+        sa.Column('risk_weight', sa.Numeric(5, 2), server_default='1.0', nullable=True),
+        sa.Column('risk_score_impact', sa.Numeric(5, 2), server_default='0.0', nullable=True),
+        sa.Column('tags', postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
         sa.Column('priority', sa.Integer(), nullable=False, server_default='100'),
-        sa.Column('tags', postgresql.ARRAY(sa.String()), nullable=True),
-        sa.Column('created_by', sa.String(100), nullable=True),
-        sa.Column('updated_by', sa.String(100), nullable=True),
+        sa.Column('created_by', sa.String(255), server_default='system', nullable=True),
+        sa.Column('updated_by', sa.String(255), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('id')
@@ -112,21 +127,27 @@ def upgrade() -> None:
     op.create_index('ix_risk_rules_active', 'risk_rules', ['is_active'])
     
     # 创建 risk_events 表
+    # [MEDIUM Fix #16] id 类型改为 BigInteger
     op.create_table('risk_events',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('event_type', sa.String(50), nullable=False),
-        sa.Column('severity', risk_level_enum, nullable=False),
-        sa.Column('address', sa.String(42), nullable=False),
-        sa.Column('tx_hash', sa.String(66), nullable=True),
-        sa.Column('description', sa.Text(), nullable=False),
+        sa.Column('id', sa.BigInteger(), nullable=False),
+        sa.Column('event_type', sa.String(100), nullable=False),
+        sa.Column('severity', risk_level_enum, nullable=False, server_default='UNKNOWN'),
+        sa.Column('address', sa.String(255), nullable=False),
+        sa.Column('address_id', sa.BigInteger(), nullable=True),
+        sa.Column('tx_hash', sa.String(255), nullable=True),
+        sa.Column('description', sa.Text(), nullable=True),
         sa.Column('details', sa.JSON(), nullable=True),
         sa.Column('triggered_rules', postgresql.ARRAY(sa.String()), nullable=True),
+        sa.Column('status', sa.String(50), server_default='PENDING', nullable=True),
         sa.Column('is_notified', sa.Boolean(), nullable=False, server_default='false'),
-        sa.Column('notified_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('assigned_to', sa.String(255), nullable=True),
         sa.Column('resolved_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('resolution_notes', sa.Text(), nullable=True),
+        sa.Column('event_metadata', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['address'], ['address_risks.address'])
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('detected_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.PrimaryKeyConstraint('id')
     )
     
     # 创建索引
@@ -140,20 +161,17 @@ def upgrade() -> None:
     # 创建 address_reports 表
     op.create_table('address_reports',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('address', sa.String(42), nullable=False),
-        sa.Column('chain', sa.String(20), nullable=False, server_default='ethereum'),
-        sa.Column('report_type', sa.String(50), nullable=False),
-        sa.Column('description', sa.Text(), nullable=False),
+        sa.Column('address', sa.String(255), nullable=False),
+        sa.Column('chain', sa.String(50), nullable=False, server_default='ethereum'),
+        sa.Column('report_type', sa.String(100), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
         sa.Column('evidence', sa.JSON(), nullable=True),
-        sa.Column('reporter_email', sa.String(100), nullable=True),
-        sa.Column('reporter_wallet', sa.String(42), nullable=True),
-        sa.Column('status', sa.String(20), nullable=False, server_default='pending'),
-        sa.Column('reviewed_by', sa.String(100), nullable=True),
-        sa.Column('reviewed_at', sa.DateTime(timezone=True), nullable=True),
-        sa.Column('notes', sa.Text(), nullable=True),
+        sa.Column('reporter_email', sa.String(255), nullable=True),
+        sa.Column('reporter_wallet', sa.String(255), nullable=True),
+        sa.Column('status', sa.String(50), server_default='pending', nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['address'], ['address_risks.address'])
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.PrimaryKeyConstraint('id')
     )
     
     # 创建索引
@@ -176,68 +194,17 @@ def upgrade() -> None:
     op.create_index('ix_system_configs_key', 'system_configs', ['key'])
     
     # 插入默认风险规则
-    op.bulk_insert('risk_rules', [
-        {
-            'id': str(uuid.uuid4()),
-            'name': 'reported_address',
-            'description': '地址被多次举报',
-            'rule_type': 'reputation',
-            'category': 'reputation',
-            'condition': {'min_reports': 1, 'weight': 0.3},
-            'risk_weight': 0.3,
-            'risk_score_impact': 50.0,
-            'priority': 10,
-            'tags': ['reputation', 'report']
-        },
-        {
-            'id': str(uuid.uuid4()),
-            'name': 'high_frequency_transactions',
-            'description': '高频交易模式',
-            'rule_type': 'behavior',
-            'category': 'behavior',
-            'condition': {'max_transactions_per_hour': 10, 'weight': 0.2},
-            'risk_weight': 0.2,
-            'risk_score_impact': 40.0,
-            'priority': 20,
-            'tags': ['behavior', 'frequency']
-        },
-        {
-            'id': str(uuid.uuid4()),
-            'name': 'large_amount_transfer',
-            'description': '大额转账',
-            'rule_type': 'amount',
-            'category': 'amount',
-            'condition': {'threshold_eth': 100, 'weight': 0.15},
-            'risk_weight': 0.15,
-            'risk_score_impact': 30.0,
-            'priority': 30,
-            'tags': ['amount', 'transfer']
-        },
-        {
-            'id': str(uuid.uuid4()),
-            'name': 'new_address',
-            'description': '新创建地址',
-            'rule_type': 'age',
-            'category': 'age',
-            'condition': {'min_days': 7, 'weight': 0.1},
-            'risk_weight': 0.1,
-            'risk_score_impact': 20.0,
-            'priority': 40,
-            'tags': ['age', 'new']
-        },
-        {
-            'id': str(uuid.uuid4()),
-            'name': 'contract_interaction',
-            'description': '可疑合约交互',
-            'rule_type': 'contract',
-            'category': 'contract',
-            'condition': {'suspicious_opcodes': ['SELFDESTRUCT', 'DELEGATECALL'], 'weight': 0.25},
-            'risk_weight': 0.25,
-            'risk_score_impact': 45.0,
-            'priority': 15,
-            'tags': ['contract', 'opcode']
-        }
-    ])
+    # [MEDIUM Fix #16] 使用 autoincrement BigInteger id 而非 UUID
+    op.execute("""
+        INSERT INTO risk_rules (name, description, rule_type, category, condition, risk_weight, risk_score_impact, priority, tags, is_active, created_at, updated_at)
+        VALUES
+        ('reported_address', '地址被多次举报', 'PATTERN', 'reputation', '{"min_reports": 1, "weight": 0.3}'::json, 0.3, 50.0, 10, ARRAY['reputation', 'report']::text[], true, now(), now()),
+        ('high_frequency_transactions', '高频交易模式', 'PATTERN', 'behavior', '{"max_transactions_per_hour": 10, "weight": 0.2}'::json, 0.2, 40.0, 20, ARRAY['behavior', 'frequency']::text[], true, now(), now()),
+        ('large_amount_transfer', '大额转账', 'PATTERN', 'amount', '{"threshold_eth": 100, "weight": 0.15}'::json, 0.15, 30.0, 30, ARRAY['amount', 'transfer']::text[], true, now(), now()),
+        ('new_address', '新创建地址', 'PATTERN', 'age', '{"min_days": 7, "weight": 0.1}'::json, 0.1, 20.0, 40, ARRAY['age', 'new']::text[], true, now(), now()),
+        ('contract_interaction', '可疑合约交互', 'PATTERN', 'contract', '{"suspicious_opcodes": ["SELFDESTRUCT", "DELEGATECALL"], "weight": 0.25}'::json, 0.25, 45.0, 15, ARRAY['contract', 'opcode']::text[], true, now(), now())
+        ON CONFLICT (name) DO NOTHING
+    """)
     
     # ### end Alembic commands ###
 

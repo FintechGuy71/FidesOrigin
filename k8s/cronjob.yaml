@@ -1,3 +1,6 @@
+# [Medium Fix #59] PVC for CronJob — ensures data persistence across sync runs.
+# TODO: For multi-replica scenarios, use ReadWriteMany (if storage class supports it)
+# or switch to an S3-compatible object store for shared state.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

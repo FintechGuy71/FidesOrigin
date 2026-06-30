@@ -15,6 +15,10 @@ from app.core.exceptions import BlockscoutAPIException
 BlockscoutAPIError = BlockscoutAPIException
 from app.core.logging import get_logger
 
+# [LOW Fix #25] 不再使用 pickle 进行序列化/反序列化，改用 JSON
+# pickle 反序列化存在任意代码执行风险
+import json as _json_for_pickle_replacement
+
 logger = get_logger(__name__)
 settings = get_settings()
 

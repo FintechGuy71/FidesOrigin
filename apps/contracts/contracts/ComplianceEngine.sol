@@ -23,6 +23,11 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     
+    /// @notice I-17 NOTE: DEFAULT_ADMIN_ROLE 是 OpenZeppelin 内置的超级管理员角色。
+    ///         部署完成后，应将其转移给 FidesOriginTimelock 合约，
+    ///         以实现去中心化管理和防止单点权力集中。
+    ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
+    
     /// @notice 合约版本号
     string public constant VERSION = "1.2.1";
     
@@ -128,6 +133,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         uint256 timestamp
     );
     
+    /// @notice H-04 FIX: setIssuerPolicy 事件，记录发行方策略变更
+    event IssuerPolicySet(address indexed token, uint256 maxTxAmount, uint256 dailyLimit, uint256 cooldownPeriod, address indexed admin);
+    
     event RoleGrantedDetailed(
         bytes32 indexed role,
         address indexed account,
@@ -232,6 +240,8 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
      * @notice 检查地址合规性
      * @dev GAS-01 NOTE: Each call writes to checkHistory + counters. Consider batching
      *      or moving statistics to off-chain indexing for high-throughput scenarios.
+     * @dev M-08 NOTE: 此函数会修改状态（totalChecks, checkHistory），
+     *      外部调用者应谨慎使用。推荐通过 checkTransfer/checkTransactionCompliance 间接调用。
      * @param addr 目标地址
      * @return isCompliant 是否合规
      * @return riskScore 风险分数
@@ -553,6 +563,38 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     }
     
     /**
+     * @notice L-12 FIX: 分页查询检查历史（防止无界数组遍历导致 OOG）
+     * @param offset 起始索引
+     * @param limit 返回数量上限
+     */
+    function getCheckHistoryPaginated(uint256 offset, uint256 limit) external view returns (CheckRecord[] memory page) {
+        uint256 total = checkHistory.length;
+        if (offset >= total) return new CheckRecord[](0);
+        uint256 end = offset + limit;
+        if (end > total) end = total;
+        page = new CheckRecord[](end - offset);
+        for (uint256 i = 0; i < page.length; i++) {
+            page[i] = checkHistory[offset + i];
+        }
+    }
+    
+    /**
+     * @notice L-12 FIX: 分页查询隔离列表（防止无界数组遍历导致 OOG）
+     * @param offset 起始索引
+     * @param limit 返回数量上限
+     */
+    function getQuarantineListPaginated(uint256 offset, uint256 limit) external view returns (bytes32[] memory page) {
+        uint256 total = quarantineList.length;
+        if (offset >= total) return new bytes32[](0);
+        uint256 end = offset + limit;
+        if (end > total) end = total;
+        page = new bytes32[](end - offset);
+        for (uint256 i = 0; i < page.length; i++) {
+            page[i] = quarantineList[offset + i];
+        }
+    }
+    
+    /**
      * @notice 获取检查记录
      */
     function getCheckRecord(uint256 index) external view returns (CheckRecord memory) {
@@ -601,6 +643,8 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         if (policy.maxTxAmount > policy.dailyLimit && policy.dailyLimit > 0) revert("maxTxAmount > dailyLimit");
         if (policy.cooldownPeriod > 30 days) revert("cooldown too long");
         issuerPolicies[token] = policy;
+        // H-04 FIX: emit event for issuer policy changes
+        emit IssuerPolicySet(token, policy.maxTxAmount, policy.dailyLimit, policy.cooldownPeriod, msg.sender);
     }
     
     /**
@@ -754,13 +798,14 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     /**
      * @notice 转账后钩子 - 记录转账
      * @dev IAssetCompliance.postTransferHook 实现
+     * @dev M-07 FIX: 添加 onlyRole(OPERATOR_ROLE) 限制，防止未授权调用
      */
     function postTransferHook(
         address from,
         address to,
         uint256 amount,
         bool success
-    ) external {
+    ) external onlyRole(OPERATOR_ROLE) {
         emit TransferRecorded(
             msg.sender, // asset contract caller
             from,

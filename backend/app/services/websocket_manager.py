@@ -60,7 +60,12 @@ class WebSocketManager:
             await websocket.close(code=4003, reason="Server capacity exceeded")
             return False
         
-        await websocket.accept()
+        # [CRITICAL Fix #1] 如果连接尚未 accept（由外部认证流程提前 accept 的情况）
+        # 尝试 accept，如果已经 accepted 则忽略 RuntimeError
+        try:
+            await websocket.accept()
+        except RuntimeError:
+            pass  # Already accepted
         self.active_connections[client_id] = websocket
         self.connection_configs[client_id] = subscription
         self.connection_times[client_id] = datetime.now(timezone.utc)

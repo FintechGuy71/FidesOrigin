@@ -64,6 +64,11 @@ export function normalizeAddresses(addrs: string[]): string[] {
  * Convert a string to a bytes32 hex string compatible with Solidity.
  * Uses ethers.encodeBytes32String for short strings (< 32 bytes),
  * safely truncates longer strings at byte boundaries.
+ *
+ * [Audit-Fix #26] Truncation note: Strings longer than 31 bytes are truncated.
+ * This means multi-byte UTF-8 characters at the boundary may be split,
+ * producing invalid UTF-8 in the bytes32 value. For tags that require
+ * full Unicode support, consider storing the hash instead of the string.
  */
 export function stringToBytes32(str: string): string {
   const encoded = ethers.encodeBytes32String(str);

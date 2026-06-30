@@ -402,16 +402,29 @@ const initialRules: Rule[] = [
   { id: "6", name: "异常交易频次", description: "短时间内高频交易检测", enabled: false, threshold: 100, action: "flag" },
 ];
 
+// [Medium Fix #15] Zod schema for validating loaded rules from localStorage.
+const RuleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  enabled: z.boolean(),
+  threshold: z.number(),
+  action: z.enum(["flag", "block", "review"]),
+});
+const RulesArraySchema = z.array(RuleSchema);
+
 function loadRules(): Rule[] {
   if (typeof window === "undefined") return initialRules;
   const saved = localStorage.getItem("fidesorigin_rules_draft") || localStorage.getItem("fidesorigin_rules");
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      // Basic runtime validation
-      if (Array.isArray(parsed)) {
-        return parsed as Rule[];
+      // [Medium Fix #15] Validate with Zod schema instead of basic Array.isArray check.
+      const result = RulesArraySchema.safeParse(parsed);
+      if (result.success) {
+        return result.data as Rule[];
       }
+      console.warn("[loadRules] Validation failed:", result.error.errors);
       return initialRules;
     } catch {
       return initialRules;

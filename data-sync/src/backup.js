@@ -268,6 +268,9 @@ class BackupService {
           dataSourceConfigs = await this.streamDataSourceConfigs(safeWrite);
         } else {
           // 增量备份
+          // [Audit-Fix #21] Note: For very large datasets (>100k records), loading all records
+          // into memory before JSON.stringify can cause OOM. Consider streaming the incremental
+          // backup data via the same streamWrite pattern used by full backups (streamRiskAddresses, etc.).
           const lastBackup = await this.prisma.backupRecord.findFirst({
             where: { status: 'SUCCESS' },
             orderBy: { timestamp: 'desc' },

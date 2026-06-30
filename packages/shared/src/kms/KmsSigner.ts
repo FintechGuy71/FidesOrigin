@@ -350,14 +350,40 @@ export async function createSigner(
       process.env.SYNC_PRIVATE_KEY ??
       process.env.PRIVATE_KEY;
 
-    if (!privateKey) {
+    // [MEDIUM Fix #11] 安全建议：避免通过环境变量传递私钥明文
+    // 环境变量在 /proc/<pid>/environ 中可见，且可能被日志记录。
+    // 推荐使用 PRIVATE_KEY_FILE 环境变量指向文件路径，从文件读取私钥。
+    // 示例：export PRIVATE_KEY_FILE=/run/secrets/private_key
+    if (process.env.PRIVATE_KEY) {
+      // 仅警告但不阻止使用（向后兼容）
+      console.warn(
+        '[Security Warning] PRIVATE_KEY is set as environment variable. ' +
+        'Consider using PRIVATE_KEY_FILE instead to avoid exposing the key in /proc/environ or process logs.'
+      );
+    }
+    // [MEDIUM Fix #11] 支持 PRIVATE_KEY_FILE 作为更安全的替代方案
+    const privateKeyFromFile = process.env.PRIVATE_KEY_FILE
+      ? (() => {
+          try {
+            const fs = require('fs');
+            return fs.readFileSync(process.env.PRIVATE_KEY_FILE!, 'utf-8').trim();
+          } catch (e) {
+            throw new Error(
+              `Failed to read private key from PRIVATE_KEY_FILE: ${process.env.PRIVATE_KEY_FILE}. Error: ${(e as Error).message}`
+            );
+          }
+        })()
+      : null;
+    const finalPrivateKey = privateKeyFromFile ?? privateKey;
+
+    if (!finalPrivateKey) {
       throw new Error(
         'KMS_PROVIDER=local requires a private key via ' +
-        'config.localPrivateKey, SYNC_PRIVATE_KEY, or PRIVATE_KEY'
+        'config.localPrivateKey, SYNC_PRIVATE_KEY, PRIVATE_KEY, or PRIVATE_KEY_FILE'
       );
     }
 
-    return new LocalSigner(privateKey, provider);
+    return new LocalSigner(finalPrivateKey, provider);
   }
 
   throw new Error(

@@ -94,7 +94,17 @@ class Settings(BaseSettings):
         description="允许的 HTTP 方法"
     )
     CORS_ALLOW_HEADERS: List[str] = Field(
-        default_factory=lambda: ["*"],
+        # [MEDIUM Fix #21] 将默认值从 ["*"] 改为具体的头列表
+        default_factory=lambda: [
+            "Accept",
+            "Authorization",
+            "Content-Type",
+            "X-API-Key",
+            "X-CSRF-Token",
+            "X-Request-ID",
+            "X-Request-Timestamp",
+            "X-Request-Signature",
+        ],
         description="允许的 HTTP 头"
     )
     
@@ -149,6 +159,29 @@ class Settings(BaseSettings):
         """是否是生产环境"""
         return self.APP_ENV == "production"
     
+    # [HIGH Fix #6] Admin 密码强度校验
+    @staticmethod
+    def validate_admin_password(password: str) -> None:
+        """
+        校验 Admin 密码强度
+        - 最小长度 12 字符
+        - 生产环境必须包含大小写字母、数字和特殊字符
+        """
+        if len(password) < 12:
+            raise ValueError(
+                "ADMIN_PASSWORD must be at least 12 characters long for security. "
+                f"Current length: {len(password)}"
+            )
+        import re
+        if not re.search(r"[A-Z]", password):
+            raise ValueError("ADMIN_PASSWORD must contain at least one uppercase letter")
+        if not re.search(r"[a-z]", password):
+            raise ValueError("ADMIN_PASSWORD must contain at least one lowercase letter")
+        if not re.search(r"\d", password):
+            raise ValueError("ADMIN_PASSWORD must contain at least one digit")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\",\\.<>\/?]", password):
+            raise ValueError("ADMIN_PASSWORD must contain at least one special character")
+    
     def validate_security(self) -> None:
         """
         生产环境安全验证
@@ -164,6 +197,14 @@ class Settings(BaseSettings):
                 missing.append("API_KEY")
             if self.CORS_ORIGINS == ["*"]:
                 missing.append("CORS_ORIGINS (cannot be '*')")
+            
+            # [HIGH Fix #6] 生产环境校验 Admin 密码强度
+            import os as _os
+            admin_pwd = _os.environ.get("ADMIN_PASSWORD", "")
+            if admin_pwd:
+                self.validate_admin_password(admin_pwd)
+            else:
+                missing.append("ADMIN_PASSWORD")
             
             if missing:
                 raise ValueError(

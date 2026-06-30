@@ -893,7 +893,10 @@ document.addEventListener('DOMContentLoaded', function() {
   showPage('dashboard');
 });
 
-// 导出函数供 HTML 调用 (保持向后兼容)
+// [Medium Fix #9] Window global function exports — kept for backward compatibility with HTML onclick attributes.
+// TODO: Migrate all HTML onclick handlers to addEventListener and remove these window assignments.
+// This reduces the attack surface from DOM-based XSS.
+// Export functions for HTML invocation (backward compatibility)
 window.showPage = showPage;
 window.toggleMobileSidebar = toggleMobileSidebar;
 window.connectWallet = connectWallet;

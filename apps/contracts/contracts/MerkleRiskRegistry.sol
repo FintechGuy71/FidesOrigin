@@ -111,9 +111,10 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
         );
     }
 
-    /// @notice 构建签名消息哈希（域隔离 + nonce 防重放）
-    /// @dev 签名覆盖 leaf + chainId + contractAddr + nonce，与 Merkle Proof 解耦
-    function _messageHash(bytes32 leaf, uint256 nonce) internal view returns (bytes32) {
+    /// @notice 构建签名消息哈希（域隔离 + nonce 防重放 + deadline 过期保护）
+    /// @dev 签名覆盖 leaf + chainId + contractAddr + nonce + deadline，与 Merkle Proof 解耦
+    /// @dev M-09 FIX: 添加 deadline 参数，防止签名被无限期重用
+    function _messageHash(bytes32 leaf, uint256 nonce, uint256 deadline) internal view returns (bytes32) {
         return MessageHashUtils.toEthSignedMessageHash(
             keccak256(
                 abi.encode(
@@ -122,7 +123,8 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
                     leaf,
                     block.chainid,
                     address(this),
-                    nonce
+                    nonce,
+                    deadline
                 )
             )
         );
@@ -164,6 +166,7 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
      * @param proof Merkle Proof
      * @param signature 签名数据
      * @param signer 签名者地址
+     * @param deadline M-09 FIX: 签名截止时间戳，防止签名被无限期重用
      */
     function verifyAddressWithSignature(
         address addr,
@@ -171,7 +174,8 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
         string memory riskTier,
         bytes32[] calldata proof,
         bytes calldata signature,
-        address signer
+        address signer,
+        uint256 deadline
     ) external onlyRole(RELAYER_ROLE) nonReentrant whenNotPaused returns (bool) {
         // P0-3: 零地址检查
         if (addr == address(0)) {
@@ -183,6 +187,9 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
             revert("Invalid signer");
         }
 
+        // M-09 FIX: 签名过期时间检查
+        require(deadline >= block.timestamp, "Signature expired");
+
         // [Critical-1] 统一 Leaf 格式，与 verifyAddress / batchVerify 一致
         bytes32 leaf = _leaf(addr, riskScore, riskTier);
 
@@ -193,8 +200,9 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
 
         // [Medium-4/Medium-5] 签名验证：nonce 从 leaf 中分离，使用标准 ECDSA
         // [High-4] nonce 机制已足够防重放，移除冗余的 verifiedSignatures
+        // M-09 FIX: 签名包含 deadline 防止无限期重用
         uint256 nonce = signerNonces[signer];
-        bytes32 msgHash = _messageHash(leaf, nonce);
+        bytes32 msgHash = _messageHash(leaf, nonce, deadline);
 
         address recovered = msgHash.recover(signature);
         require(recovered == signer, "Invalid signature");

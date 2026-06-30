@@ -18,6 +18,7 @@
     <link rel="canonical" href="https://fidesorigin.com/address-check.html">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- [Medium Fix #13] Inline styles kept for self-contained page portability. TODO: Extract to external CSS file. -->
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -152,7 +153,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <a href="/" style="color:var(--text-sec);text-decoration:none;font-size:0.85rem;">Back to Home</a>
             <div class="lang-dropdown" id="langDropdownNav" style="position:relative;">
-                <button onclick="toggleDropdown('langDropdownNav',event)" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-size:0.85rem;cursor:pointer;">
+                <button id="langToggleNav">
                     <span>🌐</span><span>English</span><span>▾</span>
                 </button>
                 <div class="lang-dropdown-menu" style="position:absolute;top:calc(100% + 6px);right:0;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
@@ -189,7 +190,7 @@
 
         <div class="search-box">
             <input type="text" id="addressInput" placeholder="Enter Ethereum address (0x...)" maxlength="42" autocomplete="off" spellcheck="false" autocorrect="off">
-            <button onclick="checkAddress()" id="checkBtn">
+            <button id="checkBtn">
                 <span id="btnText">Check Risk Level</span>
             </button>
         </div>
@@ -232,6 +233,29 @@
         </div>
     </div>
 
+    <!-- [HIGH Fix #5] Replaced inline onclick with addEventListener for CSP compliance -->
     <script src="address-check.js"></script>
+    <script>
+      // [HIGH Fix #5] Attach event listeners instead of inline onclick handlers
+      document.addEventListener('DOMContentLoaded', function() {
+        var checkBtn = document.getElementById('checkBtn');
+        if (checkBtn) {
+          checkBtn.addEventListener('click', function() {
+            if (typeof checkAddress === 'function') checkAddress();
+          });
+        }
+        var langBtn = document.getElementById('langToggleNav');
+        if (langBtn) {
+          langBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var dropdown = document.getElementById('langDropdownNav');
+            if (dropdown) {
+              var menu = dropdown.querySelector('.lang-dropdown-menu');
+              if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
+          });
+        }
+      });
+    </script>
 </body>
 </html>

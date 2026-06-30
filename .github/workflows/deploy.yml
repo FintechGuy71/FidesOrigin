@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   # [M-10 Fix] PR should NOT trigger production deploy — remove pull_request trigger
 
+# [High Fix #54] Explicit least-privilege permissions for CI/CD workflows.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,7 +21,7 @@ jobs:
           node-version: '22'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4  # [Medium Fix #60] Consistent action version
         with:
           version: 11.6.0
 

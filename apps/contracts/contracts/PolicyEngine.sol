@@ -464,6 +464,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
      * @dev M-04 FIX: This bypasses MEV deadline protection by design (deadline=0 skips check).
      *      Only use in trusted read-only contexts. For untrusted external calls,
      *      always use the 4-parameter version with an explicit deadline.
+     * @dev DEPRECATED: 此函数不提供 deadline 参数，无法防 MEV 攻击。
+     *             新代码应使用 4 参数版本的 evaluatePolicy(addr, riskScore, tier, deadline)。
      */
     function evaluatePolicy(
         address addr,

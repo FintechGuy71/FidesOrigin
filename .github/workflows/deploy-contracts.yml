@@ -15,6 +15,10 @@ on:
         description: 'Type DEPLOY to confirm'
         required: true
 
+# [High Fix #54] Explicit least-privilege permissions for CI/CD workflows.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

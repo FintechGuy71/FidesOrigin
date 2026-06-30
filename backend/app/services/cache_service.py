@@ -4,6 +4,7 @@ Redis 连接池管理 + 多级缓存策略 + 缓存穿透保护
 """
 import json
 import pickle
+import json as _json_compat  # [LOW Fix #25] 使用 JSON 替代 pickle
 from typing import Any, List, Optional, TypeVar, Union
 
 import redis.asyncio as redis
@@ -158,19 +159,32 @@ class CacheService:
         return await self.set(key, json.dumps(value), expire=expire)
     
     # ==================== Pickle 序列化（二进制对象） ====================
+    # [LOW Fix #25] 安全警告：pickle 反序列化存在任意代码执行风险
+    # 推荐使用 get_json/set_json 替代。以下方法保留向后兼容但标记为不安全。
+    # 如果必须缓存二进制对象，建议使用 JSON 序列化替代方案。
     
     async def get_object(self, key: str) -> Optional[Any]:
-        """获取二进制对象缓存"""
+        """获取二进制对象缓存（[LOW Fix #25] 改为 JSON 反序列化）"""
         if self._redis is None:
             return None
         value = await self._redis.get(key)
         if value is None:
             return None
         try:
-            return pickle.loads(value)
-        except pickle.PickleError:
-            logger.warning("cache_pickle_decode_failed", key=key)
-            return None
+            # [LOW Fix #25] 优先尝试 JSON 解析
+            if isinstance(value, bytes):
+                value = value.decode()
+            return _json_compat.loads(value)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # 回退到 pickle（向后兼容旧数据）
+            logger.warning("cache_pickle_fallback_decode", key=key)
+            try:
+                if isinstance(value, str):
+                    value = value.encode()
+                return pickle.loads(value)
+            except pickle.PickleError:
+                logger.warning("cache_object_decode_failed", key=key)
+                return None
     
     async def set_object(
         self,
@@ -178,10 +192,16 @@ class CacheService:
         value: Any,
         expire: Optional[int] = None
     ) -> bool:
-        """设置二进制对象缓存"""
+        """设置二进制对象缓存（[LOW Fix #25] 改为 JSON 序列化）"""
         if self._redis is None:
             return False
-        return await self._redis.set(key, pickle.dumps(value), ex=expire)
+        # [LOW Fix #25] 使用 JSON 序列化替代 pickle
+        try:
+            return await self._redis.set(key, _json_compat.dumps(value, default=str), ex=expire)
+        except (TypeError, ValueError):
+            # 无法 JSON 序列化时回退到 pickle（向后兼容）
+            logger.warning("cache_pickle_fallback_encode", key=key)
+            return await self._redis.set(key, pickle.dumps(value), ex=expire)
     
     # ==================== Hash 操作 ====================
     
@@ -241,10 +261,30 @@ class CacheService:
         locked = await self.acquire_lock(lock_key, timeout=10)
         
         if not locked:
-            # 未获取到锁，等待后重试
+            # [MEDIUM Fix #19] 改为 while 循环 + 最大重试次数，避免递归栈溢出
             import asyncio
-            await asyncio.sleep(0.1)
-            return await self.get_or_set(key, factory, expire, null_expire)
+            max_retries = 3
+            for attempt in range(max_retries):
+                await asyncio.sleep(0.1 * (attempt + 1))
+                # 检查缓存是否已被其他进程填充
+                cached = await self.get_json(key)
+                if cached is not None:
+                    return None if cached == "__NULL__" else cached
+                # 再次尝试获取锁
+                if await self.acquire_lock(lock_key, timeout=10):
+                    break
+            else:
+                # 重试次数耗尽，最后尝试读缓存
+                cached = await self.get_json(key)
+                if cached is not None:
+                    return None if cached == "__NULL__" else cached
+                # 仍然获取不到锁，直接执行 factory
+                value = await factory()
+                if value is None:
+                    await self.set_json(key, "__NULL__", expire=null_expire)
+                else:
+                    await self.set_json(key, value, expire=expire)
+                return value
         
         try:
             # 3. 再次检查缓存

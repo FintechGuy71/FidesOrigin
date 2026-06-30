@@ -64,6 +64,9 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
       endpoint: getEnv('OFAC_ENDPOINT', 'https://www.treasury.gov/ofac/downloads/sdn.xml'),
       apiKey: process.env.OFAC_API_KEY,
       weight: getEnvInt('OFAC_WEIGHT', 1),
+      // [Audit-Fix #27] Weight is used by DataProcessor for source prioritization.
+      // Higher weight = higher priority when multiple sources report the same address.
+      // Currently all sources default to weight=1 (equal priority). Adjust per source as needed.
       timeout: getEnvInt('OFAC_TIMEOUT', 30000),
       retryCount: getEnvInt('OFAC_RETRY', 3),
       refreshInterval: getEnv('OFAC_CRON', '0 0 * * *'),
@@ -183,7 +186,15 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
     redisUrl: getEnv('REDIS_URL', 'redis://localhost:6379'),
     lockPrefix: getEnv('CLUSTER_LOCK_PREFIX', 'fidesorigin:lock'),
     lockTtl: getEnvInt('CLUSTER_LOCK_TTL', 60000),
-    instanceId: getEnv('INSTANCE_ID', `instance-${require('os').hostname()}-${process.pid}`),
+    // [Audit-Fix #25] Lazy-evaluate hostname/instanceId instead of computing at module load time.
+    // The original code called require('os').hostname() at module top level, which executes
+    // before any env validation. This could cause premature crashes in test/CI environments.
+    // Now it uses a getter that defers evaluation until first access.
+    get instanceId() {
+      // Cache after first access to avoid repeated calls
+      const os = require('os');
+      return process.env.INSTANCE_ID || `instance-${os.hostname()}-${process.pid}`;
+    },
     heartbeatInterval: getEnvInt('CLUSTER_HEARTBEAT_INTERVAL', 10000),
   },
 

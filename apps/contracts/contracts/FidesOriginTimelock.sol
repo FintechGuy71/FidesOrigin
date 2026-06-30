@@ -107,11 +107,14 @@ contract FidesOriginTimelock is TimelockController {
 
         uint256 cancelled = 0;
         // 从后往前遍历，批量取消所有仍 pending 的 operations
+        // CRITICAL FIX: 使用 super.cancel(id) 而非 this.cancel(id)，
+        // 因为 this.cancel(id) 会通过 _removePendingOperation 再次执行 swap-and-pop，
+        // 导致数组在遍历过程中被修改。super.cancel(id) 只执行 OZ 的取消逻辑，
+        // 数组清理由本循环体的 pop() 统一负责。
         for (uint256 i = pendingOperations.length; i > 0; i--) {
             bytes32 id = pendingOperations[i - 1];
             if (isOperationPending(id)) {
-                // 通过外部调用触发 CANCELLER_ROLE 检查（address(this) 已被授予该角色）
-                this.cancel(id);
+                super.cancel(id);
                 cancelled++;
             }
             // 清理列表（无论是否成功取消）

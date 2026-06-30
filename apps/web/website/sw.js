@@ -47,7 +47,7 @@ self.addEventListener('activate', function(event) {
   self.clients.claim();
 });
 
-// Fetch: cache-first strategy for static assets, network-first for others
+// [Medium Fix #12] Fetch strategy: network-first for HTML (navigate), cache-first for static assets.
 self.addEventListener('fetch', function(event) {
   var url = new URL(event.request.url);
 
@@ -56,6 +56,30 @@ self.addEventListener('fetch', function(event) {
 
   // Skip cross-origin requests
   if (url.origin !== self.location.origin) return;
+
+  // [Medium Fix #12] HTML documents: network-first to ensure users get fresh content.
+  if (event.request.mode === 'navigate' ||
+      (event.request.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith(
+      fetch(event.request).then(function(response) {
+        if (response && response.status === 200 && response.type === 'basic') {
+          var responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      }).catch(function() {
+        // Offline fallback: serve from cache, then /index.html
+        return caches.match(event.request).then(function(cached) {
+          return cached || caches.match('/index.html');
+        });
+      })
+    );
+    return;
+  }
+
+  // Static assets: cache-first with background update (stale-while-revalidate)
 
   event.respondWith(
     caches.match(event.request).then(function(cached) {

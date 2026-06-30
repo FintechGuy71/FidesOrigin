@@ -298,7 +298,8 @@ class RiskEngine:
             select(Transaction)
             .where(
                 Transaction.address == address,
-                cast(Transaction.value, Numeric) >= threshold_wei
+                # [HIGH Fix #10] 使用 sqlalchemy 内置 cast 而非文件底部的自定义函数
+                sa_cast(Transaction.value, Numeric) >= threshold_wei
             )
             .order_by(Transaction.block_timestamp.desc())
             .limit(10)
@@ -547,9 +548,6 @@ class RiskEngine:
 
 
 # 辅助函数
-from sqlalchemy import Numeric
-
-def cast(value, type_):
-    """类型转换辅助函数"""
-    from sqlalchemy import cast as sql_cast
-    return sql_cast(value, type_)
+# [HIGH Fix #10] 删除自定义 cast() 函数，使用 sqlalchemy 内置 cast
+# 文件顶部已导入 cast，以下导入确保正确引用
+from sqlalchemy import Numeric, cast as sa_cast  # noqa: E402

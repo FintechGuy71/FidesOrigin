@@ -30,7 +30,20 @@ const requestCounts = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 60;
 
+/**
+ * [HIGH Fix #4] IP extraction trust chain.
+ *
+ * Trust order (most-trusted to least-trusted):
+ *   1. req.socket.remoteAddress — the actual TCP connection IP (cannot be spoofed)
+ *   2. x-real-ip — set by trusted reverse proxy (e.g., Nginx, Vercel)
+ *   3. x-forwarded-for (first entry) — set by proxies, but CAN be spoofed by client
+ *
+ * In production behind a trusted proxy, x-real-ip is preferred over x-forwarded-for
+ * because it is set by the proxy and not directly controllable by the client.
+ * Always configure your reverse proxy to overwrite these headers (not append).
+ */
 function checkRateLimit(req, res) {
+  // [HIGH Fix #4] Prefer x-real-ip from trusted proxy, fall back to socket address.
   const rawIp =
     req.headers['x-real-ip'] ||
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -312,6 +325,12 @@ function buildRiskCheckResult(address, chainId, riskData) {
   const chain = getChainName(chainId);
   const assessment = computeRiskScore(address, riskData);
   const now = new Date().toISOString();
+  // [Medium Fix #11] Compute deterministic hash from address for stable mock data.
+  const normalized = normalizeAddress(address);
+  let detHash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    detHash = ((detHash << 5) - detHash + normalized.charCodeAt(i)) | 0;
+  }
   return {
     address: normalizeAddress(address),
     chain,
@@ -331,8 +350,9 @@ function buildRiskCheckResult(address, chainId, riskData) {
       description: f.description,
     })),
     transactionStats: {
-      totalTransactions: Math.floor(Math.random() * 10000),
-      totalVolume: Math.floor(Math.random() * 1000000),
+      // [Medium Fix #11] Replaced Math.random with deterministic hash-based values.
+      totalTransactions: Math.abs(detHash) % 10000,
+      totalVolume: Math.abs(detHash) % 1000000,
       firstTransaction: now,
       lastTransaction: now,
     },
@@ -343,6 +363,12 @@ function buildAddressRisk(address, chainId, riskData) {
   const chain = getChainName(chainId);
   const assessment = computeRiskScore(address, riskData);
   const now = new Date().toISOString();
+  // [Medium Fix #11] Compute deterministic hash from address for stable mock data.
+  const normalized = normalizeAddress(address);
+  let detHash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    detHash = ((detHash << 5) - detHash + normalized.charCodeAt(i)) | 0;
+  }
   return {
     address: normalizeAddress(address),
     chain,
@@ -362,8 +388,9 @@ function buildAddressRisk(address, chainId, riskData) {
       description: f.description,
     })),
     stats: {
-      totalTransactions: Math.floor(Math.random() * 10000),
-      totalVolume: Math.floor(Math.random() * 1000000),
+      // [Medium Fix #11] Replaced Math.random with deterministic hash-based values.
+      totalTransactions: Math.abs(detHash) % 10000,
+      totalVolume: Math.abs(detHash) % 1000000,
       firstTransaction: now,
       lastTransaction: now,
     },

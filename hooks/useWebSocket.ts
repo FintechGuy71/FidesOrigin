@@ -2,6 +2,11 @@
  * hooks/useWebSocket.ts - WebSocket 连接 Hook
  * 带自动重连、心跳检测、使用 Zustand 存储连接状态
  * connect 使用 useCallback + 依赖优化
+ *
+ * [HIGH Fix #6] Added token-based authentication.
+ * Before connecting, fetch a short-lived token from the server's /api/auth/ws-token endpoint.
+ * The token is passed as a URL query param: wss://host/ws?token=xxx
+ * Reference: app/demo/page.tsx getWebSocketToken pattern.
  */
 import { useCallback, useEffect, useRef } from "react";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -113,18 +118,44 @@ export function useWebSocket(config: WebSocketConfig = {}) {
     return Math.max(0, delay + jitter);
   }, [reconnectBaseDelay, reconnectMaxDelay]);
 
+  // [HIGH Fix #6] Fetch short-lived WebSocket auth token from server
+  const fetchWsToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await fetch('/api/auth/ws-token', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        console.warn('[WebSocket] Failed to fetch WS token:', res.status);
+        return null;
+      }
+      const data = await res.json();
+      return data.token || null;
+    } catch (err) {
+      console.warn('[WebSocket] Error fetching WS token:', err);
+      return null;
+    }
+  }, []);
+
   // 连接 WebSocket - 使用 useCallback + 依赖优化
-  const connect = useCallback(() => {
-    const url = configUrl || getWsUrl();
-    if (!url) {
+  const connect = useCallback(async () => {
+    const baseUrl = configUrl || getWsUrl();
+    if (!baseUrl) {
       console.warn("[WebSocket] URL 未配置，跳过连接");
       setWsStatus("disconnected");
       return;
     }
 
-    // [Fix] Prevent duplicate connection attempts
+    // [HIGH Fix #6] Prevent duplicate connection attempts
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
       return;
+    }
+
+    // [HIGH Fix #6] Fetch auth token before connecting
+    const token = await fetchWsToken();
+    const url = token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+    if (!token) {
+      console.warn('[WebSocket] No auth token obtained — connecting without auth (may fail on server)');
     }
 
     // 清除之前的重连定时器

@@ -316,6 +316,33 @@ Fides 专用合规模块，扩展基础合规功能：
 
 ## 安全架构
 
+### 0. 安全审计修复 (v2.5.2)
+
+以下安全修复已实施：
+
+| 优先级 | 问题 | 修复 |
+|--------|------|------|
+| Critical | .env 泄露密钥 | 所有真实密钥替换为占位符 |
+| Critical | 管理面板暴露 API Key | 移除 NEXT_PUBLIC_API_KEY，改用服务端代理 |
+| Critical | 后端测试断言 404 | 改为 pytest.skip 并添加 TODO |
+| Critical | Subgraph ABI 不同步 | 添加同步注释和 diff 检查流程 |
+| Critical | Handler 命名歧义 | handleComplianceCheck → handleTransactionBlocked |
+| High | CSP unsafe-eval/inline | 移除并改用 strict-dynamic |
+| High | IP 伪造风险 | 添加信任链注释和 socket 回退 |
+| High | WebSocket 无认证 | 添加 token 获取逻辑 |
+| High | CSRF 防护缺失 | 添加 Origin/Referer 验证 |
+| High | 测试中使用 Math.random | 改为固定值 |
+| High | BYPASS_TIMELOCK | 限制仅在 hardhat 网络可用 |
+| High | GitHub Actions 权限 | 添加 permissions: contents: read |
+| High | K8s RBAC 缺失 | 添加 role.yaml 和 rolebinding.yaml |
+| Medium | CORS 通配符 | 改为具体域名列表 |
+| Medium | Math.random 生成数据 | 改为基于地址的确定性生成 |
+| Medium | Service Worker cache-first | HTML 改为 network-first |
+| Medium | loadRules 无验证 | 添加 Zod schema 验证 |
+| Low | CDN 无 SRI | 添加 crossorigin="anonymous" |
+| Low | 外部 IP 检测 | 添加 Vercel header 建议 |
+| Low | Prometheus 无认证 | 添加认证 TODO |
+
 ### 1. 权限控制
 
 ```

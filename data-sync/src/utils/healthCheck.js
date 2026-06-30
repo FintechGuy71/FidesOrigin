@@ -40,7 +40,10 @@ class HealthCheckServer {
     this.server = http.createServer(async (req, res) => {
       const parsedUrl = url.parse(req.url, true);
       const isDev = process.env.NODE_ENV === 'development';
-      res.setHeader('Access-Control-Allow-Origin', isDev ? '*' : 'http://localhost:3000');
+      // [Audit-Fix #30] CORS policy: In development, allow all origins (*) for local testing.
+      // In production, restrict to a specific origin to prevent unauthorized cross-origin requests.
+      // The production default (localhost:3000) should be overridden via the CORS_ALLOWED_ORIGINS env var.
+      res.setHeader('Access-Control-Allow-Origin', isDev ? '*' : (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000'));
 
       try {
         if (parsedUrl.pathname === '/health') {

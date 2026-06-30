@@ -26,8 +26,10 @@ class ChainalysisAdapter {
     }
     
     // 已知的制裁地址列表（用于演示和历史数据导入）
+    // [Audit-Fix #18] These addresses are from public sanctions sources.
+    // last_verified: 2024-08-08 — Re-verify against official OFAC/Chainalysis sources periodically.
     this.knownSanctionedAddresses = [
-      // Tornado Cash相关地址
+      // Tornado Cash相关地址 (OFAC 2022-08-08)
       '0x722122df12d4e14e13ac3b6895a86e84145b6967',
       '0xdd4c48c0b24039969fc16d1cdf626eab821d3384',
       '0xd90e2f925da8c4f35b3c9f9b8b0e4f8a5f5f5f5',

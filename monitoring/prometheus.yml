@@ -1,3 +1,12 @@
+# [Low Fix #65] TODO: Enable authentication for Prometheus scraping.
+# Options:
+#   1. Add basic_auth to scrape configs (username/password)
+#   2. Use bearer_token_file to reference a service account token
+#   3. Configure mTLS between Prometheus and the data-publisher pods
+# Example:
+#   basic_auth:
+#     username: prometheus
+#     password_file: /etc/prometheus/secrets/prom-password
 global:
   scrape_interval: 15s
   evaluation_interval: 15s

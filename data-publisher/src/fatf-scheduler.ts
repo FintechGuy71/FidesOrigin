@@ -42,6 +42,10 @@ export class FATFScheduler {
 
   /**
    * Start the weekly cron job.
+   * [Audit-Fix #29] Note: The cron job starts immediately, but the first pipeline run
+   * is deferred until the first cron tick. This avoids running the pipeline during
+   * service startup when other components (e.g., publisher) may not be fully initialized.
+   * If immediate execution is needed, call runPipeline() explicitly after start().
    */
   start(): void {
     if (!config.fatf.enabled) {

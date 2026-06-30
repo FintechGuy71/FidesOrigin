@@ -1,4 +1,4 @@
-import { ethers, Contract, Signer, JsonRpcProvider, TransactionResponse } from 'ethers';
+import { ethers, Contract, Signer, JsonRpcProvider, TransactionResponse, NonceManager } from 'ethers';
 import { RiskProfile, PublisherConfig, TxResult } from './types';
 import { config } from './config';
 import logger from './logger';
@@ -21,6 +21,7 @@ export class BlockchainPublisher {
   private provider: JsonRpcProvider;
   private contract: Contract;
   private signer?: Signer;
+  private nonceManager?: NonceManager;  // [Audit-Fix #1] Use NonceManager for proper nonce handling
   private address?: string;
   private nonce: number = 0;
   private isReady: boolean = false;
@@ -41,10 +42,14 @@ export class BlockchainPublisher {
       this.signer = await keyManager.getSigner();
       this.address = await keyManager.getAddress();
 
-      // Connect contract to signer
-      this.contract = this.contract.connect(this.signer) as Contract;
+      // [Audit-Fix #1] Wrap signer with NonceManager for automatic nonce management
+      // This prevents nonce-related transaction failures under concurrent load
+      this.nonceManager = new NonceManager(this.signer);
 
-      // Get current nonce
+      // Connect contract to signer (via NonceManager)
+      this.contract = this.contract.connect(this.nonceManager) as Contract;
+
+      // Get current nonce (for logging/monitoring only; NonceManager handles it automatically)
       this.nonce = await this.provider.getTransactionCount(this.address, 'latest');
 
       // Verify ORACLE_ROLE
@@ -79,32 +84,40 @@ export class BlockchainPublisher {
 
   /**
    * Get on-chain data for all addresses to determine which need updating
+   * [Audit-Fix #14] Added concurrency limiter to prevent overwhelming the RPC endpoint
+   * when querying large address lists. Uses a simple concurrency pool pattern.
    */
   async getOnChainData(addresses: string[]): Promise<Map<string, { score: number; tier: number; sanctioned: boolean; timestamp: number }>> {
     const results = new Map();
+    // [Audit-Fix #14] Limit concurrency to prevent RPC rate limiting
+    const MAX_CONCURRENT = 5;
 
     for (let i = 0; i < addresses.length; i += 10) {
       const batch = addresses.slice(i, i + 10);
       
-      const promises = batch.map(async (addr) => {
-        try {
-          const profile = await this.contract.riskProfiles(addr);
-          return {
-            address: addr,
-            score: Number(profile[0]),
-            tier: Number(profile[3]),
-            sanctioned: profile[5],
-            timestamp: Number(profile[2]),
-          };
-        } catch (error) {
-          // Address not registered yet
-          return null;
-        }
-      });
+      // Process in sub-batches with limited concurrency
+      for (let j = 0; j < batch.length; j += MAX_CONCURRENT) {
+        const concurrentBatch = batch.slice(j, j + MAX_CONCURRENT);
+        const promises = concurrentBatch.map(async (addr) => {
+          try {
+            const profile = await this.contract.riskProfiles(addr);
+            return {
+              address: addr,
+              score: Number(profile[0]),
+              tier: Number(profile[3]),
+              sanctioned: profile[5],
+              timestamp: Number(profile[2]),
+            };
+          } catch (error) {
+            // Address not registered yet
+            return null;
+          }
+        });
 
-      const batchResults = await Promise.all(promises);
-      for (const r of batchResults) {
-        if (r) results.set(r.address, r);
+        const batchResults = await Promise.all(promises);
+        for (const r of batchResults) {
+          if (r) results.set(r.address, r);
+        }
       }
     }
 

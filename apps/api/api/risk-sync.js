@@ -41,6 +41,9 @@ function checkOrigin(req, res) {
 }
 
 function checkApiKey(req, res) {
+  // [Low Fix #18] Development mode bypasses API key auth for convenience.
+  // TODO: In production, always require API key auth. Consider using a separate test token
+  // instead of completely disabling auth.
   if (process.env.NODE_ENV !== 'production') return true; // 开发环境跳过
   const key = req.headers['x-api-key'];
   if (!RISK_SYNC_API_KEY || key !== RISK_SYNC_API_KEY) {
@@ -298,9 +301,10 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error('Handler error:', error);
+    // [Medium Fix #10] Don't leak internal error details to client.
     return res.status(500).json({
       success: false,
-      error: error.message || 'Unknown error'
+      error: 'Internal server error. Please try again later.'
     });
   }
 };

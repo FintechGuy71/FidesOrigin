@@ -32,7 +32,8 @@ declare module "ethers" {
     signMessage(message: string): Promise<string>;
   }
 
+  // [MEDIUM Fix #13] 删除重复的 decodeBytes32String 重载声明
+  // 原来有两个重载（一个接受 string，一个接受 any），导致类型不明确
   export function encodeBytes32String(text: string): string;
   export function decodeBytes32String(bytes: string): string;
-  export function decodeBytes32String(bytes: any): string;
 }

@@ -1,0 +1,16 @@
+# [High Fix #55] K8s RBAC — bind role to fidesorigin-data-publisher service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fidesorigin-publisher-rolebinding
+  namespace: fidesorigin
+  labels:
+    app: fidesorigin-data-publisher
+subjects:
+  - kind: ServiceAccount
+    name: fidesorigin-publisher-sa
+    namespace: fidesorigin
+roleRef:
+  kind: Role
+  name: fidesorigin-publisher-role
+  apiGroup: rbac.authorization.k8s.io

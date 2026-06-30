@@ -75,11 +75,17 @@ export function handleWalletPolicySet(event: WalletPolicySet): void {
   let wallet = event.params.wallet.toHexString();
   let policyData = event.params.policy;
 
+  // [High Fix #26] Ensure WalletPolicy entity is always persisted.
   let policy = WalletPolicy.load(wallet);
   if (!policy) {
     policy = new WalletPolicy(wallet);
     policy.wallet = wallet;
+    policy.version = 0;
   }
+
+  // [Medium Fix #29] Track WalletPolicy version for audit trail.
+  let previousVersion = policy.version || 0;
+  policy.version = previousVersion + 1;
 
   policy.maxTxValue = policyData.maxTxValue;
   policy.maxTokenTxAmount = policyData.maxTokenTxAmount;

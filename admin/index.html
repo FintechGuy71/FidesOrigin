@@ -21,8 +21,12 @@
     <meta name="twitter:site" content="@fidesorigin">
     <link rel="canonical" href="https://fidesorigin.com/admin/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
+    <!-- [Low Fix #19] Added SRI (Subresource Integrity) attributes for CDN scripts. -->
+    <!-- TODO: Generate integrity hashes: `curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A` -->
+    <!-- For now, adding crossorigin="anonymous" to enable SRI when hashes are computed. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js" crossorigin="anonymous"></script>
+    <!-- [Low Fix #19] To add full SRI, compute the hash and add integrity="sha384-<hash>" to each script tag. -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }

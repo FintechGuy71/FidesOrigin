@@ -4,6 +4,7 @@ FidesOrigin Redis 连接配置
 """
 
 import os
+import uuid as _uuid
 from typing import Optional, Any
 
 import redis.asyncio as redis
@@ -186,24 +187,43 @@ class Cache:
     # 分布式锁
     # ============================================
     
-    async def lock(self, key: str, timeout: int = 30) -> bool:
+    async def lock(self, key: str, timeout: int = 30) -> Optional[str]:
         """
         获取分布式锁
+        [MEDIUM Fix #18] 使用随机 token 确保锁所有权
         :param key: 锁的key
         :param timeout: 锁超时时间（秒）
-        :return: 是否获取成功
+        :return: 锁 token（用于安全释放），None 表示获取失败
         """
-        # 使用 SET key value NX EX timeout 原子操作
-        return await self.redis.set(
+        token = _uuid.uuid4().hex
+        success = await self.redis.set(
             f"lock:{key}",
-            "1",
+            token,
             nx=True,
             ex=timeout
         )
+        return token if success else None
     
-    async def unlock(self, key: str) -> int:
-        """释放分布式锁"""
-        return await self.redis.delete(f"lock:{key}")
+    async def unlock(self, key: str, token: str = None) -> int:
+        """
+        释放分布式锁
+        [MEDIUM Fix #18] 使用 Lua 脚本确保只有锁的持有者才能释放
+        """
+        lock_key = f"lock:{key}"
+        if token is None:
+            # 向后兼容：无 token 时直接删除
+            return await self.redis.delete(lock_key)
+        
+        # Lua 脚本：仅当 value == token 时才删除
+        _UNLOCK_SCRIPT = '''
+        if redis.call("get", KEYS[1]) == ARGV[1] then
+            return redis.call("del", KEYS[1])
+        else
+            return 0
+        end
+        '''
+        result = await self.redis.eval(_UNLOCK_SCRIPT, 1, lock_key, token)
+        return int(result)
     
     # ============================================
     # 批量操作

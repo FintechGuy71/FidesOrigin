@@ -174,6 +174,7 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
      * @dev [C-2] 仅允许 to == address(0)，资金始终归还 originalOwner
      * @param recordId 隔离记录ID
      * @param to 必须为 0 地址（保留参数以兼容旧接口）
+     * @dev DEPRECATED: L-15 FIX: 请使用 releaseFunds(recordId) 替代。此函数保留仅为向后兼容。
      */
     function release(bytes32 recordId, address to) external onlyRole(RELEASE_ROLE) nonReentrant {
         require(to == address(0), "Use releaseFunds for owner return");
@@ -273,6 +274,22 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
      */
     function getRecordCount() external view returns (uint256) {
         return totalQuarantined;
+    }
+
+    /**
+     * @notice L-12 FIX: 分页查询记录ID列表（防止无界数组遍历导致 OOG）
+     * @param offset 起始索引
+     * @param limit 返回数量上限
+     */
+    function getRecordIdsPaginated(uint256 offset, uint256 limit) external view returns (bytes32[] memory page) {
+        uint256 total = recordIdList.length;
+        if (offset >= total) return new bytes32[](0);
+        uint256 end = offset + limit;
+        if (end > total) end = total;
+        page = new bytes32[](end - offset);
+        for (uint256 i = 0; i < page.length; i++) {
+            page[i] = recordIdList[offset + i];
+        }
     }
 
     // ============ Emergency Functions ============
@@ -417,12 +434,19 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
 
         totalReleased++;
         totalReleasedAmount += record.amount;
-        // H6 fix: check for underflow before decrementing
+        // H5 fix: check for underflow before decrementing
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 
-        // 资金始终归还 originalOwner
-        IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+        // H-05 FIX: 支持 ETH 释放 (当 token == address(0) 时使用 call{value: amount})
+        if (record.token == address(0)) {
+            // ETH 释放路径
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
+            require(ok, "ETH release failed");
+        } else {
+            // ERC20 释放路径
+            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+        }
 
         emit FundsReleased(
             recordId,
@@ -472,7 +496,16 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
             tokenQuarantinedAmount[record.token] -= record.amount;
 
-            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+            // H-05 FIX: 支持 ETH 批量释放 (当 token == address(0) 时使用 call{value: amount})
+            if (record.token == address(0)) {
+                (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
+                if (!ok) {
+                    emit BatchReleaseFailed(recordId, "ETH transfer failed");
+                    continue;
+                }
+            } else {
+                IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+            }
 
             emit FundsReleased(
                 recordId,

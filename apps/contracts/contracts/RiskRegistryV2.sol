@@ -12,6 +12,13 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
  * @dev 基于 UUPS 代理模式，保持 v0.2.1 存储布局完全兼容
  * @dev VERSION: 2.3.1
  *
+ * ⚠️ 升级路径警告:
+ * - ✅ 可从 v0.2.1 (RiskRegistry V1 初版) 直接升级
+ * - ❌ 不可从 V1.x (RiskRegistry 1.2.x) 直接升级，因为存储布局不兼容
+ *   V1.x 使用 `mapping(address => RiskProfile)` 而 V2 使用位打包 `_packedProfiles`
+ *   直接升级会导致所有风险数据丢失/损坏
+ * 如需从 V1.x 迁移，请部署新的 V2 合约并通过批量更新迁移数据
+ *
  * 存储兼容性说明:
  * - Slot 0-7: 与 v0.2.1 完全一致（_packedProfiles, _lastUpdateTime, _profileTags,
  *   sanctionedAddresses, _addressTags, _addressTagList, contractRegistry, entityAddresses）
@@ -29,6 +36,11 @@ contract RiskRegistryV2 is
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
     bytes32 public constant COMPLIANCE_ENGINE_ROLE = keccak256("COMPLIANCE_ENGINE_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
+    /// @notice I-17 NOTE: DEFAULT_ADMIN_ROLE 是 OpenZeppelin 内置的超级管理员角色。
+    ///         部署完成后，应将其转移给 FidesOriginTimelock 合约，
+    ///         以实现去中心化管理和防止单点权力集中。
+    ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
 
     /// @notice 合约版本号
     string public constant VERSION = "2.3.1";
@@ -156,6 +168,9 @@ contract RiskRegistryV2 is
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
+        // H-02 FIX: 版本兼容性检查 — 防止从不兼容的版本直接升级
+        // 确保 RiskRegistryV2 仅从 v0.2.1 或其他 V2.x 版本升级
+        // V1.x (RiskRegistry 1.2.x) 使用不同的存储布局，直接升级会导致数据损坏
         bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
         uint256 executeAfter = upgradeProposals[proposalId];
         require(executeAfter != 0, "No proposal for implementation");
@@ -350,6 +365,8 @@ contract RiskRegistryV2 is
         address[] calldata accounts,
         string calldata reason
     ) external onlyRole(ADMIN_ROLE) {
+        // M-06 FIX: 批量大小限制，防止 gas 耗尽
+        require(accounts.length <= 100, "Batch too large");
         // L-03: Emergency sanctions intentionally bypass MIN_UPDATE_INTERVAL for immediate response.
         // This is a design decision: sanctioned addresses must be flagged without delay.
         for (uint256 i = 0; i < accounts.length; i++) {

@@ -83,9 +83,13 @@ class APIKey(Base):
     
     id = Column(BigInteger, primary_key=True, index=True)
     key_hash = Column(String(255), nullable=False, unique=True)
+    # [CRITICAL Fix #3] 添加 key 字段以兼容 security.py 中的查询（同时保留 key_hash 用于安全查找）
+    key = Column(String(255), nullable=True, index=True, comment="明文 key 的 SHA-256 hash，用于快速查找")
     name = Column(String(100))
     is_active = Column(Boolean, default=True)
     rate_limit = Column(Integer, default=1000)
+    # [CRITICAL Fix #3] 添加 expires_at 字段支持密钥过期
+    expires_at = Column(DateTime(timezone=True), nullable=True, comment="API Key 过期时间，NULL 表示永不过期")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     request_count = Column(Integer, default=0)
@@ -226,6 +230,10 @@ class Transaction(Base):
     from_address_id = Column(BigInteger, ForeignKey("addresses.id", ondelete="SET NULL"))
     to_address_id = Column(BigInteger, ForeignKey("addresses.id", ondelete="SET NULL"))
     
+    # [MEDIUM Fix #17] 添加兼容字段供 risk_engine.py 查询使用
+    # risk_engine.py 通过 Transaction.address 查询，表示关联地址（from 或 to）
+    address = Column(String(255), nullable=True, index=True, comment="关联地址（兼容字段）")
+    
     # 交易金额
     value = Column(Numeric(36, 18), nullable=False)
     value_usd = Column(Numeric(24, 8))
@@ -241,6 +249,8 @@ class Transaction(Base):
     risk_score = Column(Numeric(5, 2), default=Decimal("0.00"))
     risk_level = Column(ENUM(RiskLevel, name="risk_level"), default=RiskLevel.UNKNOWN)
     risk_factors = Column(JSON, default=dict)
+    # [MEDIUM Fix #17] 添加 risk_indicators 别名字段供 schemas.py 使用
+    risk_indicators = Column(JSON, default=list, comment="风险指标列表")
     
     # Gas信息
     gas_used = Column(BigInteger)
@@ -250,6 +260,9 @@ class Transaction(Base):
     # 状态
     status = Column(String(50), default="confirmed")
     is_suspicious = Column(Boolean, default=False)
+    
+    # [MEDIUM Fix #17] 添加 analyzed_at 字段供 schemas.py 使用
+    analyzed_at = Column(DateTime(timezone=True), nullable=True, comment="分析时间")
     
     # 审计字段
     created_at = Column(DateTime(timezone=True), server_default=func.now())

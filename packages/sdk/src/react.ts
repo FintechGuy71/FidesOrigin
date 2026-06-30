@@ -9,6 +9,37 @@ import { FidesOriginClient } from './client';
 import type { ClientOptions, RiskCheckResult, BatchRiskCheckResult } from './types';
 import { FidesOriginError } from './error';
 
+// [MEDIUM Fix #14] 定义明确的 batch response 类型替代 any
+interface BatchRiskItem {
+  address?: string;
+  chain?: string;
+  risk?: {
+    score?: number;
+    level?: string;
+  };
+  scores?: Array<{ name?: string; score?: number; weight?: number; description?: string }>;
+  flags?: string[];
+  type?: string;
+  assessedAt?: string;
+  entities?: Array<{ name?: string; category?: string }>;
+  stats?: {
+    totalTransactions?: number;
+    totalVolumeUsd?: number;
+    firstSeenAt?: string;
+    lastSeenAt?: string;
+  };
+}
+
+interface BatchRiskErrorResponse {
+  address?: string;
+  error?: string;
+}
+
+interface BatchRiskAPIResponse {
+  results: BatchRiskItem[];
+  errors?: BatchRiskErrorResponse[];
+}
+
 export interface UseRiskCheckState {
   /** Risk assessment result */
   data: RiskCheckResult | null;
@@ -226,14 +257,16 @@ export function useBatchRiskCheck(options: ClientOptions = {}): UseBatchRiskChec
 
     try {
       const result = await clientRef.current!.batchCheckRisk({ addresses, chainId });
+      // [MEDIUM Fix #14] 使用明确的类型替代 any
+      const typedResult = result as unknown as BatchRiskAPIResponse;
       // [High Fix] Discard stale responses from earlier requests
       if (requestId !== requestIdRef.current) return;
       setState({
-        data: result.results.map((r: any) => ({
+        data: typedResult.results.map((r: BatchRiskItem) => ({
           address: r.address || '',
           chain: r.chain || 'ethereum',
           overallScore: r.risk?.score || 0,
-          overallLevel: r.risk?.level || 'medium',
+          overallLevel: (r.risk?.level as 'low' | 'medium' | 'high' | 'critical') || 'medium',
           scores: r.scores || [],
           flags: r.flags || [],
           addressType: r.type || 'unknown',
@@ -243,7 +276,7 @@ export function useBatchRiskCheck(options: ClientOptions = {}): UseBatchRiskChec
         })) as RiskCheckResult[],
         loading: false,
         error: null,
-        errors: (result.errors || []).map((e: any) => ({ address: e.address || '', error: e.error || '' })),
+        errors: (typedResult.errors || []).map((e: BatchRiskErrorResponse) => ({ address: e.address || '', error: e.error || '' })),
       });
     } catch (err) {
       if (requestId !== requestIdRef.current) return;

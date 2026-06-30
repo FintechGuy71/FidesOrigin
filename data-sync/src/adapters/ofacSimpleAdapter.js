@@ -7,6 +7,14 @@ const axios = require('axios');
 const { createLogger } = require('../utils/logger');
 const logger = createLogger('ofacSimpleAdapter');
 
+// [Audit-Fix #2] Import ethers for EIP-55 checksum validation
+const { ethers } = require('ethers');
+
+/** Wrapper to get checksummed address (EIP-55) */
+function ethersGetChecksumAddress(addr) {
+  return ethers.getAddress(addr);
+}
+
 class OFACSimpleAdapter {
   constructor() {
     this.name = 'OFAC_SDN';
@@ -69,6 +77,22 @@ class OFACSimpleAdapter {
     // 处理以太坊地址
     const uniqueEth = [...new Set(ethMatches.map(a => a.toLowerCase()))];
     for (const addr of uniqueEth) {
+      // [Audit-Fix #2] Add low_confidence flag for regex-matched addresses.
+      // The broad regex /0x[a-fA-F0-9]{40}/ may match non-address hex strings in OFAC free-text.
+      // Only addresses verified via idType="Digital Currency Address" in the full XML parser are high-confidence.
+      const hasValidChecksum = (() => {
+        try {
+          // EIP-55 checksum validation: if the address has mixed case, verify it
+          if (addr !== addr.toLowerCase() && addr !== addr.toUpperCase()) {
+            const checksummed = ethersGetChecksumAddress(addr);
+            return addr === checksummed;
+          }
+          return true; // all-lowercase or all-uppercase addresses pass (no checksum to verify)
+        } catch {
+          return false;
+        }
+      })();
+
       addresses.push({
         address: addr,
         chain: 'ethereum',
@@ -81,6 +105,10 @@ class OFACSimpleAdapter {
           source: 'OFAC_SDN',
           listType: 'SDN',
           addedAt: new Date().toISOString(),
+          // [Audit-Fix #2] Flag addresses extracted via broad regex as low_confidence.
+          // They should be cross-verified with the structured XML feed (idType-based extraction).
+          low_confidence: !hasValidChecksum,
+          extraction_method: 'regex_text_scan',
         }),
       });
     }

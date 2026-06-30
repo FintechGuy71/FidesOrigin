@@ -189,6 +189,9 @@ function releaseLock(): void {
 }
 
 /** Atomically write state file (write temp → rename + backup old). */
+// [Audit-Fix #32] Note: saveState performs atomic write via temp+rename pattern.
+// For multi-instance deployments, ensure only one instance writes to STATE_FILE at a time
+// (enforced by the acquireLock function). The lock file is PID-based with 5-min staleness detection.
 function saveState(state: SyncState): void {
   if (!acquireLock()) {
     logger.error('Could not acquire state file lock — another sync process may be running');
@@ -798,6 +801,8 @@ export async function runBatchSync(options: BatchSyncOptions = {}): Promise<{
 
   // ─── Source 1: OFAC SDN (with country enrichment) ─────────────────────────
   const ofacEnriched = await fetchOfacAddresses({ incremental, days, retryFailed });
+  // [Audit-Fix #15] Use Set for O(1) membership checks instead of Array.includes() which is O(n).
+  // For large datasets (10k+ addresses), Array.includes causes significant performance degradation.
   const ofacSynced = new Set(state.sources[OFAC_SOURCE.id]?.addresses || []);
   const ofacFailed = new Set(state.sources[OFAC_SOURCE.id]?.failed || []);
 
@@ -844,6 +849,8 @@ export async function runBatchSync(options: BatchSyncOptions = {}): Promise<{
     }
     state.sources[OFAC_SOURCE.id] = {
       count: ofacSynced.size,
+      // [Audit-Fix #15] Note: For very large datasets (>100k addresses), consider periodically
+      // pruning the addresses array or migrating to a Bloom filter for space efficiency.
       addresses: Array.from(ofacSynced),
       enriched: existingEnriched,
       failed: Array.from(ofacFailed),

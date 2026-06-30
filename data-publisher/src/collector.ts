@@ -236,6 +236,8 @@ export class DataCollector {
 
   /**
    * Fetch OpenSanctions API
+   * [Audit-Fix #5] Implemented pagination loop to fetch all pages,
+   * not just the first 1000 results.
    */
   private async fetchOpenSanctions(config: DataSourceConfig): Promise<RawRiskData[]> {
     const headers: Record<string, string> = {};
@@ -243,33 +245,52 @@ export class DataCollector {
       headers['Authorization'] = `ApiKey ${config.apiKey}`;
     }
 
-    const data = await safeAxiosGet(`${config.endpoint}entities/?schema=Person&limit=1000`, {
-      headers,
-      timeout: config.timeout,
-      maxRedirects: 5,
-      validateStatus: (status: number) => status === 200,
-    });
-
     const results: RawRiskData[] = [];
+    const pageSize = 1000;
+    let offset = 0;
+    let hasMore = true;
 
-    for (const entity of data?.results || []) {
-      // Extract Ethereum addresses from properties
-      const cryptoAddresses = entity?.properties?.cryptoAddress || [];
-      for (const addr of cryptoAddresses) {
-        if (typeof addr !== 'string') continue;
-        const address = addr.toLowerCase().trim();
-        if (address.match(/^0x[0-9a-f]{40}$/)) {
-          results.push({
-            address,
-            source: 'OpenSanctions',
-            riskScore: entity?.properties?.riskScore || 80,
-            tier: RiskTier.HIGH,
-            tags: ['sanctioned', 'opensanctions'],
-            isSanctioned: true,
-            reason: entity?.caption || 'OpenSanctions listed entity',
-            confidence: 0.85,
-          });
+    while (hasMore) {
+      const url = `${config.endpoint}entities/?schema=Person&limit=${pageSize}&offset=${offset}`;
+      const data = await safeAxiosGet(url, {
+        headers,
+        timeout: config.timeout,
+        maxRedirects: 5,
+        validateStatus: (status: number) => status === 200,
+      });
+
+      const pageResults = data?.results || [];
+      if (pageResults.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      for (const entity of pageResults) {
+        // Extract Ethereum addresses from properties
+        const cryptoAddresses = entity?.properties?.cryptoAddress || [];
+        for (const addr of cryptoAddresses) {
+          if (typeof addr !== 'string') continue;
+          const address = addr.toLowerCase().trim();
+          if (address.match(/^0x[0-9a-f]{40}$/)) {
+            results.push({
+              address,
+              source: 'OpenSanctions',
+              riskScore: entity?.properties?.riskScore || 80,
+              tier: RiskTier.HIGH,
+              tags: ['sanctioned', 'opensanctions'],
+              isSanctioned: true,
+              reason: entity?.caption || 'OpenSanctions listed entity',
+              confidence: 0.85,
+            });
+          }
         }
+      }
+
+      // If we got fewer than pageSize results, we've reached the end
+      if (pageResults.length < pageSize) {
+        hasMore = false;
+      } else {
+        offset += pageSize;
       }
     }
 

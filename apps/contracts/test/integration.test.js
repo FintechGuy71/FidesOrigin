@@ -73,6 +73,7 @@ describe('Integration Tests', function () {
       expect(await testUSD.balanceOf(user1.address)).to.be.gte(amount);
     });
 
+        // [High Fix #37] TODO: Re-enable this skipped test. GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
     it.skip('should freeze funds permanently for high-risk addresses', async function () {
       // SKIP REASON: Feature behavior verified — freezePermanently makes record unrecoverable.
       // governanceUnlock reverts with AlreadyFrozen. This is intended behavior.

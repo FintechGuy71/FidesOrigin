@@ -468,15 +468,33 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
             _enforcePolicy(ops[i]);
 
             if (complianceEnabled && address(complianceEngine) != address(0)) {
-                (IAssetCompliance.Decision decision, string memory reason) =
-                    complianceEngine.validateOperation(owner, ops[i], address(this));
+                // L-16 FIX: 统一使用 try/catch 模式，避免单个操作合规检查失败导致整批回滚
+                bool opBlocked = false;
+                string memory blockReason = "";
+                IAssetCompliance.Decision opDecision = IAssetCompliance.Decision.ALLOW;
+                
+                try complianceEngine.validateOperation(owner, ops[i], address(this)) returns (IAssetCompliance.Decision decision, string memory reason) {
+                    if (decision == IAssetCompliance.Decision.BLOCK) {
+                        opBlocked = true;
+                        blockReason = reason;
+                        opDecision = decision;
+                    }
+                } catch Error(string memory reason) {
+                    opBlocked = true;
+                    blockReason = reason;
+                    opDecision = IAssetCompliance.Decision.BLOCK;
+                } catch {
+                    opBlocked = true;
+                    blockReason = "compliance check failed";
+                    opDecision = IAssetCompliance.Decision.BLOCK;
+                }
 
-                if (decision == IAssetCompliance.Decision.BLOCK) {
+                if (opBlocked) {
                     results[i] = OperationResult({
                         success: false,
                         returnData: "",
-                        decision: decision,
-                        reason: reason
+                        decision: opDecision,
+                        reason: blockReason
                     });
                     blockedCount++;
                     continue;

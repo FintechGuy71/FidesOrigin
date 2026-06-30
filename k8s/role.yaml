@@ -1,0 +1,22 @@
+# [High Fix #55] K8s RBAC — least-privilege role for fidesorigin-data-publisher
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fidesorigin-publisher-role
+  namespace: fidesorigin
+  labels:
+    app: fidesorigin-data-publisher
+rules:
+  # Allow reading own configmaps and secrets
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  # Allow updating own configmaps (for leader election / coordination)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["fidesorigin-publisher-leader"]
+    verbs: ["update", "patch"]
+  # Allow reading pods (for self-monitoring)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]

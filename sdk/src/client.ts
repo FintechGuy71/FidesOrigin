@@ -1,3 +1,14 @@
+/**
+ * @deprecated 此文件为旧版 SDK Client 实现，不再维护。
+ * [HIGH Fix #5] 请使用 packages/sdk/src/client.ts 中的新版本。
+ * 
+ * 新版本提供更完善的类型支持、React Hooks 集成、
+ * 更安全的认证流程和更健壮的错误处理。
+ * 
+ * 迁移指南：
+ * - import { FidesOriginClient } from '@fidesorigin/sdk'
+ * - 配置方式：new FidesOriginClient({ apiKey: '...', baseUrl: '...' })
+ */
 import { Contract, JsonRpcProvider, isAddress } from "ethers";
 import type { Provider } from "ethers";
 import { RISK_REGISTRY_ABI, POLICY_ENGINE_ABI } from "./abi";
@@ -228,6 +239,12 @@ export class FidesClient {
    */
   async verifyNetwork(): Promise<void> {
     if (this.networkConfig.chainId === undefined) {
+      // [MEDIUM Fix #12] 未知 chainId 时发出警告
+      console.warn(
+        '[FidesOrigin SDK Warning] chainId is undefined. ' +
+        'Network verification is skipped. This may lead to unexpected behavior. ' +
+        'Please specify chainId in your network configuration.'
+      );
       return;
     }
     const network = await this.provider.getNetwork();

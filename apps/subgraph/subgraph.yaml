@@ -60,15 +60,15 @@ dataSources:
         - event: ComplianceCheckPerformed(indexed address,indexed uint256,indexed bool,uint256,uint256,bytes32)
           handler: handleComplianceCheckPerformed
         - event: TransactionBlocked(indexed address,indexed address,indexed uint256,address,string,uint256,uint256)
-          handler: handleComplianceCheck
+          handler: handleTransactionBlocked
         - event: TransactionQuarantined(indexed address,indexed address,indexed uint256,address,bytes32,uint256,uint256)
-          handler: handleFundsHeld
+          handler: handleTransactionQuarantined
         - event: QuarantineReleased(indexed bytes32,indexed address,uint256)
-          handler: handleFundsReleased
+          handler: handleQuarantineReleased
         - event: RulePaused(indexed bytes32)
-          handler: handleEmergencyModeActivated
+          handler: handleRulePaused
         - event: RuleUnpaused(indexed bytes32)
-          handler: handleEmergencyModeDeactivated
+          handler: handleRuleUnpaused
       file: ./src/mappings/complianceEngine.ts
   - kind: ethereum
     name: PolicyEngine

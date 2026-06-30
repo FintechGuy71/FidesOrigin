@@ -110,7 +110,12 @@ async function main(): Promise<void> {
     });
     process.on('unhandledRejection', (reason) => {
       logger.error('Unhandled rejection', { reason });
-      process.exit(1); // [FIX] Unhandled rejections are fatal — exit to prevent state corruption
+      // [Audit-Fix #23] Call shutdown before exiting instead of raw process.exit(1).
+      // This allows pending HTTP responses to complete, connections to close, and
+      // cluster state to be cleaned up before the process terminates.
+      shutdown('unhandledRejection').finally(() => {
+        process.exit(1);
+      });
     });
 
     logger.info('Data publisher ready and running');

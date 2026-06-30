@@ -12,6 +12,10 @@ on:
   # 也可以手动触发（用于测试）
   workflow_dispatch:
 
+# [High Fix #54] Explicit least-privilege permissions for CI/CD workflows.
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest

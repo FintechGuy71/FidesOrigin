@@ -144,6 +144,7 @@ describe('RiskOracle', function () {
       ).to.be.revertedWithCustomError(riskOracle, 'DeadlineExpired');
     });
 
+        // [High Fix #37] TODO: Re-enable this skipped test. GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
     it.skip('should require multiple confirmations when configured', async function () {
       // SKIP REASON: Needs mock — requires block mining between submissions due to UPDATE_DELAY_BLOCKS = 1.
       // First confirmation mines a block, second confirmation must be in a later block.

@@ -193,6 +193,10 @@ class OpenSourceAdapter {
    */
   async fetchCustomAddresses() {
     // 一些已知的风险地址，从社区收集
+    // [Audit-Fix #10] NOTE: The zero address (0x000...000) is included here as a flagged address,
+    // but it is NOT a malicious actor. It is the Ethereum burn address / default address.
+    // It is flagged because transactions involving the zero address may indicate dust attacks
+    // or airdrop scams. This flag should be reviewed periodically.
     const customAddresses = [
       {
         address: '0x0000000000000000000000000000000000000000',
@@ -202,7 +206,7 @@ class OpenSourceAdapter {
         riskScore: 100,
         tags: JSON.stringify(['Burn', 'Custom']),
         sources: JSON.stringify([this.name, 'CustomList']),
-        metadata: JSON.stringify({ note: 'Zero address, commonly used in scams' }),
+        metadata: JSON.stringify({ note: 'Zero address — not inherently malicious; flagged for scam pattern detection (dust attacks, fake airdrops)' }),
       },
     ];
     

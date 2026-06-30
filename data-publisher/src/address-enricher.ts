@@ -145,7 +145,13 @@ export class AddressEnricher {
   }
 }
 
-/** Minimal country-name → ISO2 map for common FATF entries. */
+/** Minimal country-name → ISO2 map for common FATF entries.
+ * [Audit-Fix #19] This hardcoded mapping is intentionally minimal — it covers FATF-listed
+ * jurisdictions only. For complete country name → ISO2 conversion, consider using the
+ * well-maintained `i18n-iso-countries` npm package which supports 300+ country codes
+ * and multiple naming conventions (ISO 3166-1 alpha-2/alpha-3, official names, etc.).
+ * Install: `npm install i18n-iso-countries`
+ */
 const COUNTRY_NAME_TO_ISO2: Record<string, string> = {
   'north korea': 'KP',
   'dprk': 'KP',

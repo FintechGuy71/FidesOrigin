@@ -44,6 +44,8 @@ USER fides
 
 EXPOSE 9090
 
+# [Medium Fix #57] NODE_ENV=production is explicitly set for security.
+# This disables development-only code paths that may skip authentication.
 ENV NODE_ENV=production
 ENV LOG_LEVEL=info
 

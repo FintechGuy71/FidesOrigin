@@ -1,3 +1,12 @@
+# ─── [Critical Fix #21] ABI Synchronization Note ─────────────────────────────
+# IMPORTANT: There are two subgraph directories in this monorepo:
+#   1. apps/subgraph/  — used for deployment (this directory's sibling)
+#   2. subgraph/       — this directory
+# The ABIs in both directories MUST be kept in sync whenever a contract is upgraded.
+# Before deploying, run: `diff apps/subgraph/abis/ subgraph/abis/`
+# If they differ, update the stale copy and re-run `graph codegen`.
+# ──────────────────────────────────────────────────────────────────────────────
+
 specVersion: 1.0.0
 indexerHints:
   prune: auto

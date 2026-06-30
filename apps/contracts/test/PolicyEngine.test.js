@@ -90,6 +90,7 @@ describe('PolicyEngine', function () {
     });
   });
 
+    // [High Fix #37] TODO: Re-enable this skipped test suite. GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
   describe.skip('Operation Evaluation', function () {
     // SKIP REASON: Feature not implemented in current contract.
     // evaluateOperation exists but wallet policy checks (blockContractCalls) are not implemented.

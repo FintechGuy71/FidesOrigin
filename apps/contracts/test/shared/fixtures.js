@@ -27,9 +27,9 @@ async function deployFidesOriginFixture() {
   // 3. Deploy RiskOracle (mock router address)
   // L-14 NOTE: mockRouter is a random address; real Chainlink tests need MockChainlinkRouter
   const mockRouter = ethers.Wallet.createRandom().address;
-  // 使用动态生成的 donId 和 subscriptionId，避免硬编码测试值
-  const donId = ethers.encodeBytes32String('test-don-' + Math.floor(Math.random() * 10000));
-  const subscriptionId = Math.floor(Math.random() * 1000000) + 1;
+  // [High Fix #35] Replaced Math.random with fixed values for deterministic test results.
+  const donId = ethers.encodeBytes32String('test-don-fixed-001');
+  const subscriptionId = 42;
   const RiskOracle = await ethers.getContractFactory('RiskOracle');
   const riskOracle = await RiskOracle.deploy(
     mockRouter,

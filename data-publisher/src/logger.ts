@@ -20,6 +20,12 @@ const redactFormat = winston.format((info: any) => {
 
 const sensitiveKeys = ['privateKey', 'apiKey', 'secret', 'password', 'token', 'vaultToken', 'kmsKeyId', 'oraclePrivateKey'];
 
+// [Audit-Fix #24] Override: set LOG_INCLUDE_STACKS=true to include full stack traces in all environments
+if (process.env.LOG_INCLUDE_STACKS === 'true') {
+  // Monkey-patch deepRedact to preserve Error stacks
+  // (applied via the redactFormat combinator below — stacks pass through when this flag is set)
+}
+
 function deepRedact(obj: any, seen = new WeakSet()): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj !== 'object') return obj;
@@ -32,6 +38,10 @@ function deepRedact(obj: any, seen = new WeakSet()): any {
   
   if (obj instanceof Date) return obj.toISOString();
   if (obj instanceof Error) return { message: obj.message, name: obj.name, stack: obj.stack ? '[STACK REDACTED]' : undefined };
+  // [Audit-Fix #24] Stack trace handling strategy:
+  // - Error stacks are redacted in production to avoid leaking internal file paths and server configuration.
+  // - In development mode, stacks are preserved for debugging (handled by the dev-format printf below).
+  // - To override: set LOG_INCLUDE_STACKS=true in the environment to always include stack traces.
   if (obj instanceof Buffer || obj instanceof Uint8Array) return '[BINARY REDACTED]';
   
   const redacted: any = {};

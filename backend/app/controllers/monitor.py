@@ -29,6 +29,20 @@ import secrets
 from app.core.security import get_current_user
 
 
+# [HIGH Fix #9] 允许的 WebSocket Origin 列表
+_ALLOWED_WS_ORIGINS = set(settings.CORS_ORIGINS) | {"http://localhost:3000", "http://localhost:5173"}
+
+
+async def _validate_origin(websocket: WebSocket) -> bool:
+    """[HIGH Fix #9] 验证 WebSocket 请求的 Origin header"""
+    origin = websocket.headers.get("origin", "")
+    if not origin:
+        # 非浏览器客户端（如 curl）可能不携带 Origin，允许无 Origin 连接但记录日志
+        logger.debug("websocket_no_origin_header")
+        return True
+    return origin in _ALLOWED_WS_ORIGINS
+
+
 @router.websocket("/stream")
 async def monitor_stream(
     websocket: WebSocket,
@@ -44,6 +58,11 @@ async def monitor_stream(
     - **addresses**: 要监控的地址列表，逗号分隔
     - **min_risk_score**: 只推送风险评分高于此值的交易
     
+    认证流程（[CRITICAL Fix #1]）：
+    1. 客户端先建立 WebSocket 连接（不传递 api_key）
+    2. 连接后发送 {"type": "auth", "api_key": "<your-key>"} 进行认证
+    3. 认证成功后开始推送数据
+    
     消息格式：
     ```json
     {
@@ -53,6 +72,11 @@ async def monitor_stream(
     }
     ```
     """
+    # [HIGH Fix #9] 验证 Origin header
+    if not await _validate_origin(websocket):
+        await websocket.close(code=4003, reason="Origin not allowed")
+        return
+    
     # 解析地址列表
     address_list = [addr.strip().lower() for addr in addresses.split(",") if addr.strip()]
     
@@ -68,10 +92,26 @@ async def monitor_stream(
             await websocket.close(code=4001, reason="Invalid address format")
             return
     
-    # WebSocket 认证 - 使用安全的 token 比较
-    api_key = websocket.query_params.get("api_key", "")
-    if not api_key:
-        await websocket.close(code=4001, reason="Missing API key")
+    # [CRITICAL Fix #1] WebSocket 认证改为连接后通过消息发送
+    # 不再从 query_params 读取 api_key（避免 URL 明文传输）
+    # 先接受连接，然后等待客户端发送 auth 消息
+    await websocket.accept()
+    
+    try:
+        # 等待认证消息（超时 10 秒）
+        auth_data = await asyncio.wait_for(websocket.receive_text(), timeout=10.0)
+        auth_msg = json.loads(auth_data)
+        
+        if auth_msg.get("type") != "auth" or not auth_msg.get("api_key"):
+            await websocket.close(code=4001, reason="Authentication required: send {\"type\": \"auth\", \"api_key\": \"...\"}")
+            return
+        
+        api_key = auth_msg["api_key"]
+    except asyncio.TimeoutError:
+        await websocket.close(code=4001, reason="Authentication timeout")
+        return
+    except (json.JSONDecodeError, KeyError):
+        await websocket.close(code=4001, reason="Invalid auth message")
         return
     
     # 验证 API Key

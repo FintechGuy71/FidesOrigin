@@ -52,19 +52,28 @@ class Token(BaseModel):
 
 def create_access_token(username: str, role: str = "admin") -> str:
     """生成 JWT access token"""
+    # [CRITICAL Fix #2] 移除硬编码 fallback secret，secret 为空时直接报错
+    secret = settings.SECRET_KEY
+    if not secret:
+        raise RuntimeError(
+            "SECRET_KEY is not configured. Set it via environment variable or .env file. "
+            "JWT token generation is disabled until a proper secret is provided."
+        )
     payload = {
         "sub": username,
         "role": role,
         "iat": int(time.time()),
         "exp": int(time.time()) + JWT_EXPIRE_MINUTES * 60,
     }
-    secret = settings.SECRET_KEY or "dev-secret-key-change-in-production"
     return jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
 
 
 def decode_access_token(token: str) -> TokenData:
     """解码并验证 JWT token"""
-    secret = settings.SECRET_KEY or "dev-secret-key-change-in-production"
+    # [CRITICAL Fix #2] 移除硬编码 fallback secret
+    secret = settings.SECRET_KEY
+    if not secret:
+        raise AuthenticationException("SECRET_KEY is not configured")
     try:
         payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
@@ -158,9 +167,10 @@ async def csrf_protection_middleware(
         return response
     
     # 状态改变方法：验证 CSRF Token
-    # 跳过 WebSocket 和 API 认证端点
-    if request.url.path.startswith("/api/v1"):
-        # API 端点使用 API Key 认证，不需要 CSRF
+    # [HIGH Fix #7] 仅对携带 Authorization header（API Key / Bearer token 模式）的请求跳过 CSRF
+    # JWT cookie 请求仍需 CSRF 检查
+    # X-API-Key header 也视为 API Key 模式，跳过 CSRF
+    if request.headers.get("authorization") or request.headers.get("x-api-key"):
         response = await call_next(request)
         return response
     
@@ -200,12 +210,22 @@ SESSION_INACTIVITY_MINUTES = 15  # 不活动超时
 
 class SessionManager:
     """会话管理器"""
+    # [MEDIUM Fix #20] 安全建议：生产环境应使用 Redis 存储会话而非内存字典。
+    # 当前内存字典在单进程部署中可用，但在多进程/多实例部署中会导致会话不一致。
+    # 迁移建议：将 _sessions 替换为 Redis hash，key = "session:{session_id}"。
+    # 同时添加最大会话数限制以防止内存耗尽。
+    MAX_SESSIONS = 10000  # 最大会话数限制
     
     def __init__(self):
         self._sessions: dict = {}  # session_id -> {created_at, last_activity, data}
     
     def create_session(self, session_id: str, data: dict = None) -> dict:
         """创建新会话"""
+        # [MEDIUM Fix #20] 添加最大会话数限制
+        if len(self._sessions) >= self.MAX_SESSIONS:
+            self.cleanup_expired()
+            if len(self._sessions) >= self.MAX_SESSIONS:
+                raise RuntimeError("Maximum session limit reached")
         now = datetime.now(timezone.utc)
         session = {
             "created_at": now,
@@ -614,8 +634,11 @@ async def verify_api_key(
     
     try:
         # 查询数据库
+        # [CRITICAL Fix #3] 使用 key_hash 查询（与 models.py 中 APIKey.key_hash 一致）
+        import hashlib
+        key_hash = hashlib.sha256(api_key.encode()).hexdigest()
         result = await db.execute(
-            select(APIKey).where(APIKey.key == api_key, APIKey.is_active == True)
+            select(APIKey).where(APIKey.key_hash == key_hash, APIKey.is_active == True)
         )
         key_record = result.scalar_one_or_none()
         
@@ -623,8 +646,8 @@ async def verify_api_key(
             logger.warning("api_key_invalid", api_key_prefix=api_key[:8] if len(api_key) > 8 else "")
             return False
         
-        # 检查是否过期
-        if key_record.expires_at and key_record.expires_at < datetime.now(timezone.utc):
+        # [CRITICAL Fix #3] 检查是否过期（使用新增的 expires_at 字段）
+        if hasattr(key_record, 'expires_at') and key_record.expires_at and key_record.expires_at < datetime.now(timezone.utc):
             logger.warning("api_key_expired", api_key_id=str(key_record.id))
             return False
         

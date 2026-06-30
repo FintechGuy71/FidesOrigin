@@ -404,6 +404,10 @@ class VaultKeyManager implements IKeyManager {
       // Best-effort cleanup: clear the private key string reference
       // NOTE: Strings are immutable in JS, so the value may still exist in memory until GC.
       // For production, migrate to Vault transit engine.
+      // [Audit-Fix #31] Buffer.fill(0) only zeroes the buffer's backing memory; it does NOT
+      // guarantee the original string is wiped from the JS heap. Consider using a Uint8Array
+      // throughout the key lifecycle to ensure deterministic zeroing. V8's GC may also compact
+      // or move strings, leaving copies in old-generation memory.
       try {
         const buf = Buffer.from(privateKey);
         buf.fill(0);

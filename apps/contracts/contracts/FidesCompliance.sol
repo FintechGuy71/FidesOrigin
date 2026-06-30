@@ -25,6 +25,11 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     
+    /// @notice I-17 NOTE: DEFAULT_ADMIN_ROLE 是 OpenZeppelin 内置的超级管理员角色。
+    ///         部署完成后，应将其转移给 FidesOriginTimelock 合约，
+    ///         以实现去中心化管理和防止单点权力集中。
+    ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
+    
     /// @notice 合约版本号
     string public constant VERSION = "1.3.1";
 
@@ -241,7 +246,8 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         returns (uint256 riskScore, bool isSanctioned, uint256 lastUpdated)
     {
         if (account == address(0) || address(riskRegistry) == address(0)) {
-            return (0, false, 0);
+            // L-13 FIX: 统一 Fail-Closed 行为 — 与 _getRiskScore 一致返回 100
+            return (100, false, 0);
         }
         riskScore = _getRiskScore(account);
         isSanctioned = riskRegistry.isSanctioned(account);
@@ -323,6 +329,9 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         address token,
         uint256 deadline
     ) external whenNotPaused nonReentrant returns (bool allowed) {
+        // H-03 FIX: 调用者验证 — 确保只有 from 本人才能通过中间合约发起交易
+        // 防止恶意中间合约绕过合规检查以其他用户身份执行
+        require(msg.sender == from, "Caller must be from");
         // H-02: 强制 deadline 校验
         uint256 currentTime = block.timestamp;
         if (deadline == 0) revert DeadlineExpired(0, currentTime);

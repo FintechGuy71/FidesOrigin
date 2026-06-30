@@ -4,6 +4,10 @@
 **网络**: Sepolia Testnet (Chain ID: 11155111)
 **部署者**: `0x5F6Ae278e7a62E64F9F467a91B693f372b84a374`
 
+> [Fix #46] **安全修复更新 (2026-07-01)**: 已完成 72 项安全审计修复。
+> 关键变更：升级脚本添加了网络限制 (BYPASS_TIMELOCK 仅在 hardhat 网络)、
+> Hardhat 配置添加了 KMS 迁移 TODO、CI/CD 添加了最小权限。
+
 ---
 
 ## 部署记录汇总

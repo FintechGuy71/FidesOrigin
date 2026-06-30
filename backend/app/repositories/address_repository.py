@@ -170,8 +170,10 @@ class AddressRepository:
         )
         
         if query:
+            # [HIGH Fix #8] 转义 SQL LIKE 通配符，防止注入
+            safe_query = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             base_query = base_query.where(
-                AddressRisk.address.ilike(f"%{query}%")
+                AddressRisk.address.ilike(f"%{safe_query}%", escape="\\")
             )
         
         if risk_level:

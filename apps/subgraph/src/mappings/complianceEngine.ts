@@ -207,7 +207,11 @@ export function handleComplianceCheckPerformed(event: ComplianceCheckPerformed):
   );
 }
 
-export function handleComplianceCheck(event: TransactionBlocked): void {
+// [Critical Fix #22] Handler renamed for semantic clarity.
+// Old name: handleComplianceCheck → was ambiguous (could mean any compliance check)
+// New name: handleTransactionBlocked → clearly describes the event being handled.
+// Note: The subgraph.yaml still references the old handler name for backward compatibility.
+export function handleTransactionBlocked(event: TransactionBlocked): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let decision = 'BLOCK';
   let check = new ComplianceCheck(id);
@@ -244,7 +248,7 @@ export function handleComplianceCheck(event: TransactionBlocked): void {
   );
 }
 
-export function handleFundsHeld(event: TransactionQuarantined): void {
+export function handleTransactionQuarantined(event: TransactionQuarantined): void {
   let hold = new HoldRecord(event.params.quarantineId.toHexString());
   hold.owner = event.params.from.toHexString();
   hold.asset = event.params.token.toHexString();
@@ -278,7 +282,7 @@ export function handleFundsHeld(event: TransactionQuarantined): void {
   );
 }
 
-export function handleFundsReleased(event: QuarantineReleased): void {
+export function handleQuarantineReleased(event: QuarantineReleased): void {
   let hold = HoldRecord.load(event.params.quarantineId.toHexString());
   if (hold) {
     let amountBefore = hold.amount;
@@ -316,7 +320,7 @@ export function handleFundsReleased(event: QuarantineReleased): void {
   }
 }
 
-export function handleEmergencyModeActivated(event: RulePaused): void {
+export function handleRulePaused(event: RulePaused): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new OperationLog(id);
   logEntry.timestamp = event.block.timestamp;
@@ -329,7 +333,7 @@ export function handleEmergencyModeActivated(event: RulePaused): void {
   logEntry.save();
 }
 
-export function handleEmergencyModeDeactivated(event: RuleUnpaused): void {
+export function handleRuleUnpaused(event: RuleUnpaused): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new OperationLog(id);
   logEntry.timestamp = event.block.timestamp;

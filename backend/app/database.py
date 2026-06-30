@@ -13,11 +13,13 @@ settings = get_settings()
 # 创建基类（用于 Alembic 和模型定义）
 Base = declarative_base()
 
-# 数据库引擎（延迟初始化）
+# [LOW Fix #23] 改为 lazy initialization，避免模块级导入时立即创建引擎
+# 模块级引擎初始化会在 import 时就创建连接池，即使只是导入也消耗资源
 _async_engine = None
 
+
 def get_async_engine():
-    """获取或创建异步数据库引擎"""
+    """获取或创建异步数据库引擎（lazy initialization）"""
     global _async_engine
     if _async_engine is None:
         _async_engine = create_async_engine(
@@ -31,9 +33,10 @@ def get_async_engine():
         )
     return _async_engine
 
+
 # 为了兼容现有代码，提供模块级别的引擎引用
-# 注意：这会在首次访问时初始化
-async_engine = get_async_engine()
+# [LOW Fix #23] 不再模块级初始化，改为 None；需要时调用 get_async_engine()
+async_engine = None
 
 # 测试环境使用 NullPool（避免连接池问题）
 test_engine = create_async_engine(
@@ -44,6 +47,7 @@ test_engine = create_async_engine(
 
 # 创建会话工厂 - 使用函数以便在测试时可以被覆盖
 _AsyncSessionLocal = None
+
 
 def get_async_session_maker():
     """获取或创建异步会话工厂"""
@@ -57,6 +61,7 @@ def get_async_session_maker():
             autoflush=False,
         )
     return _AsyncSessionLocal
+
 
 # 模块级别兼容
 AsyncSessionLocal = get_async_session_maker()
@@ -72,19 +77,9 @@ TestingSessionLocal = async_sessionmaker(
 )
 
 
-async def get_db():
-    """
-    FastAPI 依赖注入用数据库会话生成器
-    """
-    session = get_async_session_maker()()
-    try:
-        yield session
-        await session.commit()
-    except Exception:
-        await session.rollback()
-        raise
-    finally:
-        await session.close()
+# [LOW Fix #22] get_db 已在 di.py 中定义，此处仅 re-export 以保持向后兼容
+# 不再重复定义，避免与 di.py 中的版本产生不一致
+from app.core.di import get_db as get_db  # noqa: F401, E402
 
 
 async def init_db():

@@ -56,7 +56,11 @@ const FATF_GREYLIST: FATFCountry[] = [
   { country: 'Yemen', iso2: 'YE', riskTier: 'HIGH', reason: 'FATF Increased Monitoring', listType: 'greylist' },
 ];
 
-/** Last hardcoded revision date. */
+/** Last hardcoded revision date.
+ * [Audit-Fix #20] FATF updates its lists 3× per year (Feb / Jun / Oct plenaries).
+ * This hardcoded list should be updated within 30 days of each FATF plenary.
+ * Source: https://www.fatf-gafi.org/en/publications/High-risk-and-other-monitored-jurisdictions.html
+ */
 const HARDCODED_AS_OF = '2026-06-25';
 
 /**

@@ -25,11 +25,14 @@ const http = require('http');
 const https = require('https');
 
 // ==================== 专用 Axios 实例 ====================
+// [Audit-Fix #12] Changed maxRedirects from 0 to 5 for resilience.
+// Many government APIs (e.g., treasury.gov) issue 302 redirects to CDN URLs.
+// Setting maxRedirects: 0 causes immediate failure on redirect.
 const syncAxios = axios.create({
   timeout: 30000,
   maxContentLength: 50 * 1024 * 1024,
   maxBodyLength: 50 * 1024 * 1024,
-  maxRedirects: 0,
+  maxRedirects: 5,
   httpAgent: new http.Agent({ keepAlive: true }),
   httpsAgent: new https.Agent({ keepAlive: true, rejectUnauthorized: true }),
 });
@@ -121,7 +124,7 @@ async function fetchFromUrl(source) {
       headers: { 'User-Agent': 'FidesOrigin-Sync/1.0' },
       responseType: source.type === 'xml' ? 'text' : 'json',
       timeout: 30000,
-      maxRedirects: 0,
+      maxRedirects: 5,  // [Audit-Fix #12] Follow redirects for government API URLs
     });
     return res.data;
   });
@@ -135,23 +138,29 @@ async function parseOFACXml(xmlData) {
   const entries = Array.isArray(sdnEntries) ? sdnEntries : [sdnEntries];
 
   for (const entry of entries) {
-    const sdnType = entry?.sdnType;
-    if (sdnType && (sdnType.includes('Digital Currency') || sdnType.includes('Virtual Currency'))) {
-      const addressList = entry?.addressList?.address;
-      if (addressList) {
-        const addrEntries = Array.isArray(addressList) ? addressList : [addressList];
-        for (const addr of addrEntries) {
-          if (addr?.address && /^0x[a-fA-F0-9]{40}$/.test(addr.address)) {
+    // [Audit-Fix #4] Extract crypto addresses from idList/id (idType="Digital Currency Address"),
+    // NOT from addressList.address. The addressList contains physical/street addresses,
+    // while digital currency addresses are stored under idList.
+    const idList = entry?.idList?.id;
+    if (idList) {
+      const ids = Array.isArray(idList) ? idList : [idList];
+      for (const id of ids) {
+        const idType = id?.idType || '';
+        const idNumber = id?.idNumber || '';
+        // Match "Digital Currency Address - <CCY>"
+        if (idType.toLowerCase().includes('digital currency address')) {
+          const address = idNumber.trim();
+          if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
             try {
               addresses.push({
-                address: validateEthereumAddress(addr.address),
+                address: validateEthereumAddress(address),
                 riskScore: 100,
                 tag: 'SANCTIONS',
                 category: 'BLACKLIST',
                 source: 'OFAC_SDN',
-                description: sanitizeString(`OFAC SDN: ${entry.firstName || ''} ${entry.lastName || ''}`.trim(), 500),
+                description: sanitizeString(`OFAC SDN: ${entry.firstName || ''} ${entry.lastName || entry.sdnName || ''}`.trim(), 500),
               });
-            } catch (e) { /* skip */ }
+            } catch (e) { /* skip invalid */ }
           }
         }
       }

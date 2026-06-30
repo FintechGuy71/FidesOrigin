@@ -30,7 +30,10 @@ if (!PROXY) {
 // ⚠️  SECURITY WARNING: This script directly calls upgradeToAndCall, bypassing any Timelock.
 // Production deployments MUST use a TimelockController with a two-phase process.
 // To bypass this check for testing/emergency, set BYPASS_TIMELOCK=true
-const BYPASS_TIMELOCK = process.env.BYPASS_TIMELOCK === 'true';
+// [High Fix #53] BYPASS_TIMELOCK is only allowed on hardhat/local networks.
+// On any live network (sepolia, mainnet, etc.), BYPASS_TIMELOCK is forcibly ignored.
+const _network = hre ? (hre.network ? hre.network.name : 'unknown') : 'unknown';
+const BYPASS_TIMELOCK = process.env.BYPASS_TIMELOCK === 'true' && _network === 'hardhat';
 
 async function main() {
   if (!BYPASS_TIMELOCK) {

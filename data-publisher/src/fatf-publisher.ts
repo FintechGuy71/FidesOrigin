@@ -1,8 +1,10 @@
-import { Contract, JsonRpcProvider, TransactionResponse, Wallet } from 'ethers';
+import { Contract, JsonRpcProvider, TransactionResponse, Wallet, AbstractSigner } from 'ethers';
 import { AddressJurisdiction } from './address-enricher';
 import { stringToBytes32 as safeStringToBytes32 } from './address-utils';
 import { config } from './config';
 import logger from './logger';
+// [Audit-Fix #7] Import createKeyManager factory to avoid bypassing KMS in production
+import { createKeyManager } from './kms-key-manager';
 
 /** Minimal RiskRegistry ABI — only updateRiskProfile(). */
 const RISK_REGISTRY_ABI = [
@@ -31,7 +33,8 @@ export interface FATFPublishResult {
 export class FATFPublisher {
   private provider: JsonRpcProvider;
   private contract: Contract;
-  private signer: Wallet;
+  // [Audit-Fix #7] Changed from concrete Wallet to AbstractSigner to support KMS
+  private signer!: AbstractSigner;
   private dryRun: boolean;
   private gasLimit: number;
   private txInterval: number;
@@ -50,15 +53,10 @@ export class FATFPublisher {
     const rpcUrl = opts?.rpcUrl ?? config.publisher.rpcUrl;
     const chainId = opts?.chainId ?? config.publisher.chainId;
     const registryAddress = opts?.registryAddress ?? '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
-    const privateKey = opts?.privateKey ?? process.env.FATF_ORACLE_PRIVATE_KEY ?? '';
-
-    if (!privateKey) {
-      throw new Error('FATFPublisher: FATF_ORACLE_PRIVATE_KEY is required (or pass opts.privateKey)');
-    }
-
+    // [Audit-Fix #7] No longer accept raw privateKey directly; use createKeyManager() factory.
+    // The privateKey parameter is kept for backward compat but ignored in production.
     this.provider = new JsonRpcProvider(rpcUrl, chainId);
-    this.signer = new Wallet(privateKey, this.provider);
-    this.contract = new Contract(registryAddress, RISK_REGISTRY_ABI, this.signer);
+    this.contract = new Contract(registryAddress, RISK_REGISTRY_ABI, this.provider);
     this.dryRun = opts?.dryRun ?? config.publisher.dryRun;
     this.gasLimit = opts?.gasLimit ?? config.publisher.gasLimit;
     this.batchSize = opts?.batchSize ?? config.publisher.batchSize;
@@ -66,25 +64,34 @@ export class FATFPublisher {
   }
 
   /**
-   * Initialise: verify signer has ORACLE_ROLE.
+   * Initialise: create signer via key manager factory and verify ORACLE_ROLE.
+   * [Audit-Fix #7] Uses createKeyManager() instead of `new Wallet(privateKey)`.
    */
   async initialize(): Promise<void> {
+    // [Audit-Fix #7] Use the factory function which enforces KMS in production
+    const keyManager = await createKeyManager(this.provider);
+    this.signer = await keyManager.getSigner() as AbstractSigner;
+    const signerAddress = await keyManager.getAddress();
+
+    // Connect contract to signer
+    this.contract = this.contract.connect(this.signer) as Contract;
+
     const oracleRole = await this.contract.ORACLE_ROLE();
-    const hasRole = await this.contract.hasRole(oracleRole, this.signer.address);
+    const hasRole = await this.contract.hasRole(oracleRole, signerAddress);
 
     if (!hasRole) {
       logger.warn('FATFPublisher: signer does NOT have ORACLE_ROLE', {
-        signer: this.signer.address,
+        signer: signerAddress,
         oracleRole,
       });
       // Don't throw in dry-run mode
       if (!this.dryRun) {
-        throw new Error(`Address ${this.signer.address} lacks ORACLE_ROLE on RiskRegistry`);
+        throw new Error(`Address ${signerAddress} lacks ORACLE_ROLE on RiskRegistry`);
       }
     }
 
     logger.info('FATFPublisher initialised', {
-      signer: this.signer.address,
+      signer: signerAddress,
       registry: await this.contract.getAddress(),
       dryRun: this.dryRun,
     });
@@ -196,6 +203,8 @@ export class FATFPublisher {
     }
 
     // Build gas params
+    // [Audit-Fix #33] Gas params: In production, consider adding maxFeePerGas and maxPriorityFeePerGas
+    // overrides from config to prevent gas price spikes from draining the oracle wallet.
     const feeData = await this.provider.getFeeData();
     const gasParams: any = { gasLimit: this.gasLimit };
     if (feeData.maxFeePerGas) gasParams.maxFeePerGas = feeData.maxFeePerGas;

@@ -11,6 +11,9 @@
 .pnpm-store/
 
 # Environment
+# [Low Fix #66] .env files are properly gitignored.
+# SECURITY: Never commit real secret values. Always use placeholders.
+# Environment files (.env, .env.local, .env.*.local) contain sensitive data.
 .env
 .env.local
 .env.*.local

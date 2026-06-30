@@ -4,6 +4,13 @@ import logger from './logger';
 
 /**
  * Abstract Key Manager — supports plain private key, AWS KMS, and Azure Key Vault
+ *
+ * @deprecated This module uses a dummy all-zero private key for KMS signers which is insecure.
+ *             Please use `./kms-key-manager.ts` instead, which provides a proper AbstractSigner
+ *             implementation that routes all signing through KMS without creating a Wallet.
+ *             This file is kept only for backward compatibility with Azure Key Vault fallback.
+ *
+ * [Audit-Fix #8] Added deprecation notice. See kms-key-manager.ts for the secure replacement.
  */
 export interface KeyManager {
   getSigner(): Promise<Signer>;

@@ -48,6 +48,8 @@ export async function fetchElliptic(config: DataSourceConfig): Promise<RawRiskDa
 
 // ============================================
 // TRM Labs API
+// [Audit-Fix #11] Throw NotImplemented error instead of silently returning empty array
+// when API key is configured but the implementation is incomplete.
 // ============================================
 export async function fetchTRMLabs(config: DataSourceConfig): Promise<RawRiskData[]> {
   if (!config.apiKey) {
@@ -55,34 +57,14 @@ export async function fetchTRMLabs(config: DataSourceConfig): Promise<RawRiskDat
     return [];
   }
 
-  const response = await axios.post(`${config.endpoint}v1/screening/addresses`, {
-    addresses: [], // Would batch addresses for screening
-  }, {
-    headers: {
-      'Authorization': `Bearer ${config.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    timeout: config.timeout,
-    maxRedirects: 0,
-  });
-
-  const results: RawRiskData[] = [];
-
-  for (const item of response.data?.results || []) {
-    const riskScore = item.riskScore || 0;
-    results.push({
-      address: item.address.toLowerCase(),
-      source: 'TRM-Labs',
-      riskScore,
-      tier: scoreToTier(riskScore),
-      tags: item.categories || [],
-      isSanctioned: item.sanctions || false,
-      reason: item.description || 'TRM Labs risk assessment',
-      confidence: 0.90,
-    });
-  }
-
-  return results;
+  // [Audit-Fix #11] The TRM Labs integration requires a list of addresses to screen,
+  // but the current pipeline does not pass them. Throw an explicit error instead of
+  // silently sending an empty array (which would always return zero results).
+  throw new Error(
+    'TRM Labs fetchTRMLabs: address batching not implemented. ' +
+    'This connector requires a pre-collected list of addresses to screen. ' +
+    'Pass addresses via config.endpoint or implement a dedicated address collection step.'
+  );
 }
 
 // ============================================

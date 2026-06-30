@@ -18,6 +18,11 @@ const { sendAlert } = require('./alertManager');
 
 const logger = createLogger('ChainSyncer');
 
+// [Audit-Fix #9] Made MIN_CONFIRMATIONS configurable (default: 6 for production safety).
+// Previously hardcoded to 2, which is insufficient for finality on most chains.
+// Set via env var MIN_CONFIRMATIONS or defaults to 6.
+const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS || '6', 10);
+
 // ==================== 合约 ABI ====================
 const RISK_REGISTRY_ABI = [
   'function updateMerkleRoot(bytes32 merkleRoot, uint256 totalAddresses, uint256 version) external',
@@ -481,11 +486,11 @@ async function syncMerkleRootToChain(merkleRoot, totalAddresses, auditLogger) {
 
   secureLog.info(`[Sync] 交易已广播: ${tx.hash}, nonce=${nonce}`);
 
-  // [Cross-check fix] Add 5-minute timeout to tx.wait to prevent indefinite hangs
+  // [Audit-Fix #9] Use configurable MIN_CONFIRMATIONS instead of hardcoded 2
   const receipt = await Promise.race([
-    tx.wait(2),
+    tx.wait(MIN_CONFIRMATIONS),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Transaction confirmation timeout after 5 minutes')), 300000)
+      setTimeout(() => reject(new Error(`Transaction confirmation timeout after 5 minutes (waiting for ${MIN_CONFIRMATIONS} confirmations)`)), 300000)
     ),
   ]);
 

@@ -123,7 +123,10 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         }
 
         // 3. 验证时间戳
-        if (timestamp < lastSyncTime) {
+        // L-14 FIX: 添加 ±5 分钟容差，适应跨链区块时间漂移
+        // 允许源链时间戳略落后于本地链 (最多 5 分钟)，避免因轻微时钟差异导致同步失败
+        uint256 SYNC_TOLERANCE = 5 minutes;
+        if (timestamp + SYNC_TOLERANCE < lastSyncTime) {
             revert StaleUpdate(timestamp, lastSyncTime);
         }
         // D1-AUDIT1-017 fix: reject future timestamps beyond 1 hour drift

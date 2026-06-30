@@ -9,9 +9,11 @@ import { FidesOriginClient, FidesOriginError } from "@fidesorigin/sdk";
 
 // ─── SDK Client ──────────────────────────────────────────────────────────────
 
+// [CRITICAL Fix #2] Removed NEXT_PUBLIC_API_KEY — API key must never be exposed to the client.
+// All API calls are proxied through server-side API routes (e.g., /api/admin/*).
 const sdkClient = new FidesOriginClient({
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.fidesorigin.com",
-  apiKey: process.env.NEXT_PUBLIC_API_KEY,
+  // No apiKey on client-side — authentication is handled via server-side proxy routes
 });
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://api.fidesorigin.com/ws";

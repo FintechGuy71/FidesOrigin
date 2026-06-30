@@ -1,3 +1,6 @@
+# [Medium Fix #56] TODO: Move all hardcoded contract addresses to ConfigMap or Secret.
+# Currently, addresses are injected via environment variables in deployment.yaml.
+# Ensure all addresses are configurable via Helm values or K8s ConfigMap.
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -30,6 +30,11 @@ class DLQService {
   /**
    * 记录同步失败
    *
+   * [Audit-Fix #28] Note on upsert behavior: The where clause for Prisma upsert requires a unique constraint.
+   * Since `source + recordId` may not have a unique constraint in the Prisma schema, this method
+   * falls back to findFirst + create/update (the _recordFailureFallback method).
+   * Consider adding a @@unique([source, recordId]) constraint to the SyncFailure model for native upserts.
+   *
    * @param {string} source - 数据源名称 (ofac, un, hmt, eu, chainalysis...)
    * @param {string} recordId - 失败记录的标识符
    * @param {string|Error} error - 错误信息

@@ -10,12 +10,19 @@ import "./RiskOracleStorage.sol";
  */
 abstract contract RiskOracleConsensus is RiskOracleStorage {
 
+    /// @notice M-10 FIX: 最大授权预言机数量，防止 _resetConfirmations 等遍历操作的 gas 膨胀
+    uint256 public constant MAX_ORACLES = 50;
+
     /**
      * @notice 添加授权预言机
+     * @dev M-10 FIX: 检查 MAX_ORACLES 上限，防止 oracleList 无限增长
      */
     function _addAuthorizedOracle(address oracle) internal {
         if (oracle == address(0)) revert InvalidAddress();
         if (authorizedOracles[oracle]) return;
+
+        // M-10 FIX: 限制预言机总数
+        require(oracleList.length < MAX_ORACLES, "Max oracles reached");
 
         authorizedOracles[oracle] = true;
         oracleList.push(oracle);
@@ -150,6 +157,7 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     /**
      * @notice 重置地址的确认状态
      * @dev C-2 修复: 彻底清理 responseConfirmations
+     * @dev M-10 NOTE: 循环受 MAX_ORACLES (50) 上限保护，已在 _addAuthorizedOracle 中强制
      */
     function _resetConfirmations(address account) internal {
         confirmedUpdates[account] = false;

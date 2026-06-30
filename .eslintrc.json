@@ -1,4 +1,8 @@
 {
+  // [Medium Fix #16] TODO: Remove `ignoreDuringBuilds` if present in next.config.
+  // ESLint and TypeScript errors should be resolved, not suppressed.
+  // Consider adding `eslint: { ignoreDuringBuilds: false }` and `typescript: { ignoreBuildErrors: false }`
+  // to the Next.js config once all existing errors are fixed.
   "extends": "next/core-web-vitals",
   "rules": {
     "@typescript-eslint/no-unused-vars": "warn",

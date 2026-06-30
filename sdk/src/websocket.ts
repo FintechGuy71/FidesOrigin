@@ -1,3 +1,12 @@
+/**
+ * @deprecated 此文件为旧版 WebSocket 实现，不再维护。
+ * [HIGH Fix #4] 请使用 packages/sdk/src/websocket.ts 中的新版本。
+ * 新版本支持更安全的认证流程（连接后通过消息发送 API Key）。
+ * 
+ * 迁移指南：
+ * - import { FidesOriginWS } from '@fidesorigin/sdk'
+ * - 新版认证流程：先建立连接，再发送 {"type":"auth","api_key":"..."} 认证消息
+ */
 import WebSocket from 'isomorphic-ws';
 import {
   FidesOriginConfig,

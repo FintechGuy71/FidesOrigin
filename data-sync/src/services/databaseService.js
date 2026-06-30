@@ -92,6 +92,13 @@ class DatabaseService {
 
     // 将循环 + SyncLog 写入合并到同一事务中，保证原子性
     // Serializable 隔离级别消除 TOCTOU 竞态条件
+    // [Audit-Fix #22] Note: Serializable isolation can cause serialization failures (Prisma error P2034)
+    // under high concurrency. Consider adding retry logic with exponential backoff for P2034 errors:
+    //   const MAX_TX_RETRIES = 3;
+    //   for (let attempt = 0; attempt < MAX_TX_RETRIES; attempt++) {
+    //     try { await this.prisma.$transaction(fn, { isolationLevel: 'Serializable' }); break; }
+    //     catch (e) { if (e.code === 'P2034' && attempt < MAX_TX_RETRIES - 1) { await sleep(100 * 2**attempt); continue; } throw e; }
+    //   }
     await this.prisma.$transaction(async (tx) => {
       for (const addr of addresses) {
         try {

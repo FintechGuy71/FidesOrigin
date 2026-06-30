@@ -46,7 +46,9 @@ const CONTRACT_ABI = [
   {
     "inputs": [
       { "name": "accounts", "type": "address[]" },
-      { "name": "riskScores", "type": "uint256[]" },
+      // [Audit-Fix #3] Fixed: riskScores should be uint8[] not uint256[].
+      // Risk scores are 0-100, which fits in uint8. The smart contract expects uint8[].
+      { "name": "riskScores", "type": "uint8[]" },
       { "name": "tiers", "type": "uint8[]" },
       { "name": "isSanctioned", "type": "bool[]" }
     ],

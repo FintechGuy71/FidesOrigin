@@ -13,6 +13,20 @@ import {
  * Provides convenient methods for risk assessment operations
  */
 
+// [MEDIUM Fix #15] 使用单例 client 避免每次调用 checkAddress 都创建新实例
+// 缓存已创建的 client，按 baseUrl+apiKey 作为 key
+const _clientCache = new Map<string, FidesOriginClient>();
+
+function getCachedClient(baseUrl: string, apiKey: string): FidesOriginClient {
+  const cacheKey = `${baseUrl}:${apiKey}`;
+  let client = _clientCache.get(cacheKey);
+  if (!client) {
+    client = new FidesOriginClient({ baseUrl, apiKey });
+    _clientCache.set(cacheKey, client);
+  }
+  return client;
+}
+
 /**
  * Quick risk check - one line integration
  * 
@@ -31,10 +45,8 @@ export async function checkAddress(
 ): Promise<AddressRisk> {
   const { baseUrl = 'https://api.fidesorigin.com', ...riskOptions } = options;
   
-  const client = new FidesOriginClient({
-    baseUrl,
-    apiKey
-  });
+  // [MEDIUM Fix #15] 使用缓存的 singleton client
+  const client = getCachedClient(baseUrl, apiKey);
   
   return client.checkAddress(address, riskOptions);
 }
@@ -59,10 +71,8 @@ export async function checkBatchAddresses(
 ): Promise<BatchRiskCheckResponse> {
   const { baseUrl = 'https://api.fidesorigin.com', chain, detailed } = options;
   
-  const client = new FidesOriginClient({
-    baseUrl,
-    apiKey
-  });
+  // [MEDIUM Fix #15] 使用缓存的 singleton client
+  const client = getCachedClient(baseUrl, apiKey);
   
   return client.checkBatchAddresses({
     addresses,

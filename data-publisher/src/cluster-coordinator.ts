@@ -19,6 +19,8 @@ export class ClusterCoordinator {
   private client: RedisClientType;
   private config: ClusterConfig;
   private heartbeatTimer?: NodeJS.Timeout;
+  // [Audit-Fix #6] Watchdog timers for lock auto-renewal
+  private lockWatchdogs: Map<string, NodeJS.Timeout> = new Map();
   private isLeader: boolean = false;
 
   constructor(config: ClusterConfig) {
@@ -35,14 +37,29 @@ export class ClusterCoordinator {
    */
   async connect(): Promise<void> {
     await this.client.connect();
-    logger.info('Connected to Redis', { 
-      redisUrl: this.config.redisUrl.replace(/:\/\/.*@/, '://***@'),
+    // [Audit-Fix #13] Properly redact Redis URL using URL parsing instead of partial regex.
+    // The previous regex /:\/\/.*@/ only masked credentials between :// and @, but could
+    // leak the password if the URL format was unexpected. Using URL parsing is more robust.
+    let redactedUrl: string;
+    try {
+      const parsed = new URL(this.config.redisUrl);
+      if (parsed.password || parsed.username) {
+        redactedUrl = `${parsed.protocol}//***@${parsed.host}`;
+      } else {
+        redactedUrl = `${parsed.protocol}//${parsed.host}`;
+      }
+    } catch {
+      redactedUrl = '[INVALID_REDIS_URL]';
+    }
+    logger.info('Connected to Redis', {
+      redisUrl: redactedUrl,
       instanceId: this.config.instanceId,
     });
   }
 
   /**
    * Try to acquire a distributed lock for a sync job
+   * [Audit-Fix #6] Added watchdog timer to auto-renew the lock before TTL expires.
    */
   async acquireLock(lockName: string, ttl?: number): Promise<boolean> {
     const key = `${this.config.lockPrefix}:${lockName}`;
@@ -57,6 +74,30 @@ export class ClusterCoordinator {
 
     if (result === 'OK') {
       logger.info(`Acquired lock: ${lockName}`, { instanceId: this.config.instanceId });
+
+      // [Audit-Fix #6] Start a watchdog to renew the lock periodically.
+      // Renew every lockTtl/3 ms to ensure the lock doesn't expire while the job is running.
+      const renewInterval = Math.max(Math.floor(lockTtl / 3), 1000);
+      const watchdog = setInterval(async () => {
+        try {
+          // Only renew if we still own the lock
+          const owner = await this.client.get(key);
+          if (owner && owner.startsWith(this.config.instanceId)) {
+            // Extend the lock TTL using PEXPIRE
+            await this.client.pExpire(key, lockTtl);
+            logger.debug(`Lock renewed: ${lockName}`, { instanceId: this.config.instanceId });
+          } else {
+            // Lock was lost or stolen — stop the watchdog
+            logger.warn(`Lock lost during renewal: ${lockName}`, { instanceId: this.config.instanceId });
+            this.stopLockWatchdog(lockName);
+          }
+        } catch (err) {
+          logger.error(`Lock renewal failed: ${lockName}`, { error: (err as Error).message });
+        }
+      }, renewInterval);
+      watchdog.unref();
+
+      this.lockWatchdogs.set(lockName, watchdog);
       return true;
     }
 
@@ -80,8 +121,12 @@ export class ClusterCoordinator {
 
   /**
    * Release a distributed lock
+   * [Audit-Fix #6] Also stops the associated watchdog timer.
    */
   async releaseLock(lockName: string, force: boolean = false): Promise<void> {
+    // Stop the watchdog for this lock
+    this.stopLockWatchdog(lockName);
+
     const key = `${this.config.lockPrefix}:${lockName}`;
     
     if (!force) {
@@ -122,6 +167,17 @@ export class ClusterCoordinator {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = undefined;
+    }
+  }
+
+  /**
+   * [Audit-Fix #6] Stop the watchdog timer for a specific lock.
+   */
+  private stopLockWatchdog(lockName: string): void {
+    const watchdog = this.lockWatchdogs.get(lockName);
+    if (watchdog) {
+      clearInterval(watchdog);
+      this.lockWatchdogs.delete(lockName);
     }
   }
 
@@ -208,6 +264,10 @@ export class ClusterCoordinator {
    */
   async disconnect(): Promise<void> {
     this.stopHeartbeat();
+    // [Audit-Fix #6] Stop all lock watchdogs
+    for (const lockName of this.lockWatchdogs.keys()) {
+      this.stopLockWatchdog(lockName);
+    }
     await this.client.quit();
     logger.info('Disconnected from Redis');
   }

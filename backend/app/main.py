@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -24,7 +24,7 @@ from app.core.middleware import (
     session_timeout_middleware,
     request_signature_middleware,
 )
-from app.core.security import get_hmac_validator
+from app.core.security import get_hmac_validator, get_current_user
 from app.database import init_db
 
 # 配置日志
@@ -219,7 +219,10 @@ app.include_router(monitor.router, prefix=api_v1_prefix)
 
 # 版本信息端点
 @app.get("/api/version", tags=["版本信息"])
-async def api_version():
+async def api_version(
+    # [LOW Fix #24] 生产环境对信息端点添加认证
+    _: str = Depends(get_current_user) if settings.is_production else None,
+):
     """获取 API 版本信息"""
     return {
         "version": "v1",
@@ -293,7 +296,10 @@ async def sql_query_timeout(request, call_next):
 
 # ==================== 根路由 ====================
 @app.get("/")
-async def root():
+async def root(
+    # [LOW Fix #24] 生产环境对根端点添加认证
+    _: str = Depends(get_current_user) if settings.is_production else None,
+):
     """根端点 - API 信息"""
     return {
         "name": "FidesOrigin",

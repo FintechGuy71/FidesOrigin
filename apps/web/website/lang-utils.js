@@ -24,6 +24,10 @@
   };
 
   // ===== Language Detection =====
+  // [Low Fix #17] External IP detection via ipapi.co.
+  // TODO: When deployed on Vercel, use the `x-vercel-ip-country` request header
+  // instead of making a client-side API call to ipapi.co.
+  // Example: const cc = request.headers['x-vercel-ip-country'];
   window.detectLang = async function() {
     try {
       var controller = new AbortController();
