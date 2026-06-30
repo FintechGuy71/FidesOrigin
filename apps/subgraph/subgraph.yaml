@@ -57,15 +57,17 @@ dataSources:
         - name: ComplianceEngine
           file: ./abis/ComplianceEngine.json
       eventHandlers:
-        - event: ComplianceCheck(indexed address,indexed address,indexed address,uint256,uint8,string)
+        - event: ComplianceCheckPerformed(indexed address,indexed uint256,indexed bool,uint256,uint256,bytes32)
+          handler: handleComplianceCheckPerformed
+        - event: TransactionBlocked(indexed address,indexed address,indexed uint256,address,string,uint256,uint256)
           handler: handleComplianceCheck
-        - event: FundsHeld(indexed bytes32,indexed address,address,uint256)
+        - event: TransactionQuarantined(indexed address,indexed address,indexed uint256,address,bytes32,uint256,uint256)
           handler: handleFundsHeld
-        - event: FundsReleased(indexed bytes32,indexed address,uint256)
+        - event: QuarantineReleased(indexed bytes32,indexed address,uint256)
           handler: handleFundsReleased
-        - event: EmergencyModeActivated(indexed address)
+        - event: RulePaused(indexed bytes32)
           handler: handleEmergencyModeActivated
-        - event: EmergencyModeDeactivated(indexed address)
+        - event: RuleUnpaused(indexed bytes32)
           handler: handleEmergencyModeDeactivated
       file: ./src/mappings/complianceEngine.ts
   - kind: ethereum

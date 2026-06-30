@@ -91,10 +91,9 @@ describe('PolicyEngine', function () {
   });
 
   describe.skip('Operation Evaluation', function () {
-    // TODO: evaluateOperation signature changed to (Operation calldata op, address issuer)
-    // and it delegates to evaluateTransfer(_msgSender(), op.target, op.value, issuer)
-    // The wallet policy checks (blockContractCalls) are not implemented in current contract.
-    // Skip pending contract implementation update.
+    // SKIP REASON: Feature not implemented in current contract.
+    // evaluateOperation exists but wallet policy checks (blockContractCalls) are not implemented.
+    // Re-enable after contract implements wallet-level operation blocking.
     it('should BLOCK wallet operation for sanctioned owner', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 90, 3, [], true); // HIGH + sanctioned
       const op = {

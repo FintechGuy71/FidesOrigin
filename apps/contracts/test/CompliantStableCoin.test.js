@@ -140,11 +140,4 @@ describe('CompliantStableCoin', function () {
     });
   });
 
-  describe.skip('Compliance Integration', function () {
-    // TODO: ComplianceEngine.sol does not implement IAssetCompliance interface.
-    // Missing: preTransferHook, postTransferHook, validateTransfer, getAddressRisk, getDailySpent.
-    // These tests require contract-level fixes.
-    it('should BLOCK transfer from sanctioned address', async function () {});
-    it('should simulate transfer correctly', async function () {});
-  });
 });

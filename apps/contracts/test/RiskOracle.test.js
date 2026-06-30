@@ -145,7 +145,7 @@ describe('RiskOracle', function () {
     });
 
     it.skip('should require multiple confirmations when configured', async function () {
-      // TODO: Needs block mining between submissions due to UPDATE_DELAY_BLOCKS = 1
+      // SKIP REASON: Needs mock — requires block mining between submissions due to UPDATE_DELAY_BLOCKS = 1.
       // First confirmation mines a block, second confirmation must be in a later block.
       await riskOracle.addAuthorizedOracle(operator.address);
       await riskOracle.setRequiredConfirmations(2);
@@ -167,22 +167,6 @@ describe('RiskOracle', function () {
     });
   });
 
-  describe.skip('Direct Risk Profile Update', function () {
-    // TODO: RiskOracle does not expose updateRiskProfile directly.
-    // It only submits responses via submitOracleResponse.
-  });
-
-  describe.skip('Batch Update', function () {
-    // TODO: batchUpdateRiskProfiles does not exist on RiskOracle.
-  });
-
-  describe.skip('Queue Management', function () {
-    // TODO: queueRiskUpdate, executeQueuedUpdates do not exist on RiskOracle.
-  });
-
-  describe.skip('Rate Limiting', function () {
-    // TODO: setMaxDailyRequestsPerCaller, setCallerCooldown do not exist on RiskOracle.
-  });
 
   describe('Admin Functions', function () {
     it('should set subscription id', async function () {
@@ -193,18 +177,6 @@ describe('RiskOracle', function () {
     it('should set gas limit', async function () {
       await riskOracle.setGasLimit(500000);
       expect(await riskOracle.gasLimit()).to.equal(500000);
-    });
-
-    it.skip('should set update cooldown', async function () {
-      // TODO: setUpdateCooldown does not exist on RiskOracle.
-    });
-
-    it.skip('should set risk registry', async function () {
-      // TODO: setRiskRegistry does not exist on RiskOracle.
-    });
-
-    it.skip('should reject zero address for risk registry', async function () {
-      // TODO: setRiskRegistry does not exist on RiskOracle.
     });
 
     it('should pause and unpause', async function () {
@@ -222,10 +194,6 @@ describe('RiskOracle', function () {
   });
 
   describe('View Functions', function () {
-    it.skip('should return request info', async function () {
-      // TODO: getRequestInfo does not exist on RiskOracle.
-    });
-
     it('should return oracle list', async function () {
       await riskOracle.addAuthorizedOracle(user1.address);
       const oracles = await riskOracle.getOracleList();

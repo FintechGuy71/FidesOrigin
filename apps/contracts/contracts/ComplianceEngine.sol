@@ -18,7 +18,7 @@ import "./PolicyEngine.sol";
  * @dev VERSION: 1.2.1 - 修复时间操纵风险(P0-6) + 事件索引(P1-6) + 审计日志(P1-12) + MEV保护(P1-11)
  *      + whenNotPaused(S-04) + Fail-Closed(S-05)
  */
-contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
+contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, IComplianceEngine {
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -50,18 +50,6 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         uint256 blockNumber;
         bytes32 checkType;
         string reason;
-    }
-    
-    /// @notice 发行方策略配置
-    struct IssuerPolicy {
-        uint256 maxTxAmount;
-        uint256 dailyLimit;
-        bool allowMediumRisk;
-        bool allowHighRisk;
-        bool blockMixer;
-        bool requireDestinationKYC;
-        uint256 cooldownPeriod;
-        address[] blockedTokens;
     }
     
     CheckRecord[] public checkHistory;
@@ -203,12 +191,10 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         _grantRole(ADMIN_ROLE, msg.sender);
         _grantRole(OPERATOR_ROLE, msg.sender);
         
-        // L-15: Set ADMIN_ROLE as admin of itself and OPERATOR_ROLE before renouncing DEFAULT_ADMIN_ROLE
+        // L-15: Set ADMIN_ROLE as admin of itself and OPERATOR_ROLE
+        // DEFAULT_ADMIN_ROLE is retained as ultimate safety net for role recovery
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(OPERATOR_ROLE, ADMIN_ROLE);
-        
-        // L-15: Renounce DEFAULT_ADMIN_ROLE after granting ADMIN_ROLE to reduce centralization risk
-        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
         
         // M-03: Initialize upgrade timelock delay
         upgradeTimelockDelay = 2 days;
@@ -326,7 +312,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     function checkTransfer(address from, address to, uint256 amount, address token) 
         public 
         whenNotPaused
-        returns (IComplianceEngine.Decision decision, string memory reason) 
+        returns (Decision decision, string memory reason) 
     {
         // [C-1] 修复: 调用者权限验证
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
@@ -355,7 +341,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         public 
         whenNotPaused
         nonReentrant
-        returns (IComplianceEngine.Decision decision, string memory reason) 
+        returns (Decision decision, string memory reason) 
     {
         // [C-1] 修复: 调用者权限验证 — 只有 from 本人或授权 Operator 才能发起
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
@@ -373,7 +359,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         // 检查发送方
         (bool fromCompliant, , string memory fromReason) = checkAddressCompliance(from);
         if (!fromCompliant) {
-            decision = IComplianceEngine.Decision.BLOCK;
+            decision = Decision.BLOCK;
             reason = fromReason;
             emit TransactionBlocked(from, to, amount, token, reason, block.timestamp, block.number);
             blockedTransactions++;
@@ -383,7 +369,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         // 检查接收方
         (bool toCompliant, , string memory toReason) = checkAddressCompliance(to);
         if (!toCompliant) {
-            decision = IComplianceEngine.Decision.BLOCK;
+            decision = Decision.BLOCK;
             reason = toReason;
             emit TransactionBlocked(from, to, amount, token, reason, block.timestamp, block.number);
             blockedTransactions++;
@@ -398,7 +384,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         if (policy.blockedTokens.length > 0) {
             for (uint256 i = 0; i < policy.blockedTokens.length; i++) {
                 if (policy.blockedTokens[i] == to) {
-                    decision = IComplianceEngine.Decision.BLOCK;
+                    decision = Decision.BLOCK;
                     reason = "Destination token is blocked by issuer policy";
                     emit TransactionBlocked(from, to, amount, token, reason, block.timestamp, block.number);
                     blockedTransactions++;
@@ -408,7 +394,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         }
         
         if (policy.maxTxAmount > 0 && amount > policy.maxTxAmount) {
-            decision = IComplianceEngine.Decision.BLOCK;
+            decision = Decision.BLOCK;
             reason = "Exceeds max transaction amount";
             emit TransactionBlocked(from, to, amount, token, reason, block.timestamp, block.number);
             blockedTransactions++;
@@ -420,7 +406,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
             uint256 dayKey = block.timestamp / 1 days;
             uint256 spent = dailySpent[from][dayKey];
             if (spent + amount > policy.dailyLimit) {
-                decision = IComplianceEngine.Decision.BLOCK;
+                decision = Decision.BLOCK;
                 reason = "Daily limit exceeded";
                 emit TransactionBlocked(from, to, amount, token, reason, block.timestamp, block.number);
                 blockedTransactions++;
@@ -459,7 +445,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
                 // L-01 FIX: Update lastTransferTime even for HOLD to prevent perpetual holding
                 lastTransferTime[from] = block.timestamp;
                 
-                decision = IComplianceEngine.Decision.HOLD;
+                decision = Decision.HOLD;
                 reason = "Cooldown period active";
                 emit TransactionQuarantined(from, to, amount, token, quarantineId, block.timestamp, block.number);
                 return (decision, reason);
@@ -472,7 +458,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         }
         lastTransferTime[from] = block.timestamp;
         
-        decision = IComplianceEngine.Decision.ALLOW;
+        decision = Decision.ALLOW;
         reason = "Transfer allowed";
         return (decision, reason);
     }
@@ -667,6 +653,228 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
             results[i] = compliant;
             scores[i] = score;
         }
+    }
+    
+    // ============ IAssetCompliance / IComplianceEngine Interface Implementation ============
+    
+    /**
+     * @notice 转账前合规检查 (view函数)
+     * @dev IAssetCompliance.validateTransfer 实现
+     */
+    function validateTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        address assetContract
+    ) external view returns (Decision decision, string memory reason) {
+        // 权限检查（和 checkTransfer 一致）
+        if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
+            revert UnauthorizedCaller(msg.sender);
+        }
+        
+        // 简化：复用 checkTransfer 逻辑但不改状态
+        if (from == address(0) || to == address(0)) {
+            return (Decision.BLOCK, "Invalid address");
+        }
+        if (address(riskRegistry) == address(0)) {
+            return (Decision.BLOCK, "Registry not set");
+        }
+        
+        // 检查发送方
+        (uint256 fromScore, , , , , bool fromSanctioned, bool fromExists, ) = riskRegistry.getProfile(from);
+        if (!fromExists) {
+            return (Decision.BLOCK, "No risk profile - fail closed");
+        }
+        if (fromSanctioned) {
+            return (Decision.BLOCK, "Sanctioned address");
+        }
+        if (fromScore >= 95) {
+            return (Decision.BLOCK, "Critical risk score");
+        }
+        if (fromScore >= 80) {
+            return (Decision.BLOCK, "High risk score");
+        }
+        
+        // 检查接收方
+        (uint256 toScore, , , , , bool toSanctioned, bool toExists, ) = riskRegistry.getProfile(to);
+        if (!toExists) {
+            return (Decision.BLOCK, "No risk profile - fail closed");
+        }
+        if (toSanctioned) {
+            return (Decision.BLOCK, "Sanctioned address");
+        }
+        if (toScore >= 95) {
+            return (Decision.BLOCK, "Critical risk score");
+        }
+        if (toScore >= 80) {
+            return (Decision.BLOCK, "High risk score");
+        }
+        
+        // 检查发行方策略
+        IssuerPolicy memory policy = issuerPolicies[assetContract];
+        if (policy.maxTxAmount > 0 && amount > policy.maxTxAmount) {
+            return (Decision.BLOCK, "Exceeds max transaction amount");
+        }
+        if (policy.dailyLimit > 0) {
+            uint256 dayKey = block.timestamp / 1 days;
+            uint256 spent = dailySpent[from][dayKey];
+            if (spent + amount > policy.dailyLimit) {
+                return (Decision.BLOCK, "Daily limit exceeded");
+            }
+        }
+        
+        return (Decision.ALLOW, "Transfer allowed");
+    }
+    
+    /**
+     * @notice 转账前钩子 - 如果BLOCK则revert
+     * @dev IAssetCompliance.preTransferHook 实现
+     */
+    function preTransferHook(
+        address from,
+        address to,
+        uint256 amount
+    ) external view {
+        if (from == address(0) || to == address(0)) revert InvalidAddress();
+        if (address(riskRegistry) == address(0)) revert RegistryNotSet();
+        
+        (uint256 fromScore, , , , , bool fromSanctioned, bool fromExists, ) = riskRegistry.getProfile(from);
+        if (!fromExists) revert("No risk profile - fail closed");
+        if (fromSanctioned) revert("Sanctioned address");
+        if (fromScore >= 95) revert("Critical risk score");
+        if (fromScore >= 80) revert("High risk score");
+        
+        (uint256 toScore, , , , , bool toSanctioned, bool toExists, ) = riskRegistry.getProfile(to);
+        if (!toExists) revert("No risk profile - fail closed");
+        if (toSanctioned) revert("Sanctioned address");
+        if (toScore >= 95) revert("Critical risk score");
+        if (toScore >= 80) revert("High risk score");
+    }
+    
+    /**
+     * @notice 转账后钩子 - 记录转账
+     * @dev IAssetCompliance.postTransferHook 实现
+     */
+    function postTransferHook(
+        address from,
+        address to,
+        uint256 amount,
+        bool success
+    ) external {
+        emit TransferRecorded(
+            msg.sender, // asset contract caller
+            from,
+            to,
+            amount,
+            success
+        );
+    }
+    
+    /**
+     * @notice 获取地址完整风险档案
+     * @dev IAssetCompliance.getAddressRisk 实现
+     */
+    function getAddressRisk(address account) external view returns (RiskProfile memory) {
+        if (address(riskRegistry) == address(0)) {
+            return RiskProfile({
+                riskScore: 0,
+                tier: RiskTier.UNKNOWN,
+                tags: new bytes32[](0),
+                lastUpdated: 0,
+                isSanctioned: false
+            });
+        }
+        (uint256 score, , uint32 lastUpdated, uint8 riskTier, , bool sanctioned, bool exists, bytes32[] memory tags) = riskRegistry.getProfile(account);
+        if (!exists) {
+            return RiskProfile({
+                riskScore: 0,
+                tier: RiskTier.UNKNOWN,
+                tags: new bytes32[](0),
+                lastUpdated: 0,
+                isSanctioned: false
+            });
+        }
+        return RiskProfile({
+            riskScore: uint8(score),
+            tier: RiskTier(riskTier),
+            tags: tags,
+            lastUpdated: lastUpdated,
+            isSanctioned: sanctioned
+        });
+    }
+    
+    /**
+     * @notice 获取地址风险等级
+     * @dev IAssetCompliance.getRiskTier 实现
+     */
+    function getRiskTier(address account) external view returns (RiskTier) {
+        if (address(riskRegistry) == address(0)) return RiskTier.UNKNOWN;
+        (, , , uint8 tier, , , bool exists, ) = riskRegistry.getProfile(account);
+        if (!exists) return RiskTier.UNKNOWN;
+        return RiskTier(tier);
+    }
+    
+    /**
+     * @notice 检查地址是否在制裁名单
+     * @dev IAssetCompliance.isSanctioned 实现
+     */
+    function isSanctioned(address account) external view returns (bool) {
+        if (address(riskRegistry) == address(0)) return false;
+        (, , , , , bool sanctioned, bool exists, ) = riskRegistry.getProfile(account);
+        if (!exists) return false;
+        return sanctioned;
+    }
+    
+    /**
+     * @notice 获取发行方策略配置
+     * @dev IAssetCompliance.getIssuerPolicy 实现
+     */
+    function getIssuerPolicy(address issuer) external view returns (IssuerPolicy memory) {
+        return issuerPolicies[issuer];
+    }
+    
+    /**
+     * @notice 计算地址日累计转账额
+     * @dev IAssetCompliance.getDailySpent 实现
+     */
+    function getDailySpent(address account, address asset) external view returns (uint256) {
+        uint256 dayKey = block.timestamp / 1 days;
+        return dailySpent[account][dayKey];
+    }
+    
+    /**
+     * @notice 交易合规检查（带 deadline）
+     * @dev IComplianceEngine.checkTransactionCompliance 实现
+     */
+    function checkTransactionCompliance(
+        address from,
+        address to,
+        uint256 amount,
+        address token,
+        uint256 deadline
+    ) external returns (bool isCompliant, uint8[] memory actionTypes) {
+        (Decision decision, ) = checkTransferWithDeadline(from, to, amount, token, deadline);
+        isCompliant = decision != Decision.BLOCK;
+        actionTypes = new uint8[](1);
+        actionTypes[0] = uint8(decision);
+        return (isCompliant, actionTypes);
+    }
+    
+    /**
+     * @notice 交易合规检查（简版）
+     * @dev IComplianceEngine.checkTransactionCompliance 实现
+     */
+    function checkTransactionCompliance(
+        address from,
+        address to,
+        uint256 amount,
+        address token
+    ) external returns (bool isCompliant, uint8[] memory actionTypes) {
+        (Decision decision, ) = checkTransfer(from, to, amount, token);
+        isCompliant = decision != Decision.BLOCK;
+        actionTypes = new uint8[](1);
+        actionTypes[0] = uint8(decision);
+        return (isCompliant, actionTypes);
     }
     
     /**

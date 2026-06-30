@@ -137,17 +137,6 @@ describe('RiskRegistry', function () {
     });
   });
 
-  // ============ Tags ============
-  describe.skip('Tags', function () {
-    // TODO: addTag, removeTag, hasTag do not exist on RiskRegistry.
-    // Tags are only set via updateRiskProfile/batchUpdateRiskProfiles.
-  });
-
-  // ============ Contract Registry ============
-  describe.skip('Contract Registry', function () {
-    // TODO: registerContract, getContractRisk do not exist on RiskRegistry.
-  });
-
   // ============ View Functions ============
   describe('View Functions', function () {
     it('should return correct risk profile', async function () {

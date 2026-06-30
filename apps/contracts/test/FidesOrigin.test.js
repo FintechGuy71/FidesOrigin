@@ -136,10 +136,6 @@ describe('FidesOrigin Contract Suite', function () {
         });
     });
 
-    describe.skip('ComplianceEngine', function () {
-        // TODO: ComplianceEngine does not implement validateTransfer, emergencyMode, etc.
-    });
-
     describe('TestUSD', function () {
         it('should deploy with correct initial supply', async function () {
             const totalSupply = await testUSD.totalSupply();

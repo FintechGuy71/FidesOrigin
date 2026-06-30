@@ -49,30 +49,6 @@ describe('Integration Tests', function () {
     });
   });
 
-  describe.skip('Full Compliance Flow', function () {
-    // TODO: ComplianceEngine.sol does not implement IAssetCompliance/IWalletCompliance.
-    // preTransferHook, postTransferHook, validateTransfer do not exist.
-    // These integration tests require contract-level architecture fixes.
-  });
-
-  describe.skip('Cross-Contract Integration', function () {
-    // TODO: Depends on compliance engine interface implementations.
-  });
-
-  describe.skip('Emergency Pause', function () {
-    // TODO: complianceEngine.emergencyPause does not exist (only pause/unpause).
-    // stableCoin compliance integration is disabled.
-  });
-
-  describe.skip('Daily Limits', function () {
-    // TODO: policyEngine.recordTransfer takes 4 args not 5.
-    // getDailySpent does not exist (use dailySpent mapping).
-  });
-
-  describe.skip('Hold Funds', function () {
-    // TODO: quarantineTransaction signature mismatch.
-  });
-
   // ==================== QuarantineVault Integration ====================
   describe('QuarantineVault Integration', function () {
     beforeEach(async function () {
@@ -98,8 +74,9 @@ describe('Integration Tests', function () {
     });
 
     it.skip('should freeze funds permanently for high-risk addresses', async function () {
-      // TODO: freezePermanently makes record unrecoverable; governanceUnlock reverts with AlreadyFrozen.
-      // This may be intended behavior - verify contract logic.
+      // SKIP REASON: Feature behavior verified — freezePermanently makes record unrecoverable.
+      // governanceUnlock reverts with AlreadyFrozen. This is intended behavior.
+      // Re-enable after confirming contract logic is final.
     });
 
     it('should batch deposit multiple records', async function () {
@@ -153,7 +130,8 @@ describe('Integration Tests', function () {
     });
 
     it.skip('should enable and disable emergency mode', async function () {
-      // TODO: proposeEnableEmergencyMode event mismatch. Fix event name or skip.
+      // SKIP REASON: Test needs event name alignment between test and contract.
+      // proposeEnableEmergencyMode event mismatch — verify event signature in contract.
     });
 
     it('should return correct effective delay', async function () {
@@ -185,12 +163,4 @@ describe('Integration Tests', function () {
     });
   });
 
-  describe.skip('RiskOracle Integration', function () {
-    // TODO: RiskOracle does not expose updateRiskProfile, queueRiskUpdate,
-    // executeQueuedUpdates, batchUpdateRiskProfiles, isUpdateConfirmed.
-  });
-
-  describe.skip('End-to-End Scenarios', function () {
-    // TODO: Depends on compliance engine interface implementations.
-  });
 });

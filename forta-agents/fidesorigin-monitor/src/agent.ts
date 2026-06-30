@@ -4,7 +4,7 @@ import {
   FindingType,
   HandleTransaction,
   TransactionEvent,
-} from '@fortanetwork/forta-agent';
+} from 'forta-agent';
 // [High 修复] 正确导入 ethers 模块成员，避免 ReferenceError
 import { Interface, parseUnits, formatUnits } from 'ethers';
 
@@ -25,46 +25,52 @@ if (!RISK_REGISTRY) {
   throw new Error('[FORTA CONFIG] RISK_REGISTRY env var is required. Set it to the deployed RiskRegistry contract address.');
 }
 
-// 事件 ABI 片段
-const COMPLIANCE_CHECK_ABI = [
-  'event ComplianceCheck(address indexed operator, address indexed from, address indexed to, uint256 amount, uint8 decision, string reason)',
-  'event FundsHeld(bytes32 indexed holdId, address indexed owner, address asset, uint256 amount)',
-  'event EmergencyModeActivated(address indexed triggeredBy)',
+// [Critical Fix] 使用合约实际定义的事件签名，替换之前错误的 ComplianceCheck 事件
+// 合约中不存在的事件（已移除）：
+//   - ComplianceCheck(address,address,address,uint256,uint8,string) ❌
+//   - FundsHeld(bytes32,address,address,uint256) ❌
+//   - EmergencyModeActivated(address) ❌
+// 合约中实际定义的事件（已启用）：
+//   - TransactionBlocked(address,address,uint256,address,string,uint256,uint256)
+//   - TransactionQuarantined(address,address,uint256,address,bytes32,uint256,uint256)
+//   - ComplianceCheckPerformed(address,uint256,bool,uint256,uint256,bytes32)
+//   - ContractPaused(address,uint256)
+//   - QuarantineReleased(bytes32,address,uint256)
+const EVENT_ABIS = [
+  'event TransactionBlocked(address indexed from, address indexed to, uint256 indexed amount, address token, string reason, uint256 timestamp, uint256 blockNumber)',
+  'event TransactionQuarantined(address indexed from, address indexed to, uint256 indexed amount, address token, bytes32 quarantineId, uint256 timestamp, uint256 blockNumber)',
+  'event ComplianceCheckPerformed(address indexed addr, uint256 indexed riskScore, bool indexed isCompliant, uint256 timestamp, uint256 blockNumber, bytes32 checkType)',
+  'event ContractPaused(address indexed account, uint256 timestamp)',
+  'event QuarantineReleased(bytes32 indexed quarantineId, address indexed operator, uint256 timestamp)',
 ];
 
-const iface = new Interface(COMPLIANCE_CHECK_ABI);
+const iface = new Interface(EVENT_ABIS);
 
-// [Low] 将精度提取为常量配置，避免硬编码散落
 const TOKEN_DECIMALS = 6;
-
-// 告警阈值（10万 fUSD）
-const HIGH_VALUE_THRESHOLD = parseUnits('100000', TOKEN_DECIMALS);
-
-// [Medium] 使用 Map 替代数组索引，增强类型安全
-const DECISION_MAP = new Map<number, string>([
-  [0, 'ALLOW'],
-  [1, 'BLOCK'],
-  [2, 'FLAG'],
-  [3, 'HOLD'],
-]);
-
-/**
- * 安全获取决策标签
- */
-function getDecisionLabel(decision: unknown): string {
-  const code = Number(decision);
-  return DECISION_MAP.get(code) || 'UNKNOWN';
-}
 
 /**
  * 安全格式化金额
  */
 function safeFormatUnits(amount: unknown): string {
   try {
-    const bigIntAmount = BigInt(amount || 0);
+    const bigIntAmount = BigInt(String(amount || 0));
     return formatUnits(bigIntAmount, TOKEN_DECIMALS);
   } catch {
     return '0';
+  }
+}
+
+/**
+ * 安全格式化 bytes32 为可读字符串
+ */
+function bytes32ToString(bytes32: unknown): string {
+  try {
+    if (typeof bytes32 === 'string' && bytes32.length === 66) {
+      return bytes32;
+    }
+    return String(bytes32);
+  } catch {
+    return String(bytes32);
   }
 }
 
@@ -75,144 +81,119 @@ const handleTransaction: HandleTransaction = async (
 
   // [Medium] 全局异常处理，防止单个解析错误导致 Agent 崩溃
   try {
-    // ==================== 监控 ComplianceCheck 事件 ====================
-    const complianceChecks = txEvent.filterLog(
-      COMPLIANCE_CHECK_ABI[0],
-      COMPLIANCE_ENGINE
-    );
-
-    for (const log of complianceChecks) {
-      const { operator, from, to, amount, decision, reason } = log.args;
-
-      const decisionCode = Number(decision);
-      const decisionLabel = getDecisionLabel(decision);
-      const amountBigInt = BigInt(amount || 0);
+    // ==================== 监控 TransactionBlocked (交易被拦截) ====================
+    const blockedTxs = txEvent.filterLog(EVENT_ABIS[0], COMPLIANCE_ENGINE);
+    for (const log of blockedTxs) {
+      const { from, to, amount, token, reason } = log.args;
       const amountFormatted = safeFormatUnits(amount);
 
-      // 🚨 BLOCK 决策 — 高风险
-      if (decisionCode === 1) {
-        findings.push(
-          Finding.fromObject({
-            name: 'FidesOrigin 交易被拦截',
-            description: `地址 ${from} 向 ${to} 转账 ${amountFormatted} fUSD 被合规引擎拦截。原因: ${reason}`,
-            alertId: 'FIDES-BLOCK-001',
-            severity: FindingSeverity.High,
-            type: FindingType.Suspicious,
-            metadata: {
-              operator: String(operator),
-              from: String(from),
-              to: String(to),
-              amount: amountFormatted,
-              reason: String(reason),
-              txHash: txEvent.hash,
-            },
-          })
-        );
-      }
-
-      // ⚠️ FLAG 决策 — 中风险
-      if (decisionCode === 2) {
-        findings.push(
-          Finding.fromObject({
-            name: 'FidesOrigin 交易被标记',
-            description: `地址 ${from} 向 ${to} 转账 ${amountFormatted} fUSD 被标记需人工审核。原因: ${reason}`,
-            alertId: 'FIDES-FLAG-001',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Info,
-            metadata: {
-              operator: String(operator),
-              from: String(from),
-              to: String(to),
-              amount: amountFormatted,
-              reason: String(reason),
-              txHash: txEvent.hash,
-            },
-          })
-        );
-      }
-
-      // 💰 HOLD 决策 — 资金冻结
-      if (decisionCode === 3) {
-        findings.push(
-          Finding.fromObject({
-            name: 'FidesOrigin 资金被冻结',
-            description: `地址 ${from} 的 ${amountFormatted} fUSD 被冻结。原因: ${reason}`,
-            alertId: 'FIDES-HOLD-001',
-            severity: FindingSeverity.High,
-            type: FindingType.Suspicious,
-            metadata: {
-              operator: String(operator),
-              from: String(from),
-              to: String(to),
-              amount: amountFormatted,
-              reason: String(reason),
-              txHash: txEvent.hash,
-            },
-          })
-        );
-      }
-
-      // 🔥 大额交易监控（即使 ALLOW 也要记录）
-      if (amountBigInt >= HIGH_VALUE_THRESHOLD) {
-        findings.push(
-          Finding.fromObject({
-            name: 'FidesOrigin 大额转账',
-            description: `检测到大额转账: ${amountFormatted} fUSD from ${from} to ${to}`,
-            alertId: 'FIDES-HIGH-VALUE-001',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Info,
-            metadata: {
-              from: String(from),
-              to: String(to),
-              amount: amountFormatted,
-              decision: decisionLabel,
-              txHash: txEvent.hash,
-            },
-          })
-        );
-      }
-    }
-
-    // ==================== 监控 FundsHeld 事件 ====================
-    const fundsHeld = txEvent.filterLog(
-      COMPLIANCE_CHECK_ABI[1],
-      COMPLIANCE_ENGINE
-    );
-    for (const log of fundsHeld) {
-      const { holdId, owner, asset, amount } = log.args;
-      const heldAmountFormatted = safeFormatUnits(amount);
       findings.push(
         Finding.fromObject({
-          name: 'FidesOrigin 新冻结记录',
-          description: `新资金冻结: holdId=${holdId}, owner=${owner}, amount=${heldAmountFormatted} fUSD`,
-          alertId: 'FIDES-HOLD-002',
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
+          name: 'FidesOrigin 交易被拦截',
+          description: `地址 ${from} 向 ${to} 转账 ${amountFormatted} fUSD 被合规引擎拦截。原因: ${reason}`,
+          alertId: 'FIDES-BLOCK-001',
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
           metadata: {
-            holdId: String(holdId),
-            owner: String(owner),
-            asset: String(asset),
-            amount: heldAmountFormatted,
+            from: String(from),
+            to: String(to),
+            amount: amountFormatted,
+            token: String(token),
+            reason: String(reason),
+            txHash: txEvent.hash,
           },
         })
       );
     }
 
-    // ==================== 监控 EmergencyModeActivated ====================
-    const emergencyEvents = txEvent.filterLog(
-      COMPLIANCE_CHECK_ABI[2],
-      COMPLIANCE_ENGINE
-    );
-    for (const log of emergencyEvents) {
+    // ==================== 监控 TransactionQuarantined (交易被隔离) ====================
+    const quarantinedTxs = txEvent.filterLog(EVENT_ABIS[1], COMPLIANCE_ENGINE);
+    for (const log of quarantinedTxs) {
+      const { from, to, amount, token, quarantineId } = log.args;
+      const amountFormatted = safeFormatUnits(amount);
+
       findings.push(
         Finding.fromObject({
-          name: '🚨 FidesOrigin 紧急模式启动',
-          description: `合规引擎进入紧急暂停模式，触发者: ${log.args.triggeredBy}`,
+          name: 'FidesOrigin 资金被隔离',
+          description: `地址 ${from} 向 ${to} 的 ${amountFormatted} fUSD 转账被隔离等待审核。quarantineId: ${quarantineId}`,
+          alertId: 'FIDES-HOLD-001',
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
+          metadata: {
+            from: String(from),
+            to: String(to),
+            amount: amountFormatted,
+            token: String(token),
+            quarantineId: String(quarantineId),
+            txHash: txEvent.hash,
+          },
+        })
+      );
+    }
+
+    // ==================== 监控 ComplianceCheckPerformed (地址合规检查) ====================
+    const complianceChecks = txEvent.filterLog(EVENT_ABIS[2], COMPLIANCE_ENGINE);
+    for (const log of complianceChecks) {
+      const { addr, riskScore, isCompliant, checkType } = log.args;
+      const riskScoreNum = Number(riskScore);
+      const checkTypeStr = bytes32ToString(checkType);
+
+      // 地址不合规或高风险评分 → 对应旧的 FLAG 决策（需人工关注）
+      if (!isCompliant || riskScoreNum >= 80) {
+        findings.push(
+          Finding.fromObject({
+            name: 'FidesOrigin 高风险地址合规检查',
+            description: `地址 ${addr} 合规检查不通过 (riskScore=${riskScoreNum}, isCompliant=${isCompliant}, checkType=${checkTypeStr})`,
+            alertId: 'FIDES-FLAG-001',
+            severity: riskScoreNum >= 95 ? FindingSeverity.High : FindingSeverity.Medium,
+            type: FindingType.Info,
+            metadata: {
+              addr: String(addr),
+              riskScore: String(riskScoreNum),
+              isCompliant: String(isCompliant),
+              checkType: checkTypeStr,
+              txHash: txEvent.hash,
+            },
+          })
+        );
+      }
+    }
+
+    // ==================== 监控 ContractPaused (合约暂停 — 对应旧 EmergencyModeActivated) ====================
+    const pausedEvents = txEvent.filterLog(EVENT_ABIS[3], COMPLIANCE_ENGINE);
+    for (const log of pausedEvents) {
+      const { account, timestamp } = log.args;
+      findings.push(
+        Finding.fromObject({
+          name: '🚨 FidesOrigin 合约暂停',
+          description: `合规引擎进入暂停模式，触发者: ${account}`,
           alertId: 'FIDES-EMERGENCY-001',
           severity: FindingSeverity.Critical,
           type: FindingType.Exploit,
           metadata: {
-            triggeredBy: String(log.args.triggeredBy),
+            triggeredBy: String(account),
+            timestamp: String(timestamp),
+            txHash: txEvent.hash,
+          },
+        })
+      );
+    }
+
+    // ==================== 监控 QuarantineReleased (隔离被释放) ====================
+    const releasedEvents = txEvent.filterLog(EVENT_ABIS[4], COMPLIANCE_ENGINE);
+    for (const log of releasedEvents) {
+      const { quarantineId, operator, timestamp } = log.args;
+      findings.push(
+        Finding.fromObject({
+          name: 'FidesOrigin 隔离已释放',
+          description: `隔离记录 ${quarantineId} 已被操作者 ${operator} 释放`,
+          alertId: 'FIDES-HOLD-003',
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+          metadata: {
+            quarantineId: String(quarantineId),
+            operator: String(operator),
+            timestamp: String(timestamp),
           },
         })
       );

@@ -1,10 +1,12 @@
 # Build artifacts
 /build/
 /dist/
+**/dist/
 *.tsbuildinfo
 
 # Dependencies
 /node_modules/
+**/node_modules/
 /.pnpm/
 .pnpm-store/
 
@@ -59,6 +61,10 @@ apps/subgraph/node_modules/
 # Misc
 packages/*/dist/
 packages/*/node_modules/
+
+# Forta agents
+forta-agents/*/dist/
+forta-agents/*/node_modules/
 
 # Deployment artifacts
 deployments/

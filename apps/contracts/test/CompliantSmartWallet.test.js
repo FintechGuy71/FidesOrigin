@@ -207,14 +207,4 @@ describe('CompliantSmartWallet', function () {
       expect(ethSpent).to.equal(ethers.parseEther('1'));
     });
   });
-
-  describe.skip('Compliance Integration', function () {
-    // TODO: ComplianceEngine.sol does not implement IWalletCompliance interface.
-    // Missing: preExecutionHook, postExecutionHook, validateOperation, etc.
-    // These tests require contract-level fixes.
-    it('should BLOCK transfer to sanctioned address', async function () {});
-    it('should skip blocked operations in batch', async function () {});
-    it('should allow transfer to sanctioned when compliance disabled', async function () {});
-    it('should simulate operation', async function () {});
-  });
 });

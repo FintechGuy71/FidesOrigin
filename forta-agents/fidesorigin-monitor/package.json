@@ -10,7 +10,7 @@
     "push": "forta-agent push"
   },
   "dependencies": {
-    "@fortanetwork/forta-agent": "^0.1.48",
+    "forta-agent": "^0.1.48",
     "ethers": "^6.8.0"
   },
   "devDependencies": {

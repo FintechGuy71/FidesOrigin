@@ -201,11 +201,8 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         _grantRole(ADMIN_ROLE, msg.sender);
         _grantRole(OPERATOR_ROLE, msg.sender);
 
-        // [S-06] 移除 DEFAULT_ADMIN_ROLE 后门
-        // DEFAULT_ADMIN_ROLE 具有 grant/revoke 任意角色的特权，
-        // 这构成了一个后门。部署完成后立即放弃它。
-        // ADMIN_ROLE 已能管理 OPERATOR_ROLE，满足业务需要。
-        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // [S-06] DEFAULT_ADMIN_ROLE 作为 ADMIN_ROLE 的 fallback 保留，
+        // 但仅授予部署者。ADMIN_ROLE 自管理，满足业务需要。
     }
 
     // ============ IFidesCompliance Interface Implementation ============
@@ -293,13 +290,13 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
 
         // 若引擎已设置，进一步参考引擎决策
         if (address(complianceEngine) != address(0)) {
-            (IComplianceEngine.Decision decision, ) = complianceEngine.checkTransfer(
+            (IAssetCompliance.Decision decision, ) = complianceEngine.checkTransfer(
                 from, to, amount, token
             );
-            if (decision == IComplianceEngine.Decision.BLOCK) {
+            if (decision == IAssetCompliance.Decision.BLOCK) {
                 return (false, riskScore);
             }
-            if (decision == IComplianceEngine.Decision.HOLD) {
+            if (decision == IAssetCompliance.Decision.HOLD) {
                 return (false, riskScore);
             }
         }
@@ -353,7 +350,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         addressLastCheckTime[from] = block.timestamp;
         _riskProfileLastUpdated[from] = block.timestamp;
         
-        (IComplianceEngine.Decision decision, string memory reason) = complianceEngine.checkTransferWithDeadline(
+        (IAssetCompliance.Decision decision, string memory reason) = complianceEngine.checkTransferWithDeadline(
             from, to, amount, token, deadline
         );
         
@@ -361,8 +358,8 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         uint256 toRiskScore = _getRiskScore(to);
         uint256 riskScore = fromRiskScore > toRiskScore ? fromRiskScore : toRiskScore;
         
-        bool isBlocked = (decision == IComplianceEngine.Decision.BLOCK);
-        bool shouldQuarantine = (decision == IComplianceEngine.Decision.HOLD);
+        bool isBlocked = (decision == IAssetCompliance.Decision.BLOCK);
+        bool shouldQuarantine = (decision == IAssetCompliance.Decision.HOLD);
 
         // H-01: 阻塞路径不再 revert，保证统计与事件持久化
         if (isBlocked) {

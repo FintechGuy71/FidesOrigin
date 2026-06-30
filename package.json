@@ -1,7 +1,8 @@
 {
   "name": "fidesorigin",
-  "version": "0.2.1",
+  "version": "2.6.1",
   "private": true,
+  "_versionNotes": "Root package version tracks monorepo/git tags (v2.6.1). Contract VERSION constants are independent (1.2.x-1.3.x) — see apps/contracts/ for contract version line.",
   "description": "FidesOrigin — Programmable On-Chain Compliance Protocol (Monorepo)",
   "scripts": {
     "build": "turbo run build",

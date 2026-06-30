@@ -33,6 +33,8 @@ type ComplianceCheck @entity {
   amount: BigInt!
   decision: Decision!
   reason: String!
+  riskScore: Int
+  checkType: String
   assetContract: String
   timestamp: BigInt!
   blockNumber: BigInt!

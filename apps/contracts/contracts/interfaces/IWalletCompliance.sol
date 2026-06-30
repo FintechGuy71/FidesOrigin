@@ -7,6 +7,9 @@ import "./IAssetCompliance.sol";
  * @title IWalletCompliance
  * @notice 智能钱包合规接口标准 - MPC钱包、AA账户抽象钱包、机构托管钱包等
  * @dev 实现此接口的合约可被智能钱包集成，实现操作级合规检查
+ * @dev 【设计意图】本接口为核心协议层定义的标准，供外部钱包和托管服务商集成使用。
+ *      核心协议层不直接提供 IWalletCompliance 的合约实现，由第三方钱包（MPC、AA等）
+ *      自行实现或调用核心协议的 IAssetCompliance / IComplianceEngine 接口完成合规检查。
  */
 interface IWalletCompliance {
     
