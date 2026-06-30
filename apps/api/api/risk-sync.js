@@ -1,5 +1,7 @@
 const https = require('https');
 
+const { checkRateLimit } = require('../middleware/rateLimit');
+
 // 配置
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 if (!ETHERSCAN_API_KEY) {
@@ -48,34 +50,10 @@ function checkApiKey(req, res) {
   return true;
 }
 
-// ==================== 速率限制（内存版，生产环境建议用 Redis）====================
-const requestCounts = new Map(); // IP -> { count, resetTime }
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1分钟
-const RATE_LIMIT_MAX = 60; // 每分钟60请求
+// ==================== 速率限制（Redis-backed，自动降级到内存）====================
+// 已迁移到 apps/api/middleware/rateLimit.js
+// 配置：REDIS_URL 环境变量；默认 60 req/min per IP，sliding window 算法
 
-function checkRateLimit(req, res) {
-  // [High Fix] More robust IP extraction — prefer Vercel's x-real-ip, validate format
-  const rawIp = req.headers['x-real-ip'] ||
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    'unknown';
-  // Strip IPv6 prefix from IPv4-mapped addresses
-  const ip = rawIp.replace(/^::ffff:/, '');
-  const now = Date.now();
-  const record = requestCounts.get(ip);
-  
-  if (!record || now > record.resetTime) {
-    requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-  
-  record.count++;
-  if (record.count > RATE_LIMIT_MAX) {
-    res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
-    return false;
-  }
-  return true;
-}
 
 // ==================== 输入验证 ====================
 function isValidEthereumAddress(address) {
@@ -101,12 +79,7 @@ function cleanupExpiredCache() {
   if (memoryCache && (now - memoryCache.timestamp) > CACHE_TTL * 1000) {
     memoryCache = null;
   }
-  // [High Fix] Also prune expired entries from rate limit map to prevent memory leak
-  for (const [key, val] of requestCounts.entries()) {
-    if (now > val.resetTime) {
-      requestCounts.delete(key);
-    }
-  }
+  // [Perf-Fix] Rate-limit cleanup now handled by middleware/rateLimit.js (auto TTL purge)
   cacheLastCleaned = now;
 }
 
@@ -215,8 +188,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
   
-  // 2. 速率限制
-  if (!checkRateLimit(req, res)) return;
+  // 2. 速率限制（Redis-backed，自动降级到内存）
+  if (!(await checkRateLimit(req, res))) return;
   
   // 3. API Key 认证（仅生产环境）
   if (!checkApiKey(req, res)) return;
@@ -224,7 +197,7 @@ module.exports = async function handler(req, res) {
   // 4. 强制刷新参数
   const forceRefresh = req.query?.refresh === 'true';
   
-  // 定期清理内存缓存，防止泄漏
+  // 定期清理内存缓存，防止泄漏（速率限制已迁移到 middleware/rateLimit.js，自带 TTL 清理）
   cleanupExpiredCache();
   
   // 5. 检查缓存

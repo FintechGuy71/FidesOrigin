@@ -34,26 +34,28 @@ describe('PolicyEngine Daily Limits', function () {
       await policyEngine.connect(owner).setIssuerPolicy(issuer.address, policy);
 
       // First transaction: 1000
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1000n * 10n ** 18n, issuer.address, true);
-      let spent = await policyEngine.getDailySpent(user1.address, issuer.address);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1000n * 10n ** 18n, issuer.address);
+      let spent = await policyEngine.dailySpent(issuer.address, user1.address);
       expect(spent).to.equal(1000n * 10n ** 18n);
 
       // Second transaction: 600 would exceed daily limit (1500)
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 600n * 10n ** 18n, issuer.address, true);
-      spent = await policyEngine.getDailySpent(user1.address, issuer.address);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 600n * 10n ** 18n, issuer.address);
+      spent = await policyEngine.dailySpent(issuer.address, user1.address);
       expect(spent).to.equal(1600n * 10n ** 18n); // exceeded but still recorded
 
       // Advance time by 1 day
       await ethers.provider.send('evm_increaseTime', [86400]);
       await ethers.provider.send('evm_mine');
 
-      // After reset, spent should be 0 for new day
-      spent = await policyEngine.getDailySpent(user1.address, issuer.address);
+      // After reset, evaluateTransfer should treat spent as 0 (even though state variable hasn't been reset yet)
+      // Call recordTransfer to trigger actual reset
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 0, issuer.address);
+      spent = await policyEngine.dailySpent(issuer.address, user1.address);
       expect(spent).to.equal(0);
 
       // Can transfer again
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1000n * 10n ** 18n, issuer.address, true);
-      spent = await policyEngine.getDailySpent(user1.address, issuer.address);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1000n * 10n ** 18n, issuer.address);
+      spent = await policyEngine.dailySpent(issuer.address, user1.address);
       expect(spent).to.equal(1000n * 10n ** 18n);
     });
   });
@@ -64,11 +66,11 @@ describe('PolicyEngine Daily Limits', function () {
       await policyEngine.connect(owner).setIssuerPolicy(issuer.address, policy);
 
       // Record 1500 spent
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1500n * 10n ** 18n, issuer.address, true);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1500n * 10n ** 18n, issuer.address);
 
       // Evaluate transfer of 1 should exceed daily limit
       const [decision, reason] = await policyEngine.evaluateTransfer(user1.address, user2.address, 1n * 10n ** 18n, issuer.address);
-      expect(decision).to.equal(3); // HOLD (Decision.HOLD = 3)
+      expect(decision).to.equal(1); // BLOCK (ActionType.BLOCK = 1)
       expect(reason).to.include('Daily limit');
     });
 
@@ -77,11 +79,11 @@ describe('PolicyEngine Daily Limits', function () {
       await policyEngine.connect(owner).setIssuerPolicy(issuer.address, policy);
 
       // Multiple transactions
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1000n * 10n ** 18n, issuer.address, true);
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 2000n * 10n ** 18n, issuer.address, true);
-      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 500n * 10n ** 18n, issuer.address, true);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1000n * 10n ** 18n, issuer.address);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 2000n * 10n ** 18n, issuer.address);
+      await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 500n * 10n ** 18n, issuer.address);
 
-      const spent = await policyEngine.getDailySpent(user1.address, issuer.address);
+      const spent = await policyEngine.dailySpent(issuer.address, user1.address);
       expect(spent).to.equal(3500n * 10n ** 18n);
     });
   });

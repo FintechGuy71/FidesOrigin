@@ -117,12 +117,33 @@ model DataSourceConfig {
   lastSync  DateTime?
   requestCount Int @default(0) // 今日请求计数
 
+  // 增量同步游标
+  lastSyncCursor String?  // 增量同步游标（时间戳或cursor字符串）
+  lastSyncMode   String   @default("full") // incremental | full
+
   // 关联：同步历史
   syncHistories SyncHistory[]
 
   updatedAt DateTime @updatedAt
 
   @@map("data_source_configs")
+}
+
+// 同步失败记录（死信队列）
+model SyncFailure {
+  id          String   @id @default(cuid())
+  source      String   // ofac, chainalysis, etc.
+  recordId    String   // failed record identifier
+  error       String   // error message
+  retryCount  Int      @default(0)
+  status      String   @default("pending") // pending | retrying | permanent_failure | resolved
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  nextRetryAt DateTime?
+
+  @@index([source, status])
+  @@index([nextRetryAt])
+  @@map("sync_failures")
 }
 
 // 备份记录

@@ -616,7 +616,7 @@ contract RiskRegistry is
         RiskTier tier,
         bytes32[] memory tags,
         uint256 lastUpdated,
-        bool isSanctioned
+        bool sanctioned
     ) {
         RiskProfile storage profile = riskProfiles[addr];
         return (

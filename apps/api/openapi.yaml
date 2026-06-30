@@ -1,0 +1,739 @@
+openapi: 3.0.3
+info:
+  title: FidesOrigin API
+  description: |
+    FidesOrigin Risk Assessment & Compliance API.
+    Provides address risk scoring, batch checks, dashboard statistics, and compliance rule management.
+  version: 1.0.0
+  contact:
+    name: FidesOrigin Team
+servers:
+  - url: https://api.fidesorigin.com
+    description: Production
+  - url: https://api-staging.fidesorigin.com
+    description: Staging
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /v1/risk/check:
+    get:
+      summary: Single Address Risk Check
+      description: Assess the risk level of a single blockchain address.
+      operationId: checkRisk
+      tags:
+        - Risk Assessment
+      parameters:
+        - name: address
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Ethereum address to assess
+        - name: chainId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Chain ID or chain name (e.g., 1, 137, ethereum, polygon)
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Transaction amount (optional)
+      responses:
+        "200":
+          description: Risk assessment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskCheckResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /v1/risk/batch-check:
+    post:
+      summary: Batch Address Risk Check
+      description: Assess the risk level of multiple blockchain addresses in a single request.
+      operationId: batchCheckRisk
+      tags:
+        - Risk Assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchRiskCheckRequest"
+      responses:
+        "200":
+          description: Batch risk assessment results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchRiskCheckResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limited
+
+  /v1/risk/address/{address}:
+    get:
+      summary: Get Address Risk Details
+      description: Retrieve the latest risk snapshot for a specific address.
+      operationId: getAddressRisk
+      tags:
+        - Risk Assessment
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Ethereum address
+      responses:
+        "200":
+          description: Address risk details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddressRisk"
+        "400":
+          description: Invalid address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Address not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /v1/dashboard/stats:
+    get:
+      summary: Dashboard Statistics
+      description: Retrieve aggregated risk statistics for the dashboard.
+      operationId: getDashboardStats
+      tags:
+        - Dashboard
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+        "401":
+          description: Unauthorized
+
+  /v1/rules:
+    get:
+      summary: List Compliance Rules
+      description: Retrieve a paginated list of compliance rules.
+      operationId: listRules
+      tags:
+        - Compliance Rules
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, inactive, draft]
+          description: Filter by rule status
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Number of items to skip
+      responses:
+        "200":
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleListResponse"
+        "401":
+          description: Unauthorized
+
+    post:
+      summary: Create Compliance Rule
+      description: Create a new compliance rule.
+      operationId: createRule
+      tags:
+        - Compliance Rules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRuleRequest"
+      responses:
+        "201":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Unauthorized
+
+  /v1/rules/{id}:
+    get:
+      summary: Get Compliance Rule
+      description: Retrieve a specific compliance rule by ID.
+      operationId: getRule
+      tags:
+        - Compliance Rules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Rule ID
+      responses:
+        "200":
+          description: Rule details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Rule not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+    put:
+      summary: Update Compliance Rule
+      description: Update an existing compliance rule.
+      operationId: updateRule
+      tags:
+        - Compliance Rules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Rule ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRuleRequest"
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Rule not found
+
+    patch:
+      summary: Partially Update Compliance Rule
+      description: Partially update an existing compliance rule. Accepts the same body as PUT.
+      operationId: patchRule
+      tags:
+        - Compliance Rules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Rule ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRuleRequest"
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+        "404":
+          description: Rule not found
+
+    delete:
+      summary: Delete Compliance Rule
+      description: Delete a compliance rule by ID.
+      operationId: deleteRule
+      tags:
+        - Compliance Rules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Rule ID
+      responses:
+        "204":
+          description: Successfully deleted
+        "401":
+          description: Unauthorized
+        "404":
+          description: Rule not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: "Bearer token API key (e.g., Bearer sk_xxx)"
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: "API key passed via X-API-Key header"
+
+  schemas:
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        status:
+          type: integer
+          description: HTTP status code
+
+    RiskLevel:
+      type: string
+      enum: [low, medium, high, critical]
+
+    Chain:
+      type: string
+      enum: [ethereum, bitcoin, polygon, bsc, arbitrum, optimism, base, solana]
+
+    AddressType:
+      type: string
+      enum: [wallet, contract, exchange, mixer, unknown]
+
+    RiskScore:
+      type: object
+      required:
+        - score
+        - level
+        - confidence
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+        level:
+          $ref: "#/components/schemas/RiskLevel"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        category:
+          type: string
+
+    RiskFlag:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - severity
+        - description
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        severity:
+          $ref: "#/components/schemas/RiskLevel"
+        description:
+          type: string
+        metadata:
+          type: object
+
+    Entity:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - riskLevel
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        riskLevel:
+          $ref: "#/components/schemas/RiskLevel"
+        description:
+          type: string
+
+    TransactionStats:
+      type: object
+      required:
+        - totalTransactions
+        - totalVolume
+      properties:
+        totalTransactions:
+          type: integer
+        totalVolume:
+          type: number
+        firstTransaction:
+          type: string
+          format: date-time
+        lastTransaction:
+          type: string
+          format: date-time
+
+    AddressRisk:
+      type: object
+      required:
+        - address
+        - chain
+        - type
+        - risk
+        - flags
+        - assessedAt
+      properties:
+        address:
+          type: string
+        chain:
+          $ref: "#/components/schemas/Chain"
+        type:
+          $ref: "#/components/schemas/AddressType"
+        risk:
+          $ref: "#/components/schemas/RiskScore"
+        flags:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskFlag"
+        entities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entity"
+        stats:
+          $ref: "#/components/schemas/TransactionStats"
+        assessedAt:
+          type: string
+          format: date-time
+
+    RiskCheckResult:
+      type: object
+      required:
+        - address
+        - chain
+        - overallScore
+        - overallLevel
+        - scores
+        - flags
+        - addressType
+        - timestamp
+      properties:
+        address:
+          type: string
+        chain:
+          $ref: "#/components/schemas/Chain"
+        overallScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        overallLevel:
+          $ref: "#/components/schemas/RiskLevel"
+        scores:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskScore"
+        flags:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskFlag"
+        addressType:
+          $ref: "#/components/schemas/AddressType"
+        timestamp:
+          type: string
+          format: date-time
+        relatedEntities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entity"
+        transactionStats:
+          $ref: "#/components/schemas/TransactionStats"
+
+    BatchRiskCheckRequest:
+      type: object
+      required:
+        - addresses
+      properties:
+        addresses:
+          type: array
+          items:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+          maxItems: 100
+        chainId:
+          oneOf:
+            - type: integer
+            - type: string
+        amount:
+          type: string
+        includeDetails:
+          type: boolean
+
+    BatchRiskCheckResult:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/AddressRisk"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+              error:
+                type: string
+        failed:
+          type: array
+          items:
+            type: string
+
+    DashboardStats:
+      type: object
+      required:
+        - totalAddresses
+        - highRiskCount
+        - mediumRiskCount
+        - lowRiskCount
+        - lastUpdated
+      properties:
+        totalAddresses:
+          type: integer
+        highRiskCount:
+          type: integer
+        mediumRiskCount:
+          type: integer
+        lowRiskCount:
+          type: integer
+        lastUpdated:
+          type: string
+          format: date-time
+
+    RuleStatus:
+      type: string
+      enum: [active, inactive, draft]
+
+    RuleOperator:
+      type: string
+      enum:
+        [equals, not_equals, greater_than, less_than, contains, not_contains, in, not_in]
+
+    RuleCondition:
+      type: object
+      required:
+        - field
+        - operator
+        - value
+      properties:
+        field:
+          type: string
+        operator:
+          $ref: "#/components/schemas/RuleOperator"
+        value: {}
+
+    RuleAction:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [flag, block, review, allow]
+        params:
+          type: object
+
+    Rule:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - priority
+        - conditions
+        - actions
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/RuleStatus"
+        priority:
+          type: integer
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleCondition"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleAction"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RuleListResponse:
+      type: object
+      required:
+        - rules
+        - total
+        - page
+        - limit
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rule"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    CreateRuleRequest:
+      type: object
+      required:
+        - name
+        - conditions
+        - actions
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleCondition"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleAction"
+        priority:
+          type: integer
+
+    UpdateRuleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/RuleStatus"
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleCondition"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleAction"
+        priority:
+          type: integer

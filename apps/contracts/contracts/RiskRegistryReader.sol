@@ -174,7 +174,7 @@ contract RiskRegistryReader {
         uint8 tier,
         bytes32[] memory tags,
         uint256 lastUpdated,
-        bool isSanctioned
+        bool sanctioned
     ) {
         return abi.decode(data, (uint8, uint8, bytes32[], uint256, bool));
     }

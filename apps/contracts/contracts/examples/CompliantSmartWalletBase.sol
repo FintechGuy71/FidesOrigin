@@ -588,7 +588,7 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
 
     // ============ Compliance Helpers ============
 
-    function _preComplianceCheck(address user, IWalletCompliance.Operation memory op) internal {
+    function _preComplianceCheck(address user, IWalletCompliance.Operation memory op) internal view {
         if (address(complianceEngine) == address(0)) return;
 
         try complianceEngine.preExecutionHook(user, op) {

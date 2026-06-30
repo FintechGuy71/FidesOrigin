@@ -20,6 +20,7 @@
  */
 
 const { ethers } = require('ethers');
+const { createSigner, createLocalSigner } = require('../../../packages/shared/dist/index.js');
 const { DatabaseService } = require('./databaseService');
 require('dotenv').config();
 
@@ -163,39 +164,24 @@ class BlockchainSyncService {
 
     // [L] Fix: 生产环境强制使用KMS/HSM，违规时抛出异常而非静默 return
     if (isProduction) {
-      const hasHSM = process.env.AWS_KMS_KEY_ID ||
-                     (process.env.AZURE_KEY_VAULT_NAME && process.env.AZURE_KEY_NAME) ||
-                     process.env.GCP_KMS_KEY_PATH ||
-                     (process.env.VAULT_ADDR && process.env.VAULT_KEY_PATH);
+      const hasKms = process.env.AWS_KMS_KEY_ID;
 
-      if (!hasHSM || process.env.SYNC_PRIVATE_KEY || process.env.PRIVATE_KEY) {
+      if (!hasKms || process.env.SYNC_PRIVATE_KEY || process.env.PRIVATE_KEY) {
         const errMsg = '❌ [Security] 生产环境密钥配置违规！必须使用 HSM/KMS 且禁止明文私钥。' +
-                       '支持的方案：AWS KMS / Azure Key Vault / GCP KMS / HashiCorp Vault';
+                       '请设置 KMS_PROVIDER=aws 和 AWS_KMS_KEY_ID';
         logger.error(errMsg);
         throw new Error(errMsg);
       }
 
-      // [FIX] Production KMS: lazy initialization instead of throwing
-      // Store KMS config for async initialization on first sync
-      this._kmsConfig = {
-        awsKmsKeyId: process.env.AWS_KMS_KEY_ID,
-        awsRegion: process.env.AWS_REGION || 'us-east-1',
-        azureKeyVaultName: process.env.AZURE_KEY_VAULT_NAME,
-        azureKeyName: process.env.AZURE_KEY_NAME,
-        gcpKmsKeyPath: process.env.GCP_KMS_KEY_PATH,
-        vaultAddr: process.env.VAULT_ADDR,
-        vaultKeyPath: process.env.VAULT_KEY_PATH,
-      };
       logger.info('🔐 KMS configuration detected, wallet will be initialized lazily on first sync');
       return;
     }
 
-    // 开发环境：允许使用环境变量私钥
+    // 开发环境：允许使用环境变量私钥（通过 createLocalSigner）
     const privateKey = process.env.SYNC_PRIVATE_KEY || process.env.PRIVATE_KEY;
     if (privateKey) {
-      // [I] Fix: 验证私钥格式
       try {
-        this.wallet = new ethers.Wallet(privateKey, this.provider);
+        this.wallet = createLocalSigner(privateKey, this.provider);
         logger.warn('⚠️ [Security] 开发环境使用环境变量私钥（仅限本地测试）');
       } catch (err) {
         throw new Error(`私钥格式无效: ${err.message}`);
@@ -204,71 +190,20 @@ class BlockchainSyncService {
   }
 
   /**
-   * [FIX] Plugin-style lazy KMS wallet initialization for production
-   * Supports: AWS KMS (full), Azure KeyVault, HashiCorp Vault, GCP KMS (stubs)
+   * [FIX] Lazy KMS wallet initialization via unified createSigner() factory
    */
   async _ensureWallet() {
     if (this.wallet) return;
 
-    if (!this._kmsConfig) {
-      throw new Error('Wallet not initialized: no KMS config or private key available');
+    try {
+      this.wallet = await createSigner({
+        providerInstance: this.provider,
+      });
+      logger.info('Wallet initialized via createSigner', { address: await this.wallet.getAddress() });
+    } catch (err) {
+      logger.error('Wallet initialization failed', { error: err.message });
+      throw new Error(`Wallet initialization failed: ${err.message}`);
     }
-
-    const cfg = this._kmsConfig;
-
-    // AWS KMS — production-ready
-    if (cfg.awsKmsKeyId) {
-      try {
-        await this._initAWSKMSWallet();
-        return;
-      } catch (err) {
-        logger.error('AWS KMS wallet initialization failed', { error: err.message });
-        throw new Error(`AWS KMS wallet initialization failed: ${err.message}. ` +
-          'Install @aws-sdk/client-kms if needed, or configure a different key provider.');
-      }
-    }
-
-    // Azure Key Vault — stub with clear guidance
-    if (cfg.azureKeyVaultName && cfg.azureKeyName) {
-      try {
-        await this._initAzureKMSWallet();
-        return;
-      } catch (err) {
-        logger.error('Azure Key Vault wallet initialization failed', { error: err.message });
-        throw err;
-      }
-    }
-
-    // HashiCorp Vault — stub with clear guidance
-    if (cfg.vaultAddr && cfg.vaultKeyPath) {
-      try {
-        await this._initVaultKMSWallet();
-        return;
-      } catch (err) {
-        logger.error('Vault KMS wallet initialization failed', { error: err.message });
-        throw err;
-      }
-    }
-
-    // GCP KMS — stub with clear guidance
-    if (cfg.gcpKmsKeyPath) {
-      try {
-        await this._initGCPKMSWallet();
-        return;
-      } catch (err) {
-        logger.error('GCP KMS wallet initialization failed', { error: err.message });
-        throw err;
-      }
-    }
-
-    throw new Error(
-      'No supported KMS provider configured. Currently supported:\n' +
-      '  - AWS KMS: AWS_KMS_KEY_ID + AWS_REGION\n' +
-      '  - Azure KeyVault: AZURE_KEY_VAULT_NAME + AZURE_KEY_NAME\n' +
-      '  - HashiCorp Vault: VAULT_ADDR + VAULT_KEY_PATH\n' +
-      '  - GCP KMS: GCP_KMS_KEY_PATH\n' +
-      'See the adapter class stubs for integration guidance.'
-    );
   }
 
   /**

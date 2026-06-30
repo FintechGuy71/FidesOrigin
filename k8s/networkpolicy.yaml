@@ -1,5 +1,27 @@
 # [L-17 Fix] NetworkPolicy: restrict outbound connections to only required endpoints
-# Apply this to the fidesorigin-data-publisher namespace
+# Apply this to the fidesorigin-data-publisher namespace.
+#
+# NOTE: Standard Kubernetes NetworkPolicy does NOT support FQDN-based filtering.
+# To enforce egress rules to specific external domains (listed below), you MUST use
+# one of the following approaches:
+#   1. Calico NetworkPolicy (networking.projectcalico.org/v1) — supports domains.
+#   2. Cilium NetworkPolicy (cilium.io/v2) — supports DNS-aware FQDN filtering.
+#   3. Istio Egress Gateway — route all external traffic through a controlled gateway.
+#
+# Required external domains (FQDN) for this workload:
+#   - treasury.gov          (OFAC SDN list)
+#   - api.chainalysis.com   (Chainalysis risk data)
+#   - api.opensanctions.org (OpenSanctions data)
+#   - api.etherscan.io      (Etherscan API)
+#   - thegraph.com          (Subgraph gateway)
+#   - alchemy.com           (Alchemy RPC)
+#   - raw.githubusercontent.com (Metamask phishing list)
+#   - any trust anchor oracles required by FATF pipeline
+#
+# This manifest keeps the standard K8s fallback (allow 443/80 to any) so that
+# workloads continue to function in clusters without Calico/Cilium.
+# Once Calico/Cilium is installed, replace the "allow 443/80 to any" rules
+# with FQDN-based rules. See k8s/networkpolicy-calico.yaml for an example.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -24,7 +46,7 @@ spec:
         - protocol: TCP
           port: 9090
   egress:
-    # Allow DNS resolution
+    # Allow DNS resolution (kube-dns in any namespace)
     - to:
         - namespaceSelector: {}
           podSelector:
@@ -33,12 +55,17 @@ spec:
       ports:
         - protocol: UDP
           port: 53
-    # Allow HTTPS to external APIs (OFAC, Chainalysis, OpenSanctions, Etherscan, Subgraph, Alchemy, RPC)
+    # [L-17-Fix] Allow HTTPS to external APIs.
+    # In clusters with Calico/Cilium, REPLACE this with FQDN-based rules.
+    # Until then, 443/80 to any target is the least-privilege option available
+    # in standard K8s NetworkPolicy.
     - to: []
       ports:
         - protocol: TCP
           port: 443
-    # Allow HTTP to external APIs if needed (upgrade to HTTPS when possible)
+    # [L-17-Fix] Allow HTTP to external APIs only if needed.
+    # Prefer HTTPS (port 443) for all external traffic; remove port 80
+    # once all upstream dependencies support TLS.
     - to: []
       ports:
         - protocol: TCP

@@ -31,6 +31,11 @@ contract FidesOriginTimelock is TimelockController {
     
     /// @notice 紧急操作员 (安全团队多签)
     mapping(address => bool) public emergencyOperators;
+
+    /// @notice Pending operations 列表（用于紧急模式切换时批量取消）
+    bytes32[] public pendingOperations;
+    /// @notice operationId => index + 1（0 表示不在列表中）
+    mapping(bytes32 => uint256) private _pendingOpIndex;
     
     // ============ Events ============
     
@@ -38,6 +43,7 @@ contract FidesOriginTimelock is TimelockController {
     event EmergencyModeDisabled(address indexed operator);
     event EmergencyOperatorAdded(address indexed operator);
     event EmergencyOperatorRemoved(address indexed operator);
+    event EmergencyModeChangeAffected(address indexed caller, uint256 pendingOpsCancelled);
     
     // ============ Errors ============
     
@@ -54,7 +60,8 @@ contract FidesOriginTimelock is TimelockController {
         address[] memory executors,
         address admin
     ) TimelockController(MIN_DELAY, proposers, executors, admin) {
-        // 初始化时，admin 应该是部署者，之后需要 renounce
+        // 授予自身 CANCELLER_ROLE，以便在紧急模式切换时批量取消 pending operations
+        _grantRole(CANCELLER_ROLE, address(this));
     }
     
     // ============ Emergency Functions ============
@@ -91,14 +98,31 @@ contract FidesOriginTimelock is TimelockController {
 
     /**
      * @notice 执行紧急模式切换（在时间锁到期后）
-     * @dev M-07 FIX: 任何人均可在时间锁到期后执行
+     * @dev M-07 FIX: 任何人均可在时间锁到期后执行。切换前会批量取消所有 pending operations，
+     *      防止已 schedule 的操作因紧急模式缩短延迟而被提前执行。
      */
     function executeEmergencyModeChange() external {
         if (emergencyModeChangeTimestamp == 0) revert EmergencyModeAlreadySet(emergencyMode);
         if (block.timestamp < emergencyModeChangeTimestamp) revert EmergencyModeTimelockActive(emergencyModeChangeTimestamp);
 
+        uint256 cancelled = 0;
+        // 从后往前遍历，批量取消所有仍 pending 的 operations
+        for (uint256 i = pendingOperations.length; i > 0; i--) {
+            bytes32 id = pendingOperations[i - 1];
+            if (isOperationPending(id)) {
+                // 通过外部调用触发 CANCELLER_ROLE 检查（address(this) 已被授予该角色）
+                this.cancel(id);
+                cancelled++;
+            }
+            // 清理列表（无论是否成功取消）
+            delete _pendingOpIndex[id];
+            pendingOperations.pop();
+        }
+
         emergencyMode = pendingEmergencyMode;
         emergencyModeChangeTimestamp = 0;
+
+        emit EmergencyModeChangeAffected(msg.sender, cancelled);
     }
     
     /**
@@ -134,7 +158,96 @@ contract FidesOriginTimelock is TimelockController {
     function getMinDelay() public view virtual override returns (uint256) {
         return emergencyMode ? EMERGENCY_DELAY : MIN_DELAY;
     }
-    
+
+    /**
+     * @notice 覆盖 schedule — 记录 pending operation
+     */
+    function schedule(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        bytes32 predecessor,
+        bytes32 salt,
+        uint256 delay
+    ) public override {
+        super.schedule(target, value, data, predecessor, salt, delay);
+        _addPendingOperation(hashOperation(target, value, data, predecessor, salt));
+    }
+
+    /**
+     * @notice 覆盖 scheduleBatch — 记录 pending operation
+     */
+    function scheduleBatch(
+        address[] calldata targets,
+        uint256[] calldata values,
+        bytes[] calldata payloads,
+        bytes32 predecessor,
+        bytes32 salt,
+        uint256 delay
+    ) public override {
+        super.scheduleBatch(targets, values, payloads, predecessor, salt, delay);
+        _addPendingOperation(hashOperationBatch(targets, values, payloads, predecessor, salt));
+    }
+
+    /**
+     * @notice 覆盖 execute — 移除 pending operation
+     */
+    function execute(
+        address target,
+        uint256 value,
+        bytes calldata payload,
+        bytes32 predecessor,
+        bytes32 salt
+    ) public payable override {
+        bytes32 id = hashOperation(target, value, payload, predecessor, salt);
+        super.execute(target, value, payload, predecessor, salt);
+        _removePendingOperation(id);
+    }
+
+    /**
+     * @notice 覆盖 executeBatch — 移除 pending operation
+     */
+    function executeBatch(
+        address[] calldata targets,
+        uint256[] calldata values,
+        bytes[] calldata payloads,
+        bytes32 predecessor,
+        bytes32 salt
+    ) public payable override {
+        bytes32 id = hashOperationBatch(targets, values, payloads, predecessor, salt);
+        super.executeBatch(targets, values, payloads, predecessor, salt);
+        _removePendingOperation(id);
+    }
+
+    /**
+     * @notice 覆盖 cancel — 移除 pending operation
+     */
+    function cancel(bytes32 id) public override {
+        super.cancel(id);
+        _removePendingOperation(id);
+    }
+
+    // ============ Internal Helpers ============
+
+    function _addPendingOperation(bytes32 id) internal {
+        if (_pendingOpIndex[id] == 0 && isOperationPending(id)) {
+            pendingOperations.push(id);
+            _pendingOpIndex[id] = pendingOperations.length;
+        }
+    }
+
+    function _removePendingOperation(bytes32 id) internal {
+        uint256 idx = _pendingOpIndex[id];
+        if (idx > 0) {
+            uint256 lastIdx = pendingOperations.length - 1;
+            bytes32 lastId = pendingOperations[lastIdx];
+            pendingOperations[idx - 1] = lastId;
+            _pendingOpIndex[lastId] = idx;
+            pendingOperations.pop();
+            delete _pendingOpIndex[id];
+        }
+    }
+
     /**
      * @notice 获取当前有效延迟期
      */

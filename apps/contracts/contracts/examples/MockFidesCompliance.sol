@@ -11,7 +11,7 @@ contract MockFidesCompliance is IFidesCompliance {
         return _blacklisted[account];
     }
 
-    function isWhitelisted(address account) external view returns (bool) {
+    function isWhitelisted(address /* account */) external pure returns (bool) {
         return false;
     }
 

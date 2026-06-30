@@ -8,3 +8,6 @@ export * from './types';
 
 // Constants
 export * from './constants';
+
+// KMS Signer
+export * from './kms';

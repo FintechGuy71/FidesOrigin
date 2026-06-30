@@ -220,7 +220,7 @@ contract TestUSD is ERC20, AccessControl, Pausable {
     /**
      * @dev 检查交易限额
      */
-    function _checkLimits(address account, uint256 amount) internal {
+    function _checkLimits(address account, uint256 amount) internal view {
         RiskLevel level = getRiskLevel(account);
         LimitConfig memory config = riskLimits[level];
         

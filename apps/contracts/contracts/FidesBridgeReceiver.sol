@@ -20,6 +20,12 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant BRIDGE_RELAYER_ROLE = keccak256("BRIDGE_RELAYER_ROLE");
 
+    /// @notice 升级时间锁（秒）
+    uint256 public constant UPGRADE_TIMELOCK = 48 hours;
+
+    /// @notice 升级提案映射（bytes32 proposalId => 可执行时间戳）
+    mapping(bytes32 => uint256) public upgradeProposals;
+
     /// @notice 目标 MerkleRiskRegistry
     IMerkleRiskRegistry public merkleRegistry;
 
@@ -60,6 +66,7 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     event SenderAuthorized(uint256 chainId, address sender);
     event SenderDeauthorized(uint256 chainId, address sender);
     event MerkleRegistryUpdated(address newRegistry);
+    event UpgradeProposed(bytes32 indexed proposalId, address indexed proposedImplementation, uint256 executeAfter);
 
     // ============ Errors ============
     error UnauthorizedSender(uint256 chainId, address sender);
@@ -67,6 +74,8 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     error SyncTooFrequent(uint256 elapsed, uint256 required);
     error InvalidMerkleRoot();
     error ReplayDetected(uint256 nonce, uint256 expected);
+    error UpgradeNotProposed(bytes32 proposalId);
+    error UpgradeTimelockActive(bytes32 proposalId, uint256 executeAfter);
 
     // ============ Constructor ============
     constructor() {
@@ -193,7 +202,35 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     }
 
     // ============ UUPS Upgrade ============
-    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {}
 
-    uint256[48] private __gap;
+    /**
+     * @notice 提议升级 — 必须经过 UPGRADE_TIMELOCK 时间锁
+     */
+    function proposeUpgrade(address newImplementation) external onlyRole(ADMIN_ROLE) {
+        require(newImplementation != address(0), "Zero address");
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        upgradeProposals[proposalId] = block.timestamp + UPGRADE_TIMELOCK;
+        emit UpgradeProposed(proposalId, newImplementation, upgradeProposals[proposalId]);
+    }
+
+    /**
+     * @notice 取消升级提案
+     */
+    function cancelUpgradeProposal(bytes32 proposalId) external onlyRole(ADMIN_ROLE) {
+        if (upgradeProposals[proposalId] == 0) revert UpgradeNotProposed(proposalId);
+        delete upgradeProposals[proposalId];
+    }
+
+    /**
+     * @notice UUPS 升级授权 — 强制时间锁与权限控制
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        uint256 executeAfter = upgradeProposals[proposalId];
+        if (executeAfter == 0) revert UpgradeNotProposed(proposalId);
+        if (block.timestamp < executeAfter) revert UpgradeTimelockActive(proposalId, executeAfter);
+        delete upgradeProposals[proposalId];
+    }
+
+    uint256[47] private __gap;
 }

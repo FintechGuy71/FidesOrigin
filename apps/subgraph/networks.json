@@ -1,0 +1,47 @@
+{
+  "sepolia": {
+    "RiskRegistry": {
+      "address": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+      "startBlock": 7650000
+    },
+    "ComplianceEngine": {
+      "address": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+      "startBlock": 7650000
+    },
+    "PolicyEngine": {
+      "address": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+      "startBlock": 7650000
+    },
+    "FidesCompliance": {
+      "address": "0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594",
+      "startBlock": 7800000
+    },
+    "CompliantStableCoin": {
+      "address": "0xb47a6520740a54B375e6F3B22bC316B4b02bFbCF",
+      "startBlock": 7800000
+    }
+  },
+  "mainnet": {
+    "_comment": "Mainnet contracts not yet deployed. Update addresses and startBlock after deployment.",
+    "RiskRegistry": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 0
+    },
+    "ComplianceEngine": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 0
+    },
+    "PolicyEngine": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 0
+    },
+    "FidesCompliance": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 0
+    },
+    "CompliantStableCoin": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "startBlock": 0
+    }
+  }
+}

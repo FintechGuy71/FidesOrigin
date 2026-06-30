@@ -15,8 +15,9 @@ data:
   # FATF_RISK_REGISTRY_ADDRESS: "${FATF_RISK_REGISTRY_ADDRESS}"
 
   # Key Management (choose ONE in the Secret; this ConfigMap sets metadata)
-  KMS_PROVIDER: ""
+  KMS_PROVIDER: "aws"
   KMS_KEY_ID: ""
+  AWS_REGION: "us-east-1"
   VAULT_ADDR: ""
   VAULT_SECRET_PATH: "secret/data/fidesorigin"
   VAULT_KEY_NAME: "privateKey"

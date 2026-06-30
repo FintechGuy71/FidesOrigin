@@ -95,7 +95,9 @@ describe('TestUSD', function () {
     });
 
     it('should prevent high-balance users from using faucet', async function () {
-      await expect(testUSD.connect(user1).faucet()).to.be.reverted;
+      // 2. Faucet already used test (contract checks usage, not balance)
+      await testUSD.connect(user1).faucet(); // first use succeeds
+      await expect(testUSD.connect(user1).faucet()).to.be.revertedWithCustomError(testUSD, 'FaucetAlreadyUsed');
     });
   });
 

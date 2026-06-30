@@ -10,12 +10,19 @@
     "cl:save": "node chainlink-automation.js --save-source",
     "cl:sync": "node chainlink-automation.js --sanctions",
     "cl:check": "node chainlink-automation.js --check",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:prod": "prisma migrate deploy",
+    "db:studio": "prisma studio",
     "test": "echo 'No tests yet'"
   },
   "dependencies": {
-    "ethers": "^6.10.0"
+    "ethers": "^6.10.0",
+    "@prisma/client": "^5.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "prisma": "^5.0.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

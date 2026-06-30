@@ -1,12 +1,15 @@
+"use strict";
 /**
  * FidesOrigin Shared Constants
  * Chain IDs, contract addresses, risk level enums, and other shared constants
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.JURISDICTIONS = exports.REGULATORY_FRAMEWORKS = exports.ANIMATION_DURATIONS = exports.TOAST_DURATIONS = exports.DEFAULT_PAGINATION = exports.WEBSOCKET_CONFIG = exports.API_ENDPOINTS = exports.DEFAULT_API_CONFIG = exports.ADDRESS_PREFIXES = exports.ADDRESS_LENGTHS = exports.RISK_FLAGS = exports.RISK_THRESHOLDS = exports.RISK_LEVEL_ORDER = exports.RISK_LEVELS = exports.FIDES_REGISTRY_ADDRESSES = exports.CHAIN_EXPLORERS = exports.CHAIN_CURRENCIES = exports.CHAIN_NAMES = exports.CHAIN_IDS = void 0;
 // ============================================================================
 // Chain IDs (EIP-155 compatible)
 // ============================================================================
 /** Chain ID mapping for supported networks */
-export const CHAIN_IDS = {
+exports.CHAIN_IDS = {
     ethereum: 1,
     bitcoin: 0, // Bitcoin doesn't use EIP-155
     polygon: 137,
@@ -17,7 +20,7 @@ export const CHAIN_IDS = {
     solana: 0, // Solana doesn't use EIP-155
 };
 /** Chain names for display */
-export const CHAIN_NAMES = {
+exports.CHAIN_NAMES = {
     ethereum: 'Ethereum',
     bitcoin: 'Bitcoin',
     polygon: 'Polygon',
@@ -28,7 +31,7 @@ export const CHAIN_NAMES = {
     solana: 'Solana',
 };
 /** Chain native currency symbols */
-export const CHAIN_CURRENCIES = {
+exports.CHAIN_CURRENCIES = {
     ethereum: 'ETH',
     bitcoin: 'BTC',
     polygon: 'MATIC',
@@ -39,7 +42,7 @@ export const CHAIN_CURRENCIES = {
     solana: 'SOL',
 };
 /** Chain explorer URLs */
-export const CHAIN_EXPLORERS = {
+exports.CHAIN_EXPLORERS = {
     ethereum: 'https://etherscan.io',
     bitcoin: 'https://blockchain.info',
     polygon: 'https://polygonscan.com',
@@ -53,7 +56,7 @@ export const CHAIN_EXPLORERS = {
 // Contract Addresses (Sample / Placeholder)
 // ============================================================================
 /** FidesOrigin registry contract addresses by chain */
-export const FIDES_REGISTRY_ADDRESSES = {
+exports.FIDES_REGISTRY_ADDRESSES = {
     ethereum: '0xFidesOriginRegistry...',
     polygon: '0xFidesOriginRegistry...',
     bsc: '0xFidesOriginRegistry...',
@@ -65,7 +68,7 @@ export const FIDES_REGISTRY_ADDRESSES = {
 // Risk Level Configuration
 // ============================================================================
 /** Risk level definitions with thresholds and display properties */
-export const RISK_LEVELS = {
+exports.RISK_LEVELS = {
     low: {
         name: 'Low Risk',
         label: 'Low',
@@ -112,14 +115,14 @@ export const RISK_LEVELS = {
     },
 };
 /** Risk level keys in order of severity */
-export const RISK_LEVEL_ORDER = [
+exports.RISK_LEVEL_ORDER = [
     'low',
     'medium',
     'high',
     'critical',
 ];
 /** Risk score thresholds for classification */
-export const RISK_THRESHOLDS = {
+exports.RISK_THRESHOLDS = {
     low: { min: 0, max: 29 },
     medium: { min: 30, max: 69 },
     high: { min: 70, max: 89 },
@@ -129,7 +132,7 @@ export const RISK_THRESHOLDS = {
 // Risk Flags
 // ============================================================================
 /** All available risk flags with metadata */
-export const RISK_FLAGS = {
+exports.RISK_FLAGS = {
     sanctions: {
         label: 'Sanctions',
         description: 'Address associated with sanctioned entities',
@@ -225,7 +228,7 @@ export const RISK_FLAGS = {
 // Address Validation
 // ============================================================================
 /** Address length requirements by chain */
-export const ADDRESS_LENGTHS = {
+exports.ADDRESS_LENGTHS = {
     ethereum: { min: 42, max: 42 },
     bitcoin: { min: 26, max: 62 },
     polygon: { min: 42, max: 42 },
@@ -236,7 +239,7 @@ export const ADDRESS_LENGTHS = {
     solana: { min: 32, max: 44 },
 };
 /** Address prefix requirements by chain */
-export const ADDRESS_PREFIXES = {
+exports.ADDRESS_PREFIXES = {
     ethereum: ['0x'],
     bitcoin: ['1', '3', 'bc1'],
     polygon: ['0x'],
@@ -250,7 +253,7 @@ export const ADDRESS_PREFIXES = {
 // API Configuration
 // ============================================================================
 /** Default API configuration */
-export const DEFAULT_API_CONFIG = {
+exports.DEFAULT_API_CONFIG = {
     baseUrl: 'https://api.fidesorigin.com',
     timeout: 30000,
     maxRetries: 3,
@@ -258,7 +261,7 @@ export const DEFAULT_API_CONFIG = {
     maxDelayMs: 30000,
 };
 /** API endpoints */
-export const API_ENDPOINTS = {
+exports.API_ENDPOINTS = {
     risk: {
         check: '/v1/risk/check',
         batch: '/v1/risk/batch',
@@ -277,7 +280,7 @@ export const API_ENDPOINTS = {
 // WebSocket Configuration
 // ============================================================================
 /** WebSocket default configuration */
-export const WEBSOCKET_CONFIG = {
+exports.WEBSOCKET_CONFIG = {
     reconnectInterval: 5000,
     maxReconnectAttempts: 10,
     heartbeatInterval: 30000,
@@ -286,20 +289,20 @@ export const WEBSOCKET_CONFIG = {
 // UI Constants
 // ============================================================================
 /** Default pagination settings */
-export const DEFAULT_PAGINATION = {
+exports.DEFAULT_PAGINATION = {
     page: 1,
     pageSize: 20,
     pageSizeOptions: [10, 20, 50, 100],
 };
 /** Toast notification durations (ms) */
-export const TOAST_DURATIONS = {
+exports.TOAST_DURATIONS = {
     info: 5000,
     success: 3000,
     warning: 5000,
     error: 8000,
 };
 /** Animation durations (ms) */
-export const ANIMATION_DURATIONS = {
+exports.ANIMATION_DURATIONS = {
     fast: 150,
     normal: 300,
     slow: 500,
@@ -308,7 +311,7 @@ export const ANIMATION_DURATIONS = {
 // Regulatory Frameworks
 // ============================================================================
 /** Supported regulatory frameworks */
-export const REGULATORY_FRAMEWORKS = {
+exports.REGULATORY_FRAMEWORKS = {
     FATF: 'FATF Travel Rule',
     EU_MICA: 'EU MiCA',
     US_BSA: 'US BSA/AML',
@@ -317,7 +320,7 @@ export const REGULATORY_FRAMEWORKS = {
     HK_SFC: 'Hong Kong SFC',
 };
 /** Jurisdiction codes */
-export const JURISDICTIONS = {
+exports.JURISDICTIONS = {
     US: 'United States',
     UK: 'United Kingdom',
     EU: 'European Union',

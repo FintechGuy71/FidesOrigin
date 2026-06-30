@@ -84,10 +84,10 @@ export interface TransactionStats {
     totalVolume: string;
     /** Average transaction value */
     averageValue: string;
-    /** Time since first transaction (days) */
-    accountAge: number;
-    /** Number of unique counterparties */
-    uniqueCounterparties: number;
+    /** Time since first transaction (days) — optional if not available */
+    accountAge?: number;
+    /** Number of unique counterparties — optional if not available */
+    uniqueCounterparties?: number;
     /** Incoming transaction count */
     incomingCount: number;
     /** Outgoing transaction count */

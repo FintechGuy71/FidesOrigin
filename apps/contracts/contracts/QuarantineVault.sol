@@ -143,8 +143,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         _grantRole(AUDITOR_ROLE, msg.sender);
         _grantRole(RELEASE_ROLE, msg.sender);
         _grantRole(EMERGENCY_ROLE, msg.sender);
-        // L-05 FIX: Renounce DEFAULT_ADMIN_ROLE after setup to remove backdoor
-        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // L-05 FIX: Keep DEFAULT_ADMIN_ROLE for role management
+        // Note: Previously renounced, but that made all grant/revokeRole functions dead code
+        // Renouncing is a trade-off: removing backdoor vs losing admin capability
     }
 
     // ============ External API (兼容层) ============
@@ -184,7 +185,7 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
      * @dev [C-3] 移除 to 参数，资金始终归还 originalOwner；尊重冻结状态
      * @param recordId 隔离记录ID
      */
-    function governanceUnlock(bytes32 recordId) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+    function governanceUnlock(bytes32 recordId) external onlyRole(EMERGENCY_ROLE) nonReentrant {
         _releaseFunds(recordId, false);
     }
 
@@ -534,7 +535,7 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
      * @notice 提取合约中的 ETH（防止 ETH 被意外锁定）
      * @param to 接收地址
      */
-    function withdrawETH(address payable to) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+    function withdrawETH(address payable to) external onlyRole(EMERGENCY_ROLE) nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         uint256 balance = address(this).balance;
         require(balance > 0, "No ETH to withdraw");

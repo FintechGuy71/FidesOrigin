@@ -3,11 +3,12 @@ const { ethers } = require('hardhat');
 const { deployFidesOriginFixture } = require('./shared/fixtures');
 
 describe('FidesCompliance', function () {
-  let fidesCompliance, owner, addr1, addr2;
+  let fidesCompliance, riskRegistry, owner, addr1, addr2;
 
   beforeEach(async function () {
     const fixture = await deployFidesOriginFixture();
     fidesCompliance = fixture.fidesCompliance;
+    riskRegistry = fixture.riskRegistry;
     owner = fixture.owner;
     addr1 = fixture.user1;
     addr2 = fixture.user2;
@@ -16,28 +17,34 @@ describe('FidesCompliance', function () {
   describe('Deployment', function () {
     it('should set correct admin roles', async function () {
       expect(await fidesCompliance.hasRole(await fidesCompliance.ADMIN_ROLE(), owner.address)).to.be.true;
-      expect(await fidesCompliance.hasRole(await fidesCompliance.DEFAULT_ADMIN_ROLE(), owner.address)).to.be.true;
+      // DEFAULT_ADMIN_ROLE is intentionally removed (S-06 fix)
     });
   });
 
   describe('Risk Profile', function () {
-    it('should allow operator to update risk profile', async function () {
-      const level = 1; // RiskLevel.NORMAL
-      const score = 5000;
-      const tags = [];
-      const reasonHash = ethers.keccak256(ethers.toUtf8Bytes('test'));
-
-      await expect(
-        fidesCompliance.connect(owner).updateRiskProfile(addr1.address, level, score, tags, reasonHash)
-      ).to.emit(fidesCompliance, 'RiskProfileUpdated');
+    it('should retrieve default risk profile for unknown address', async function () {
+      const [riskScore, isSanctioned, lastUpdated] = await fidesCompliance.getRiskProfile(addr1.address);
+      expect(riskScore).to.equal(0);
+      expect(isSanctioned).to.be.false;
+      expect(lastUpdated).to.equal(0);
     });
 
-    it('should retrieve correct risk profile', async function () {
-      const reasonHash = ethers.keccak256(ethers.toUtf8Bytes('test'));
-      await fidesCompliance.connect(owner).updateRiskProfile(addr1.address, 2, 7500, [], reasonHash);
-      const profile = await fidesCompliance.getRiskProfile(addr1.address);
-      expect(profile.score).to.equal(7500);
-      expect(profile.level).to.equal(2);
+    it('should reflect risk profile updated via RiskRegistry', async function () {
+      // Update via RiskRegistry (which FidesCompliance reads from)
+      await riskRegistry.connect(owner).updateRiskProfile(addr1.address, 75, 2, [], false);
+      const [riskScore, isSanctioned] = await fidesCompliance.getRiskProfile(addr1.address);
+      expect(riskScore).to.equal(75);
+      expect(isSanctioned).to.be.false;
+    });
+  });
+
+  describe('Blacklist / Whitelist', function () {
+    it('should return false for non-blacklisted address', async function () {
+      expect(await fidesCompliance.isBlacklisted(addr1.address)).to.be.false;
+    });
+
+    it('should return false for non-whitelisted address', async function () {
+      expect(await fidesCompliance.isWhitelisted(addr1.address)).to.be.false;
     });
   });
 

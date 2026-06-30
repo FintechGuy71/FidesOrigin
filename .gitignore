@@ -1,22 +1,64 @@
-/.next/
-/dist/
+# Build artifacts
 /build/
+/dist/
+*.tsbuildinfo
+
+# Dependencies
 /node_modules/
-/.turbo/
-/coverage/
-/.vercel/
-*.log
+/.pnpm/
+.pnpm-store/
+
+# Environment
 .env
 .env.local
 .env.*.local
+
+# Testing & Coverage
+/coverage/
+
+# Framework
+/.next/
+/.turbo/
+/.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
 .DS_Store
-*.tsbuildinfo
-data-publisher/node_modules/
-data-publisher/.env
-data-publisher/dist/
-data-publisher/node_modules/
+Thumbs.db
+
+# Backup
 *.bak.js
 *.tmp.js
+
+# Contract build artifacts
+apps/contracts/artifacts/
+apps/contracts/cache/
+apps/contracts/typechain-types/
+apps/contracts/typechain/
+apps/contracts/deployments/*/solcInputs/
+
+# Subgraph build
+apps/subgraph/build/
+apps/subgraph/generated/
+apps/subgraph/node_modules/
+
+# Data sync
+/data-sync/node_modules/
+/data-sync/dist/
+/data-sync/prisma/migrations/
+/data-sync/db/
+
+# API
+/apps/api/.next/
+/apps/api/dist/
+
+# Misc
+packages/*/dist/
+packages/*/node_modules/
 
 # Deployment artifacts
 deployments/
@@ -41,3 +83,5 @@ data-sync/.env
 *.crt
 .ssh/
 .vercel/
+.env.glm52
+*.env.*

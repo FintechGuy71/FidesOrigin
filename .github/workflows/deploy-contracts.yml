@@ -1,0 +1,59 @@
+name: Deploy Contracts
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Target network'
+        required: true
+        type: choice
+        options:
+          - sepolia
+          - base-sepolia
+          - mainnet
+      confirm:
+        description: 'Type DEPLOY to confirm'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: cd apps/contracts && npm ci
+
+      - name: Compile contracts
+        run: cd apps/contracts && npx hardhat compile
+
+      - name: Run tests
+        run: cd apps/contracts && npx hardhat test
+
+      - name: Deploy
+        if: github.event.inputs.confirm == 'DEPLOY'
+        env:
+          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+        run: |
+          cd apps/contracts
+          npx hardhat run scripts/deploy-full.js --network ${{ github.event.inputs.network }}
+
+      - name: Verify on Etherscan
+        if: success()
+        env:
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+        run: |
+          cd apps/contracts
+          npx hardhat verify --network ${{ github.event.inputs.network }} --list
+
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-${{ github.event.inputs.network }}
+          path: apps/contracts/deployments/

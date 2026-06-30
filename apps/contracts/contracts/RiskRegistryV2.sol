@@ -500,7 +500,7 @@ contract RiskRegistryV2 is
         uint8 tier,
         bytes32[] memory tags,
         uint256 lastUpdated,
-        bool isSanctioned
+        bool sanctioned
     ) {
         uint256 packed = _packedProfiles[account];
         return (
@@ -654,5 +654,5 @@ contract RiskRegistryV2 is
     mapping(bytes32 => uint256) public upgradeProposals;
     
     // ============ Storage Gap ============
-    uint256[37] private __gap;
+    uint256[35] private __gap;
 }

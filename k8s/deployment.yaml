@@ -7,7 +7,12 @@ metadata:
     app: fidesorigin-data-publisher
     tier: backend
 spec:
-  replicas: 1
+  # [HA-Fix] Scale to 3 replicas for high availability
+  replicas: 3
+  # [HA-Fix] Keep last 10 replica sets for rollback capability
+  revisionHistoryLimit: 10
+  # [HA-Fix] Timeout for deployment progress (10 minutes)
+  progressDeadlineSeconds: 600
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -119,6 +124,20 @@ spec:
       volumes:
         - name: logs
           emptyDir: {}
+      # [HA-Fix] Spread pods across failure domains (AZ + hostname)
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: fidesorigin-data-publisher
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: fidesorigin-data-publisher
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

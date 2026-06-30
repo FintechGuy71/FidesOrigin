@@ -1,0 +1,18 @@
+# [HA-Fix] PodDisruptionBudget: ensure at least 2 pods are always available during voluntary disruptions
+# (e.g., node drain, cluster upgrades, spot instance preemption).
+# Requires at least 3 replicas to tolerate single-node disruption.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fidesorigin-data-publisher-pdb
+  namespace: fidesorigin
+  labels:
+    app: fidesorigin-data-publisher
+    tier: backend
+spec:
+  # minAvailable: 2 ensures that even during a rolling update or node drain,
+  # we maintain quorum / service availability.
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: fidesorigin-data-publisher

@@ -411,7 +411,7 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     function evaluatePolicy(
         address addr,
         uint256 riskScore,
-        IAssetCompliance.RiskTier tier,
+        IAssetCompliance.RiskTier /* tier */,
         uint256 deadline
     ) public view returns (ActionType[] memory actions, bool requiresKYC, bool requiresAML) {
         if (deadline > 0 && block.timestamp > deadline) {
@@ -515,8 +515,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         }
 
         // H-01: 双向风险等级（取最大值）— getRiskScore 不存在，使用 getRiskLevel 推导
-        (uint256 fromScore_, , , uint8 fromTier_, , ,,) = riskRegistry.getProfile(from);
-        (uint256 toScore_, , , uint8 toTier_, , ,,) = riskRegistry.getProfile(to);
+        (, , , uint8 fromTier_, , ,,) = riskRegistry.getProfile(from);
+        (, , , uint8 toTier_, , ,,) = riskRegistry.getProfile(to);
         RiskRegistry.RiskTier tier = uint8(fromTier_) > uint8(toTier_) ? RiskRegistry.RiskTier(fromTier_) : RiskRegistry.RiskTier(toTier_);
 
         // M-03: 显式发行方策略启用标志

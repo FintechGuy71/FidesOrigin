@@ -1,5 +1,6 @@
+"use strict";
 /**
  * FidesOrigin Shared Types
  * Core type definitions extracted from the application codebase
  */
-export {};
+Object.defineProperty(exports, "__esModule", { value: true });

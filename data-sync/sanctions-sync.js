@@ -187,6 +187,17 @@ async function httpGet(url, options = {}, redirectCount = 0) {
         return reject(new Error(`Redirect ${res.statusCode} without Location header`));
       }
 
+      // 增量同步: 304 Not Modified — 数据未变更
+      if (res.statusCode === 304) {
+        res.resume();
+        return resolve({
+          data: null,
+          notModified: true,
+          lastModified: res.headers['last-modified'] || null,
+          statusCode: 304,
+        });
+      }
+
       if (res.statusCode !== 200) {
         res.resume();
         return reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage || 'Error'}`));
@@ -217,7 +228,9 @@ async function httpGet(url, options = {}, redirectCount = 0) {
         if (rejected) return;
         resolve({
           data: Buffer.concat(chunks).toString('utf8'),
-          contentType: res.headers['content-type']
+          contentType: res.headers['content-type'],
+          lastModified: res.headers['last-modified'] || null,
+          statusCode: 200,
         });
       });
 
@@ -524,8 +537,11 @@ function extractCryptoAddresses(text) {
  * OFAC 数据适配器
  */
 class OFACAdapter {
+  /**
+   * 全量拉取
+   */
   static async fetch() {
-    console.log('[OFAC] Fetching SDN list...');
+    console.log('[OFAC] Fetching SDN list (full sync)...');
 
     try {
       let response;
@@ -536,6 +552,19 @@ class OFACAdapter {
         console.log('[OFAC] Primary URL failed, trying alternative...');
         response = await httpGet(CONFIG.sources.ofac.altUrl);
         usedAlt = true;
+      }
+
+      if (response.notModified) {
+        // 全量拉取不应该返回 304，但如果返回了说明服务器配置问题
+        console.log('[OFAC] Server returned 304 on full sync, treating as empty');
+        return {
+          source: 'OFAC',
+          total: 0,
+          withCrypto: 0,
+          entries: [],
+          hash: '',
+          fetchedAt: new Date().toISOString(),
+        };
       }
 
       const raw = response.data;
@@ -590,6 +619,130 @@ class OFACAdapter {
 
     } catch (error) {
       console.error('[OFAC] Error:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 增量拉取 — 基于 If-Modified-Since
+   *
+   * @param {string} cursor - 上次同步的游标（ISO 8601 时间戳或 HTTP-date 字符串）
+   * @returns {Promise<object>} 增量数据结果
+   */
+  static async fetchIncremental(cursor) {
+    console.log(`[OFAC] Fetching incremental data, cursor=${cursor || 'none'}`);
+
+    const headers = {};
+    if (cursor) {
+      // 游标可能是 ISO 8601 格式，需要转换为 HTTP-date 格式
+      const cursorDate = new Date(cursor);
+      if (!isNaN(cursorDate.getTime())) {
+        headers['If-Modified-Since'] = cursorDate.toUTCString();
+      }
+    }
+
+    try {
+      let response;
+      let usedAlt = false;
+      try {
+        response = await httpGet(CONFIG.sources.ofac.url, { headers });
+      } catch (e) {
+        if (e.message.includes('304')) {
+          // 如果是 304，直接返回 notModified
+          console.log('[OFAC] 304 Not Modified — 数据无变更');
+          return {
+            source: 'OFAC',
+            total: 0,
+            withCrypto: 0,
+            entries: [],
+            hash: '',
+            fetchedAt: new Date().toISOString(),
+            notModified: true,
+            lastModified: cursor,
+          };
+        }
+        console.log('[OFAC] Primary URL failed, trying alternative...');
+        response = await httpGet(CONFIG.sources.ofac.altUrl, { headers });
+        usedAlt = true;
+      }
+
+      // 增量同步: 如果返回 304，数据未变更
+      if (response.notModified || response.statusCode === 304) {
+        console.log('[OFAC] 304 Not Modified — 数据无变更');
+        return {
+          source: 'OFAC',
+          total: 0,
+          withCrypto: 0,
+          entries: [],
+          hash: '',
+          fetchedAt: new Date().toISOString(),
+          notModified: true,
+          lastModified: response.lastModified || cursor,
+        };
+      }
+
+      const raw = response.data;
+      const records = parseCSV(raw);
+
+      console.log(`[OFAC] Incremental parsed ${records.length} records${usedAlt ? ' (from alt source)' : ''}`);
+
+      // OFAC 的 CSV 不提供增量字段，增量拉取实际是全量拉取 + 客户端去重
+      // 这里返回全量数据，由调度器根据 hash/cursor 判断是否真正有变更
+      const entries = records.map((r, idx) => {
+        const entityName = r['Name'] || r['name'] || r['NAME'] || '';
+        const fullAddress = [
+          r['Address'] || r['address'] || '',
+          r['City'] || r['city'] || '',
+          r['Country'] || r['country'] || ''
+        ].filter(Boolean).join(', ');
+
+        const remarks = r['Remarks'] || r['remarks'] || r['Comment'] || '';
+        const cryptoAddresses = extractCryptoAddresses(remarks + ' ' + fullAddress);
+
+        return {
+          uid: `OFAC-${r['Ent_Num'] || r['ent_num'] || idx}`,
+          source: 'OFAC',
+          sourceId: r['Ent_Num'] || r['ent_num'] || '',
+          entityName: entityName,
+          entityType: r['Entity_Type'] || r['type'] || 'Unknown',
+          programs: (r['Programs'] || r['programs'] || '').split(';').filter(Boolean),
+          addresses: [{
+            address: fullAddress,
+            city: r['City'] || r['city'] || '',
+            country: r['Country'] || r['country'] || ''
+          }],
+          cryptoAddresses: cryptoAddresses,
+          aliases: (r['Aliases'] || r['aliases'] || '').split(';').filter(Boolean),
+          remarks: remarks,
+          listType: 'SDN',
+          riskLevel: 'CRITICAL',
+          lastUpdated: new Date().toISOString()
+        };
+      }).filter(e => e.entityName);
+
+      // 获取新的 crypto 地址（这部分通常很少变动，可以按需跳过）
+      const cryptoEntries = await this.fetchCryptoAddresses();
+
+      // 计算新的游标: 优先使用响应的 Last-Modified，否则使用当前时间
+      const newCursor = response.lastModified
+        ? new Date(response.lastModified).toISOString()
+        : new Date().toISOString();
+
+      return {
+        source: 'OFAC',
+        total: entries.length,
+        withCrypto: entries.filter(e =>
+          Object.values(e.cryptoAddresses).some(arr => arr.length > 0)
+        ).length,
+        entries: [...entries, ...cryptoEntries],
+        hash: computeHash(raw),
+        fetchedAt: new Date().toISOString(),
+        lastModified: response.lastModified || null,
+        cursor: newCursor,
+      };
+
+    } catch (error) {
+      console.error('[OFAC] Incremental fetch error:', error.message);
       throw error;
     }
   }
@@ -858,7 +1011,7 @@ class EUAdapter {
 
       // 使用安全的字符串查找提取实体
       const subjectBlocks = extractAllBlocks(data, 'sanctionEntity');
-      for (block of subjectBlocks) {
+      for (const block of subjectBlocks) {
         const nameBlocks = extractAllBlocks(block, 'nameAlias');
         const entityName = nameBlocks.length > 0
           ? extractTagContent(nameBlocks[0], 'wholeName')

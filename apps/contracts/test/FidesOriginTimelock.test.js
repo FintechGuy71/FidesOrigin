@@ -11,7 +11,6 @@ describe('FidesOriginTimelock', function () {
     timelock = fixture.timelock;
     owner = fixture.owner;
     admin = fixture.admin;
-    // Use available signers as proposers/executors
     const signers = await ethers.getSigners();
     proposer1 = signers[10];
     proposer2 = signers[11];
@@ -20,8 +19,8 @@ describe('FidesOriginTimelock', function () {
     executor2 = signers[14];
     user = signers[15];
 
-    minDelay = 2 * 24 * 60 * 60; // 2 days
-    emergencyDelay = 4 * 60 * 60; // 4 hours
+    minDelay = 2 * 24 * 60 * 60;
+    emergencyDelay = 4 * 60 * 60;
   });
 
   describe('Deployment', function () {
@@ -37,49 +36,73 @@ describe('FidesOriginTimelock', function () {
 
   describe('Emergency Mode', function () {
     beforeEach(async function () {
-      // Add owner as emergency operator for testing
       await timelock.addEmergencyOperator(owner.address);
     });
 
     it('should enable emergency mode', async function () {
-      await expect(timelock.enableEmergencyMode())
+      await expect(timelock.proposeEnableEmergencyMode())
         .to.emit(timelock, 'EmergencyModeEnabled')
         .withArgs(owner.address);
+
+      await network.provider.send('evm_increaseTime', [minDelay + 1]);
+      await network.provider.send('evm_mine');
+
+      await expect(timelock.executeEmergencyModeChange())
+        .to.emit(timelock, 'EmergencyModeChangeAffected');
 
       expect(await timelock.emergencyMode()).to.be.true;
     });
 
     it('should disable emergency mode', async function () {
-      await timelock.enableEmergencyMode();
+      await timelock.proposeEnableEmergencyMode();
+      await network.provider.send('evm_increaseTime', [minDelay + 1]);
+      await network.provider.send('evm_mine');
+      await timelock.executeEmergencyModeChange();
+      expect(await timelock.emergencyMode()).to.be.true;
 
-      await expect(timelock.disableEmergencyMode())
+      await expect(timelock.proposeDisableEmergencyMode())
         .to.emit(timelock, 'EmergencyModeDisabled')
         .withArgs(owner.address);
+
+      await network.provider.send('evm_increaseTime', [minDelay + 1]);
+      await network.provider.send('evm_mine');
+
+      await expect(timelock.executeEmergencyModeChange())
+        .to.emit(timelock, 'EmergencyModeChangeAffected');
 
       expect(await timelock.emergencyMode()).to.be.false;
     });
 
     it('should reject enable when already enabled', async function () {
-      await timelock.enableEmergencyMode();
-      await expect(timelock.enableEmergencyMode())
-        .to.be.revertedWithCustomError(timelock, 'EmergencyModeAlreadySet');
+      await timelock.proposeEnableEmergencyMode();
+      await network.provider.send('evm_increaseTime', [minDelay + 1]);
+      await network.provider.send('evm_mine');
+      await timelock.executeEmergencyModeChange();
+
+      await expect(timelock.proposeEnableEmergencyMode())
+        .to.be.revertedWithCustomError(timelock, 'EmergencyModeAlreadySet')
+        .withArgs(true);
     });
 
     it('should reject disable when already disabled', async function () {
-      await expect(timelock.disableEmergencyMode())
-        .to.be.revertedWithCustomError(timelock, 'EmergencyModeAlreadySet');
+      await expect(timelock.proposeDisableEmergencyMode())
+        .to.be.revertedWithCustomError(timelock, 'EmergencyModeAlreadySet')
+        .withArgs(false);
     });
 
     it('should reject emergency mode from non-operator', async function () {
-      await expect(timelock.connect(user).enableEmergencyMode())
-        .to.be.revertedWithCustomError(timelock, 'NotEmergencyOperator');
+      await expect(timelock.connect(user).proposeEnableEmergencyMode())
+        .to.be.revertedWithCustomError(timelock, 'NotEmergencyOperator')
+        .withArgs(user.address);
     });
 
     it('should return correct effective delay', async function () {
       expect(await timelock.getEffectiveDelay()).to.equal(minDelay);
 
-      await timelock.addEmergencyOperator(owner.address);
-      await timelock.enableEmergencyMode();
+      await timelock.proposeEnableEmergencyMode();
+      await network.provider.send('evm_increaseTime', [minDelay + 1]);
+      await network.provider.send('evm_mine');
+      await timelock.executeEmergencyModeChange();
 
       expect(await timelock.getEffectiveDelay()).to.equal(emergencyDelay);
     });
@@ -122,7 +145,6 @@ describe('FidesOriginTimelock', function () {
     });
 
     it('should schedule an operation', async function () {
-      // Grant proposer role to owner for testing
       const proposerRole = await timelock.PROPOSER_ROLE();
       await timelock.grantRole(proposerRole, owner.address);
 
@@ -146,7 +168,6 @@ describe('FidesOriginTimelock', function () {
     it('should have correct roles', async function () {
       const defaultAdminRole = await timelock.DEFAULT_ADMIN_ROLE();
       const proposerRole = await timelock.PROPOSER_ROLE();
-      const executorRole = await timelock.EXECUTOR_ROLE();
 
       expect(await timelock.hasRole(defaultAdminRole, owner.address)).to.be.true;
     });
