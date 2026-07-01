@@ -48,7 +48,11 @@
     "typescript": "^5.9.3"
   },
   "publishConfig": {
-    "access": "public"
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fidesorigin/fidesorigin-demo.git"
   },
   "license": "MIT"
 }
