@@ -2,10 +2,11 @@
 FidesOrigin API 单元测试
 """
 import asyncio
+import hashlib
 import os
 import uuid
-from datetime import datetime, timezone
-from typing import AsyncGenerator
+from datetime import datetime, timedelta, timezone
+from typing import AsyncGenerator, Optional
 
 import pytest
 import pytest_asyncio
@@ -15,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.main import app
 from app.models import (
-    Address, AddressRisk, AddressReport, Base, RiskEvent, 
+    APIKey, Address, AddressRisk, AddressReport, Base, RiskEvent,
     RiskLevel, RiskRule, RiskStatus, Transaction
 )
 
@@ -100,6 +101,84 @@ async def create_test_risk_rule(
     await db.commit()
     await db.refresh(rule)
     return rule
+
+
+async def create_test_api_key(
+    db: AsyncSession,
+    key: str = "test-api-key-valid",
+    is_active: bool = True,
+    expires_at: Optional[datetime] = None
+) -> APIKey:
+    """创建测试 API Key"""
+    api_key = APIKey(
+        key_hash="test-hash-" + key,
+        key=key,
+        name="Test API Key",
+        is_active=is_active,
+        rate_limit=1000,
+        expires_at=expires_at,
+        request_count=0
+    )
+    db.add(api_key)
+    await db.commit()
+    await db.refresh(api_key)
+    return api_key
+
+
+# ==================== 认证测试 ====================
+
+@pytest.mark.asyncio
+async def test_auth_missing_api_key(client):
+    """测试缺少 API Key 时返回 401"""
+    from app.main import app
+    for i, route in enumerate(app.routes):
+        route_type = type(route).__name__
+        methods = getattr(route, 'methods', 'N/A')
+        print(f"ROUTE[{i}]: type={route_type}, path={route.path}, methods={methods}")
+    
+    response = await client.get(
+        "/api/v1/transaction/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    )
+    print(f"DEBUG: status={response.status_code}, body={response.text[:500]}")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_valid_api_key(client, db_session):
+    """测试有效 API Key 可以访问"""
+    # 创建有效的 API Key
+    await create_test_api_key(db_session, key="valid-test-key")
+
+    response = await client.get(
+        "/api/v1/transaction/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        headers={"X-API-Key": "valid-test-key"}
+    )
+    # 认证通过，但交易不存在，返回 404 或 500（Blockscout 调用失败）
+    assert response.status_code in [404, 500]
+
+
+@pytest.mark.asyncio
+async def test_auth_invalid_api_key(client):
+    """测试无效 API Key 返回 401"""
+    response = await client.get(
+        "/api/v1/transaction/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        headers={"X-API-Key": "invalid-key"}
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_expired_api_key(client, db_session):
+    """测试过期 API Key 返回 401"""
+    # 创建过期的 API Key
+    expired_time = datetime.now(timezone.utc) - timedelta(hours=1)
+    await create_test_api_key(db_session, key="expired-test-key", expires_at=expired_time)
+
+    response = await client.get(
+        "/api/v1/transaction/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        headers={"X-API-Key": "expired-test-key"}
+    )
+    assert response.status_code == 401
 
 
 # ==================== 基础 API 测试 ====================
@@ -204,6 +283,7 @@ async def test_search_addresses(client, db_session):
 # ==================== 交易 API 测试 ====================
 
 @pytest.mark.asyncio
+@pytest.mark.noauth
 async def test_get_transaction_not_found(client):
     """测试获取不存在的交易"""
     response = await client.get(
@@ -388,5 +468,5 @@ async def test_concurrent_requests(client, db_session):
     
     for response in responses:
         # 搜索端点可能不存在，返回 404
-    # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    pytest.skip("[Fix #34] API endpoint not implemented — update test when available")
+        # [Critical Fix #34] TODO: Endpoint not yet implemented.
+        pytest.skip("[Fix #34] API endpoint not implemented — update test when available")

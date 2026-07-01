@@ -33,6 +33,8 @@ type ComplianceCheck @entity {
   amount: BigInt!
   decision: Decision!
   reason: String!
+  riskScore: Int
+  checkType: String
   assetContract: String
   timestamp: BigInt!
   blockNumber: BigInt!
@@ -69,6 +71,38 @@ type PolicyVersion @entity {
   blockNumber: BigInt!
   transactionHash: String!
   active: Boolean!
+}
+
+# NEW: PolicyEvaluation entity for PolicyEvaluated event
+type PolicyEvaluation @entity {
+  id: ID!                              # txHash-logIndex
+  operator: String!
+  from: String!
+  to: String!
+  amount: BigInt!
+  decision: Decision!
+  reason: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+# NEW: WalletPolicy entity for WalletPolicySet event
+type WalletPolicy @entity {
+  id: ID!                              # wallet address
+  wallet: String!
+  maxTxValue: BigInt!
+  maxTokenTxAmount: BigInt!
+  dailyEthLimit: BigInt!
+  dailyTokenLimit: BigInt!
+  blockContractCalls: Boolean!
+  blockUnknownTokens: Boolean!
+  requireWhitelist: Boolean!
+  allowedDex: [String!]!
+  blockedContracts: [String!]!
+  updatedAt: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
 }
 
 type SanctionedAddress @entity {
@@ -125,9 +159,17 @@ type DailyStats @entity {
   totalBlocked: BigInt!
   totalFlagged: BigInt!
   totalHeld: BigInt!
-  uniqueAddresses: Int!
-  avgRiskScore: Int!  # 放大100倍存整数，如123=1.23（规避AS BigDecimal编译器bug）
+  uniqueAddresses: Int!                # derived from DailyStatsAddress count
+  avgRiskScore: Int!  # 放大100倍存整数，如123=1.23
   topDecision: String!                 # "ALLOW" | "BLOCK" | "FLAG" | "HOLD"
+}
+
+# NEW: Composite entity for unique address counting per day
+type DailyStatsAddress @entity {
+  id: ID!                              # date-address
+  date: String!
+  address: String!
+  firstSeen: BigInt!
 }
 
 type HourlyStats @entity {
@@ -159,53 +201,57 @@ enum RiskTier {
   HIGH
 }
 
-# ========== CompliantSmartWallet ==========
+enum Decision {
+  ALLOW
+  BLOCK
+  FLAG
+  HOLD
+}
 
-type WalletOperation @entity {
-  id: ID!                              # opHash
-  wallet: String!                     # 钱包地址
-  opType: String!                     # TRANSFER | TOKEN_TRANSFER | CONTRACT_CALL
-  target: String!
-  value: BigInt!
-  success: Boolean!
+# ========== CompliantStableCoin ==========
+
+type TokenTransfer @entity {
+  id: ID!                              # txHash-logIndex
+  from: String!
+  to: String!
+  amount: BigInt!
   timestamp: BigInt!
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type BatchExecution @entity {
-  id: ID!                              # txHash
-  wallet: String!
-  count: BigInt!
-  successCount: BigInt!
-  blockedCount: BigInt!
-  timestamp: BigInt!
-  blockNumber: BigInt!
-  transactionHash: String!
-}
-
-type QuarantineRecord @entity {
-  id: ID!                              # recordId
-  wallet: String!
-  token: String!
+type TokenTransferBlocked @entity {
+  id: ID!                              # txHash-logIndex
+  from: String!
+  to: String!
   amount: BigInt!
   reason: String!
-  released: Boolean!
-  releasedAt: BigInt
   timestamp: BigInt!
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type WalletBalance @entity {
-  id: ID!                              # wallet-token
-  wallet: String!
-  token: String!
-  totalBalance: BigInt!
-  available: BigInt!
-  frozen: BigInt!
-  pendingRisk: BigInt!
+type KYCStatus @entity {
+  id: ID!                              # address
+  account: String!
+  verified: Boolean!
   updatedAt: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type TokenPolicy @entity {
+  id: ID!                              # "policy"
+  maxTxAmount: BigInt!
+  dailyLimit: BigInt!
+  allowMediumRisk: Boolean!
+  allowHighRisk: Boolean!
+  blockMixer: Boolean!
+  requireDestinationKYC: Boolean!
+  cooldownPeriod: BigInt!
+  updatedAt: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
 }
 
 # ========== FidesCompliance ==========
@@ -270,11 +316,4 @@ enum RiskLevel {
   HIGH
   BLACKLIST
   WHITELIST
-}
-
-enum Decision {
-  ALLOW
-  BLOCK
-  FLAG
-  HOLD
 }

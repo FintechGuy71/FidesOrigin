@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./interfaces/IComplianceEngine.sol";
 import "./interfaces/IAssetCompliance.sol";
+import "./interfaces/IWalletCompliance.sol";
 import "./utils/ReentrancyGuardUpgradeable.sol";
 import "./RiskRegistry.sol";
 import "./PolicyEngine.sol";
@@ -18,7 +19,7 @@ import "./PolicyEngine.sol";
  * @dev VERSION: 1.2.1 - 修复时间操纵风险(P0-6) + 事件索引(P1-6) + 审计日志(P1-12) + MEV保护(P1-11)
  *      + whenNotPaused(S-04) + Fail-Closed(S-05)
  */
-contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, IComplianceEngine {
+contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, IComplianceEngine, IWalletCompliance {
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -920,6 +921,158 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         actionTypes = new uint8[](1);
         actionTypes[0] = uint8(decision);
         return (isCompliant, actionTypes);
+    }
+    
+    // ============ IWalletCompliance Interface Implementation ============
+    
+    /**
+     * @notice 验证单个操作合规性
+     * @dev IWalletCompliance.validateOperation 实现
+     */
+    function validateOperation(
+        address walletOwner,
+        Operation calldata op,
+        address walletContract
+    ) external view returns (Decision decision, string memory reason) {
+        // Basic validation: check wallet owner risk
+        (uint256 score, , , , , bool sanctioned, bool exists, ) = riskRegistry.getProfile(walletOwner);
+        if (!exists) {
+            return (Decision.BLOCK, "No risk profile - fail closed");
+        }
+        if (sanctioned) {
+            return (Decision.BLOCK, "Sanctioned address");
+        }
+        if (score >= 95) {
+            return (Decision.BLOCK, "Critical risk score");
+        }
+        if (score >= 80) {
+            return (Decision.BLOCK, "High risk score");
+        }
+        // For TRANSFER operations, validate like a regular transfer
+        if (op.opType == OperationType.TRANSFER) {
+            return this.validateTransfer(walletOwner, op.target, op.value, walletContract);
+        }
+        return (Decision.ALLOW, "Operation allowed");
+    }
+    
+    /**
+     * @notice 执行前钩子 - 会revert如果BLOCK
+     * @dev IWalletCompliance.preExecutionHook 实现
+     */
+    function preExecutionHook(
+        address walletOwner,
+        Operation calldata op
+    ) external view {
+        if (op.target == address(0)) revert InvalidAddress();
+        if (address(riskRegistry) == address(0)) revert RegistryNotSet();
+        
+        (uint256 score, , , , , bool sanctioned, bool exists, ) = riskRegistry.getProfile(walletOwner);
+        if (!exists) revert("No risk profile - fail closed");
+        if (sanctioned) revert("Sanctioned address");
+        if (score >= 95) revert("Critical risk score");
+        if (score >= 80) revert("High risk score");
+        
+        // For TRANSFER operations, also run preTransferHook
+        if (op.opType == OperationType.TRANSFER) {
+            this.preTransferHook(walletOwner, op.target, op.value);
+        }
+    }
+    
+    /**
+     * @notice 执行后钩子
+     * @dev IWalletCompliance.postExecutionHook 实现
+     */
+    function postExecutionHook(
+        address walletOwner,
+        Operation calldata op,
+        bool success
+    ) external onlyRole(OPERATOR_ROLE) {
+        emit OperationExecuted(
+            msg.sender,
+            walletOwner,
+            op.opType,
+            success
+        );
+    }
+    
+    /**
+     * @notice 批量验证操作
+     * @dev IWalletCompliance.validateBatch 实现
+     */
+    function validateBatch(
+        address walletOwner,
+        Operation[] calldata ops
+    ) external view returns (Decision[] memory decisions) {
+        decisions = new Decision[](ops.length);
+        for (uint256 i = 0; i < ops.length; i++) {
+            (decisions[i], ) = this.validateOperation(walletOwner, ops[i], address(0));
+        }
+    }
+    
+    /**
+     * @notice 批量执行前检查
+     * @dev IWalletCompliance.preBatchExecutionHook 实现
+     */
+    function preBatchExecutionHook(
+        address walletOwner,
+        Operation[] calldata ops
+    ) external view {
+        for (uint256 i = 0; i < ops.length; i++) {
+            this.preExecutionHook(walletOwner, ops[i]);
+        }
+    }
+    
+    /**
+     * @notice 解析操作风险特征
+     * @dev IWalletCompliance.analyzeOperationRisk 实现
+     */
+    function analyzeOperationRisk(
+        Operation calldata op
+    ) external view returns (uint8 riskScore, RiskTier tier, string memory riskFactors) {
+        if (op.target == address(0)) {
+            return (100, RiskTier.CRITICAL, "Zero address target");
+        }
+        // Get target contract risk
+        (uint256 targetScore, , , uint8 targetTier, , bool targetSanctioned, bool targetExists, ) = riskRegistry.getProfile(op.target);
+        if (!targetExists) {
+            return (50, RiskTier.MEDIUM, "Unknown target address");
+        }
+        if (targetSanctioned) {
+            return (100, RiskTier.CRITICAL, "Sanctioned target");
+        }
+        return (uint8(targetScore), RiskTier(targetTier), "Standard risk");
+    }
+    
+    /**
+     * @notice 获取钱包策略
+     * @dev IWalletCompliance.getWalletPolicy 实现
+     */
+    function getWalletPolicy(address wallet) external view returns (WalletPolicy memory) {
+        // Return empty policy - wallet policies are managed by PolicyEngine
+        return WalletPolicy({
+            maxTxValue: 0,
+            maxTokenTxAmount: 0,
+            dailyEthLimit: 0,
+            dailyTokenLimit: 0,
+            blockContractCalls: false,
+            blockUnknownTokens: false,
+            requireWhitelist: false,
+            allowedDex: new address[](0),
+            blockedContracts: new address[](0),
+            whitelistedContracts: new bytes32[](0)
+        });
+    }
+    
+    /**
+     * @notice 检查目标合约风险
+     * @dev IWalletCompliance.getContractRisk 实现
+     */
+    function getContractRisk(address target) external view returns (bool isVerified, uint8 riskScore, string memory contractType) {
+        (uint256 score, , , , , , bool exists, ) = riskRegistry.getProfile(target);
+        if (!exists) {
+            return (false, 0, "Unknown");
+        }
+        return (true, uint8(score), "Contract");
     }
     
     /**

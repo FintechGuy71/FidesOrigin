@@ -117,14 +117,39 @@ export function handleAddressTagged(event: AddressTagged): void {
   let account = event.params.account.toHexString();
   let tag = event.params.tag.toHexString();
 
+  // Ensure RiskProfile entity is created if it doesn't exist.
   let profile = RiskProfile.load(account);
-  if (profile) {
-    let tags = profile.tags;
-    if (!tags.includes(tag)) {
-      tags.push(tag);
-      profile.tags = tags;
-      profile.save();
-    }
+  if (!profile) {
+    profile = new RiskProfile(account);
+    profile.tags = [];
+    profile.riskScore = BigInt.fromI32(0);
+    profile.tier = 'UNKNOWN';
+    profile.lastUpdated = event.block.timestamp;
+    profile.isSanctioned = false;
+  }
+
+  let tags = profile.tags;
+  if (!tags.includes(tag)) {
+    tags.push(tag);
+    profile.tags = tags;
+    profile.lastUpdated = event.block.timestamp;
+    profile.save();
+  }
+
+  // Create a RiskProfileUpdate record for audit trail.
+  let updateId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
+  let update = RiskProfileUpdate.load(updateId);
+  if (!update) {
+    update = new RiskProfileUpdate(updateId);
+    update.account = account;
+    update.riskScore = profile.riskScore;
+    update.tier = profile.tier;
+    update.tags = tags;
+    update.timestamp = event.block.timestamp;
+    update.blockNumber = event.block.number;
+    update.transactionHash = event.transaction.hash.toHexString();
+    update.oracle = event.transaction.from.toHexString();
+    update.save();
   }
 
   log.info('[handleAddressTagged] account={} tag={}', [account, tag]);

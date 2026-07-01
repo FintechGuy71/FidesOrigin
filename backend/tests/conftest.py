@@ -1,6 +1,11 @@
 """
 FidesOrigin 测试配置
 核心设计：确保 FastAPI 应用和测试固件共享同一个事件循环和数据库连接池
+
+[Fix #7] 认证策略：
+- 默认情况下测试使用真实认证（不绕过）
+- 仅当测试标记了 @pytest.mark.noauth 时才绕过认证和安全中间件
+- 新增认证测试用例验证有效/无效/过期 API Key 的行为
 """
 import os
 
@@ -76,11 +81,18 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
-    """创建测试客户端 - 覆盖所有模块的 get_db 依赖"""
+async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
+    """创建测试客户端 - 覆盖所有模块的 get_db 依赖
+    
+    [Fix #7] 认证策略：
+    - 默认使用真实认证（不绕过 get_current_api_key）
+    - 仅当测试标记 @pytest.mark.noauth 时绕过认证
+    """
     from app.main import app
     from app.core.di import get_container
     import app.core.di as di_module
+    import app.core.security as security_module
+    from app.core.security import get_current_api_key
     
     # 保存原始的 get_db 函数
     original_get_db = di_module.get_db
@@ -114,34 +126,24 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
     
     container.get_risk_engine = mock_get_risk_engine
     
-    # 覆盖 API Key 认证（测试环境跳过认证）
-    # [High Fix #36] TODO: Add a dedicated authentication test suite that verifies:
-    #   1. Requests without API key are rejected (401)
-    #   2. Requests with invalid API key are rejected (401)
-    #   3. Requests with valid API key are accepted (200)
-    #   4. Rate limiting is enforced per API key
-    # GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
-    from app.core.security import get_current_api_key
-    original_get_current_api_key = get_current_api_key
+    # 检查是否标记了 noauth
+    noauth_marker = request.node.get_closest_marker("noauth")
     
-    async def mock_get_current_api_key(*args, **kwargs):
-        return "test-api-key"
-    
-    app.dependency_overrides[get_current_api_key] = mock_get_current_api_key
-    
-    # 覆盖请求签名中间件（测试环境跳过签名验证）
-    import app.core.security as security_module
+    # 保存原始中间件引用以便恢复
     original_request_signature_middleware = security_module.request_signature_middleware
     
-    async def mock_request_signature_middleware(request, call_next):
-        return await call_next(request)
-    
-    security_module.request_signature_middleware = mock_request_signature_middleware
-    
-    # [HIGH Fix #7] CSRF 中间件在 main.py 中通过 @app.middleware 注册，
-    # 注册时已捕获原始函数引用，无法通过替换模块属性来 mock。
-    # 因此测试客户端需要注入 Authorization header 以跳过 CSRF 检查。
-    # 这与生产环境中 API Key 模式的行为一致。
+    if noauth_marker:
+        # [Fix #7] 仅在 noauth 标记时绕过认证和安全中间件
+        async def mock_get_current_api_key(*args, **kwargs):
+            return "test-api-key"
+        
+        app.dependency_overrides[get_current_api_key] = mock_get_current_api_key
+        
+        # 覆盖请求签名中间件（测试环境跳过签名验证）
+        async def mock_request_signature_middleware(request, call_next):
+            return await call_next(request)
+        
+        security_module.request_signature_middleware = mock_request_signature_middleware
     
     # 使用 LifespanManager 管理应用生命周期
     try:
@@ -151,10 +153,11 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
             transport = ASGITransport(app=manager.app)
             # [HIGH Fix #7] 测试客户端注入 Authorization header 以跳过 CSRF 检查
             # 这与生产环境中 API Key 模式的行为一致（API Key 请求不需要 CSRF token）
+            client_headers = {"Authorization": "Bearer test-api-key"}
             async with AsyncClient(
                 transport=transport,
                 base_url="http://test",
-                headers={"Authorization": "Bearer test-api-key"}
+                headers=client_headers
             ) as client:
                 yield client
     except ImportError:
@@ -167,10 +170,11 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
         
         async with manual_lifespan():
             transport = ASGITransport(app=app)
+            client_headers = {"Authorization": "Bearer test-api-key"}
             async with AsyncClient(
                 transport=transport,
                 base_url="http://test",
-                headers={"Authorization": "Bearer test-api-key"}
+                headers=client_headers
             ) as client:
                 yield client
     

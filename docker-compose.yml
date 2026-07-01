@@ -13,7 +13,7 @@ services:
     env_file:
       - data-publisher/.env
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
     # [P1-fix] Production: Do NOT mount host source code — build image with code baked in
     # volumes:

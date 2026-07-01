@@ -1,6 +1,8 @@
 import {
   Policy,
   PolicyVersion,
+  PolicyEvaluation,
+  WalletPolicy,
 } from '../../generated/schema';
 import {
   IssuerPolicySet,
@@ -77,24 +79,73 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
 
 // Handle WalletPolicySet event
 export function handleWalletPolicySet(event: WalletPolicySet): void {
-  // Wallet policies are tracked but stored differently
-  // For now, log the event
   let wallet = event.params.wallet.toHexString();
-  log.info('WalletPolicySet: {}', [wallet]);
+  let policyData = event.params.policy;
+
+  // Ensure WalletPolicy entity is always persisted.
+  let policy = WalletPolicy.load(wallet);
+  if (!policy) {
+    policy = new WalletPolicy(wallet);
+    policy.wallet = wallet;
+    policy.version = 0;
+  }
+
+  // Track WalletPolicy version for audit trail.
+  let previousVersion = policy.version || 0;
+  policy.version = previousVersion + 1;
+
+  policy.maxTxValue = policyData.maxTxValue;
+  policy.maxTokenTxAmount = policyData.maxTokenTxAmount;
+  policy.dailyEthLimit = policyData.dailyEthLimit;
+  policy.dailyTokenLimit = policyData.dailyTokenLimit;
+  policy.blockContractCalls = policyData.blockContractCalls;
+  policy.blockUnknownTokens = policyData.blockUnknownTokens;
+  policy.requireWhitelist = policyData.requireWhitelist;
+
+  let allowedDex: string[] = [];
+  for (let i = 0; i < policyData.allowedDex.length; i++) {
+    allowedDex.push(policyData.allowedDex[i].toHexString());
+  }
+  policy.allowedDex = allowedDex;
+
+  let blockedContracts: string[] = [];
+  for (let i = 0; i < policyData.blockedContracts.length; i++) {
+    blockedContracts.push(policyData.blockedContracts[i].toHexString());
+  }
+  policy.blockedContracts = blockedContracts;
+
+  policy.updatedAt = event.block.timestamp;
+  policy.blockNumber = event.block.number;
+  policy.transactionHash = event.transaction.hash.toHexString();
+  policy.save();
+
+  log.info('WalletPolicySet: {} maxTxValue={} dailyEthLimit={}', [
+    wallet,
+    policyData.maxTxValue.toString(),
+    policyData.dailyEthLimit.toString(),
+  ]);
 }
 
 // Handle PolicyEvaluated event
 export function handlePolicyEvaluated(event: PolicyEvaluated): void {
-  let operator = event.params.operator.toHexString();
-  let from = event.params.from.toHexString();
-  let to = event.params.to.toHexString();
-  let decision = getDecision(event.params.decision as i32);
+  let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
+  let evaluation = new PolicyEvaluation(id);
+  evaluation.operator = event.params.operator.toHexString();
+  evaluation.from = event.params.from.toHexString();
+  evaluation.to = event.params.to.toHexString();
+  evaluation.amount = event.params.amount;
+  evaluation.decision = getDecision(event.params.decision as i32);
+  evaluation.reason = event.params.reason;
+  evaluation.timestamp = event.block.timestamp;
+  evaluation.blockNumber = event.block.number;
+  evaluation.transactionHash = event.transaction.hash.toHexString();
+  evaluation.save();
 
   log.info('PolicyEvaluated: {} {} -> {} decision={} reason={}', [
-    operator,
-    from,
-    to,
-    decision,
-    event.params.reason,
+    evaluation.operator,
+    evaluation.from,
+    evaluation.to,
+    evaluation.decision,
+    evaluation.reason,
   ]);
 }

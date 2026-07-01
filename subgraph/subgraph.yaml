@@ -64,21 +64,23 @@ dataSources:
         - ProtocolStats
         - DailyStats
         - HourlyStats
+        - DailyStatsAddress
       abis:
         - name: ComplianceEngine
           file: ./abis/ComplianceEngine.json
       eventHandlers:
-        - event: ComplianceCheck(indexed address,indexed address,indexed
-            address,uint256,uint8,string)
-          handler: handleComplianceCheck
-        - event: FundsHeld(indexed bytes32,indexed address,address,uint256)
-          handler: handleFundsHeld
-        - event: FundsReleased(indexed bytes32,indexed address,uint256)
-          handler: handleFundsReleased
-        - event: EmergencyModeActivated(indexed address)
-          handler: handleEmergencyModeActivated
-        - event: EmergencyModeDeactivated(indexed address)
-          handler: handleEmergencyModeDeactivated
+        - event: ComplianceCheckPerformed(indexed address,indexed uint256,indexed bool,uint256,uint256,bytes32)
+          handler: handleComplianceCheckPerformed
+        - event: TransactionBlocked(indexed address,indexed address,indexed uint256,address,string,uint256,uint256)
+          handler: handleTransactionBlocked
+        - event: TransactionQuarantined(indexed address,indexed address,indexed uint256,address,bytes32,uint256,uint256)
+          handler: handleTransactionQuarantined
+        - event: QuarantineReleased(indexed bytes32,indexed address,uint256)
+          handler: handleQuarantineReleased
+        - event: RulePaused(indexed bytes32)
+          handler: handleRulePaused
+        - event: RuleUnpaused(indexed bytes32)
+          handler: handleRuleUnpaused
       file: ./src/mappings/complianceEngine.ts
   - kind: ethereum
     name: PolicyEngine
@@ -95,6 +97,8 @@ dataSources:
       entities:
         - Policy
         - PolicyVersion
+        - PolicyEvaluation
+        - WalletPolicy
       abis:
         - name: PolicyEngine
           file: ./abis/PolicyEngine.json
@@ -115,9 +119,9 @@ dataSources:
     source:
       abi: FidesCompliance
       # FidesCompliance: Fides-specific compliance rules and risk profiles
-      address: "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b"
+      address: "0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594"
       # Later deployment than core contracts; startBlock matches deployment
-      startBlock: 11053336
+      startBlock: 7800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -149,37 +153,35 @@ dataSources:
           handler: handleRuleUpdated
       file: ./src/mappings/fidesCompliance.ts
   - kind: ethereum
-    name: CompliantSmartWalletV3
+    name: CompliantStableCoin
     network: sepolia
     source:
-      abi: CompliantSmartWallet
-      # CompliantSmartWalletV3: wallet operations, balance freezing, quarantine
-      address: "0xbe33EBA3e0d6Dc324aBF1DE1aD0E1e65DcA526AB"
-      startBlock: 11053336
+      abi: CompliantStableCoin
+      # CompliantStableCoin: stablecoin with compliance, KYC, and policy controls
+      address: "0xb47a6520740a54B375e6F3B22bC316B4b02bFbCF"
+      startBlock: 7800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
       entities:
-        - WalletOperation
-        - BatchExecution
-        - QuarantineRecord
-        - WalletBalance
+        - TokenTransfer
+        - TokenTransferBlocked
+        - KYCStatus
+        - TokenPolicy
       abis:
-        - name: CompliantSmartWallet
-          file: ./abis/CompliantSmartWallet.json
+        - name: CompliantStableCoin
+          file: ./abis/CompliantStableCoin.json
       eventHandlers:
-        - event: OperationExecuted(indexed bytes32,uint8,address,uint256,bool)
-          handler: handleOperationExecuted
-        - event: BatchExecuted(uint256,uint256,uint256)
-          handler: handleBatchExecuted
-        - event: AutoQuarantineTriggered(indexed address,uint256,indexed bytes32,string)
-          handler: handleAutoQuarantineTriggered
-        - event: BalanceFrozen(indexed address,uint256,string)
-          handler: handleBalanceFrozen
-        - event: BalanceReleased(indexed address,uint256)
-          handler: handleBalanceReleased
-      file: ./src/mappings/compliantSmartWallet.ts
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: TransferBlocked(indexed address,indexed address,uint256,string)
+          handler: handleTransferBlocked
+        - event: KYCStatusUpdated(indexed address,bool)
+          handler: handleKYCStatusUpdated
+        - event: PolicyUpdated(indexed uint256,indexed uint256,bool,bool,bool,bool,uint256)
+          handler: handlePolicyUpdated
+      file: ./src/mappings/compliantStableCoin.ts
 
 # Network switching guide:
 # To switch from Sepolia to mainnet:

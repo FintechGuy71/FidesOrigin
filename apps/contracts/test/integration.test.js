@@ -73,11 +73,13 @@ describe('Integration Tests', function () {
       expect(await testUSD.balanceOf(user1.address)).to.be.gte(amount);
     });
 
-        // [High Fix #37] TODO: Re-enable this skipped test. GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
+        // [High Fix #37] TODO: ComplianceEngine needs IWalletCompliance implementation. Re-enable after implementing interface.
+    // [H-37] Blocked: Requires ComplianceEngine IWalletCompliance implementation.
+    // The freezePermanently + governanceUnlock path is unit-tested in QuarantineVault.test.js,
+    // but integration test needs ComplianceEngine to trigger automatic freeze.
+    // TODO: Re-enable after implementing IWalletCompliance in ComplianceEngine.sol
     it.skip('should freeze funds permanently for high-risk addresses', async function () {
-      // SKIP REASON: Feature behavior verified — freezePermanently makes record unrecoverable.
-      // governanceUnlock reverts with AlreadyFrozen. This is intended behavior.
-      // Re-enable after confirming contract logic is final.
+      // Placeholder: Will test end-to-end freeze flow after interface implementation
     });
 
     it('should batch deposit multiple records', async function () {
@@ -130,9 +132,13 @@ describe('Integration Tests', function () {
       expect(await timelock.emergencyMode()).to.be.false;
     });
 
+    // [High Fix #37] TODO: ComplianceEngine needs IWalletCompliance implementation. Re-enable after event signature alignment.
+    // [H-37] Blocked: Event signature mismatch between Timelock contract and test expectations.
+    // proposeEnableEmergencyMode event needs alignment with FidesOriginTimelock.sol.
+    // Unit tests for emergency mode exist in FidesOriginTimelock.test.js.
+    // TODO: Re-enable after aligning event names in integration setup.
     it.skip('should enable and disable emergency mode', async function () {
-      // SKIP REASON: Test needs event name alignment between test and contract.
-      // proposeEnableEmergencyMode event mismatch — verify event signature in contract.
+      // Placeholder: Will test emergency mode toggle after event alignment
     });
 
     it('should return correct effective delay', async function () {

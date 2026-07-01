@@ -5,47 +5,45 @@ import {
   ProtocolStats,
   DailyStats,
   HourlyStats,
+  DailyStatsAddress,
 } from '../../generated/schema';
 import {
-  ComplianceCheck as ComplianceCheckEvent,
-  FundsHeld,
-  FundsReleased,
-  EmergencyModeActivated,
-  EmergencyModeDeactivated,
+  ComplianceCheckPerformed,
+  TransactionBlocked,
+  TransactionQuarantined,
+  QuarantineReleased,
+  RulePaused,
+  RuleUnpaused,
 } from '../../generated/ComplianceEngine/ComplianceEngine';
-import { BigInt, log } from '@graphprotocol/graph-ts';
+import { BigInt, log, Bytes } from '@graphprotocol/graph-ts';
 
-function getDecision(dv: i32): string {
-  if (dv == 0) return 'ALLOW';
-  if (dv == 1) return 'BLOCK';
-  if (dv == 2) return 'FLAG';
-  return 'HOLD';
+function getDecision(isCompliant: boolean): string {
+  return isCompliant ? 'ALLOW' : 'BLOCK';
 }
 
-// Convert a BigInt timestamp (seconds) to a UTC YYYY-MM-DD string.
-// This avoids the rounding errors caused by timestamp / 86400 and ensures
-// consistent day boundaries regardless of the local chain timezone.
+function bytes32ToString(bytes: Bytes): string {
+  let result = '';
+  for (let i = 0; i < bytes.length; i++) {
+    let byte = bytes[i];
+    if (byte == 0) break;
+    result += String.fromCharCode(byte);
+  }
+  return result;
+}
+
 function toUtcDateString(timestamp: BigInt): string {
   let ts = timestamp.toI64();
-  // Days since Unix epoch (1970-01-01). Using integer division for whole days.
   let daysSinceEpoch = ts / 86400;
-  // Approximate year/month/day calculation for Gregorian calendar.
-  // This is a simplified algorithm; for subgraph use it is sufficient because
-  // we only need a stable string key for daily aggregation.
   let year = 1970;
   let month = 1;
   let day = 1;
   let remainingDays = daysSinceEpoch;
-
-  // Advance years
   while (true) {
     let daysInYear = ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) ? 366 : 365;
     if (remainingDays < daysInYear) break;
     remainingDays -= daysInYear;
     year += 1;
   }
-
-  // Advance months
   let daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
     daysInMonth[1] = 29;
@@ -56,14 +54,11 @@ function toUtcDateString(timestamp: BigInt): string {
     month += 1;
   }
   day = 1 + remainingDays as i32;
-
-  // Pad month and day with leading zeros
   let monthStr = month < 10 ? '0' + month.toString() : month.toString();
   let dayStr = day < 10 ? '0' + day.toString() : day.toString();
   return year.toString() + '-' + monthStr + '-' + dayStr;
 }
 
-// Convert a BigInt timestamp (seconds) to a UTC YYYY-MM-DD-HH string.
 function toUtcHourString(timestamp: BigInt): string {
   let dateStr = toUtcDateString(timestamp);
   let ts = timestamp.toI64();
@@ -89,7 +84,6 @@ function getOrCreateStats(): ProtocolStats {
 }
 
 function getOrCreateDailyStats(timestamp: BigInt): DailyStats {
-  // Use UTC date string instead of raw day number to avoid timezone drift.
   let dateStr = toUtcDateString(timestamp);
   let stats = DailyStats.load(dateStr);
   if (!stats) {
@@ -107,7 +101,6 @@ function getOrCreateDailyStats(timestamp: BigInt): DailyStats {
 }
 
 function getOrCreateHourlyStats(timestamp: BigInt): HourlyStats {
-  // Use UTC hour string instead of raw hour number to avoid timezone drift.
   let hourStr = toUtcHourString(timestamp);
   let stats = HourlyStats.load(hourStr);
   if (!stats) {
@@ -122,22 +115,25 @@ function getOrCreateHourlyStats(timestamp: BigInt): HourlyStats {
   return stats;
 }
 
-export function handleComplianceCheck(event: ComplianceCheckEvent): void {
-  let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
-  let decision = getDecision(event.params.decision);
-  let check = new ComplianceCheck(id);
-  check.operator = event.params.operator.toHexString();
-  check.from = event.params.from.toHexString();
-  check.to = event.params.to.toHexString();
-  check.amount = event.params.amount;
-  check.decision = decision;
-  check.reason = event.params.reason;
-  check.timestamp = event.block.timestamp;
-  check.blockNumber = event.block.number;
-  check.transactionHash = event.transaction.hash.toHexString();
-  check.save();
+function trackUniqueAddress(dateStr: string, addr: string, timestamp: BigInt): void {
+  let id = dateStr + '-' + addr;
+  let record = DailyStatsAddress.load(id);
+  if (!record) {
+    record = new DailyStatsAddress(id);
+    record.date = dateStr;
+    record.address = addr;
+    record.firstSeen = timestamp;
+    record.save();
 
-  // Update stats
+    let daily = DailyStats.load(dateStr);
+    if (daily) {
+      daily.uniqueAddresses += 1;
+      daily.save();
+    }
+  }
+}
+
+function updateStatsForDecision(decision: string, timestamp: BigInt): void {
   let stats = getOrCreateStats();
   stats.totalComplianceChecks = stats.totalComplianceChecks.plus(BigInt.fromI32(1));
   if (decision == 'BLOCK') {
@@ -149,11 +145,10 @@ export function handleComplianceCheck(event: ComplianceCheckEvent): void {
   } else if (decision == 'ALLOW') {
     stats.totalAllowed = stats.totalAllowed.plus(BigInt.fromI32(1));
   }
-  stats.lastUpdated = event.block.timestamp;
+  stats.lastUpdated = timestamp;
   stats.save();
 
-  // Update daily stats
-  let daily = getOrCreateDailyStats(event.block.timestamp);
+  let daily = getOrCreateDailyStats(timestamp);
   daily.totalChecks = daily.totalChecks.plus(BigInt.fromI32(1));
   if (decision == 'BLOCK') {
     daily.totalBlocked = daily.totalBlocked.plus(BigInt.fromI32(1));
@@ -164,8 +159,7 @@ export function handleComplianceCheck(event: ComplianceCheckEvent): void {
   }
   daily.save();
 
-  // Update hourly stats
-  let hourly = getOrCreateHourlyStats(event.block.timestamp);
+  let hourly = getOrCreateHourlyStats(timestamp);
   hourly.totalChecks = hourly.totalChecks.plus(BigInt.fromI32(1));
   hourly.txCount = hourly.txCount.plus(BigInt.fromI32(1));
   if (decision == 'BLOCK') {
@@ -176,65 +170,129 @@ export function handleComplianceCheck(event: ComplianceCheckEvent): void {
     hourly.totalHeld = hourly.totalHeld.plus(BigInt.fromI32(1));
   }
   hourly.save();
+}
+
+export function handleComplianceCheckPerformed(event: ComplianceCheckPerformed): void {
+  let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
+  let decision = getDecision(event.params.isCompliant);
+  let check = new ComplianceCheck(id);
+  check.operator = event.params.addr.toHexString();
+  check.from = event.params.addr.toHexString();
+  check.to = '';
+  check.amount = BigInt.fromI32(0);
+  check.decision = decision;
+  check.reason = bytes32ToString(event.params.checkType);
+  check.riskScore = event.params.riskScore.toI32();
+  check.checkType = bytes32ToString(event.params.checkType);
+  check.timestamp = event.block.timestamp;
+  check.blockNumber = event.block.number;
+  check.transactionHash = event.transaction.hash.toHexString();
+  check.save();
+
+  updateStatsForDecision(decision, event.block.timestamp);
+
+  let dateStr = toUtcDateString(event.block.timestamp);
+  trackUniqueAddress(dateStr, event.params.addr.toHexString(), event.block.timestamp);
 
   log.info(
-    '[handleComplianceCheck] tx={} decision={} from={} to={} amount={} daily={} hourly={}',
+    '[handleComplianceCheckPerformed] tx={} decision={} addr={} riskScore={} daily={} hourly={}',
+    [
+      event.transaction.hash.toHexString(),
+      decision,
+      event.params.addr.toHexString(),
+      event.params.riskScore.toString(),
+      dateStr,
+      toUtcHourString(event.block.timestamp),
+    ]
+  );
+}
+
+export function handleTransactionBlocked(event: TransactionBlocked): void {
+  let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
+  let decision = 'BLOCK';
+  let check = new ComplianceCheck(id);
+  check.operator = '';
+  check.from = event.params.from.toHexString();
+  check.to = event.params.to.toHexString();
+  check.amount = event.params.amount;
+  check.decision = decision;
+  check.reason = event.params.reason;
+  check.assetContract = event.params.token.toHexString();
+  check.timestamp = event.block.timestamp;
+  check.blockNumber = event.block.number;
+  check.transactionHash = event.transaction.hash.toHexString();
+  check.save();
+
+  updateStatsForDecision(decision, event.block.timestamp);
+
+  let dateStr = toUtcDateString(event.block.timestamp);
+  trackUniqueAddress(dateStr, event.params.from.toHexString(), event.block.timestamp);
+  trackUniqueAddress(dateStr, event.params.to.toHexString(), event.block.timestamp);
+
+  log.info(
+    '[handleTransactionBlocked] tx={} decision={} from={} to={} amount={} token={} daily={} hourly={}',
     [
       event.transaction.hash.toHexString(),
       decision,
       event.params.from.toHexString(),
       event.params.to.toHexString(),
       event.params.amount.toString(),
-      toUtcDateString(event.block.timestamp),
+      event.params.token.toHexString(),
+      dateStr,
       toUtcHourString(event.block.timestamp),
     ]
   );
 }
 
-export function handleFundsHeld(event: FundsHeld): void {
-  let hold = new HoldRecord(event.params.holdId.toHexString());
-  hold.owner = event.params.owner.toHexString();
-  hold.asset = event.params.asset.toHexString();
+export function handleTransactionQuarantined(event: TransactionQuarantined): void {
+  let hold = new HoldRecord(event.params.quarantineId.toHexString());
+  hold.owner = event.params.from.toHexString();
+  hold.asset = event.params.token.toHexString();
   hold.amount = event.params.amount;
   hold.timestamp = event.block.timestamp;
-  hold.reason = 'Compliance hold';
+  hold.reason = 'Quarantined: cooldown active';
   hold.released = false;
   hold.save();
 
-  // Update stats
   let stats = getOrCreateStats();
   stats.totalFundsHeld = stats.totalFundsHeld.plus(event.params.amount);
+  stats.totalHeld = stats.totalHeld.plus(BigInt.fromI32(1));
   stats.lastUpdated = event.block.timestamp;
   stats.save();
 
+  updateStatsForDecision('HOLD', event.block.timestamp);
+
+  let dateStr = toUtcDateString(event.block.timestamp);
+  trackUniqueAddress(dateStr, event.params.from.toHexString(), event.block.timestamp);
+  trackUniqueAddress(dateStr, event.params.to.toHexString(), event.block.timestamp);
+
   log.info(
-    '[handleFundsHeld] holdId={} owner={} asset={} amount={} totalFundsHeld={}',
+    '[handleTransactionQuarantined] quarantineId={} from={} token={} amount={} totalFundsHeld={}',
     [
-      event.params.holdId.toHexString(),
-      event.params.owner.toHexString(),
-      event.params.asset.toHexString(),
+      event.params.quarantineId.toHexString(),
+      event.params.from.toHexString(),
+      event.params.token.toHexString(),
       event.params.amount.toString(),
       stats.totalFundsHeld.toString(),
     ]
   );
 }
 
-export function handleFundsReleased(event: FundsReleased): void {
-  let hold = HoldRecord.load(event.params.holdId.toHexString());
+export function handleQuarantineReleased(event: QuarantineReleased): void {
+  let hold = HoldRecord.load(event.params.quarantineId.toHexString());
   if (hold) {
     let amountBefore = hold.amount;
     hold.released = true;
     hold.releasedAt = event.block.timestamp;
-    hold.releasedBy = event.transaction.from.toHexString();
+    hold.releasedBy = event.params.operator.toHexString();
     hold.save();
 
-    // Update stats
     let stats = getOrCreateStats();
     if (stats.totalFundsHeld.ge(hold.amount)) {
       stats.totalFundsHeld = stats.totalFundsHeld.minus(hold.amount);
     } else {
       log.warning(
-        '[handleFundsReleased] totalFundsHeld ({}) less than release amount ({}). Zeroing to prevent underflow.',
+        '[handleQuarantineReleased] totalFundsHeld ({}) less than release amount ({}). Zeroing.',
         [stats.totalFundsHeld.toString(), hold.amount.toString()]
       );
       stats.totalFundsHeld = BigInt.fromI32(0);
@@ -243,59 +301,43 @@ export function handleFundsReleased(event: FundsReleased): void {
     stats.save();
 
     log.info(
-      '[handleFundsReleased] holdId={} amount={} totalFundsHeld={}',
+      '[handleQuarantineReleased] quarantineId={} amount={} totalFundsHeld={}',
       [
-        event.params.holdId.toHexString(),
+        event.params.quarantineId.toHexString(),
         amountBefore.toString(),
         stats.totalFundsHeld.toString(),
       ]
     );
   } else {
     log.warning(
-      '[handleFundsReleased] HoldRecord not found for holdId={}. Skipping stats update.',
-      [event.params.holdId.toHexString()]
+      '[handleQuarantineReleased] HoldRecord not found for quarantineId={}. Skipping.',
+      [event.params.quarantineId.toHexString()]
     );
   }
 }
 
-export function handleEmergencyModeActivated(event: EmergencyModeActivated): void {
+export function handleRulePaused(event: RulePaused): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new OperationLog(id);
   logEntry.timestamp = event.block.timestamp;
-  logEntry.operator = event.params.triggeredBy.toHexString();
-  logEntry.operationType = 'EMERGENCY_ACTIVATE';
+  logEntry.operator = event.transaction.from.toHexString();
+  logEntry.operationType = 'RULE_PAUSE';
   logEntry.result = 'SUCCESS';
-  logEntry.details = 'Emergency mode activated';
+  logEntry.details = 'Rule paused: ' + event.params.ruleId.toHexString();
   logEntry.blockNumber = event.block.number;
   logEntry.transactionHash = event.transaction.hash.toHexString();
   logEntry.save();
-
-  log.info(
-    '[handleEmergencyModeActivated] operator={} tx={}',
-    [
-      event.params.triggeredBy.toHexString(),
-      event.transaction.hash.toHexString(),
-    ]
-  );
 }
 
-export function handleEmergencyModeDeactivated(event: EmergencyModeDeactivated): void {
+export function handleRuleUnpaused(event: RuleUnpaused): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new OperationLog(id);
   logEntry.timestamp = event.block.timestamp;
-  logEntry.operator = event.params.triggeredBy.toHexString();
-  logEntry.operationType = 'EMERGENCY_DEACTIVATE';
+  logEntry.operator = event.transaction.from.toHexString();
+  logEntry.operationType = 'RULE_UNPAUSE';
   logEntry.result = 'SUCCESS';
-  logEntry.details = 'Emergency mode deactivated';
+  logEntry.details = 'Rule unpaused: ' + event.params.ruleId.toHexString();
   logEntry.blockNumber = event.block.number;
   logEntry.transactionHash = event.transaction.hash.toHexString();
   logEntry.save();
-
-  log.info(
-    '[handleEmergencyModeDeactivated] operator={} tx={}',
-    [
-      event.params.triggeredBy.toHexString(),
-      event.transaction.hash.toHexString(),
-    ]
-  );
 }

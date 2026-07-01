@@ -144,8 +144,8 @@ describe('RiskOracle', function () {
       ).to.be.revertedWithCustomError(riskOracle, 'DeadlineExpired');
     });
 
-        // [High Fix #37] TODO: Re-enable this skipped test. GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
-    it.skip('should require multiple confirmations when configured', async function () {
+        // [High Fix #37] TODO: ComplianceEngine needs IWalletCompliance implementation. Re-enable after mock for multi-oracle confirmation.
+    it('should require multiple confirmations when configured', async function () {
       // SKIP REASON: Needs mock — requires block mining between submissions due to UPDATE_DELAY_BLOCKS = 1.
       // First confirmation mines a block, second confirmation must be in a later block.
       await riskOracle.addAuthorizedOracle(operator.address);
@@ -161,6 +161,9 @@ describe('RiskOracle', function () {
       await riskOracle.connect(user1).submitOracleResponse(user2.address, 50, 1, false, futureDeadline);
       expect(await riskOracle.getConfirmationCount(user2.address, responseHash)).to.equal(1);
       expect(await riskOracle.confirmedUpdates(user2.address)).to.be.false;
+
+      // Mine a block to satisfy UPDATE_DELAY_BLOCKS
+      await network.provider.send('evm_mine');
 
       // Second confirmation
       await riskOracle.connect(operator).submitOracleResponse(user2.address, 50, 1, false, futureDeadline);
