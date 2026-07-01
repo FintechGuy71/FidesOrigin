@@ -151,9 +151,11 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
         
         async with LifespanManager(app) as manager:
             transport = ASGITransport(app=manager.app)
-            # [HIGH Fix #7] 测试客户端注入 Authorization header 以跳过 CSRF 检查
-            # 这与生产环境中 API Key 模式的行为一致（API Key 请求不需要 CSRF token）
-            client_headers = {"Authorization": "Bearer test-api-key"}
+            # [Fix #7] 仅在 noauth 标记时注入 Authorization header 以跳过 CSRF 检查
+            # 真实认证测试不注入，确保测试真实的认证流程
+            client_headers = {}
+            if noauth_marker:
+                client_headers = {"Authorization": "Bearer test-api-key"}
             async with AsyncClient(
                 transport=transport,
                 base_url="http://test",
@@ -170,7 +172,9 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
         
         async with manual_lifespan():
             transport = ASGITransport(app=app)
-            client_headers = {"Authorization": "Bearer test-api-key"}
+            client_headers = {}
+            if noauth_marker:
+                client_headers = {"Authorization": "Bearer test-api-key"}
             async with AsyncClient(
                 transport=transport,
                 base_url="http://test",

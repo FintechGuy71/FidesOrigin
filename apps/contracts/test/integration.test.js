@@ -73,13 +73,26 @@ describe('Integration Tests', function () {
       expect(await testUSD.balanceOf(user1.address)).to.be.gte(amount);
     });
 
-        // [High Fix #37] TODO: ComplianceEngine needs IWalletCompliance implementation. Re-enable after implementing interface.
+    // [High Fix #37] TODO: ComplianceEngine needs IWalletCompliance implementation. Re-enable after implementing interface.
     // [H-37] Blocked: Requires ComplianceEngine IWalletCompliance implementation.
     // The freezePermanently + governanceUnlock path is unit-tested in QuarantineVault.test.js,
     // but integration test needs ComplianceEngine to trigger automatic freeze.
     // TODO: Re-enable after implementing IWalletCompliance in ComplianceEngine.sol
-    it.skip('should freeze funds permanently for high-risk addresses', async function () {
-      // Placeholder: Will test end-to-end freeze flow after interface implementation
+    it('should freeze funds permanently for high-risk addresses', async function () {
+      const amount = ethers.parseEther('100');
+      const reason = ethers.keccak256(ethers.toUtf8Bytes('HIGH_RISK_ADDRESS'));
+
+      // user1 deposits funds into quarantine vault
+      await quarantineVault.connect(user1).deposit(user1.address, testUSD.target, amount, reason);
+      const recordId = await quarantineVault.allRecordIds(0);
+
+      // Owner freezes the funds permanently
+      await quarantineVault.connect(owner).freezePermanently(recordId);
+
+      // Verify governanceUnlock reverts with AlreadyFrozen
+      await expect(
+        quarantineVault.connect(owner).governanceUnlock(recordId)
+      ).to.be.revertedWithCustomError(quarantineVault, 'AlreadyFrozen');
     });
 
     it('should batch deposit multiple records', async function () {
@@ -137,8 +150,31 @@ describe('Integration Tests', function () {
     // proposeEnableEmergencyMode event needs alignment with FidesOriginTimelock.sol.
     // Unit tests for emergency mode exist in FidesOriginTimelock.test.js.
     // TODO: Re-enable after aligning event names in integration setup.
-    it.skip('should enable and disable emergency mode', async function () {
-      // Placeholder: Will test emergency mode toggle after event alignment
+    it('should enable and disable emergency mode', async function () {
+      // 1. Add emergency operator
+      await timelock.addEmergencyOperator(owner.address);
+
+      // 2. Propose enable emergency mode
+      await timelock.proposeEnableEmergencyMode();
+
+      // 3. Wait EMERGENCY_DELAY (4 hours)
+      await network.provider.send('evm_increaseTime', [4 * 60 * 60 + 1]);
+      await network.provider.send('evm_mine');
+
+      // 4. Execute — emergency mode should be enabled
+      await timelock.executeEmergencyModeChange();
+      expect(await timelock.emergencyMode()).to.be.true;
+
+      // 5. Propose disable emergency mode
+      await timelock.proposeDisableEmergencyMode();
+
+      // 6. Wait EMERGENCY_DELAY (4 hours)
+      await network.provider.send('evm_increaseTime', [4 * 60 * 60 + 1]);
+      await network.provider.send('evm_mine');
+
+      // 7. Execute — emergency mode should be disabled
+      await timelock.executeEmergencyModeChange();
+      expect(await timelock.emergencyMode()).to.be.false;
     });
 
     it('should return correct effective delay', async function () {

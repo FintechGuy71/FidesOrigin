@@ -96,7 +96,7 @@ describe('PolicyEngine', function () {
     // Root cause: evaluateTransfer checks risk score/tier but doesn't explicitly check sanctioned flag.
     // Fix required: Add sanctioned address check in evaluateTransfer or evaluateOperation before risk evaluation.
     // TODO: Implement in next contract upgrade — sanctioned check should short-circuit to BLOCK.
-    it.skip('should BLOCK wallet operation for sanctioned owner', async function () {
+    it('should BLOCK wallet operation for sanctioned owner', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 90, 3, [], true); // HIGH + sanctioned
       const op = {
         opType: 0, // TRANSFER
@@ -105,7 +105,7 @@ describe('PolicyEngine', function () {
         data: '0x',
         token: ethers.ZeroAddress,
         tokenAmount: 0,
-        chainId: 1,
+        chainId: 31337,
       };
       const [decision] = await policyEngine.connect(user1).evaluateOperation(op, ethers.Wallet.createRandom().address);
       expect(decision).to.equal(1); // BLOCK
@@ -115,7 +115,7 @@ describe('PolicyEngine', function () {
     // Root cause: evaluateOperation delegates to evaluateTransfer which has no wallet policy awareness.
     // Fix required: Add wallet policy lookup (blockContractCalls, blockedContracts) in evaluateOperation.
     // TODO: Implement in next contract upgrade.
-    it.skip('should BLOCK contract calls when blockContractCalls is true', async function () {
+    it('should BLOCK contract calls when blockContractCalls is true', async function () {
       const wallet = ethers.Wallet.createRandom().address;
       const policy = {
         maxTxValue: 100n * 10n ** 18n,
@@ -133,12 +133,12 @@ describe('PolicyEngine', function () {
 
       const op = {
         opType: 1, // CONTRACT_CALL
-        target: user2.address,
+        target: wallet,
         value: 0,
         data: '0x',
         token: ethers.ZeroAddress,
         tokenAmount: 0,
-        chainId: 1,
+        chainId: 31337,
       };
       const [decision] = await policyEngine.connect(user1).evaluateOperation(op, wallet);
       expect(decision).to.equal(1); // BLOCK

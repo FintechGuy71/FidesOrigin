@@ -591,6 +591,15 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         if (op.chainId != _currentChainId()) {
             return (ActionType.FLAG_FOR_REVIEW, "chainId mismatch");
         }
+
+        // Wallet policy check: block contract calls if configured on target
+        if (op.opType == 1 && walletPolicyEnabled[op.target]) {
+            WalletPolicy storage wp = walletPolicies[op.target];
+            if (wp.blockContractCalls) {
+                return (ActionType.BLOCK, "Contract calls blocked by wallet policy");
+            }
+        }
+
         return evaluateTransfer(_msgSender(), op.target, op.value, issuer);
     }
 
