@@ -1,5 +1,5 @@
 {
-  "name": "@fidesorigin/sdk",
+  "name": "@fintechguy71/fidesorigin-sdk",
   "version": "0.2.1",
   "description": "FidesOrigin client SDK for risk assessment and compliance",
   "main": "dist/index.js",
@@ -52,7 +52,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fidesorigin/fidesorigin-demo.git"
+    "url": "https://github.com/FintechGuy71/FidesOrigin.git"
   },
   "license": "MIT"
 }
