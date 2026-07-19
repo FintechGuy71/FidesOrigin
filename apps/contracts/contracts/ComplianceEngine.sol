@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./interfaces/IComplianceEngine.sol";
 import "./interfaces/IAssetCompliance.sol";
 import "./interfaces/IWalletCompliance.sol";
@@ -553,6 +554,32 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         external onlyRole(ADMIN_ROLE)
     {
         _revokeRole(role, account);
+    }
+
+    // ============ P1-1: MerkleProof Verification ============
+
+    /**
+     * @notice 验证单个地址的 Merkle Proof
+     * @param addr 要验证的地址
+     * @param riskScore 风险分数
+     * @param riskTier 风险等级字符串
+     * @param proof Merkle Proof
+     * @param merkleRoot Merkle Root
+     * @return isValid Proof 是否有效
+     * @return isCompliant 地址是否合规（riskScore < 80）
+     */
+    function verifyMerkleRisk(
+        address addr,
+        uint256 riskScore,
+        string calldata riskTier,
+        bytes32[] calldata proof,
+        bytes32 merkleRoot
+    ) external pure returns (bool isValid, bool isCompliant) {
+        bytes32 leaf = keccak256(
+            bytes.concat(keccak256(abi.encode(addr, riskScore, riskTier)))
+        );
+        isValid = MerkleProof.verify(proof, merkleRoot, leaf);
+        isCompliant = isValid && riskScore < 80;
     }
 
     /// @dev Storage gap for future upgrade compatibility (H-09)

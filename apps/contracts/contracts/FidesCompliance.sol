@@ -194,7 +194,6 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         __AccessControl_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-        __UUPSUpgradeable_init();
         
         require(_complianceEngine != address(0), "Invalid compliance engine");
         require(_riskRegistry != address(0), "Invalid risk registry");
