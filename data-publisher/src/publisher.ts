@@ -1,8 +1,10 @@
 import { ethers, Contract, Signer, JsonRpcProvider, TransactionResponse, NonceManager } from 'ethers';
+import { createClient, RedisClientType } from 'redis';
 import { RiskProfile, PublisherConfig, TxResult } from './types';
 import { config } from './config';
 import logger from './logger';
 import { createKeyManager } from './kms-key-manager';
+import { getMessageQueue, MessageEnvelope, MessageQueue } from './message-queue';
 
 // RiskRegistry ABI (minimal — only the functions we need)
 const RISK_REGISTRY_ABI = [
@@ -15,7 +17,209 @@ const RISK_REGISTRY_ABI = [
 ];
 
 /**
+ * P0-3 Fix: Distributed Lock Manager (Redis Redlock simplified)
+ * 
+ * 职责：
+ * - 防止 data-publisher 和 backend 同时写入链上
+ * - 使用 Redis SET NX EX 实现独占锁
+ * - 支持锁自动续期和自动释放
+ */
+class DistributedLockManager {
+  private redis: RedisClientType | null = null;
+  private readonly lockPrefix: string = 'fides:lock';
+  private readonly lockTtl: number = 30; // 锁过期时间（秒）
+  private readonly watchdogInterval: number = 10; // 看门狗续期间隔（秒）
+  private watchdogTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  constructor(private redisUrl: string) {}
+
+  private async getRedis(): Promise<RedisClientType> {
+    if (!this.redis) {
+      this.redis = createClient({ url: this.redisUrl });
+      await this.redis.connect();
+    }
+    return this.redis;
+  }
+
+  private lockKey(resource: string): string {
+    return `${this.lockPrefix}:${resource}`;
+  }
+
+  private generateToken(): string {
+    return `${Date.now()}-${Math.random().toString(36).substring(2)}-${process.pid}`;
+  }
+
+  /**
+   * P0-3 Fix: 获取分布式锁
+   */
+  async acquireLock(
+    resource: string,
+    ttl: number = this.lockTtl,
+    blocking: boolean = true,
+    blockingTimeout: number = 60,
+  ): Promise<string | null> {
+    const redis = await this.getRedis();
+    const lockKey = this.lockKey(resource);
+    const token = this.generateToken();
+    const startTime = Date.now();
+
+    while (true) {
+      // 尝试获取锁（SET NX EX）
+      const acquired = await redis.set(lockKey, token, {
+        NX: true,
+        EX: ttl,
+      });
+
+      if (acquired) {
+        logger.info('Lock acquired', { resource, lockKey, token: token.substring(0, 20) + '...' });
+        // 启动看门狗自动续期
+        this.startWatchdog(resource, lockKey, token, ttl);
+        return token;
+      }
+
+      if (!blocking) {
+        logger.debug('Lock not acquired (non-blocking)', { resource, lockKey });
+        return null;
+      }
+
+      // 检查阻塞超时
+      if (Date.now() - startTime >= blockingTimeout * 1000) {
+        logger.warning('Lock acquire timeout', { resource, lockKey, blockingTimeout });
+        return null;
+      }
+
+      // 等待后重试
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  /**
+   * P0-3 Fix: 释放分布式锁（安全释放）
+   */
+  async releaseLock(resource: string, token: string): Promise<boolean> {
+    const redis = await this.getRedis();
+    const lockKey = this.lockKey(resource);
+
+    // 停止看门狗
+    this.stopWatchdog(resource);
+
+    // 使用 Lua 脚本安全释放锁
+    const luaScript = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `;
+
+    try {
+      const result = await redis.eval(luaScript, {
+        keys: [lockKey],
+        arguments: [token],
+      });
+      const released = result === 1;
+
+      if (released) {
+        logger.info('Lock released', { resource, lockKey });
+      } else {
+        logger.warning('Lock release failed or expired', { resource, lockKey });
+      }
+
+      return released;
+    } catch (error) {
+      logger.error('Lock release error', { resource, lockKey, error: (error as Error).message });
+      return false;
+    }
+  }
+
+  /**
+   * P0-3 Fix: 检查资源是否被锁定
+   */
+  async isLocked(resource: string): Promise<boolean> {
+    const redis = await this.getRedis();
+    const lockKey = this.lockKey(resource);
+    const exists = await redis.exists(lockKey);
+    return exists > 0;
+  }
+
+  /**
+   * P0-3 Fix: 延长锁过期时间
+   */
+  async extendLock(resource: string, token: string, additionalTtl: number): Promise<boolean> {
+    const redis = await this.getRedis();
+    const lockKey = this.lockKey(resource);
+
+    const luaScript = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("expire", KEYS[1], ARGV[2])
+      else
+        return 0
+      end
+    `;
+
+    try {
+      const result = await redis.eval(luaScript, {
+        keys: [lockKey],
+        arguments: [token, String(additionalTtl)],
+      });
+      return result === 1;
+    } catch (error) {
+      logger.error('Lock extend error', { resource, error: (error as Error).message });
+      return false;
+    }
+  }
+
+  /**
+   * P0-3 Fix: 启动看门狗自动续期
+   */
+  private startWatchdog(resource: string, lockKey: string, token: string, ttl: number): void {
+    this.stopWatchdog(resource);
+
+    const timer = setInterval(async () => {
+      try {
+        const extended = await this.extendLock(resource, token, ttl);
+        if (!extended) {
+          logger.warning('Watchdog lock extend failed', { resource, lockKey });
+          this.stopWatchdog(resource);
+        } else {
+          logger.debug('Watchdog lock extended', { resource, lockKey });
+        }
+      } catch (error) {
+        logger.error('Watchdog error', { resource, error: (error as Error).message });
+        this.stopWatchdog(resource);
+      }
+    }, this.watchdogInterval * 1000);
+
+    this.watchdogTimers.set(resource, timer);
+  }
+
+  /**
+   * P0-3 Fix: 停止看门狗
+   */
+  private stopWatchdog(resource: string): void {
+    const timer = this.watchdogTimers.get(resource);
+    if (timer) {
+      clearInterval(timer);
+      this.watchdogTimers.delete(resource);
+    }
+  }
+
+  async close(): Promise<void> {
+    for (const resource of this.watchdogTimers.keys()) {
+      this.stopWatchdog(resource);
+    }
+    if (this.redis) {
+      await this.redis.quit();
+      this.redis = null;
+    }
+  }
+}
+
+/**
  * Blockchain Publisher — signs and sends transactions to RiskRegistry
+ * 
+ * P0-3 Fix: 添加分布式锁检查，防止与 backend 同时写入链上
+ * P1-2 Fix: 集成消息队列，backend 发布消息后 publisher 订阅处理
  */
 export class BlockchainPublisher {
   private provider: JsonRpcProvider;
@@ -26,14 +230,29 @@ export class BlockchainPublisher {
   private nonce: number = 0;
   private isReady: boolean = false;
   private oracleRole?: string;
+  
+  // P0-3 Fix: 分布式锁管理器
+  private lockManager: DistributedLockManager;
+  
+  // P1-2 Fix: 消息队列
+  private messageQueue: MessageQueue;
+  
+  // P0-3 Fix: 是否启用锁检查
+  private lockEnabled: boolean = true;
 
   constructor(cfg: PublisherConfig) {
     this.provider = new JsonRpcProvider(cfg.rpcUrl, cfg.chainId);
     this.contract = new Contract(cfg.riskRegistryAddress, RISK_REGISTRY_ABI, this.provider);
+    
+    // P0-3 Fix: 初始化锁管理器
+    this.lockManager = new DistributedLockManager(config.cluster.redisUrl);
+    
+    // P1-2 Fix: 初始化消息队列
+    this.messageQueue = getMessageQueue();
   }
 
   /**
-   * Initialize the publisher (connect signer, verify role)
+   * Initialize the publisher (connect signer, verify role, start message queue)
    */
   async initialize(): Promise<void> {
     try {
@@ -63,6 +282,9 @@ export class BlockchainPublisher {
         );
       }
 
+      // P1-2 Fix: 启动消息队列订阅
+      await this.setupMessageQueueSubscriber();
+
       this.isReady = true;
       
       logger.info('Publisher initialized successfully', {
@@ -71,15 +293,100 @@ export class BlockchainPublisher {
         chainId: config.publisher.chainId,
         oracleRole: this.oracleRole,
         nonce: this.nonce,
+        lockEnabled: this.lockEnabled,
       });
     } catch (error) {
       logger.error('Failed to initialize publisher', { error: (error as Error).stack });
       throw error;
     }
   }
+  
+  /**
+   * P1-2 Fix: 设置消息队列订阅
+   * - 订阅 backend 发布的 risk_update 消息
+   * - 处理消息后发布确认
+   */
+  private async setupMessageQueueSubscriber(): Promise<void> {
+    this.messageQueue.onMessage('risk_update', async (envelope: MessageEnvelope) => {
+      logger.info('Received risk_update message from queue', {
+        messageId: envelope.message_id,
+        source: envelope.source,
+        address: envelope.payload?.address,
+        score: envelope.payload?.score,
+        tier: envelope.payload?.tier,
+      });
+      
+      try {
+        // 从消息中提取数据
+        const { address, score, tier } = envelope.payload as any;
+        
+        if (!address || score === undefined || !tier) {
+          logger.error('Invalid risk_update message payload', { payload: envelope.payload });
+          return;
+        }
+        
+        // 构建 RiskProfile 并发布到链上
+        const profile: RiskProfile = {
+          address,
+          riskScore: Math.round(score),
+          tier: this.tierStringToNumber(tier),
+          tags: [],
+          isSanctioned: false,
+          source: envelope.source || 'backend',
+          confidence: 1.0,
+          timestamp: Date.now(),
+        };
+        
+        // 使用锁保护发布
+        const result = await this.publishSingleWithLock(profile);
+        
+        if (result.status === 'success' || result.status === 'skipped') {
+          // P1-2 Fix: 确认消息已处理
+          await this.messageQueue.acknowledgeMessage(envelope.message_id);
+          
+          logger.info('Risk update from queue confirmed', {
+            messageId: envelope.message_id,
+            address,
+            txHash: result.hash,
+          });
+        } else {
+          throw new Error(result.error || 'Publish failed');
+        }
+      } catch (error) {
+        logger.error('Failed to process queue message', {
+          messageId: envelope.message_id,
+          error: (error as Error).message,
+        });
+        // 消息处理失败会自动重试或进入死信队列（由 MessageQueue 处理）
+      }
+    });
+    
+    await this.messageQueue.startSubscriber();
+  }
+  
+  /**
+   * 将 tier 字符串转换为数字
+   */
+  private tierStringToNumber(tier: string): number {
+    const tierMap: Record<string, number> = {
+      'LOW': 0,
+      'MEDIUM': 1,
+      'HIGH': 2,
+      'CRITICAL': 3,
+    };
+    return tierMap[tier.toUpperCase()] ?? 0;
+  }
 
   async getAddress(): Promise<string | undefined> {
     return this.address;
+  }
+  
+  /**
+   * P0-3 Fix: 设置是否启用锁检查
+   */
+  setLockEnabled(enabled: boolean): void {
+    this.lockEnabled = enabled;
+    logger.info('Lock enabled status changed', { enabled });
   }
 
   /**
@@ -126,6 +433,8 @@ export class BlockchainPublisher {
 
   /**
    * Publish risk profiles to the blockchain
+   * 
+   * P0-3 Fix: 批量发布时先获取全局锁，防止与 backend 冲突
    */
   async publish(profiles: RiskProfile[]): Promise<TxResult[]> {
     if (!this.isReady) {
@@ -142,45 +451,124 @@ export class BlockchainPublisher {
       }));
     }
 
+    // P0-3 Fix: 检查 backend 是否正在写入
+    if (this.lockEnabled) {
+      const isBackendWriting = await this.lockManager.isLocked('chain:write');
+      if (isBackendWriting) {
+        logger.warning('Backend is writing to chain, publisher will skip this batch', {
+          profilesCount: profiles.length,
+        });
+        
+        // P1-2 Fix: 将消息发送到队列，等待 publisher 后续处理
+        for (const profile of profiles) {
+          try {
+            await this.messageQueue.publishRiskUpdate(
+              profile.address,
+              profile.riskScore,
+              this.tierNumberToString(profile.tier),
+              'publisher',
+            );
+          } catch (e) {
+            logger.error('Failed to queue profile for later', { 
+              address: profile.address, 
+              error: (e as Error).message 
+            });
+          }
+        }
+        
+        return profiles.map(p => ({
+          hash: 'skipped-backend-writing',
+          status: 'skipped' as const,
+          error: 'Backend is writing to chain, queued for later',
+        }));
+      }
+    }
+
+    // P0-3 Fix: 获取链上写入独占锁
+    let lockToken: string | null = null;
+    if (this.lockEnabled) {
+      lockToken = await this.lockManager.acquireLock('chain:write', 60, true, 30);
+      if (!lockToken) {
+        logger.warning('Failed to acquire chain write lock, skipping batch', {
+          profilesCount: profiles.length,
+        });
+        return profiles.map(p => ({
+          hash: 'skipped-lock-failed',
+          status: 'skipped' as const,
+          error: 'Failed to acquire chain write lock',
+        }));
+      }
+      logger.info('Acquired chain write lock for batch publish', {
+        profilesCount: profiles.length,
+      });
+    }
+
     const results: TxResult[] = [];
     const batchSize = config.publisher.batchSize;
 
-    for (let i = 0; i < profiles.length; i += batchSize) {
-      const batch = profiles.slice(i, i + batchSize);
-      
-      logger.info(`Publishing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(profiles.length / batchSize)}`, {
-        batchSize: batch.length,
-        remaining: profiles.length - i - batch.length,
-      });
+    try {
+      for (let i = 0; i < profiles.length; i += batchSize) {
+        const batch = profiles.slice(i, i + batchSize);
+        
+        logger.info(`Publishing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(profiles.length / batchSize)}`, {
+          batchSize: batch.length,
+          remaining: profiles.length - i - batch.length,
+        });
 
-      for (const profile of batch) {
-        try {
-          const result = await this.publishSingle(profile);
-          results.push(result);
-        } catch (error) {
-          results.push({
-            hash: '',
-            status: 'failed',
-            error: (error as Error).message,
-          });
-          logger.error(`Failed to publish profile for ${profile.address}`, { error: (error as Error).message });
-        }
+        for (const profile of batch) {
+          try {
+            const result = await this.publishSingle(profile);
+            results.push(result);
+            
+            // P1-2 Fix: 发布成功后，通知 backend
+            if (result.status === 'success') {
+              try {
+                await this.messageQueue.publishRiskUpdate(
+                  profile.address,
+                  profile.riskScore,
+                  this.tierNumberToString(profile.tier),
+                  'publisher',
+                );
+              } catch (e) {
+                logger.debug('Failed to publish confirmation to queue', { 
+                  address: profile.address, 
+                  error: (e as Error).message 
+                });
+              }
+            }
+          } catch (error) {
+            results.push({
+              hash: '',
+              status: 'failed',
+              error: (error as Error).message,
+            });
+            logger.error(`Failed to publish profile for ${profile.address}`, { error: (error as Error).message });
+          }
 
-        // Rate limiting between transactions
-        if (config.publisher.txInterval > 0) {
-          await new Promise(resolve => setTimeout(resolve, config.publisher.txInterval));
+          // Rate limiting between transactions
+          if (config.publisher.txInterval > 0) {
+            await new Promise(resolve => setTimeout(resolve, config.publisher.txInterval));
+          }
         }
+      }
+    } finally {
+      // P0-3 Fix: 确保锁被释放（即使发布失败）
+      if (lockToken) {
+        const released = await this.lockManager.releaseLock('chain:write', lockToken);
+        logger.info('Released chain write lock after batch publish', { released });
       }
     }
 
     // Summary
     const successCount = results.filter(r => r.status === 'success').length;
     const failedCount = results.filter(r => r.status === 'failed').length;
+    const skippedCount = results.filter(r => r.status === 'skipped').length;
     
-    logger.info(`Publishing complete: ${successCount} success, ${failedCount} failed`, {
+    logger.info(`Publishing complete: ${successCount} success, ${failedCount} failed, ${skippedCount} skipped`, {
       total: results.length,
       success: successCount,
       failed: failedCount,
+      skipped: skippedCount,
     });
 
     return results;
@@ -276,6 +664,57 @@ export class BlockchainPublisher {
       blockNumber: receipt.blockNumber,
     };
   }
+  
+  /**
+   * P0-3 Fix: 使用锁保护的单条发布
+   * - 如果 backend 正在写入，等待或跳过
+   */
+  private async publishSingleWithLock(profile: RiskProfile): Promise<TxResult> {
+    if (!this.lockEnabled) {
+      return this.publishSingle(profile);
+    }
+    
+    // 检查 backend 是否正在写入
+    const isBackendWriting = await this.lockManager.isLocked('chain:write');
+    if (isBackendWriting) {
+      logger.info('Backend is writing to chain, waiting for lock release', {
+        address: profile.address,
+      });
+    }
+    
+    // 获取锁
+    const lockToken = await this.lockManager.acquireLock('chain:write', 60, true, 30);
+    if (!lockToken) {
+      logger.warning('Failed to acquire lock for single publish', {
+        address: profile.address,
+      });
+      return {
+        hash: 'skipped-lock-failed',
+        status: 'skipped',
+        error: 'Failed to acquire chain write lock',
+      };
+    }
+    
+    try {
+      return await this.publishSingle(profile);
+    } finally {
+      // 确保锁被释放
+      await this.lockManager.releaseLock('chain:write', lockToken);
+    }
+  }
+  
+  /**
+   * 将 tier 数字转换为字符串
+   */
+  private tierNumberToString(tier: number): string {
+    const tierMap: Record<number, string> = {
+      0: 'LOW',
+      1: 'MEDIUM',
+      2: 'HIGH',
+      3: 'CRITICAL',
+    };
+    return tierMap[tier] ?? 'LOW';
+  }
 
   /**
    * [Audit Fix #10] Compare local profile with on-chain data for idempotency.
@@ -310,6 +749,16 @@ export class BlockchainPublisher {
       if (!hasRole) {
         return { healthy: false, error: 'ORACLE_ROLE revoked' };
       }
+      
+      // P0-3 Fix: 检查锁管理器连接
+      if (this.lockEnabled) {
+        try {
+          const isLocked = await this.lockManager.isLocked('chain:write');
+          logger.debug('Lock manager health check', { isLocked });
+        } catch (e) {
+          return { healthy: false, error: `Lock manager error: ${(e as Error).message}` };
+        }
+      }
 
       return { healthy: true };
     } catch (error) {
@@ -333,6 +782,15 @@ export class BlockchainPublisher {
       logger.error('Failed to estimate gas', { error });
       return { eth: 'unknown' };
     }
+  }
+  
+  /**
+   * P0-3 Fix: 关闭 publisher，释放锁和消息队列
+   */
+  async close(): Promise<void> {
+    await this.lockManager.close();
+    await this.messageQueue.close();
+    logger.info('Publisher closed');
   }
 }
 

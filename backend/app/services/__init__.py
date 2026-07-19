@@ -5,6 +5,7 @@ from app.services.alert_service import AlertService
 from app.services.blockscout_service import BlockscoutService
 from app.services.cache_service import CacheService
 from app.services.risk_engine_service import RiskEngineService
+from app.services.risk_sync_service import RiskSyncService
 from app.services.websocket_manager import WebSocketManager
 
 __all__ = [
@@ -12,5 +13,6 @@ __all__ = [
     "BlockscoutService",
     "CacheService",
     "RiskEngineService",
+    "RiskSyncService",
     "WebSocketManager",
 ]

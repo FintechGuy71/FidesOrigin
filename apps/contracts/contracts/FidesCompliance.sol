@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./utils/ReentrancyGuardUpgradeable.sol";
 import "./interfaces/IAssetCompliance.sol";
 import "./interfaces/IComplianceEngine.sol";
 import "./interfaces/IFidesCompliance.sol";
@@ -15,12 +18,13 @@ import "./QuarantineVault.sol";
 
 /**
  * @title FidesCompliance
- * @notice FidesOrigin 主合规合约 — 面向用户的统一接口
+ * @notice FidesOrigin 主合规合约 — 面向用户的统一接口 (UUPS Upgradeable)
  * @dev 所有业务合约应调用此合约进行合规检查
- * @dev VERSION: 1.3.1 - 修复统计回滚(H-01) + MEV保护强制(H-02) + 多项安全加固
+ * @dev VERSION: 1.4.0 - UUPS Upgradeable 重构
+ *      1.3.1 - 修复统计回滚(H-01) + MEV保护强制(H-02) + 多项安全加固
  *      + DEFAULT_ADMIN_ROLE后门移除(S-06) + isBlacklisted Fail-Closed(S-07) + 合约校验(S-08)
  */
-contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesCompliance {
+contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, IFidesCompliance {
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -31,7 +35,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
     
     /// @notice 合约版本号
-    string public constant VERSION = "1.3.1";
+    string public constant VERSION = "1.4.0";
 
     /// @notice MEV 保护最大 deadline 时长
     uint256 public constant MAX_DEADLINE_DURATION = 5 minutes;
@@ -52,11 +56,9 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     QuarantineVault public quarantineVault;
     
     /// @notice 合规配置
-    uint256 public minRiskScoreForQuarantine = 80;
-    uint256 public maxRiskScoreForBlock = 95;
-    uint256 public minUpdateInterval = 24 hours;
-    
-    // I-01 FIX: Removed unused maxRiskAddresses state variable
+    uint256 public minRiskScoreForQuarantine;
+    uint256 public maxRiskScoreForBlock;
+    uint256 public minUpdateInterval;
     
     /// @notice 交易统计
     uint256 public totalTransactionsChecked;
@@ -70,7 +72,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     
     /// @notice 紧急模式
     bool public emergencyMode;
-    uint256 public emergencyCooldown = 24 hours;
+    uint256 public emergencyCooldown;
     uint256 public lastEmergencyTime;
 
     /// @notice 两步确认 pending 地址
@@ -175,14 +177,25 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     error AlreadyInEmergency();
     error RiskRegistryNotSet();
     
-    // ============ Constructor ============
-    
-    constructor(
+    // ============ Constructor & Initializer ============
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _complianceEngine,
         address _riskRegistry,
         address _policyEngine,
         address _quarantineVault
-    ) {
+    ) external initializer {
+        __Context_init();
+        __AccessControl_init();
+        __Pausable_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+        
         require(_complianceEngine != address(0), "Invalid compliance engine");
         require(_riskRegistry != address(0), "Invalid risk registry");
         require(_policyEngine != address(0), "Invalid policy engine");
@@ -199,6 +212,12 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         policyEngine = PolicyEngine(_policyEngine);
         quarantineVault = QuarantineVault(payable(_quarantineVault));
 
+        // 初始化默认值
+        minRiskScoreForQuarantine = 80;
+        maxRiskScoreForBlock = 95;
+        minUpdateInterval = 24 hours;
+        emergencyCooldown = 24 hours;
+
         // L-05: 设置角色管理关系
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);          // ADMIN 自管理
         _setRoleAdmin(OPERATOR_ROLE, ADMIN_ROLE);        // OPERATOR 由 ADMIN 管理
@@ -208,6 +227,13 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
 
         // [S-06] DEFAULT_ADMIN_ROLE 作为 ADMIN_ROLE 的 fallback 保留，
         // 但仅授予部署者。ADMIN_ROLE 自管理，满足业务需要。
+    }
+
+    /**
+     * @notice UUPS 升级授权 — 仅 ADMIN_ROLE 可执行升级
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
+        // 升级授权由 ADMIN_ROLE 控制
     }
 
     // ============ IFidesCompliance Interface Implementation ============
@@ -565,8 +591,6 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         emit RiskThresholdUpdated("minUpdateInterval", old, _value, msg.sender, block.timestamp);
     }
 
-    // I-01 FIX: Removed unused maxRiskAddresses setter
-
     function setEmergencyCooldown(uint256 _cooldown) external onlyRole(ADMIN_ROLE) {
         if (_cooldown > MAX_EMERGENCY_COOLDOWN) revert InvalidCooldown(_cooldown);
         uint256 old = emergencyCooldown;
@@ -651,4 +675,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     function getAddressStats(address account) external view returns (uint256 count, uint256 lastCheck) {
         return (addressTransactionCount[account], addressLastCheckTime[account]);
     }
+
+    /// @dev Storage gap for future upgrade compatibility
+    uint256[50] private __gap;
 }

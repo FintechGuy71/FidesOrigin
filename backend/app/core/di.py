@@ -20,7 +20,10 @@ from app.services.alert_service import AlertService
 from app.services.blockscout_service import BlockscoutService
 from app.services.cache_service import CacheService
 from app.services.risk_engine_service import RiskEngineService
+from app.services.risk_sync_service import RiskSyncService, get_risk_sync_service
 from app.services.websocket_manager import WebSocketManager
+from app.core.lock_manager import DistributedLockManager, get_lock_manager
+from app.core.message_queue import MessageQueue, get_message_queue
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -39,6 +42,8 @@ class DIContainer:
         self._blockscout: Optional[BlockscoutService] = None
         self._alert: Optional[AlertService] = None
         self._ws_manager: Optional[WebSocketManager] = None
+        self._lock_manager: Optional[DistributedLockManager] = None
+        self._message_queue: Optional[MessageQueue] = None
         self._initialized = False
     
     async def initialize(self) -> None:
@@ -123,6 +128,20 @@ class DIContainer:
             self._ws_manager = WebSocketManager()
         return self._ws_manager
     
+    @property
+    def lock_manager(self) -> DistributedLockManager:
+        """获取分布式锁管理器（懒加载）"""
+        if not self._lock_manager:
+            self._lock_manager = get_lock_manager()
+        return self._lock_manager
+    
+    @property
+    def message_queue(self) -> MessageQueue:
+        """获取消息队列（懒加载）"""
+        if not self._message_queue:
+            self._message_queue = get_message_queue()
+        return self._message_queue
+    
     # ==================== Repository 工厂方法 ====================
     
     def get_address_repository(self, db: AsyncSession) -> AddressRepository:
@@ -149,6 +168,15 @@ class DIContainer:
             address_repo=self.get_address_repository(db),
             transaction_repo=self.get_transaction_repository(db),
             rule_repo=self.get_rule_repository(db)
+        )
+    
+    def get_risk_sync_service(self, db: AsyncSession) -> RiskSyncService:
+        """获取风险同步服务（每次请求创建新实例）"""
+        return get_risk_sync_service(
+            db=db,
+            cache=self.cache,
+            alert=self.alert,
+            address_repo=self.get_address_repository(db),
         )
 
 
@@ -212,3 +240,10 @@ async def get_risk_engine(
 async def get_ws_manager() -> WebSocketManager:
     """获取 WebSocket 管理器（FastAPI 依赖）"""
     return get_container().ws_manager
+
+
+async def get_risk_sync_service(
+    db: AsyncSession = Depends(get_db)
+) -> RiskSyncService:
+    """获取风险同步服务（FastAPI 依赖）"""
+    return get_container().get_risk_sync_service(db)

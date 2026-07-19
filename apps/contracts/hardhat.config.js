@@ -15,7 +15,7 @@ module.exports = {
       evmVersion: 'cancun',
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1,
         details: {
           constantOptimizer: true,
           orderLiterals: true,
