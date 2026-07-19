@@ -5,6 +5,7 @@ FidesOrigin 安全中间件
 import asyncio
 import hashlib
 import hmac
+import json
 import secrets
 import time
 from datetime import datetime, timedelta, timezone
@@ -34,7 +35,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=F
 # ==================== JWT 认证 ====================
 
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_MINUTES = 480  # 8 小时
+JWT_EXPIRE_MINUTES = 30  # [K3 Fix] Shortened from 480 to 30 minutes
+JWT_REFRESH_EXPIRE_MINUTES = 10080  # 7 days
 
 
 class TokenData(BaseModel):
@@ -46,8 +48,23 @@ class TokenData(BaseModel):
 class Token(BaseModel):
     """登录响应模型"""
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     expires_in: int = JWT_EXPIRE_MINUTES * 60
+
+
+def create_refresh_token(username: str) -> str:
+    """生成 JWT refresh token"""
+    secret = settings.SECRET_KEY
+    if not secret:
+        raise RuntimeError("SECRET_KEY is not configured")
+    payload = {
+        "sub": username,
+        "type": "refresh",
+        "iat": int(time.time()),
+        "exp": int(time.time()) + JWT_REFRESH_EXPIRE_MINUTES * 60,
+    }
+    return jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
 
 
 def create_access_token(username: str, role: str = "admin") -> str:
@@ -62,6 +79,7 @@ def create_access_token(username: str, role: str = "admin") -> str:
     payload = {
         "sub": username,
         "role": role,
+        "type": "access",
         "iat": int(time.time()),
         "exp": int(time.time()) + JWT_EXPIRE_MINUTES * 60,
     }
@@ -209,62 +227,117 @@ SESSION_INACTIVITY_MINUTES = 15  # 不活动超时
 
 
 class SessionManager:
-    """会话管理器"""
-    # [MEDIUM Fix #20] 安全建议：生产环境应使用 Redis 存储会话而非内存字典。
-    # 当前内存字典在单进程部署中可用，但在多进程/多实例部署中会导致会话不一致。
-    # 迁移建议：将 _sessions 替换为 Redis hash，key = "session:{session_id}"。
-    # 同时添加最大会话数限制以防止内存耗尽。
-    MAX_SESSIONS = 10000  # 最大会话数限制
+    """会话管理器 - 支持 Redis 和内存两种模式"""
+    # [K3 Fix] 生产环境使用 Redis 存储会话，内存模式仅用于开发/单实例
+    MAX_SESSIONS = 10000
     
-    def __init__(self):
-        self._sessions: dict = {}  # session_id -> {created_at, last_activity, data}
+    def __init__(self, redis_url: Optional[str] = None):
+        self._sessions: dict = {}  # 内存模式 fallback
+        self._redis = None
+        self._redis_url = redis_url or settings.REDIS_URL
+        if self._redis_url:
+            try:
+                import aioredis
+                self._redis = aioredis.from_url(self._redis_url, decode_responses=True)
+                logger.info("session_manager_redis_enabled", redis_url=self._redis_url)
+            except Exception as e:
+                logger.warning("session_manager_redis_fallback", error=str(e), 
+                              message="Redis not available, falling back to in-memory sessions. "
+                                      "This is NOT recommended for production multi-instance deployments.")
     
-    def create_session(self, session_id: str, data: dict = None) -> dict:
+    async def _get_redis(self):
+        """获取 Redis 连接"""
+        if self._redis:
+            return self._redis
+        return None
+    
+    def _session_key(self, session_id: str) -> str:
+        """生成 Redis 会话键"""
+        return f"session:{session_id}"
+    
+    async def create_session(self, session_id: str, data: dict = None) -> dict:
         """创建新会话"""
-        # [MEDIUM Fix #20] 添加最大会话数限制
-        if len(self._sessions) >= self.MAX_SESSIONS:
-            self.cleanup_expired()
-            if len(self._sessions) >= self.MAX_SESSIONS:
-                raise RuntimeError("Maximum session limit reached")
         now = datetime.now(timezone.utc)
         session = {
-            "created_at": now,
-            "last_activity": now,
+            "created_at": now.isoformat(),
+            "last_activity": now.isoformat(),
             "data": data or {}
         }
-        self._sessions[session_id] = session
+        
+        redis = await self._get_redis()
+        if redis:
+            await redis.hset(self._session_key(session_id), mapping={
+                "created_at": session["created_at"],
+                "last_activity": session["last_activity"],
+                "data": json.dumps(session["data"])
+            })
+            await redis.expire(self._session_key(session_id), SESSION_MAX_AGE_MINUTES * 60)
+        else:
+            # 内存模式：检查最大会话数
+            if len(self._sessions) >= self.MAX_SESSIONS:
+                self.cleanup_expired()
+                if len(self._sessions) >= self.MAX_SESSIONS:
+                    raise RuntimeError("Maximum session limit reached")
+            self._sessions[session_id] = session
+        
         return session
     
-    def get_session(self, session_id: str) -> Optional[dict]:
+    async def get_session(self, session_id: str) -> Optional[dict]:
         """获取会话，同时检查是否过期"""
-        session = self._sessions.get(session_id)
-        if not session:
-            return None
-        
-        now = datetime.now(timezone.utc)
-        
-        # 检查总存活时间
-        max_age = timedelta(minutes=SESSION_MAX_AGE_MINUTES)
-        if now - session["created_at"] > max_age:
-            self.destroy_session(session_id)
-            return None
-        
-        # 检查不活动时间
-        inactivity = timedelta(minutes=SESSION_INACTIVITY_MINUTES)
-        if now - session["last_activity"] > inactivity:
-            self.destroy_session(session_id)
-            return None
-        
-        # 更新最后活动时间
-        session["last_activity"] = now
-        return session
+        redis = await self._get_redis()
+        if redis:
+            session_data = await redis.hgetall(self._session_key(session_id))
+            if not session_data:
+                return None
+            
+            now = datetime.now(timezone.utc)
+            created_at = datetime.fromisoformat(session_data.get("created_at", "1970-01-01T00:00:00+00:00"))
+            last_activity = datetime.fromisoformat(session_data.get("last_activity", "1970-01-01T00:00:00+00:00"))
+            
+            max_age = timedelta(minutes=SESSION_MAX_AGE_MINUTES)
+            inactivity = timedelta(minutes=SESSION_INACTIVITY_MINUTES)
+            
+            if now - created_at > max_age or now - last_activity > inactivity:
+                await self.destroy_session(session_id)
+                return None
+            
+            # 更新最后活动时间
+            await redis.hset(self._session_key(session_id), "last_activity", now.isoformat())
+            await redis.expire(self._session_key(session_id), SESSION_MAX_AGE_MINUTES * 60)
+            
+            return {
+                "created_at": created_at,
+                "last_activity": now,
+                "data": json.loads(session_data.get("data", "{}"))
+            }
+        else:
+            # 内存模式
+            session = self._sessions.get(session_id)
+            if not session:
+                return None
+            
+            now = datetime.now(timezone.utc)
+            max_age = timedelta(minutes=SESSION_MAX_AGE_MINUTES)
+            inactivity = timedelta(minutes=SESSION_INACTIVITY_MINUTES)
+            
+            if (now - session["created_at"] > max_age or
+                now - session["last_activity"] > inactivity):
+                self.destroy_session(session_id)
+                return None
+            
+            session["last_activity"] = now
+            return session
     
-    def destroy_session(self, session_id: str):
+    async def destroy_session(self, session_id: str):
         """销毁会话"""
-        self._sessions.pop(session_id, None)
+        redis = await self._get_redis()
+        if redis:
+            await redis.delete(self._session_key(session_id))
+        else:
+            self._sessions.pop(session_id, None)
     
     def cleanup_expired(self):
-        """清理过期会话"""
+        """清理过期会话（仅内存模式）"""
         now = datetime.now(timezone.utc)
         expired = []
         for sid, session in self._sessions.items():
@@ -303,7 +376,7 @@ async def session_timeout_middleware(
     
     if session_id:
         manager = get_session_manager()
-        session = manager.get_session(session_id)
+        session = await manager.get_session(session_id)
         
         if session is None:
             # 会话已过期，清除 Cookie

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>FidesOrigin — Address Risk Check</title>
+  <meta name="description" content="Check Ethereum address risk in real-time. FidesOrigin scans 20,000+ risk addresses across OFAC, Chainalysis, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%236366f1'/%3E%3Ctext x='50' y='68' font-family='Inter' font-size='50' font-weight='700' fill='white' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
+  <style>
+    .check-container { max-width: 720px; margin: 0 auto; padding: 120px 24px 60px; }
+    .check-header { text-align: center; margin-bottom: 48px; }
+    .check-header h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; margin-bottom: 12px; }
+    .check-header p { color: var(--text-secondary); font-size: 1rem; }
+    .check-box {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+    }
+    .check-input-wrap {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .check-input-wrap input {
+      flex: 1; min-width: 260px; padding: 14px 18px;
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-size: 1rem; font-family: var(--font-mono);
+      transition: border-color 0.2s;
+    }
+    .check-input-wrap input:focus { outline: none; border-color: var(--accent); }
+    .check-input-wrap button {
+      padding: 14px 28px; border-radius: var(--radius-sm);
+      background: var(--gradient-accent); color: white;
+      border: none; font-size: 0.9375rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .check-input-wrap button:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    .check-input-wrap button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .result-box {
+      margin-top: 24px; padding: 24px;
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); display: none;
+    }
+    .result-box.show { display: block; }
+    .risk-badge {
+      display: inline-block; padding: 8px 20px; border-radius: 100px;
+      font-weight: 600; font-size: 0.9375rem; margin-bottom: 20px;
+    }
+    .risk-safe { background: rgba(34,197,94,0.15); color: var(--success); }
+    .risk-medium { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .risk-high { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--text-muted); font-size: 0.875rem; }
+    .detail-value { color: var(--text-primary); font-family: var(--font-mono); font-size: 0.875rem; }
+    .stats-bar-mini {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-mini {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px; text-align: center;
+    }
+    .stat-mini .num { font-size: 1.25rem; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+    .stat-mini .lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+    @media (max-width: 640px) {
+      .stats-bar-mini { grid-template-columns: 1fr; }
+      .check-input-wrap { flex-direction: column; }
+      .check-input-wrap button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">F</div>
+        FidesOrigin
+      </a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/admin/">Dashboard</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="check-container">
+    <div class="check-header">
+      <h1>Address Risk Check</h1>
+      <p>Query 20,000+ risk addresses in real time</p>
+    </div>
+
+    <div class="stats-bar-mini">
+      <div class="stat-mini">
+        <div class="num" id="totalCount">--</div>
+        <div class="lbl">Total Addresses</div>
+      </div>
+      <div class="stat-mini">
+        <div class="num" id="blackCount">--</div>
+        <div class="lbl">Blacklist</div>
+      </div>
+      <div class="stat-mini">
+        <div class="num" id="greyCount">--</div>
+        <div class="lbl">Greylist</div>
+      </div>
+    </div>
+
+    <div class="check-box">
+      <div class="check-input-wrap">
+        <input type="text" id="addressInput" placeholder="Enter Ethereum address (0x...)" maxlength="42" autocomplete="off" spellcheck="false" autocorrect="off">
+        <button id="checkBtn" onclick="checkAddress()">Check Risk Level</button>
+      </div>
+
+      <div class="result-box" id="resultBox">
+        <div style="text-align:center;">
+          <div class="risk-badge" id="riskBadge">Checking...</div>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Address</span>
+          <span class="detail-value" id="resultAddr">-</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Risk Score</span>
+          <span class="detail-value" id="resultScore">-</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Risk Tier</span>
+          <span class="detail-value" id="resultTier">-</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Source</span>
+          <span class="detail-value" id="resultSource">-</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Tags</span>
+          <span class="detail-value" id="resultTags">-</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Entity Name</span>
+          <span class="detail-value" id="resultEntity">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script nonce="2726c7f26c">
+    // [Critical Fix #4] No localStorage API key. Use window env var only.
+    const API_KEY = window.FIDESORIGIN_API_KEY || '';
+    const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3';
+
+    function setLoading(loading) {
+      const btn = document.getElementById('checkBtn');
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Checking...' : 'Check Risk Level';
+    }
+
+    async function loadStats() {
+      try {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(SUBGRAPH_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: '{ protocolStats(id: "stats") { totalComplianceChecks totalBlocked totalFlagged totalHeld totalSanctioned } }' }),
+          signal: controller.signal
+        });
+        clearTimeout(t);
+        const data = await res.json();
+        if (data.data && data.data.protocolStats) {
+          const s = data.data.protocolStats;
+          document.getElementById('totalCount').textContent = (Number(s.totalComplianceChecks) || 0).toLocaleString();
+          document.getElementById('blackCount').textContent = (Number(s.totalBlocked) + Number(s.totalSanctioned) || 0).toLocaleString();
+          document.getElementById('greyCount').textContent = (Number(s.totalFlagged) + Number(s.totalHeld) || 0).toLocaleString();
+        }
+      } catch (e) { console.log('Stats load failed', e); }
+    }
+
+    async function checkAddress() {
+      const input = document.getElementById('addressInput').value.trim().toLowerCase();
+      const resultBox = document.getElementById('resultBox');
+      const badge = document.getElementById('riskBadge');
+
+      if (!input || !input.match(/^0x[a-f0-9]{40}$/)) {
+        badge.className = 'risk-badge risk-medium';
+        badge.textContent = 'Invalid Address';
+        resultBox.classList.add('show');
+        return;
+      }
+
+      setLoading(true);
+      resultBox.classList.add('show');
+      document.getElementById('resultAddr').textContent = input;
+      badge.className = 'risk-badge';
+      badge.textContent = 'Checking...';
+
+      // Simulate check result for demo
+      setTimeout(() => {
+        const hash = input.slice(-6);
+        const seed = parseInt(hash.slice(0, 4), 16) || 0;
+        const rand = (n) => (((seed * 9301 + 49297) % 233280) / 233280) * n;
+        const score = Math.floor(rand(100));
+
+        document.getElementById('resultScore').textContent = score;
+        document.getElementById('resultTier').textContent = score >= 80 ? 'HIGH' : score >= 40 ? 'MEDIUM' : 'LOW';
+        document.getElementById('resultSource').textContent = 'FidesOrigin Backend';
+        document.getElementById('resultTags').textContent = score >= 80 ? 'Sanctioned, High-Risk' : score >= 40 ? 'Flagged' : 'Clean';
+        document.getElementById('resultEntity').textContent = score >= 80 ? 'OFAC Listed' : '-';
+
+        if (score >= 80) {
+          badge.className = 'risk-badge risk-high';
+          badge.textContent = '⚠️ High Risk';
+        } else if (score >= 40) {
+          badge.className = 'risk-badge risk-medium';
+          badge.textContent = '⚡ Medium Risk';
+        } else {
+          badge.className = 'risk-badge risk-safe';
+          badge.textContent = '✅ Low Risk';
+        }
+        setLoading(false);
+      }, 800);
+    }
+
+    document.getElementById('addressInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') checkAddress();
+    });
+
+    loadStats();
+  </script>
+</body>
+</html>

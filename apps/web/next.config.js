@@ -8,10 +8,10 @@ const nextConfig = {
     unoptimized: true,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   webpack: (config) => {
     config.resolve.alias = {
@@ -22,7 +22,6 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || '0.1.1',
-    NEXT_PUBLIC_BUILD_TIME: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'dev',
   },
 }
 

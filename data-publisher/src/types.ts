@@ -96,7 +96,7 @@ export interface RawRiskData {
 
 export interface TxResult {
   hash: string;
-  status: 'success' | 'failed' | 'pending';
+  status: 'success' | 'failed' | 'pending' | 'skipped';
   gasUsed?: bigint;
   blockNumber?: number;
   error?: string;

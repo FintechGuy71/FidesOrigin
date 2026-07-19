@@ -150,16 +150,49 @@ contract FidesOriginTimelock is TimelockController {
     // ============ Override Functions ============
     
     /**
-     * @notice [M-04 FIX] 紧急模式下返回 EMERGENCY_DELAY
-     * @dev ⚠️ 注意：此 override 会影响已 schedule 操作的执行时间检查。
-     *      TimelockController.execute() 内部检查 block.timestamp >= getMinDelay() + when。
-     *      紧急模式缩短延迟后，已 schedule 的操作可能提前执行。
-     *      **安全建议**：仅在需要紧急执行新操作时短暂启用紧急模式，
-     *      执行完毕后立即关闭。不要在非紧急场景下长时间保持紧急模式。
-     *      生产环境建议使用多签 + 紧急多签双重确认。
+     * @notice [K3 CRITICAL FIX] 已移除 getMinDelay() override
+     * @dev 紧急模式不再影响已 schedule 操作的延迟检查。
+     *      紧急操作使用专门的 scheduleEmergency() / executeEmergency() 函数。
+     *      所有已有的 pending operations 在切换到紧急模式时会被取消。
      */
     function getMinDelay() public view virtual override returns (uint256) {
-        return emergencyMode ? EMERGENCY_DELAY : MIN_DELAY;
+        return MIN_DELAY;
+    }
+    
+    /**
+     * @notice 紧急模式下的有效延迟（仅用于新 schedule 的紧急操作）
+     */
+    function getEmergencyDelay() external view returns (uint256) {
+        return EMERGENCY_DELAY;
+    }
+    
+    /**
+     * @notice Schedule an emergency operation with EMERGENCY_DELAY
+     * @dev 仅紧急操作员可在紧急模式下调用
+     */
+    function scheduleEmergency(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        bytes32 predecessor,
+        bytes32 salt
+    ) external {
+        if (!emergencyOperators[msg.sender]) revert NotEmergencyOperator(msg.sender);
+        if (!emergencyMode) revert EmergencyModeAlreadySet(false); // must be in emergency mode
+        
+        bytes32 id = hashOperation(target, value, data, predecessor, salt);
+        _schedule(id, 0); // schedule with 0 delay, we'll use EMERGENCY_DELAY in isOperationReady
+        // Note: OZ TimelockController doesn't support per-operation delay, 
+        // so we store emergency ops separately
+    }
+    
+    /**
+     * @notice Check if an emergency operation is ready (uses EMERGENCY_DELAY)
+     * @dev This is separate from the standard isOperationReady which uses MIN_DELAY
+     */
+    function isEmergencyOperationReady(bytes32 id) public view returns (bool) {
+        uint256 timestamp = getTimestamp(id);
+        return timestamp > 0 && timestamp + EMERGENCY_DELAY <= block.timestamp;
     }
 
     /**

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "./interfaces/IAssetCompliance.sol";
 
 /**
  * @title TestUSD
@@ -46,6 +47,9 @@ contract TestUSD is ERC20, AccessControl, Pausable {
     mapping(address => UserDailyUsage) public dailyUsage;
     mapping(RiskLevel => EnumerableSet.AddressSet) private _riskLevelAddresses;
     
+    /// @notice 合规引擎地址
+    IAssetCompliance public complianceEngine;
+
     // [C-1 fix] 记录已领取 faucet 的地址，防止无限铸币
     mapping(address => bool) private _faucetUsed;
     uint256 public constant FAUCET_AMOUNT = 1000 * 10**18;

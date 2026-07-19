@@ -104,6 +104,8 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
         payable(msg.sender).transfer(amount);
         emit OracleUnstaked(msg.sender, amount);
     }
+
+    /**
      * @dev 修复 C-1: 防止同一预言机重复投票
      * @dev 修复 H-1: score 类型收紧为 uint8
      * @dev 修复 H-2: 真正的 MEV / 闪电贷保护

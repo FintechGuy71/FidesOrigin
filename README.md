@@ -1,5 +1,9 @@
 # FidesOrigin Monorepo
 
+> ⚠️ **SECURITY WARNING: Never commit `.env` files to Git.**  
+> Environment files contain sensitive secrets (private keys, API keys, tokens). Always use `.env.example` as a template and keep real `.env` files in `.gitignore`.
+
+
 ## 项目结构
 
 ```
