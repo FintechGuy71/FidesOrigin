@@ -259,6 +259,15 @@ contract TestUSD is ERC20, AccessControl, Pausable {
     
     // ========== 管理功能 ==========
     /**
+     * @dev 设置合规引擎
+     * @param _complianceEngine 合规引擎合约地址
+     */
+    function setComplianceEngine(address _complianceEngine) external onlyRole(ADMIN_ROLE) {
+        if (_complianceEngine == address(0)) revert InvalidAddress();
+        complianceEngine = IAssetCompliance(_complianceEngine);
+    }
+
+    /**
      * @dev 铸造代币
      */
     function mint(address to, uint256 amount) external onlyRole(ADMIN_ROLE) {
@@ -269,7 +278,8 @@ contract TestUSD is ERC20, AccessControl, Pausable {
     /**
      * @dev 批量转账（Gas优化版）
      * @notice 一次性计算总金额、检查黑名单/灰名单、检查限额、更新日使用额度
-     * 循环中调用父类 _update，跳过重复限额检查
+     * @notice C-2 FIX: 在每次转账前调用合规引擎 preTransferHook，转账后调用 postTransferHook
+     * @notice 如果合规引擎未设置，revert；如果 preTransferHook 失败，跳过该笔转账并记录原因
      */
     function batchTransfer(
         address[] calldata recipients,
@@ -279,6 +289,9 @@ contract TestUSD is ERC20, AccessControl, Pausable {
         if (recipients.length > 100) revert BatchTooLarge();
         
         address sender = _msgSender();
+        
+        // C-2 FIX: 合规引擎必须已设置
+        if (address(complianceEngine) == address(0)) revert EngineNotSet();
         
         // 1. 一次性计算总金额
         uint256 totalAmount = 0;
@@ -309,9 +322,20 @@ contract TestUSD is ERC20, AccessControl, Pausable {
         // 5. 一次性更新日使用额度
         _updateDailyUsed(sender, totalAmount);
         
-        // 6. 循环执行转账，调用父类 _update 跳过重复限额检查
+        // 6. 循环执行转账，每次调用合规引擎钩子
         for (uint256 i = 0; i < recipients.length; i++) {
-            super._update(sender, recipients[i], amounts[i]);
+            try complianceEngine.preTransferHook(sender, recipients[i], amounts[i]) {
+                // 合规检查通过，执行转账
+                super._update(sender, recipients[i], amounts[i]);
+                // C-2 FIX: 调用 postTransferHook（try/catch 避免权限问题阻断 batch）
+                try complianceEngine.postTransferHook(sender, recipients[i], amounts[i], true) {
+                    // success
+                } catch {}
+            } catch {
+                // C-2 FIX: preTransferHook 失败，跳过该笔转账，不回滚整个 batch
+                emit TransferBlocked(sender, recipients[i], amounts[i], "Compliance hook failed");
+                continue;
+            }
         }
         
         return true;

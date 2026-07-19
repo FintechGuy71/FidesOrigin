@@ -1,4 +1,6 @@
-# [High Fix #55] K8s RBAC — bind role to fidesorigin-data-publisher service account
+# [High Fix #55] K8s RBAC — bind role to fidesorigin-publisher service account
+# NOTE: The service account name MUST match the serviceAccountName used in
+# deployment.yaml and cronjob.yaml (both reference "fidesorigin-publisher").
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -8,7 +10,7 @@ metadata:
     app: fidesorigin-data-publisher
 subjects:
   - kind: ServiceAccount
-    name: fidesorigin-publisher-sa
+    name: fidesorigin-publisher
     namespace: fidesorigin
 roleRef:
   kind: Role

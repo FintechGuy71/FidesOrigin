@@ -258,6 +258,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
     /**
      * @notice 评估交易（会触发下游引擎状态更新，非纯 view 函数）
      * @dev 如需纯预览，使用 quickCheckAddress
+     * @dev H-07 FIX: 添加 nonReentrant 修饰符，防止 complianceEngine.checkTransfer 重入攻击
      */
     function evaluateTransaction(
         address from,
@@ -265,7 +266,7 @@ contract FidesCompliance is AccessControl, Pausable, ReentrancyGuard, IFidesComp
         uint256 amount,
         address token,
         uint256 deadline
-    ) external returns (bool allowed, uint256 riskScore) {
+    ) external nonReentrant returns (bool allowed, uint256 riskScore) {
         if (from == address(0) || to == address(0)) {
             return (false, 0);
         }

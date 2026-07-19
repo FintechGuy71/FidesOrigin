@@ -438,10 +438,10 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 
-        // H-05 FIX: 支持 ETH 释放 (当 token == address(0) 时使用 call{value: amount})
+        // H-06 FIX: 支持 ETH 释放，限制 gas 为 2300 防止重入攻击
         if (record.token == address(0)) {
-            // ETH 释放路径
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
+            // ETH 释放路径 — 限制 gas 防止恶意接收方消耗无限 gas
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 2300}("");
             require(ok, "ETH release failed");
         } else {
             // ERC20 释放路径
@@ -496,9 +496,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
             tokenQuarantinedAmount[record.token] -= record.amount;
 
-            // H-05 FIX: 支持 ETH 批量释放 (当 token == address(0) 时使用 call{value: amount})
+            // H-06 FIX: 支持 ETH 批量释放，限制 gas 为 2300
             if (record.token == address(0)) {
-                (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
+                (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 2300}("");
                 if (!ok) {
                     emit BatchReleaseFailed(recordId, "ETH transfer failed");
                     continue;
@@ -516,6 +516,45 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
                 block.timestamp
             );
         }
+    }
+
+    /**
+     * @notice H-06 FIX: 用户自行提取隔离资金（pull-based 模式）
+     * @dev 只有 originalOwner 可以调用，不限制 gas，适合合约接收方
+     * @param recordId 隔离记录ID
+     */
+    function claimFunds(bytes32 recordId) external nonReentrant {
+        QuarantineRecord storage record = records[recordId];
+        if (record.timestamp == 0) revert RecordNotFound(recordId);
+        if (record.released) revert AlreadyReleased(recordId);
+        if (record.frozen) revert AlreadyFrozen(recordId);
+        if (emergencyPaused) revert EmergencyPausedError();
+        if (record.originalOwner != msg.sender) revert UnauthorizedRelease();
+
+        record.released = true;
+        record.releasedBy = msg.sender;
+        record.releasedAt = block.timestamp;
+
+        totalReleased++;
+        totalReleasedAmount += record.amount;
+        require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
+        tokenQuarantinedAmount[record.token] -= record.amount;
+
+        if (record.token == address(0)) {
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
+            require(ok, "ETH claim failed");
+        } else {
+            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+        }
+
+        emit FundsReleased(
+            recordId,
+            record.originalOwner,
+            record.token,
+            record.amount,
+            msg.sender,
+            block.timestamp
+        );
     }
 
     // ============ Admin Functions (审计日志) ============

@@ -504,12 +504,8 @@ function useWebSocketStream(
     }
 
     try {
-      // Build authenticated URL — short-lived token via query string
-      const urlObj = new URL(url);
-      urlObj.searchParams.set("token", wsToken);
-      const wsUrlWithAuth = urlObj.toString();
-
-      ws.current = new WebSocket(wsUrlWithAuth);
+      // [High Fix #8] Do NOT pass token in URL query. Send auth message after connection.
+      ws.current = new WebSocket(url);
     } catch (err) {
       console.error("WebSocket construction failed:", err);
       return;
@@ -519,6 +515,12 @@ function useWebSocketStream(
 
     ws.current.onopen = () => {
       retryCount.current = 0;
+      // [High Fix #8] Send auth token via message after connection, not URL
+      try {
+        ws.current?.send(JSON.stringify({ type: 'auth', token: wsToken }));
+      } catch {
+        // silently ignore send failure
+      }
       // Heartbeat — only send when in OPEN state
       heartbeatTimer.current = setInterval(() => {
         if (ws.current?.readyState === WebSocket.OPEN) {

@@ -8,7 +8,7 @@ import "../libraries/LibComplianceStorage.sol";
 import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
 
-contract ComplianceCoreFacet is AccessControl, Pausable, ReentrancyGuard {
+contract ComplianceCoreFacet is BaseFacet {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 

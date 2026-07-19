@@ -9,7 +9,7 @@ const SUBGRAPH_URLS = {
 
 const NETWORK = 'sepolia';
 const SUBGRAPH_URL = SUBGRAPH_URLS[NETWORK] || SUBGRAPH_URLS.sepolia;
-let API_KEY = window.FIDESORIGIN_API_KEY || localStorage.getItem('fidesorigin_api_key') || '';
+let API_KEY = window.FIDESORIGIN_API_KEY || '';
 
 const BACKEND_API = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
     ? 'http://localhost:8000'
@@ -117,11 +117,14 @@ async function fetchBackendRisk(address) {
         };
         if (API_KEY) headers['X-API-Key'] = API_KEY;
         
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(url, {
             method: 'GET',
             headers: headers,
-            signal: AbortSignal.timeout(8000)
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         if (res.status === 401 || res.status === 403) {
             throw new Error('API key required or invalid');
         }
@@ -144,12 +147,15 @@ async function fetchSubgraphRisk(address) {
         }
     }`;
     try {
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 5000);
         const res = await fetch(SUBGRAPH_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query }),
-            signal: AbortSignal.timeout(5000)
+            signal: controller2.signal
         });
+        clearTimeout(timeoutId2);
         const data = await res.json();
         if (data.data && data.data.riskProfile) {
             return data.data.riskProfile;

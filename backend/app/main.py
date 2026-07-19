@@ -169,34 +169,42 @@ async def fides_exception_handler(request, exc: FidesException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc: Exception):
-    """通用异常处理 - 生产环境不暴露内部错误详情"""
+    """通用异常处理 - [Audit Fix #7] 生产环境不暴露内部错误详情"""
     import traceback
     
     # 生成追踪 ID
     trace_id = getattr(request.state, "trace_id", "unknown")
     
     # 记录完整错误（仅服务端）
+    # [Audit Fix #7] 堆栈信息只记录到安全审计日志，不返回给客户端
     logger.error(
         "unhandled_exception",
         path=request.url.path,
         error_type=type(exc).__name__,
         trace_id=trace_id,
-        # 仅在调试模式记录完整堆栈
-        traceback=traceback.format_exc() if settings.DEBUG else None
+        traceback=traceback.format_exc()  # Always log full traceback server-side
     )
     
-    # 返回给客户端的信息 - 生产环境隐藏具体错误
+    # [Audit Fix #7] 返回给客户端的信息 — 生产环境隐藏具体错误
     if settings.is_production:
-        message = "Internal server error"
-    else:
-        message = str(exc) if settings.DEBUG else "Internal server error"
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred",
+                    "trace_id": trace_id
+                }
+            }
+        )
     
+    # 开发/调试环境：返回详细错误信息
     return JSONResponse(
         status_code=500,
         content={
             "error": {
                 "code": "INTERNAL_ERROR",
-                "message": message,
+                "message": str(exc),
                 "trace_id": trace_id
             }
         }

@@ -105,6 +105,9 @@ contract RiskRegistryV2 is
     /// @dev D2-016: 升级时间锁（秒），生产环境应配合 Timelock 使用
     uint256 public constant UPGRADE_TIMELOCK = 48 hours;
 
+    /// @notice C-3 FIX: 只允许从 V2.x 版本升级
+    uint256 public constant UPGRADE_FROM_VERSION = 2;
+
     // ============ Events ============
     event RiskProfileUpdated(
         address indexed account,
@@ -149,6 +152,7 @@ contract RiskRegistryV2 is
     /// @notice V2 升级初始化函数 — 仅可在从 V1 升级时调用一次
     function initializeV2() external reinitializer(2) onlyRole(ADMIN_ROLE) {
         chainId = block.chainid;
+        version = 2; // C-3 FIX: 标记当前版本为 V2
         // totalProfiles / totalHighRisk / totalSanctioned 保持默认值 0
         // 如需回填历史数据，可在升级后通过 batch migration 完成
     }
@@ -168,6 +172,11 @@ contract RiskRegistryV2 is
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
+        // C-3 FIX: 版本兼容性检查 — 防止从不兼容的版本直接升级
+        // 确保 RiskRegistryV2 仅从 V2.x 或其他兼容版本升级
+        // V1.x 使用不同的存储布局（struct-based vs bit-packed），直接升级会导致数据损坏
+        require(version >= UPGRADE_FROM_VERSION, "Incompatible upgrade: must be V2 or higher");
+        
         // H-02 FIX: 版本兼容性检查 — 防止从不兼容的版本直接升级
         // 确保 RiskRegistryV2 仅从 v0.2.1 或其他 V2.x 版本升级
         // V1.x (RiskRegistry 1.2.x) 使用不同的存储布局，直接升级会导致数据损坏
@@ -669,7 +678,10 @@ contract RiskRegistryV2 is
     
     // L-09 FIX: Upgrade proposal tracking
     mapping(bytes32 => uint256) public upgradeProposals;
+
+    // C-3 FIX: 版本号，用于防止从不兼容版本直接升级
+    uint256 public version;
     
     // ============ Storage Gap ============
-    uint256[35] private __gap;
+    uint256[34] private __gap;
 }

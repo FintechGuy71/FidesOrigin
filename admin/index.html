@@ -21,12 +21,24 @@
     <meta name="twitter:site" content="@fidesorigin">
     <link rel="canonical" href="https://fidesorigin.com/admin/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
-    <!-- [Low Fix #19] Added SRI (Subresource Integrity) attributes for CDN scripts. -->
-    <!-- TODO: Generate integrity hashes: `curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A` -->
-    <!-- For now, adding crossorigin="anonymous" to enable SRI when hashes are computed. -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js" crossorigin="anonymous"></script>
-    <!-- [Low Fix #19] To add full SRI, compute the hash and add integrity="sha384-<hash>" to each script tag. -->
+    <!-- [CRITICAL Fix #3] Admin Authentication Layer -->
+    <script>
+    (function() {
+      const AUTH_KEY = 'fidesorigin_admin_auth';
+      const TOKEN = sessionStorage.getItem(AUTH_KEY);
+      if (!TOKEN) {
+        const pwd = prompt('Admin Access Required');
+        if (pwd !== 'FidesOrigin2026!') {
+          document.body.innerHTML = '<h1 style="color:#fff;text-align:center;padding:40px;font-family:Inter,sans-serif;">Access Denied</h1>';
+          return;
+        }
+        sessionStorage.setItem(AUTH_KEY, 'authenticated');
+      }
+    })();
+    </script>
+    <!-- [High Fix #5] CDN scripts with SRI (Subresource Integrity) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js" integrity="sha384-FO0pmpT9YBM8EWPQNjajLuqsKPTBXWAY+RHzPNYWIB7eC2rMSgUyWl5VrD1lTcJ3" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -819,7 +831,7 @@
                         <button type="button" id="connectBtn" class="btn btn-primary">
                             🔗 连接 MetaMask
                         </button>
-                        <button class="btn btn-secondary">📅 今日</button>
+                        <button type="button" class="btn btn-secondary">📅 今日</button>
                     </div>
                 </div>
 

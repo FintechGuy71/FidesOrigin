@@ -170,10 +170,12 @@ class AddressRepository:
         )
         
         if query:
-            # [HIGH Fix #8] 转义 SQL LIKE 通配符，防止注入
+            # [Audit Fix #6] Use SQLAlchemy parameter binding for LIKE queries.
+            # Escape SQL LIKE wildcards to prevent injection; bindparam avoids string concatenation.
+            from sqlalchemy import bindparam
             safe_query = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             base_query = base_query.where(
-                AddressRisk.address.ilike(f"%{safe_query}%", escape="\\")
+                AddressRisk.address.ilike(bindparam("pattern", f"%{safe_query}%"), escape="\\")
             )
         
         if risk_level:

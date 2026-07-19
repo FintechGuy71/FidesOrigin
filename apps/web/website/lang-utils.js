@@ -24,27 +24,14 @@
   };
 
   // ===== Language Detection =====
-  // [Low Fix #17] External IP detection via ipapi.co.
-  // TODO: When deployed on Vercel, use the `x-vercel-ip-country` request header
-  // instead of making a client-side API call to ipapi.co.
-  // Example: const cc = request.headers['x-vercel-ip-country'];
+  // [Critical Fix #9] Removed IP geolocation auto-redirect.
+  // Only uses navigator.language for language detection. No external IP APIs.
   window.detectLang = async function() {
-    try {
-      var controller = new AbortController();
-      var timeoutId = setTimeout(function() { controller.abort(); }, 3000);
-      var res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
-      clearTimeout(timeoutId);
-      var data = await res.json();
-      var cc = data.country_code;
-      if (cc === 'CN') return 'cn';
-      if (cc === 'TW' || cc === 'HK') return 'tw';
-      return 'en';
-    } catch (e) {
-      var lang = navigator.language || navigator.userLanguage;
-      if (lang.startsWith('zh-Hans') || lang === 'zh-CN') return 'cn';
-      if (lang.startsWith('zh-Hant') || lang === 'zh-TW') return 'tw';
-      return 'en';
-    }
+    var lang = navigator.language || navigator.userLanguage || 'en';
+    if (lang.startsWith('zh-Hans') || lang === 'zh-CN') return 'cn';
+    if (lang.startsWith('zh-Hant') || lang === 'zh-TW' || lang === 'zh-HK') return 'tw';
+    if (lang.startsWith('ja') || lang.startsWith('jp')) return 'jp';
+    return 'en';
   };
 
   window.getBasePath = function() {
@@ -78,11 +65,12 @@
   };
 
   // ===== Demo Risk Check =====
-  window.KNOWN_ADDRESSES = {
+  // [Medium Fix #14] Freeze global variables to prevent tampering
+  window.KNOWN_ADDRESSES = Object.freeze({
     '0x1234567890123456789012345678901234567890': { score: 95, tier: 'BLACK', source: 'OFAC', tags: 'Sanctioned' },
     '0xab5801a7d398351b8be11c439e05c5b3259aec9b': { score: 90, tier: 'BLACK', source: 'Chainalysis', tags: 'Hacker' },
     '0xdac17f958d2ee523a2206206994597c13d831ec7': { score: 85, tier: 'GREY', source: 'Etherscan', tags: 'Scam' }
-  };
+  });
 
   window.checkRisk = function() {
     var input = document.getElementById('demoAddress');
@@ -130,21 +118,11 @@
     }
   };
 
-  // ===== Auto-init Language =====
+  // [Critical Fix #9] Auto-init: no IP-based redirect. Only sets language preference.
   window.initLangAutoRedirect = async function() {
     var saved = localStorage.getItem('lang-pref');
     if (saved) return;
-    if (!sessionStorage.getItem('lang-checked')) {
-      sessionStorage.setItem('lang-checked', '1');
-      var detected = await window.detectLang();
-      var current = document.documentElement.lang;
-      var currentCode = 'en';
-      if (current === 'zh-CN') currentCode = 'cn';
-      else if (current === 'zh-TW') currentCode = 'tw';
-      if (detected !== currentCode) {
-        window.location.href = window.getLangPath(detected);
-      }
-    }
+    // No auto-redirect. User can manually switch language via UI.
   };
 
   // ===== Global Event Listeners =====

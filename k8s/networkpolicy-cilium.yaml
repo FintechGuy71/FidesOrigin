@@ -1,0 +1,79 @@
+# [K3-Audit Fix] CiliumNetworkPolicy example for FQDN-based egress filtering.
+# Standard Kubernetes NetworkPolicy does NOT support FQDN filtering.
+# Install Cilium (https://cilium.io) and apply this manifest to enable
+# DNS-aware egress rules that restrict outbound traffic to only known domains.
+#
+# Required external domains for fidesorigin-data-publisher:
+#   - treasury.gov          (OFAC SDN list)
+#   - api.chainalysis.com   (Chainalysis risk data)
+#   - api.opensanctions.org (OpenSanctions data)
+#   - api.etherscan.io      (Etherscan API)
+#   - thegraph.com          (Subgraph gateway)
+#   - alchemy.com           (Alchemy RPC)
+#   - raw.githubusercontent.com (Metamask phishing list)
+#   - any trust anchor oracles required by FATF pipeline
+#
+# NOTE: Replace the toFQDNs rules below with the exact domains your workload uses.
+# Cilium caches DNS lookups; if a domain's IP changes, Cilium automatically updates.
+
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: fidesorigin-publisher-egress-fqdn
+  namespace: fidesorigin
+  labels:
+    app: fidesorigin-data-publisher
+spec:
+  endpointSelector:
+    matchLabels:
+      app: fidesorigin-data-publisher
+  ingress:
+    # Allow metrics scraping from monitoring namespace
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+  egress:
+    # Allow DNS resolution (required for toFQDNs)
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchPattern: "*"
+    # Allow HTTPS to known external APIs only
+    - toFQDNs:
+        - matchPattern: "*.treasury.gov"
+        - matchPattern: "*.chainalysis.com"
+        - matchPattern: "*.opensanctions.org"
+        - matchPattern: "*.etherscan.io"
+        - matchPattern: "*.thegraph.com"
+        - matchPattern: "*.alchemy.com"
+        - matchPattern: "*.githubusercontent.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # Allow HTTP only if absolutely necessary (prefer HTTPS)
+    - toFQDNs:
+        - matchPattern: "*.treasury.gov"
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+    # Allow internal Redis communication
+    - toEndpoints:
+        - matchLabels:
+            app: redis
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP

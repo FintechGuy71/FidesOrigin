@@ -17,6 +17,9 @@ const crypto = require('crypto');
 const dns = require('dns');
 const { URL } = require('url');
 
+// [Audit Fix #13] HMAC key for cache integrity verification
+const CACHE_HMAC_KEY = process.env.CACHE_HMAC_KEY || '';
+
 // ============ 安全常量 ============
 const MAX_REDIRECTS = 3;
 const MAX_RESPONSE_SIZE = 150 * 1024 * 1024; // 150 MB
@@ -260,6 +263,28 @@ async function httpGet(url, options = {}, redirectCount = 0) {
  */
 function computeHash(data) {
   return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+/**
+ * [Audit Fix #13] Compute HMAC-SHA256 signature for cache integrity.
+ */
+function computeHmac(data) {
+  if (!CACHE_HMAC_KEY) {
+    console.warn('[Cache] CACHE_HMAC_KEY not set — cache integrity verification disabled');
+    return '';
+  }
+  return crypto.createHmac('sha256', CACHE_HMAC_KEY).update(data).digest('hex');
+}
+
+/**
+ * [Audit Fix #13] Verify HMAC signature of cached data.
+ */
+function verifyHmac(data, signature) {
+  if (!CACHE_HMAC_KEY || !signature) return true; // no verification if key not set
+  return crypto.timingSafeEqual(
+    Buffer.from(computeHmac(data)),
+    Buffer.from(signature)
+  );
 }
 
 // ============ 安全 XML 解析（无正则，基于字符串查找） ============
@@ -1103,6 +1128,7 @@ class SanctionsDataManager {
 
   /**
    * 读取缓存
+   * [Audit Fix #13] HMAC integrity verification added.
    */
   async readCache(sourceName) {
     try {
@@ -1116,6 +1142,22 @@ class SanctionsDataManager {
       }
 
       const data = await fs.readFile(cachePath, 'utf8');
+
+      // [Audit Fix #13] Verify HMAC signature
+      const hmacPath = cachePath + '.sig';
+      try {
+        const sig = await fs.readFile(hmacPath, 'utf8');
+        if (!verifyHmac(data, sig)) {
+          console.error(`[${sourceName}] Cache HMAC verification FAILED — possible tampering detected`);
+          return null;
+        }
+      } catch (e) {
+        if (CACHE_HMAC_KEY) {
+          console.warn(`[${sourceName}] Cache signature missing — treating as stale`);
+          return null;
+        }
+      }
+
       return JSON.parse(data);
     } catch (e) {
       return null;
@@ -1124,6 +1166,7 @@ class SanctionsDataManager {
 
   /**
    * 写入缓存（使用临时文件 + 原子重命名防止并发损坏）
+   * [Audit Fix #13] HMAC signature + restricted file permissions (0o600).
    */
   async writeCache(sourceName, data) {
     await this.ensureCacheDir();
@@ -1131,11 +1174,24 @@ class SanctionsDataManager {
     const tempPath = cachePath + '.tmp';
 
     try {
-      await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf8');
+      const payload = JSON.stringify(data, null, 2);
+      await fs.writeFile(tempPath, payload, 'utf8');
+      // [Audit Fix #13] Restrict file permissions to owner-only read/write
+      await fs.chmod(tempPath, 0o600);
       await fs.rename(tempPath, cachePath);
+
+      // [Audit Fix #13] Write HMAC signature alongside cache file
+      if (CACHE_HMAC_KEY) {
+        const hmacPath = cachePath + '.sig';
+        const hmacTemp = hmacPath + '.tmp';
+        await fs.writeFile(hmacTemp, computeHmac(payload), 'utf8');
+        await fs.chmod(hmacTemp, 0o600);
+        await fs.rename(hmacTemp, hmacPath);
+      }
     } catch (e) {
       // 清理临时文件
       try { await fs.unlink(tempPath); } catch {}
+      try { await fs.unlink(tempPath + '.sig'); } catch {}
       throw e;
     }
   }
@@ -1242,6 +1298,7 @@ class SanctionsDataManager {
     console.log(`Duration: ${summary.duration}`);
 
     // 写入合并后的制裁名单缓存
+    // [Audit Fix #13] HMAC signature + restricted file permissions (0o600)
     const merged = {
       summary,
       entries: allEntries,
@@ -1257,10 +1314,20 @@ class SanctionsDataManager {
     const mergedPath = path.join(this.cacheDir, 'sanctions-cache.json');
     const tempPath = mergedPath + '.tmp';
     try {
-      await fs.writeFile(tempPath, JSON.stringify(merged, null, 2), 'utf8');
+      const payload = JSON.stringify(merged, null, 2);
+      await fs.writeFile(tempPath, payload, 'utf8');
+      await fs.chmod(tempPath, 0o600);
       await fs.rename(tempPath, mergedPath);
+      if (CACHE_HMAC_KEY) {
+        const hmacPath = mergedPath + '.sig';
+        const hmacTemp = hmacPath + '.tmp';
+        await fs.writeFile(hmacTemp, computeHmac(payload), 'utf8');
+        await fs.chmod(hmacTemp, 0o600);
+        await fs.rename(hmacTemp, hmacPath);
+      }
     } catch (e) {
       try { await fs.unlink(tempPath); } catch {}
+      try { await fs.unlink(tempPath + '.sig'); } catch {}
       throw e;
     }
 

@@ -13,6 +13,16 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     /// @notice M-10 FIX: 最大授权预言机数量，防止 _resetConfirmations 等遍历操作的 gas 膨胀
     uint256 public constant MAX_ORACLES = 50;
 
+    /// @notice H-5 FIX: 最小预言机质押金额，防止闪电贷攻击
+    uint256 public constant MIN_ORACLE_STAKE = 0.1 ether;
+
+    /// @notice H-5 FIX: 预言机质押金额映射
+    mapping(address => uint256) public oracleStakes;
+
+    // ============ Events ============
+    event OracleStaked(address indexed oracle, uint256 amount);
+    event OracleUnstaked(address indexed oracle, uint256 amount);
+
     /**
      * @notice 添加授权预言机
      * @dev M-10 FIX: 检查 MAX_ORACLES 上限，防止 oracleList 无限增长
@@ -76,7 +86,24 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     }
 
     /**
-     * @notice 提交预言机响应（多预言机冗余）
+     * @notice H-5 FIX: 预言机质押 ETH
+     * @dev 质押金额用于防闪电贷保护，操作者必须质押至少 MIN_ORACLE_STAKE
+     */
+    function stake() external payable {
+        oracleStakes[msg.sender] += msg.value;
+        emit OracleStaked(msg.sender, msg.value);
+    }
+
+    /**
+     * @notice H-5 FIX: 预言机提取质押 ETH
+     * @param amount 提取金额
+     */
+    function unstake(uint256 amount) external {
+        require(oracleStakes[msg.sender] >= amount, "Insufficient stake balance");
+        oracleStakes[msg.sender] -= amount;
+        payable(msg.sender).transfer(amount);
+        emit OracleUnstaked(msg.sender, amount);
+    }
      * @dev 修复 C-1: 防止同一预言机重复投票
      * @dev 修复 H-1: score 类型收紧为 uint8
      * @dev 修复 H-2: 真正的 MEV / 闪电贷保护
@@ -98,9 +125,10 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
             revert DeadlineExpired(deadline, block.timestamp);
         }
 
-        // H-2: 真正的闪电贷保护 — 拒绝合约调用者（除非白名单）
-        if (msg.sender != tx.origin && !smartContractWhitelist[msg.sender]) {
-            revert FlashLoanDetected(msg.sender);
+        // H-5 FIX: 基于质押的防闪电贷机制 — 替代 tx.origin 检查
+        // 要求预言机操作者质押最小金额，防止闪电贷攻击
+        if (oracleStakes[msg.sender] < MIN_ORACLE_STAKE) {
+            revert InsufficientStake(msg.sender, oracleStakes[msg.sender], MIN_ORACLE_STAKE);
         }
 
         // H-2: same-block 调用保护

@@ -114,13 +114,24 @@ async def monitor_stream(
         await websocket.close(code=4001, reason="Invalid auth message")
         return
     
-    # 验证 API Key
+    # [Audit Fix #9] 验证 API Key
     from app.core.security import verify_api_key
     if not await verify_api_key(api_key, db):
-        # 使用常数时间比较防止时序攻击
-        await asyncio.sleep(secrets.randbelow(100) / 1000)  # 随机延迟 0-100ms
+        # [Audit Fix #9] 增加随机延迟到 100-500ms，防止时序攻击
+        await asyncio.sleep(secrets.randbelow(400) / 1000 + 0.1)
         await websocket.close(code=4001, reason="Invalid API key")
+        # [Audit Fix #9] 安全清除 API Key 内存引用
+        auth_msg.clear() if hasattr(auth_msg, 'clear') else None
+        auth_data = ""
+        api_key = ""
+        del auth_msg, auth_data, api_key
         return
+    
+    # [Audit Fix #9] 验证通过后立即清除 API Key 内存引用
+    auth_msg.clear() if hasattr(auth_msg, 'clear') else None
+    auth_data = ""
+    api_key = ""
+    del auth_msg, auth_data, api_key
     
     # 生成客户端 ID - 使用加密安全的随机数
     client_id = f"ws_{secrets.token_urlsafe(16)}"

@@ -21,6 +21,9 @@ services:
   data-sync:
     build: .
     container_name: fidesorigin-sync
+    # [K3-Audit Fix] Run as non-root user with read-only root filesystem
+    user: "1001:1001"
+    read_only: true
     environment:
       DATABASE_URL: ${DATABASE_URL}
       CHAINALYSIS_API_KEY: ${CHAINALYSIS_API_KEY}
@@ -32,6 +35,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
+      # [K3-Audit Fix] Writable tmpfs for runtime files (required with read_only: true)
+      - type: tmpfs
+        target: /tmp
       - ./logs:/app/logs
     restart: unless-stopped
 

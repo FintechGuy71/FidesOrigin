@@ -1,0 +1,11 @@
+# Prometheus web configuration for basic authentication
+# [K3-Audit Fix] Mount this file as a Secret in K8s or a Docker secret in compose.
+#
+# Generate a bcrypt password hash:
+#   htpasswd -nBC 12 "" | tr -d ':\n' | sed 's/$2y/$2a/'
+# Then paste the hash below after the username.
+#
+# WARNING: Do NOT commit real credentials. Use environment-specific secrets.
+
+basic_auth_users:
+  prometheus: $2a$12$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  # REPLACE with bcrypt hash

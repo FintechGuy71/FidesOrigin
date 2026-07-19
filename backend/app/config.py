@@ -60,6 +60,7 @@ class Settings(BaseSettings):
         return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     # ==================== Redis 配置 ====================
+    REDIS_URL: Optional[str] = Field(default=None, description="Redis URL (e.g. redis://localhost:6379)")
     REDIS_HOST: str = Field(default="localhost", description="Redis主机")
     REDIS_PORT: int = Field(default=6379, description="Redis端口")
     REDIS_PASSWORD: Optional[str] = Field(default=None, description="Redis密码")

@@ -123,8 +123,8 @@ async function connectWallet() {
     
     if (!isMetaMask && !isCoinbaseWallet && !isWalletConnect) {
       console.warn('[SECURITY] Unknown wallet provider detected:', window.ethereum);
-      showToast('检测到未知钱包提供者，请使用 MetaMask 或 Coinbase Wallet', 'warning');
-      // 继续连接但记录警告
+      showToast('不支持的 Wallet Provider', 'error');
+      return;
     }
     
     // [P2 Fix] 如果存在多个 provider（如同时安装了 MetaMask 和 Coinbase），优先使用 MetaMask

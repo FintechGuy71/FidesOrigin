@@ -140,6 +140,9 @@ async function deployFidesOriginFixture() {
   const testUSD = await TestUSD.deploy();
   await testUSD.waitForDeployment();
 
+  // C-2 FIX: Set compliance engine on TestUSD
+  await testUSD.connect(owner).setComplianceEngine(await complianceEngine.getAddress());
+
   // 13. Grant QUARANTINE_ROLE
   const QUARANTINE_ROLE = await quarantineVault.QUARANTINE_ROLE();
   await quarantineVault.connect(owner).grantRole(QUARANTINE_ROLE, user1.address);

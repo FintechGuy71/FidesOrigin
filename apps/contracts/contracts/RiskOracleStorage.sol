@@ -236,6 +236,7 @@ abstract contract RiskOracleStorage {
     error UpdateTooSoon(address account);
     error MaxDataSourcesExceeded();
     error InvalidScore();
+    error InsufficientStake(address oracle, uint256 actualStake, uint256 requiredStake);
 
     // ============ Modifiers ============
 

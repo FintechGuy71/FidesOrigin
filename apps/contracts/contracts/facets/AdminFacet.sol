@@ -9,7 +9,7 @@ import "../libraries/LibDiamond.sol";
 import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
 
-contract AdminFacet is AccessControl, Pausable, ReentrancyGuard {
+contract AdminFacet is BaseFacet {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -304,6 +304,23 @@ contract AdminFacet is AccessControl, Pausable, ReentrancyGuard {
         return LibComplianceStorage
             .diamondStorage()
             .upgradeProposals[proposalId];
+    }
+
+    // ============ ETH Withdrawal ============
+    /**
+     * @notice C-4 FIX: 提取 Diamond 合约中收到的 ETH
+     * @dev 只有合约 owner 可以调用，防止 ETH 被永久锁定
+     * @param to 接收地址
+     * @param amount 提取金额（0 表示全部）
+     */
+    function withdrawETH(address to, uint256 amount) external {
+        LibDiamond.enforceIsContractOwner();
+        if (to == address(0)) revert InvalidAddress();
+        uint256 balance = address(this).balance;
+        uint256 withdrawAmount = amount == 0 ? balance : amount;
+        require(withdrawAmount <= balance, "Insufficient ETH balance");
+        (bool success, ) = payable(to).call{value: withdrawAmount}("");
+        require(success, "ETH withdrawal failed");
     }
 
     // ============ Complex Getters ============

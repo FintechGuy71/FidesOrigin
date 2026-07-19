@@ -7,7 +7,7 @@ import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IWalletCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
 
-contract WalletComplianceFacet is AccessControl, IWalletCompliance {
+contract WalletComplianceFacet is BaseFacet, IWalletCompliance {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     // ============ Internal Helpers ============

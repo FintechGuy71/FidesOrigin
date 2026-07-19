@@ -1,5 +1,15 @@
 version: '3.8'
 
+# [Audit Fix #11] Docker secrets for sensitive environment variables
+# Do NOT mount .env files as volumes. Use Docker secrets or env_file injection.
+secrets:
+  publisher_private_key:
+    external: true
+  oracle_private_key:
+    external: true
+  fatf_oracle_private_key:
+    external: true
+
 services:
   data-publisher:
     build: .
@@ -7,11 +17,20 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      # [Audit Fix #11] Inject sensitive keys via Docker secrets at runtime
+      - PUBLISHER_PRIVATE_KEY_FILE=/run/secrets/publisher_private_key
+      - ORACLE_PRIVATE_KEY_FILE=/run/secrets/oracle_private_key
+      - FATF_ORACLE_PRIVATE_KEY_FILE=/run/secrets/fatf_oracle_private_key
+    secrets:
+      - publisher_private_key
+      - oracle_private_key
+      - fatf_oracle_private_key
     ports:
       - "9090:9090"
     volumes:
       - ./logs:/app/logs
-      - ./.env:/app/.env:ro
+      # [Audit Fix #11] REMOVED: .env file mount — use env_file + secrets instead
     networks:
       - fidesorigin
     healthcheck:
@@ -21,30 +40,44 @@ services:
       retries: 3
       start_period: 30s
 
-  # Optional: Prometheus for metrics collection
+  # Prometheus (metrics) — exposed ONLY internally via Docker network
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.53.0
     container_name: fidesorigin-prometheus
     restart: unless-stopped
+    # [K3-Audit Fix] Basic-auth + no public port exposure
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.config.file=/etc/prometheus/web-config.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus-web-config.yml:/etc/prometheus/web-config.yml:ro
       - prometheus-data:/prometheus
-    ports:
-      - "9091:9090"
+    # Ports intentionally NOT bound to host — access via reverse-proxy or docker network only
+    # ports:
+    #   - "127.0.0.1:9091:9090"
     networks:
       - fidesorigin
     profiles:
       - monitoring
 
-  # Optional: Grafana for dashboards
+  # Grafana (dashboards) — exposed ONLY internally via Docker network
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.0.0
     container_name: fidesorigin-grafana
     restart: unless-stopped
+    # [K3-Audit Fix] Admin password injected via env; never use defaults
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD must be set}
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_SECURITY_ANGULAR_SUPPORT_ENABLED=false
     volumes:
       - grafana-data:/var/lib/grafana
-    ports:
-      - "3000:3000"
+    # Ports intentionally NOT bound to host — access via reverse-proxy or docker network only
+    # ports:
+    #   - "127.0.0.1:3000:3000"
     networks:
       - fidesorigin
     profiles:

@@ -46,3 +46,19 @@ jobs:
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN
           vercel build --prod --token=$VERCEL_TOKEN
           vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+  # [K3-Audit Fix] Pin image digest in K8s deployment manifest before deploy.
+  deploy-k8s:
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin image digest
+        run: |
+          # Pull the image to get its digest, then replace ${IMAGE_DIGEST} in deployment.yaml
+          docker pull fidesorigin/data-publisher:latest
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' fidesorigin/data-publisher:latest | cut -d'@' -f2)
+          sed -i "s|\\${IMAGE_DIGEST}|${DIGEST#sha256:}|g" k8s/deployment.yaml
+          echo "Pinned digest: ${DIGEST}"
+          cat k8s/deployment.yaml | grep "image:"

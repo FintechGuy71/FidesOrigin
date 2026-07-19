@@ -188,8 +188,33 @@ export class BlockchainPublisher {
 
   /**
    * Publish a single risk profile
+   * [Audit Fix #10] Added idempotency check: skips if on-chain data is already up to date.
    */
   private async publishSingle(profile: RiskProfile): Promise<TxResult> {
+    // [Audit Fix #10] Idempotency check: read on-chain state before publishing
+    try {
+      const onChain = await this.contract.riskProfiles(profile.address);
+      const onChainScore = Number(onChain[0]);
+      const onChainTier = Number(onChain[3]);
+      const onChainSanctioned = onChain[5];
+
+      if (this.isSameProfile(profile, onChainScore, onChainTier, onChainSanctioned)) {
+        logger.info(`[Idempotent] Skipping ${profile.address} — on-chain data already up to date`, {
+          score: onChainScore,
+          tier: onChainTier,
+          sanctioned: onChainSanctioned,
+        });
+        return {
+          hash: 'skipped',
+          status: 'skipped',
+          gasUsed: BigInt(0),
+          blockNumber: 0,
+        };
+      }
+    } catch (error) {
+      // Address not yet registered on chain — proceed with publish
+      logger.debug(`No on-chain data for ${profile.address}, proceeding with publish`);
+    }
     // D1-AUDIT1-060 fix: use ethers.encodeBytes32String for correct UTF-8 handling
     const tagsBytes32 = profile.tags.map(t => ethers.encodeBytes32String(t));
 
@@ -250,6 +275,22 @@ export class BlockchainPublisher {
       gasUsed: receipt.gasUsed,
       blockNumber: receipt.blockNumber,
     };
+  }
+
+  /**
+   * [Audit Fix #10] Compare local profile with on-chain data for idempotency.
+   */
+  private isSameProfile(
+    profile: RiskProfile,
+    onChainScore: number,
+    onChainTier: number,
+    onChainSanctioned: boolean
+  ): boolean {
+    return (
+      profile.riskScore === onChainScore &&
+      profile.tier === onChainTier &&
+      profile.isSanctioned === onChainSanctioned
+    );
   }
 
   /**
