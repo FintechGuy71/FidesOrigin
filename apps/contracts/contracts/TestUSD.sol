@@ -76,6 +76,7 @@ contract TestUSD is ERC20, AccessControl, Pausable {
     error BatchTooLarge();
     error FaucetAlreadyUsed(address account);
     error CannotBlacklistAdmin(address account);
+    error EngineNotSet();
     
     // ========== 构造函数 ==========
     constructor() ERC20("TestUSD", "TUSD") {

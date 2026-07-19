@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../libraries/LibComplianceStorage.sol";
 import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
+import "./BaseFacet.sol";
 
 contract AssetComplianceFacet is BaseFacet, IAssetCompliance {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");

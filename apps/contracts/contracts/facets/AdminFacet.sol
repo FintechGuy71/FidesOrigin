@@ -8,6 +8,7 @@ import "../libraries/LibComplianceStorage.sol";
 import "../libraries/LibDiamond.sol";
 import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
+import "./BaseFacet.sol";
 
 contract AdminFacet is BaseFacet {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");

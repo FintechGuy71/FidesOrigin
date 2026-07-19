@@ -1,99 +1,65 @@
 {
   "network": "sepolia",
   "chainId": 11155111,
-  "timestamp": "2026-06-22T17:22:01.563Z",
-  "deployer": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
-  "version": "v0.2.1",
-  "status": "complete",
+  "timestamp": "2026-07-19T13:04:02.741Z",
+  "version": "v3.0.4",
   "contracts": {
+    "FidesCompliance": {
+      "address": "0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707",
+      "type": "Direct Deploy",
+      "args": [
+        "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+        "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+        "0x87089F67A61F9643796AE154663A6a9F21196b38",
+        "0x497176b21CC2EDd90a8725a3023742358311a382"
+      ]
+    },
+    "QuarantineVault": {
+      "address": "0xF7c5c4DdcB0F868a6c271334131728CecA313DFb",
+      "type": "Direct Deploy",
+      "args": []
+    },
+    "CompliantStableCoin": {
+      "address": "0xA058c5c0dD7791Ffc6A7EF14C01034d0f9F32a2B",
+      "type": "Direct Deploy",
+      "args": [
+        "FidesOrigin USD",
+        "fUSD",
+        "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC"
+      ]
+    }
+  },
+  "upgrades": {
     "RiskRegistry": {
-      "proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
-      "implementation": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59",
-      "type": "UUPS Proxy"
+      "status": "failed",
+      "error": "transaction execution reverted (action=\"sendTransaction\", data=null, reason=null, invocation=null, revert=null, transaction={ \"data\": \"\", \"from\": \"0x5F6Ae278e7a62E64F9F467a91B693f372b84a374\", \"to\": \"0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc\" }, receipt={ \"_type\": \"TransactionReceipt\", \"blobGasPrice\": null, \"blobGasUsed\": null, \"blockHash\": \"0x794ce7226e5289efc3c844bfa1db4ee12c1989eeb77f696f49ca3c344384419c\", \"blockNumber\": 11305936, \"contractAddress\": null, \"cumulativeGasUsed\": \"8665442\", \"from\": \"0x5F6Ae278e7a62E64F9F467a91B693f372b84a374\", \"gasPrice\": \"1122205664\", \"gasUsed\": \"34727\", \"hash\": \"0xbb020a78e5b817c5efe3eda74b2a6b3cb783ee2029ff1c35ff5f365f1366016e\", \"index\": 52, \"logs\": [  ], \"logsBloom\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\", \"root\": null, \"status\": 0, \"to\": \"0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc\" }, code=CALL_EXCEPTION, version=6.16.0)"
     },
     "PolicyEngine": {
-      "proxy": "0x87089F67A61F9643796AE154663A6a9F21196b38",
-      "implementation": "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7",
-      "type": "UUPS Proxy"
+      "status": "failed",
+      "error": "transaction execution reverted (action=\"sendTransaction\", data=null, reason=null, invocation=null, revert=null, transaction={ \"data\": \"\", \"from\": \"0x5F6Ae278e7a62E64F9F467a91B693f372b84a374\", \"to\": \"0x87089F67A61F9643796AE154663A6a9F21196b38\" }, receipt={ \"_type\": \"TransactionReceipt\", \"blobGasPrice\": null, \"blobGasUsed\": null, \"blockHash\": \"0x6cec47e1644093cf191436d681d2d0c7c92c216e9bb12b8738cedb42affef2ac\", \"blockNumber\": 11305938, \"contractAddress\": null, \"cumulativeGasUsed\": \"6075625\", \"from\": \"0x5F6Ae278e7a62E64F9F467a91B693f372b84a374\", \"gasPrice\": \"2556872697\", \"gasUsed\": \"34276\", \"hash\": \"0xb9ee93ffe9efa5d2033c5e40da5af212c8a596a17a4464cdfce9ff941f25581c\", \"index\": 32, \"logs\": [  ], \"logsBloom\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\", \"root\": null, \"status\": 0, \"to\": \"0x87089F67A61F9643796AE154663A6a9F21196b38\" }, code=CALL_EXCEPTION, version=6.16.0)"
     },
     "ComplianceEngine": {
       "proxy": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
-      "implementation": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807",
-      "type": "UUPS Proxy"
-    },
-    "QuarantineVault": {
-      "address": "0x497176b21CC2EDd90a8725a3023742358311a382",
-      "type": "Direct Deploy"
-    },
-    "FidesCompliance": {
-      "address": "0x7cc76aD60385f77F0e013f5C2771FCa32a6F97A1",
-      "type": "Direct Deploy",
-      "note": "Deployed with constructor args: (ComplianceEngine, RiskRegistry, PolicyEngine, QuarantineVault)"
-    },
-    "CompliantStableCoin": {
-      "address": "0xC6AC4eB3bc328D9482e243e6E2E5C4e0372a6Cca",
-      "type": "Direct Deploy",
-      "note": "fUSD - FidesOrigin USD, 6 decimals"
+      "oldImpl": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807",
+      "newImpl": "0x3B2977A90A9701EcB3F7521Df324b4A3FB10E3ed",
+      "tx": "0x207f585c5e40b5d16b997a918555b80cb87ccdc9e389d36057fd3b304c87d6b5",
+      "block": 11305940
     }
   },
   "roles": {
-    "ORACLE_ROLE": {
-      "RiskRegistry": {
-        "grantedTo": [
-          "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
-          "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"
-        ]
-      }
-    },
-    "COMPLIANCE_ENGINE_ROLE": {
-      "PolicyEngine": {
-        "grantedTo": [
-          "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC"
-        ]
-      }
-    },
-    "OPERATOR_ROLE": {
-      "ComplianceEngine": {
-        "grantedTo": [
-          "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
-          "0x7cc76aD60385f77F0e013f5C2771FCa32a6F97A1"
-        ]
-      }
-    }
-  },
-  "testData": {
-    "riskProfiles": [
-      {
-        "address": "0x1234567890123456789012345678901234567890",
-        "riskScore": 80,
-        "riskTier": 3,
-        "sanctioned": true
-      },
-      {
-        "address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
-        "riskScore": 85,
-        "riskTier": 3,
-        "sanctioned": false
-      },
-      {
-        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "riskScore": 90,
-        "riskTier": 3,
-        "sanctioned": false
-      }
+    "ORACLE_ROLE": [
+      "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+      "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"
     ],
-    "mintedTokens": {
-      "token": "fUSD",
-      "amount": "1000000000000",
-      "recipient": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"
-    }
+    "COMPLIANCE_ENGINE_ROLE": [
+      "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC"
+    ],
+    "OPERATOR_ROLE": [
+      "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"
+    ]
   },
-  "verification": {
-    "status": "pending",
-    "note": "Etherscan API v1 deprecated, manual verification may be needed via https://sepolia.etherscan.io/verifyContract"
-  },
-  "environment": {
-    "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
-    "deployerBalance": "2.554 ETH"
+  "notes": {
+    "RiskRegistry": "Upgrade blocked by Timelock - requires schedule/execute flow",
+    "PolicyEngine": "Upgrade blocked by Timelock - requires schedule/execute flow"
   }
 }

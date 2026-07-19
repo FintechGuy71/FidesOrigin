@@ -220,7 +220,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     function initialize(address admin, address _riskRegistry) public initializer {
         // L-06: __AccessControl_init 内部已初始化 Context，不再重复调用
         __AccessControl_init();
-        __UUPSUpgradeable_init();
+        // [K3 Fix M-09] OZ v5 UUPSUpgradeable has no initializer
+        // __UUPSUpgradeable_init(); // Removed - not needed in OZ v5
         __ReentrancyGuard_init();
 
         // P0-3 / L-04: 零地址检查

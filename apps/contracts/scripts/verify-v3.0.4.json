@@ -1,0 +1,33 @@
+{
+  "name": "verify-sepolia-v3.0.4",
+  "version": "3.0.4",
+  "description": "Etherscan verification commands for Sepolia deployment",
+  "network": "sepolia",
+  "contracts": {
+    "RiskRegistry": {
+      "address": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+      "cmd": "npx hardhat verify --network sepolia <IMPL_ADDRESS>"
+    },
+    "PolicyEngine": {
+      "address": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+      "cmd": "npx hardhat verify --network sepolia <IMPL_ADDRESS>"
+    },
+    "ComplianceEngine": {
+      "address": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+      "cmd": "npx hardhat verify --network sepolia <IMPL_ADDRESS>"
+    },
+    "QuarantineVault": {
+      "address": "<NEW_ADDRESS>",
+      "cmd": "npx hardhat verify --network sepolia <ADDRESS>"
+    },
+    "FidesCompliance": {
+      "address": "<NEW_ADDRESS>",
+      "cmd": "npx hardhat verify --network sepolia <ADDRESS> '<COMPLIANCE_ENGINE>' '<RISK_REGISTRY>' '<POLICY_ENGINE>' '<QUARANTINE_VAULT>'"
+    },
+    "CompliantStableCoin": {
+      "address": "<NEW_ADDRESS>",
+      "cmd": "npx hardhat verify --network sepolia <ADDRESS> 'FidesOrigin USD' 'fUSD' 6 '<COMPLIANCE_ENGINE>'"
+    }
+  },
+  "notes": "Run these commands after deployment to verify contracts on Etherscan."
+}

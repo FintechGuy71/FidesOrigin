@@ -180,10 +180,8 @@ contract FidesOriginTimelock is TimelockController {
         if (!emergencyOperators[msg.sender]) revert NotEmergencyOperator(msg.sender);
         if (!emergencyMode) revert EmergencyModeAlreadySet(false); // must be in emergency mode
         
-        bytes32 id = hashOperation(target, value, data, predecessor, salt);
-        _schedule(id, 0); // schedule with 0 delay, we'll use EMERGENCY_DELAY in isOperationReady
-        // Note: OZ TimelockController doesn't support per-operation delay, 
-        // so we store emergency ops separately
+        // Use super.schedule with EMERGENCY_DELAY instead of _schedule
+        super.schedule(target, value, data, predecessor, salt, EMERGENCY_DELAY);
     }
     
     /**

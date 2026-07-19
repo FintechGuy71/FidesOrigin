@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "../libraries/LibComplianceStorage.sol";
 import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
+import "./BaseFacet.sol";
 
 contract ComplianceCoreFacet is BaseFacet {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
