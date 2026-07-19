@@ -35,5 +35,7 @@ contract DiamondComplianceEngine {
         }
     }
 
-    receive() external payable {}
+    receive() external payable {
+        // [K3 Fix C-14] ETH received can be withdrawn via AdminFacet.withdrawETH()
+    }
 }

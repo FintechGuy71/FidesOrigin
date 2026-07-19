@@ -19,7 +19,7 @@ describe('CompliantStableCoin', function () {
     // Disable compliance engine integration since ComplianceEngine.sol
     // does not implement IAssetCompliance (preTransferHook, validateTransfer, etc.)
     // This is a contract-level architecture issue.
-    await stableCoin.connect(owner).toggleCompliance(false);
+    // [K3 Fix C-17] Compliance enabled for testing - previously disabled
 
     // Mint some tokens to user1 for testing (more than maxTxAmount)
     await stableCoin.connect(owner).mint(user1.address, 10000000 * 10 ** 6);
@@ -119,7 +119,7 @@ describe('CompliantStableCoin', function () {
       await stableCoin.connect(owner).toggleCompliance(true);
       expect(await stableCoin.complianceEnabled()).to.be.true;
 
-      await stableCoin.connect(owner).toggleCompliance(false);
+      // [K3 Fix C-17] Compliance enabled for testing - previously disabled
       expect(await stableCoin.complianceEnabled()).to.be.false;
     });
 

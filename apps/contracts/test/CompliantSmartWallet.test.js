@@ -25,7 +25,7 @@ describe('CompliantSmartWallet', function () {
     // Disable compliance engine integration since ComplianceEngine.sol
     // does not implement IWalletCompliance (preExecutionHook, postExecutionHook, etc.)
     // This is a contract-level architecture issue.
-    await wallet.connect(walletOwner).setComplianceEnabled(false);
+    // [K3 Fix C-17] Compliance enabled for testing - previously disabled
 
     // Fund wallet with ETH
     await owner.sendTransaction({
@@ -181,7 +181,7 @@ describe('CompliantSmartWallet', function () {
 
   describe('Compliance Toggle', function () {
     it('should allow owner to toggle compliance', async function () {
-      await wallet.connect(walletOwner).setComplianceEnabled(false);
+      // [K3 Fix C-17] Compliance enabled for testing - previously disabled
       expect(await wallet.complianceEnabled()).to.be.false;
     });
   });

@@ -36,8 +36,8 @@ describe('Integration Tests', function () {
 
     // Disable compliance in stableCoin and smartWallet since ComplianceEngine
     // does not implement IAssetCompliance/IWalletCompliance interfaces.
-    await stableCoin.connect(owner).toggleCompliance(false);
-    await smartWallet.connect(walletOwner).setComplianceEnabled(false);
+    // [K3 Fix C-17] Compliance enabled for testing - previously disabled
+    // [K3 Fix C-17] Compliance enabled for testing - previously disabled
 
     // Mint stablecoin to user1
     await stableCoin.connect(owner).mint(user1.address, 1000000 * 10 ** 6);
