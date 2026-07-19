@@ -14,7 +14,7 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     uint256 public constant MAX_ORACLES = 50;
 
     /// @notice H-5 FIX: 最小预言机质押金额，防止闪电贷攻击
-    uint256 public constant MIN_ORACLE_STAKE = 0.1 ether;
+    uint256 public constant MIN_STAKE_AMOUNT = 1 ether;
 
     /// @notice H-5 FIX: 预言机质押金额映射
     mapping(address => uint256) public oracleStakes;
@@ -129,8 +129,8 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
 
         // H-5 FIX: 基于质押的防闪电贷机制 — 替代 tx.origin 检查
         // 要求预言机操作者质押最小金额，防止闪电贷攻击
-        if (oracleStakes[msg.sender] < MIN_ORACLE_STAKE) {
-            revert InsufficientStake(msg.sender, oracleStakes[msg.sender], MIN_ORACLE_STAKE);
+        if (oracleStakes[msg.sender] < MIN_STAKE_AMOUNT) {
+            revert InsufficientStake(msg.sender, oracleStakes[msg.sender], MIN_STAKE_AMOUNT);
         }
 
         // H-2: same-block 调用保护

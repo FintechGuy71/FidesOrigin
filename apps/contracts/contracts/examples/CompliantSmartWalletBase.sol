@@ -128,6 +128,7 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
     event EmergencyPaused(address indexed triggeredBy);
     event EmergencyUnpaused(address indexed triggeredBy);
     event Received(address indexed from, uint256 amount);
+    event BatchOperationFailed(uint256 indexed index, IAssetCompliance.Decision decision, string reason, uint256 gasUsed);
 
     // ============ Quarantine Events ============
 
@@ -490,6 +491,7 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
                 }
 
                 if (opBlocked) {
+                    uint256 gasUsed = gasleft(); // we can track gas at start of loop if needed, but for simplicity emit 0 or approximate
                     results[i] = OperationResult({
                         success: false,
                         returnData: "",
@@ -497,6 +499,7 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
                         reason: blockReason
                     });
                     blockedCount++;
+                    emit BatchOperationFailed(i, opDecision, blockReason, 0);
                     continue;
                 }
             }
@@ -516,6 +519,7 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
                 _recordSpending(ops[i].value, ops[i].token, ops[i].tokenAmount);
             } else {
                 blockedCount++;
+                emit BatchOperationFailed(i, IAssetCompliance.Decision.BLOCK, "execution failed", 0);
             }
 
             if (complianceEnabled) {
@@ -947,8 +951,8 @@ contract CompliantSmartWalletBase is ReentrancyGuard {
         
         address target = msg.sender;
         
-        // M-08 FIX: Limit forwarded gas to prevent gas-griefing attacks
-        uint256 _gasLimit = gasleft() > 100000 ? 100000 : gasleft();
+        // M-07 FIX: Limit forwarded gas to 500k to prevent gas-griefing attacks
+        uint256 _gasLimit = gasleft() > 500000 ? 500000 : gasleft();
         
         // 使用普通 call 而非 delegatecall，防止被攻击协议覆盖 storage
         (bool success, bytes memory returnData) = target.call{value: msg.value, gas: _gasLimit}(msg.data);

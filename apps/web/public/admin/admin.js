@@ -30,19 +30,22 @@
 
 // SECURITY NOTE: Load contract addresses from external config file.
 // See admin-config.js for configuration.
-const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || {
+// [M-6 Fix] Use Object.freeze'd addresses from admin-config.js; fallback only for dev
+const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || Object.freeze({
             RiskRegistry: '0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3',
             PolicyEngine: '0xF8f89120f5628aE3De747f55e7d00D79633002c4',
             ComplianceEngine: '0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa',
             CompliantStableCoin: '0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A',
             CompliantSmartWallet: '0xbe33EBA3e0d6Dc324aBF1DE1aD0E1e65DcA526AB',
             FidesCompliance: '0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b'
-        };
+        });
         
-        const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3';
+        // [H-6 Fix] Subgraph URL from external config — no hardcoded production URLs
+        const SUBGRAPH_URL = (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRAPH_URL)
+            || '';
         
-        // Contract Address - defaults to Sepolia CompliantStableCoin
-        const CONTRACT_ADDRESS = localStorage.getItem('contractAddress') || SEPOLIA_ADDRESSES.CompliantStableCoin;
+        // [M-8 Fix] Contract address from session-only storage; avoid long-term localStorage for sensitive config
+        const CONTRACT_ADDRESS = sessionStorage.getItem('contractAddress') || SEPOLIA_ADDRESSES.CompliantStableCoin;
         
         let provider, signer, contract, userAddress;
         let charts = {};
@@ -380,10 +383,116 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || {
         
         // ========== Original Functions ==========
 
-        // 初始化
+        // [M-4 Fix] Event delegation: all interactive elements use data-action instead of inline onclick
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             loadSettings();
+            
+            // Attach delegated click handler for all data-action elements
+            document.body.addEventListener('click', function(e) {
+                const el = e.target.closest('[data-action]');
+                if (!el) return;
+                const action = el.dataset.action;
+                if (!action) return;
+                
+                switch (action) {
+                    case 'showPage':
+                        showPage(el.dataset.page);
+                        break;
+                    case 'closeModal':
+                        closeModal(el.dataset.modal);
+                        break;
+                    case 'connectWallet':
+                        connectWallet();
+                        break;
+                    case 'connectMetaMask':
+                        connectMetaMask();
+                        break;
+                    case 'loadBlockedTransfers':
+                        loadBlockedTransfers();
+                        break;
+                    case 'refreshMonitor':
+                        refreshMonitor();
+                        break;
+                    case 'openAddCustomerModal':
+                        openAddCustomerModal();
+                        break;
+                    case 'openTagModal':
+                        openTagModal();
+                        break;
+                    case 'saveLimits':
+                        saveLimits();
+                        break;
+                    case 'openTimelockConfigModal':
+                        openTimelockConfigModal();
+                        break;
+                    case 'loadPendingOperations':
+                        loadPendingOperations();
+                        break;
+                    case 'openAddSignerModal':
+                        openAddSignerModal();
+                        break;
+                    case 'updateRequiredSigs':
+                        updateRequiredSigs();
+                        break;
+                    case 'loadSigners':
+                        loadSigners();
+                        break;
+                    case 'loadQuarantineRecords':
+                        loadQuarantineRecords();
+                        break;
+                    case 'loadIncomingBlocks':
+                        loadIncomingBlocks();
+                        break;
+                    case 'emergencyPause':
+                        emergencyPause();
+                        break;
+                    case 'emergencyUnpause':
+                        emergencyUnpause();
+                        break;
+                    case 'loadLogs':
+                        loadLogs();
+                        break;
+                    case 'exportLogs':
+                        exportLogs();
+                        break;
+                    case 'loadPolicies':
+                        loadPolicies();
+                        break;
+                    case 'openPolicyModal':
+                        openPolicyModal();
+                        break;
+                    case 'loadSubgraphComplianceChecks':
+                        loadSubgraphComplianceChecks();
+                        break;
+                    case 'saveSettings':
+                        saveSettings();
+                        break;
+                    case 'submitTag':
+                        submitTag();
+                        break;
+                    case 'submitAddSigner':
+                        submitAddSigner();
+                        break;
+                    case 'submitTimelockConfig':
+                        submitTimelockConfig();
+                        break;
+                    case 'submitPolicy':
+                        submitPolicy();
+                        break;
+                    case 'toggleMobileSidebar':
+                        toggleMobileSidebar();
+                        break;
+                    case 'filterQuarantineRecords':
+                        filterQuarantineRecords();
+                        break;
+                    case 'filterComplianceLogs':
+                        filterComplianceLogs();
+                        break;
+                    default:
+                        console.warn('[Event] Unknown data-action:', action);
+                }
+            });
         });
 
         // 初始化图表
@@ -507,8 +616,30 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || {
 
         async function connectMetaMask() {
             try {
+                // [H-9 Fix] Strict Web3 provider validation: reject unknown/injected providers
                 if (!window.ethereum) {
                     alert('请安装 MetaMask!');
+                    return;
+                }
+                
+                // Validate it's a real EIP-1193 provider
+                const eth = window.ethereum;
+                if (typeof eth.request !== 'function' || typeof eth.on !== 'function') {
+                    alert('检测到不兼容的 Web3 Provider。请使用 MetaMask 或其他标准 EIP-1193 钱包。');
+                    return;
+                }
+                
+                // Reject if it's an unknown provider (not MetaMask, not explicitly allowed)
+                const isMetaMask = eth.isMetaMask === true;
+                const allowedProviders = window.ALLOWED_WEB3_PROVIDERS || ['MetaMask'];
+                if (!isMetaMask && !allowedProviders.some(name => 
+                    (eth.isMetaMask && name === 'MetaMask') ||
+                    (eth.isCoinbaseWallet && name === 'CoinbaseWallet') ||
+                    (eth.isWalletConnect && name === 'WalletConnect') ||
+                    (eth.isTrust && name === 'TrustWallet')
+                )) {
+                    console.error('[Web3] Unknown provider detected:', eth);
+                    alert('不支持的 Web3 Provider。请使用 MetaMask 或联系管理员添加白名单。');
                     return;
                 }
 
@@ -884,7 +1015,9 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || {
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.classList.add('active');
+            // [M-4 Fix] Find the nav item by data-page instead of relying on global event
+            const activeNav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+            if (activeNav) activeNav.classList.add('active');
             
             // Close mobile sidebar after navigation
             document.querySelector('.sidebar').classList.remove('mobile-open');
@@ -1248,8 +1381,9 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || {
 
         function saveSettings() {
             const address = document.getElementById('contractAddress').value;
-            localStorage.setItem('contractAddress', address);
-            alert('设置已保存，刷新页面后生效');
+            // [M-8 Fix] Use sessionStorage instead of localStorage for sensitive config
+            sessionStorage.setItem('contractAddress', address);
+            alert('设置已保存（会话级别），刷新页面后生效');
         }
 
         // 轮询更新

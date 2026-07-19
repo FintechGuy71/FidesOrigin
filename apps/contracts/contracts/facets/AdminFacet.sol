@@ -9,7 +9,7 @@ import "../libraries/LibDiamond.sol";
 import "../interfaces/IAssetCompliance.sol";
 import "../interfaces/IComplianceErrors.sol";
 
-contract AdminFacet is AccessControl, Pausable, ReentrancyGuard {
+contract AdminFacet is BaseFacet {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 

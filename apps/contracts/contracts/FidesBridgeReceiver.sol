@@ -67,6 +67,8 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     event SenderDeauthorized(uint256 chainId, address sender);
     event MerkleRegistryUpdated(address newRegistry);
     event UpgradeProposed(bytes32 indexed proposalId, address indexed proposedImplementation, uint256 executeAfter);
+    event RoleGrantedDetailed(bytes32 indexed role, address indexed account, address indexed sender, uint256 timestamp, string reason);
+    event RoleRevokedDetailed(bytes32 indexed role, address indexed account, address indexed sender, uint256 timestamp, string reason);
 
     // ============ Errors ============
     error UnauthorizedSender(uint256 chainId, address sender);
@@ -232,7 +234,32 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         uint256 executeAfter = upgradeProposals[proposalId];
         if (executeAfter == 0) revert UpgradeNotProposed(proposalId);
         if (block.timestamp < executeAfter) revert UpgradeTimelockActive(proposalId, executeAfter);
+        require(newImplementation.code.length > 0, "Not a contract");
         delete upgradeProposals[proposalId];
+    }
+
+    /**
+     * @notice M-03 FIX: 授予角色（带审计日志）
+     */
+    function grantRoleWithReason(
+        bytes32 role,
+        address account,
+        string calldata reason
+    ) external onlyRole(ADMIN_ROLE) {
+        _grantRole(role, account);
+        emit RoleGrantedDetailed(role, account, msg.sender, block.timestamp, reason);
+    }
+
+    /**
+     * @notice M-03 FIX: 撤销角色（带审计日志）
+     */
+    function revokeRoleWithReason(
+        bytes32 role,
+        address account,
+        string calldata reason
+    ) external onlyRole(ADMIN_ROLE) {
+        _revokeRole(role, account);
+        emit RoleRevokedDetailed(role, account, msg.sender, block.timestamp, reason);
     }
 
     uint256[47] private __gap;

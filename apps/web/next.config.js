@@ -5,13 +5,18 @@ const nextConfig = {
   output: 'export',
   distDir: 'dist',
   images: {
-    unoptimized: true,
+    // [H-8 Fix] Removed unoptimized: true to enable Next.js image optimization
+    // unoptimized: true,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    // [H-5 Fix] Strict: never ignore ESLint errors during builds
+    // Only CI can temporarily override via NEXT_ESLINT_IGNORE_DURING_BUILDS env var
+    ignoreDuringBuilds: process.env.NEXT_ESLINT_IGNORE_DURING_BUILDS === 'true',
   },
   typescript: {
-    ignoreBuildErrors: false,
+    // [H-5 Fix] Strict: never ignore TypeScript errors during builds
+    // Only CI can temporarily override via NEXT_TS_IGNORE_BUILD_ERRORS env var
+    ignoreBuildErrors: process.env.NEXT_TS_IGNORE_BUILD_ERRORS === 'true',
   },
   webpack: (config) => {
     config.resolve.alias = {

@@ -557,6 +557,23 @@ contract RiskRegistry is
     }
 
     /**
+     * @notice M-08 FIX: 轻量版 getProfile，仅返回核心 4 个字段，节省 gas
+     */
+    function getProfileLight(address addr)
+        external
+        view
+        returns (uint8 riskScore, uint8 riskTier, bool sanctioned, bool exists)
+    {
+        RiskProfile storage profile = riskProfiles[addr];
+        return (
+            uint8(profile.riskScore),
+            profile.riskTier,
+            profile.sanctioned,
+            profile.exists
+        );
+    }
+
+    /**
      * @notice 获取地址标签
      */
     function getTags(address addr) external view returns (bytes32[] memory) {

@@ -2,18 +2,48 @@
 let addressDB = null;
 let addressMap = new Map();
 
-const SUBGRAPH_URLS = {
-    sepolia: 'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3',
-    mainnet: 'https://api.studio.thegraph.com/query/1749664/fidesorigin/v0.0.1'
-};
+// [H-6 Fix] Subgraph URL from environment variable or backend API proxy — no hardcoded URLs
+const SUBGRAPH_URL = (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRAPH_URL)
+    || (typeof process !== 'undefined' && process.env.FIDESORIGIN_SUBGRAPH_URL)
+    || '';
 
 const NETWORK = 'sepolia';
-const SUBGRAPH_URL = SUBGRAPH_URLS[NETWORK] || SUBGRAPH_URLS.sepolia;
 let API_KEY = window.FIDESORIGIN_API_KEY || '';
 
-const BACKEND_API = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
-    ? 'http://localhost:8000'
-    : '';
+// [M-7 Fix] Backend API base: no hardcoded fallback; must be provided via env/config
+const BACKEND_API = (typeof window !== 'undefined' && window.FIDESORIGIN_BACKEND_URL)
+    || (typeof process !== 'undefined' && process.env.FIDESORIGIN_BACKEND_URL)
+    || '';
+
+// [H-7 Fix] CSRF Token management
+let csrfToken = '';
+async function fetchCsrfToken() {
+    try {
+        const res = await fetch('/api/csrf-token', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            csrfToken = data.csrfToken || '';
+        }
+    } catch (e) {
+        console.warn('[CSRF] Failed to fetch CSRF token:', e);
+    }
+}
+// Fetch CSRF token on load
+fetchCsrfToken();
+
+function getCsrfHeaders() {
+    const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    };
+    if (API_KEY) headers['X-API-Key'] = API_KEY;
+    if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+    return headers;
+}
 
 function toggleDropdown(id, event) {
     event.stopPropagation();
@@ -48,6 +78,10 @@ function setLoading(loading) {
 }
 
 async function loadStatsFromSubgraph() {
+    if (!SUBGRAPH_URL) {
+        console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph stats.');
+        return;
+    }
     try {
         const query = `query {
             protocolStats(id: "stats") {
@@ -61,11 +95,16 @@ async function loadStatsFromSubgraph() {
                 id
             }
         }`;
+        // [M-5 Fix] Use AbortController + setTimeout instead of AbortSignal.timeout for compatibility
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         const res = await fetch(SUBGRAPH_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
+            body: JSON.stringify({ query }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data.data && data.data.protocolStats) {
             const s = data.data.protocolStats;
@@ -111,18 +150,13 @@ async function fetchBackendRisk(address) {
     const apiBase = BACKEND_API || window.location.origin;
     const url = `${apiBase}/api/v1/address/${address}/risk`;
     try {
-        const headers = { 
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        };
-        if (API_KEY) headers['X-API-Key'] = API_KEY;
-        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(url, {
             method: 'GET',
-            headers: headers,
-            signal: controller.signal
+            headers: getCsrfHeaders(),
+            signal: controller.signal,
+            credentials: 'same-origin'
         });
         clearTimeout(timeoutId);
         if (res.status === 401 || res.status === 403) {
@@ -137,6 +171,10 @@ async function fetchBackendRisk(address) {
 }
 
 async function fetchSubgraphRisk(address) {
+    if (!SUBGRAPH_URL) {
+        console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph query.');
+        return null;
+    }
     const query = `query {
         riskProfile(id: "${address.toLowerCase()}") {
             id
@@ -147,15 +185,15 @@ async function fetchSubgraphRisk(address) {
         }
     }`;
     try {
-        const controller2 = new AbortController();
-        const timeoutId2 = setTimeout(() => controller2.abort(), 5000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const res = await fetch(SUBGRAPH_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query }),
-            signal: controller2.signal
+            signal: controller.signal
         });
-        clearTimeout(timeoutId2);
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data.data && data.data.riskProfile) {
             return data.data.riskProfile;
@@ -268,4 +306,16 @@ async function checkAddress() {
 loadDatabase();
 document.getElementById('addressInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') checkAddress();
+});
+
+// [M-4 Fix] Attach event listeners instead of inline onclick
+document.addEventListener('DOMContentLoaded', function() {
+    var checkBtn = document.getElementById('checkBtn');
+    if (checkBtn) checkBtn.addEventListener('click', checkAddress);
+    var langBtn = document.getElementById('langDropdownBtn');
+    if (langBtn) {
+        langBtn.addEventListener('click', function(e) {
+            toggleDropdown('langDropdownNav', e);
+        });
+    }
 });

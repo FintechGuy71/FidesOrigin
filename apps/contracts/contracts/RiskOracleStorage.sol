@@ -82,6 +82,8 @@ abstract contract RiskOracleStorage {
     }
 
     PendingRiskUpdate[] public pendingRiskQueue;
+    uint256 public queueHead;
+    uint256 public queueCount;
     uint256 public maxQueueSize = 100;
     uint256 public batchSize = 10;
 
@@ -212,6 +214,7 @@ abstract contract RiskOracleStorage {
     event FulfillmentDeferred(bytes32 indexed requestId);
     event SmartContractWhitelisted(address indexed contractAddr, bool whitelisted);
     event OwnershipRolesSynced(address indexed previousOwner, address indexed newOwner);
+    event DeferredRequestProcessed(bytes32 indexed requestId);
     event QueueDropped(address indexed account, uint256 timestamp);
 
     // ============ Errors ============
@@ -310,7 +313,7 @@ abstract contract RiskOracleStorage {
      * @notice 获取 pendingRiskQueue 长度
      */
     function getPendingQueueLength() external view returns (uint256) {
-        return pendingRiskQueue.length;
+        return queueCount;
     }
 
     /**

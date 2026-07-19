@@ -220,6 +220,7 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     function initialize(address admin, address _riskRegistry) public initializer {
         // L-06: __AccessControl_init 内部已初始化 Context，不再重复调用
         __AccessControl_init();
+        __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
 
         // P0-3 / L-04: 零地址检查
@@ -761,6 +762,30 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
 
     function currentChainId() external view returns (uint256) {
         return _currentChainId();
+    }
+
+    /**
+     * @notice M-03 FIX: 授予角色（带审计日志）
+     */
+    function grantRoleWithReason(
+        bytes32 role,
+        address account,
+        string calldata reason
+    ) external onlyRole(ADMIN_ROLE) {
+        _grantRole(role, account);
+        emit RoleGrantedDetailed(role, account, msg.sender, block.timestamp, reason);
+    }
+
+    /**
+     * @notice M-03 FIX: 撤销角色（带审计日志）
+     */
+    function revokeRoleWithReason(
+        bytes32 role,
+        address account,
+        string calldata reason
+    ) external onlyRole(ADMIN_ROLE) {
+        _revokeRole(role, account);
+        emit RoleRevokedDetailed(role, account, msg.sender, block.timestamp, reason);
     }
 
     /**

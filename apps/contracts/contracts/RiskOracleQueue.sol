@@ -12,11 +12,17 @@ abstract contract RiskOracleQueue is RiskOracleStorage {
 
     /**
      * @notice 入队风险更新（带边界检查）
-     * @dev M-1: 强制 maxQueueSize 检查
+     * @dev M-1: 强制 maxQueueSize 检查，使用环形缓冲区避免 O(n) shift
      */
     function _enqueueRiskUpdate(PendingRiskUpdate memory upd) internal {
-        if (pendingRiskQueue.length >= maxQueueSize) revert QueueFull();
-        pendingRiskQueue.push(upd);
+        if (queueCount >= maxQueueSize) revert QueueFull();
+        uint256 idx = (queueHead + queueCount) % maxQueueSize;
+        if (idx >= pendingRiskQueue.length) {
+            pendingRiskQueue.push(upd);
+        } else {
+            pendingRiskQueue[idx] = upd;
+        }
+        queueCount++;
         emit QueuedRiskUpdate(upd.account, upd.score);
     }
 
@@ -24,14 +30,16 @@ abstract contract RiskOracleQueue is RiskOracleStorage {
      * @notice 批量处理队列中的待更新项
      * @return count 处理数量
      * @return gasUsed 消耗的 gas
+     * @dev M-1: 使用环形缓冲区，避免 O(n) shift
      */
     function _processPendingQueue() internal returns (uint256 count, uint256 gasUsed) {
-        count = pendingRiskQueue.length < batchSize ? pendingRiskQueue.length : batchSize;
+        count = queueCount < batchSize ? queueCount : batchSize;
         if (count == 0) return (0, 0);
 
         uint256 gasStart = gasleft();
         for (uint256 i = 0; i < count; i++) {
-            PendingRiskUpdate storage upd = pendingRiskQueue[i];
+            uint256 idx = queueHead % maxQueueSize;
+            PendingRiskUpdate storage upd = pendingRiskQueue[idx];
             bytes32[] memory tags = upd.tags;
             riskRegistry.updateRiskProfile(
                 upd.account,
@@ -41,15 +49,8 @@ abstract contract RiskOracleQueue is RiskOracleStorage {
                 upd.isSanctioned
             );
             emit RiskProfileUpdated(bytes32(0), upd.account, uint8(upd.score), upd.tier, upd.isSanctioned);
-        }
-
-        // GAS-03: Shift remaining elements. For large queues, consider using a mapping-based circular buffer.
-        // Current implementation is O(n) per batch, acceptable for batchSize <= 10.
-        for (uint256 i = 0; i < pendingRiskQueue.length - count; i++) {
-            pendingRiskQueue[i] = pendingRiskQueue[i + count];
-        }
-        for (uint256 i = 0; i < count; i++) {
-            pendingRiskQueue.pop();
+            queueHead++;
+            queueCount--;
         }
 
         gasUsed = gasStart - gasleft();

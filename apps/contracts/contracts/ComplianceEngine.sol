@@ -383,7 +383,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     }
 
     function batchCheckAddressCompliance(address[] calldata addrs)
-        external whenNotPaused returns (bool[] memory results, uint256[] memory scores)
+        external whenNotPaused nonReentrant returns (bool[] memory results, uint256[] memory scores)
     {
         if (addrs.length > 100) revert BatchSizeExceeded(addrs.length, 100);
         results = new bool[](addrs.length);

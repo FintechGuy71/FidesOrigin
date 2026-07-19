@@ -5,7 +5,8 @@
 // Generated from deployments/sepolia-v0.2.1-partial.json
 // Last updated: 2026-06-15
 
-window.SEPOLIA_ADDRESSES = {
+// [M-6 Fix] Object.freeze prevents runtime tampering of known addresses
+window.SEPOLIA_ADDRESSES = Object.freeze({
     RiskRegistry:         '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc',
     PolicyEngine:         '0x87089F67A61F9643796AE154663A6a9F21196b38',
     ComplianceEngine:     '0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC',
@@ -14,4 +15,4 @@ window.SEPOLIA_ADDRESSES = {
     FidesCompliance:      'PENDING',  // 待部署（余额不足）
     CompliantSmartWallet: 'PENDING',  // 待部署
     TestUSD:              '0xeF90F9FdB868EDA98b337CbF54111b8539533ED2',
-};
+});

@@ -322,6 +322,7 @@ contract ComplianceCoreFacet is BaseFacet {
     )
         external
         whenNotPaused
+        nonReentrant
         returns (bool[] memory results, uint256[] memory scores)
     {
         if (addrs.length > 100)

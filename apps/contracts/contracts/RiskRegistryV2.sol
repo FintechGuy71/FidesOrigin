@@ -52,6 +52,8 @@ contract RiskRegistryV2 is
 
     /// @notice 位打包的风险档案映射 (v0.2.1 遗留)
     /// @dev 位布局: [0-7] riskScore, [8-15] tier, [16] isSanctioned, [17-80] lastUpdated(uint64)
+    /// @dev M-04 NOTE: lastUpdated 使用 uint64 存储，最大可表示至 2106-02-07 06:28:15 UTC。
+    ///      此限制已知且可接受，远超项目预期生命周期。
     mapping(address => uint256) private _packedProfiles;
 
     /// @notice 最后更新时间 (v0.2.1 遗留)
@@ -564,6 +566,24 @@ contract RiskRegistryV2 is
             isSanc,
             packed != 0,
             _addressTagList[addr]
+        );
+    }
+
+    /**
+     * @notice M-08 FIX: 轻量版 getProfile，仅返回核心 4 个字段，节省 gas
+     */
+    function getProfileLight(address addr) external view returns (
+        uint256 riskScore,
+        uint8 riskTier,
+        bool sanctioned,
+        bool exists
+    ) {
+        uint256 packed = _packedProfiles[addr];
+        return (
+            uint256(_unpackRiskScore(packed)),
+            _unpackTier(packed),
+            _unpackIsSanctioned(packed) || sanctionedAddresses[addr],
+            packed != 0
         );
     }
 

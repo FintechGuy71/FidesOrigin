@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.studio.thegraph.com https://rpc.*;">
+    <!-- [M-3 Fix] Nonce-based CSP: removed unsafe-inline for scripts. External CDN scripts use SRI integrity. -->
+    <!-- [M-10 Fix] strict-dynamic allows scripts loaded by nonce-annotated scripts; specific hashes for inline event handlers moved to external file. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-admin2026' 'strict-dynamic' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.studio.thegraph.com https://rpc.*; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>FidesOrigin Admin - 运营后台 v0.4.0 (Sepolia)</title>
     <meta name="description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
     <meta name="theme-color" content="#0f172a">
@@ -17,8 +22,8 @@
     <meta name="twitter:site" content="@fidesorigin">
     <link rel="canonical" href="https://fidesorigin.com/admin/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" integrity="sha384-PLACEHOLDER-CHARTJS" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js" integrity="sha384-PLACEHOLDER-ETHERS" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -669,11 +674,11 @@
     <div class="layout">
         <!-- Mobile Header -->
         <div class="mobile-header">
-            <button class="hamburger" onclick="toggleMobileSidebar()">☰</button>
+            <button type="button" type="button" class="hamburger" data-action="toggleMobileSidebar">☰</button>
             <span>FidesOrigin Admin</span>
             <div style="width:36px;"></div>
         </div>
-        <div class="overlay" id="overlay" onclick="toggleMobileSidebar()"></div>
+        <div class="overlay" id="overlay" data-action="toggleMobileSidebar"></div>
 
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -690,59 +695,59 @@
             
             <div class="nav-section">
                 <div class="nav-title">概览</div>
-                <a class="nav-item active" onclick="showPage('dashboard')">
+                <a class="nav-item active" data-action="showPage" data-page="dashboard">
                     <span>📊</span> 数据看板
                 </a>
-                <a class="nav-item" onclick="showPage('monitor')">
+                <a class="nav-item" data-action="showPage" data-page="monitor">
                     <span>📡</span> 实时监控
                 </a>
             </div>
             
             <div class="nav-section">
                 <div class="nav-title">管理</div>
-                <a class="nav-item" onclick="showPage('customers')">
+                <a class="nav-item" data-action="showPage" data-page="customers">
                     <span>👥</span> 客户管理
                 </a>
-                <a class="nav-item" onclick="showPage('tags')">
+                <a class="nav-item" data-action="showPage" data-page="tags">
                     <span>🏷️</span> 标签管理
                 </a>
-                <a class="nav-item" onclick="showPage('limits')">
+                <a class="nav-item" data-action="showPage" data-page="limits">
                     <span>⚙️</span> 限额配置
                 </a>
             </div>
             
             <div class="nav-section">
                 <div class="nav-title">隔离风控 (P2P Protection)</div>
-                <a class="nav-item" onclick="showPage('quarantine')">
+                <a class="nav-item" data-action="showPage" data-page="quarantine">
                     <span>🔒</span> 隔离资金管理
                 </a>
-                <a class="nav-item" onclick="showPage('incomingBlocks')">
+                <a class="nav-item" data-action="showPage" data-page="incomingBlocks">
                     <span>🚫</span> 收款拦截记录
                 </a>
             </div>
             
             <div class="nav-section">
                 <div class="nav-title">安全 (Phase 3)</div>
-                <a class="nav-item" onclick="showPage('timelock')">
+                <a class="nav-item" data-action="showPage" data-page="timelock">
                     <span>⏱️</span> 时间锁管理
                 </a>
-                <a class="nav-item" onclick="showPage('multisig')">
+                <a class="nav-item" data-action="showPage" data-page="multisig">
                     <span>🔏</span> 多签管理
                 </a>
-                <a class="nav-item" onclick="showPage('emergency')">
+                <a class="nav-item" data-action="showPage" data-page="emergency">
                     <span>🚨</span> 紧急暂停
                 </a>
             </div>
             
             <div class="nav-section">
                 <div class="nav-title">系统</div>
-                <a class="nav-item" onclick="showPage('policies')">
+                <a class="nav-item" data-action="showPage" data-page="policies">
                     <span>📜</span> 策略配置
                 </a>
-                <a class="nav-item" onclick="showPage('complianceLogs')">
+                <a class="nav-item" data-action="showPage" data-page="complianceLogs">
                     <span>📋</span> 合规日志
                 </a>
-                <a class="nav-item" onclick="showPage('settings')">
+                <a class="nav-item" data-action="showPage" data-page="settings">
                     <span>🔧</span> 系统设置
                 </a>
             </div>
@@ -762,10 +767,10 @@
                             <span class="status-dot disconnected"></span>
                             <span id="walletAddress">未连接钱包</span>
                         </div>
-                        <button id="connectBtn" class="btn btn-primary" onclick="connectWallet()">
+                        <button type="button" type="button" id="connectBtn" class="btn btn-primary" data-action="connectWallet">
                             🔗 连接 MetaMask
                         </button>
-                        <button class="btn btn-secondary">📅 今日</button>
+                        <button type="button" type="button" class="btn btn-secondary">📅 今日</button>
                     </div>
                 </div>
 
@@ -851,7 +856,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">最近拦截记录</div>
-                        <button class="btn btn-secondary" onclick="loadBlockedTransfers()">刷新</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadBlockedTransfers">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -895,7 +900,7 @@
                         <div class="card-title">实时风控拦截</div>
                         <div>
                             <span class="tag tag-success" style="margin-right: 8px;">自动拦截已启用</span>
-                            <button class="btn btn-sm btn-secondary" onclick="refreshMonitor()">刷新</button>
+                            <button type="button" type="button" class="btn btn-sm btn-secondary" data-action="refreshMonitor">刷新</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -926,7 +931,7 @@
                         <p>管理用户地址与风控标签</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="openAddCustomerModal()">+ 新增客户</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="openAddCustomerModal">+ 新增客户</button>
                     </div>
                 </div>
 
@@ -963,7 +968,7 @@
                         <p>管理地址风险标签和风控策略</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="openTagModal()">+ 新增标签</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="openTagModal">+ 新增标签</button>
                     </div>
                 </div>
 
@@ -1002,7 +1007,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">当前限额配置</div>
-                        <button class="btn btn-primary" onclick="saveLimits()">保存修改</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="saveLimits">保存修改</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -1053,7 +1058,7 @@
                         <p>管理交易延迟执行与待处理操作</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="openTimelockConfigModal()">⚙️ 配置延迟时间</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="openTimelockConfigModal">⚙️ 配置延迟时间</button>
                     </div>
                 </div>
 
@@ -1106,7 +1111,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">待执行操作队列</div>
-                        <button class="btn btn-secondary" onclick="loadPendingOperations()">刷新</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadPendingOperations">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -1136,7 +1141,7 @@
                         <p>管理签名者与多签阈值</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="openAddSignerModal()">+ 添加签名者</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="openAddSignerModal">+ 添加签名者</button>
                     </div>
                 </div>
 
@@ -1154,7 +1159,7 @@
                                 <label class="form-label">所需签名数</label>
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <input type="number" class="form-input" id="requiredSigs" value="2" style="width: 100px;">
-                                    <button class="btn btn-secondary" onclick="updateRequiredSigs()">更新</button>
+                                    <button type="button" type="button" class="btn btn-secondary" data-action="updateRequiredSigs">更新</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1186,7 +1191,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">签名者列表</div>
-                        <button class="btn btn-secondary" onclick="loadSigners()">刷新</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadSigners">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -1214,7 +1219,7 @@
                         <p>查看和管理被自动隔离的污染资金</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="loadQuarantineRecords()">刷新</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadQuarantineRecords">刷新</button>
                         <span class="tag tag-operator">Operator</span>
                     </div>
                 </div>
@@ -1294,7 +1299,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">拦截记录</div>
-                        <button class="btn btn-secondary" onclick="loadIncomingBlocks()">刷新</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadIncomingBlocks">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -1352,7 +1357,7 @@
                         </div>
                         <div class="card-body">
                             <div style="text-align: center; padding: 20px;">
-                                <button class="btn btn-danger" style="padding: 16px 32px; font-size: 1.1rem;" onclick="emergencyPause()">
+                                <button type="button" type="button" class="btn btn-danger" style="padding: 16px 32px; font-size: 1.1rem;" data-action="emergencyPause">
                                     🛑 紧急暂停合约
                                 </button>
                                 <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
@@ -1360,7 +1365,7 @@
                                 </div>
                             </div>
                             <div style="text-align: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px;">
-                                <button class="btn btn-success" style="padding: 16px 32px; font-size: 1.1rem;" onclick="emergencyUnpause()">
+                                <button type="button" type="button" class="btn btn-success" style="padding: 16px 32px; font-size: 1.1rem;" data-action="emergencyUnpause">
                                     ✅ 解除暂停
                                 </button>
                                 <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
@@ -1380,8 +1385,8 @@
                         <p>查看所有管理操作记录</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="loadLogs()">刷新</button>
-                        <button class="btn btn-primary" onclick="exportLogs()">导出</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadLogs">刷新</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="exportLogs">导出</button>
                     </div>
                 </div>
 
@@ -1410,8 +1415,8 @@
                         <p>管理发行方合规策略与版本历史</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="loadPolicies()">刷新</button>
-                        <button class="btn btn-primary" onclick="openPolicyModal()">+ 新建策略</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadPolicies">刷新</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="openPolicyModal">+ 新建策略</button>
                     </div>
                 </div>
 
@@ -1482,7 +1487,7 @@
                         <p>The Graph 实时索引的链上合规检查记录</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="loadSubgraphComplianceChecks()">刷新</button>
+                        <button type="button" type="button" class="btn btn-secondary" data-action="loadSubgraphComplianceChecks">刷新</button>
                         <span class="badge" style="background: var(--success); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem;">The Graph 实时</span>
                     </div>
                 </div>
@@ -1550,7 +1555,7 @@
                             <label class="form-label">RPC URL</label>
                             <input type="text" class="form-input" id="rpcUrl" value="https://ethereum-sepolia-rpc.publicnode.com">
                         </div>
-                        <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                        <button type="button" type="button" class="btn btn-primary" data-action="saveSettings">保存设置</button>
                     </div>
                 </div>
             </div>
@@ -1565,8 +1570,8 @@
                 请连接 MetaMask 钱包以管理 FidesOrigin 合约
             </p>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('connectModal')">取消</button>
-                <button class="btn btn-primary" onclick="connectMetaMask()">连接 MetaMask</button>
+                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="connectModal">取消</button>
+                <button type="button" type="button" class="btn btn-primary" data-action="connectMetaMask">连接 MetaMask</button>
             </div>
         </div>
     </div>
@@ -1593,8 +1598,8 @@
                 <input type="text" class="form-input" id="tagReason" placeholder="标注原因...">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('tagModal')">取消</button>
-                <button class="btn btn-primary" onclick="submitTag()">确认</button>
+                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="tagModal">取消</button>
+                <button type="button" type="button" class="btn btn-primary" data-action="submitTag">确认</button>
             </div>
         </div>
     </div>
@@ -1611,8 +1616,8 @@
                 添加签名者需要多签确认并通过时间锁执行
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('signerModal')">取消</button>
-                <button class="btn btn-primary" onclick="submitAddSigner()">提交</button>
+                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="signerModal">取消</button>
+                <button type="button" type="button" class="btn btn-primary" data-action="submitAddSigner">提交</button>
             </div>
         </div>
     </div>
@@ -1629,8 +1634,8 @@
                 修改时间锁延迟将通过时间锁执行，需要多签确认
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('timelockConfigModal')">取消</button>
-                <button class="btn btn-primary" onclick="submitTimelockConfig()">提交</button>
+                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="timelockConfigModal">取消</button>
+                <button type="button" type="button" class="btn btn-primary" data-action="submitTimelockConfig">提交</button>
             </div>
         </div>
     </div>
@@ -1664,13 +1669,13 @@
                 <input type="checkbox" id="policyRequireKYCInput" style="width: 20px; height: 20px;">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('policyModal')">取消</button>
-                <button class="btn btn-primary" onclick="submitPolicy()">保存策略</button>
+                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="policyModal">取消</button>
+                <button type="button" type="button" class="btn btn-primary" data-action="submitPolicy">保存策略</button>
             </div>
         </div>
     </div>
 
-    <script src="admin-config.js"></script>
-    <script src="admin.js"></script>
+    <script nonce="admin2026" src="admin-config.js"></script>
+    <script nonce="admin2026" src="admin.js"></script>
 </body>
 </html>

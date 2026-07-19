@@ -41,7 +41,7 @@
         <a href="#developers">Developers</a>
         <a href="#contact">Contact</a>
         <div class="lang-dropdown" style="position:relative;">
-          <button class="theme-toggle" onclick="toggleLangMenu(event)" aria-label="Language" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.875rem;">
+          <button class="theme-toggle" id="langToggleBtn" aria-label="Language" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.875rem;">
             EN ▾
           </button>
           <div id="langMenu" style="position:absolute;top:100%;right:0;min-width:120px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:4px;display:none;z-index:100;">
@@ -52,7 +52,7 @@
         </div>
         <a href="#contact" class="nav-cta">Get Started</a>
       </div>
-      <button class="nav-mobile-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+      <button class="nav-mobile-btn"  aria-label="Menu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -60,14 +60,14 @@
 
   <!-- Mobile Menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+    <button class="mobile-menu-close" >
       <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
     </button>
-    <a href="#features" onclick="toggleMobileMenu()">Features</a>
-    <a href="#how-it-works" onclick="toggleMobileMenu()">How It Works</a>
-    <a href="#security" onclick="toggleMobileMenu()">Security</a>
-    <a href="#developers" onclick="toggleMobileMenu()">Developers</a>
-    <a href="#contact" onclick="toggleMobileMenu()">Contact</a>
+    <a href="#features" >Features</a>
+    <a href="#how-it-works" >How It Works</a>
+    <a href="#security" >Security</a>
+    <a href="#developers" >Developers</a>
+    <a href="#contact" >Contact</a>
     <div style="display:flex;gap:16px;margin-top:16px;">
       <a href="/" style="color:var(--accent);">EN</a>
       <a href="/cn/">CN</a>
@@ -365,10 +365,21 @@
   </footer>
 
   <script nonce="2726c7f26c">
+    // [M-4 Fix] All event handlers attached via addEventListener instead of inline onclick
+    
     // ===== Mobile Menu =====
     function toggleMobileMenu() {
       document.getElementById('mobileMenu').classList.toggle('active');
     }
+    document.addEventListener('DOMContentLoaded', function() {
+      var mobileBtn = document.querySelector('.nav-mobile-btn');
+      if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu);
+      document.querySelectorAll('#mobileMenu a').forEach(function(link) {
+        link.addEventListener('click', toggleMobileMenu);
+      });
+    });
 
     // ===== Language Menu =====
     function toggleLangMenu(e) {
@@ -376,6 +387,10 @@
       var menu = document.getElementById('langMenu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
+    document.addEventListener('DOMContentLoaded', function() {
+      var langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.addEventListener('click', toggleLangMenu);
+    });
     document.addEventListener('click', function() {
       var menu = document.getElementById('langMenu');
       if (menu) menu.style.display = 'none';

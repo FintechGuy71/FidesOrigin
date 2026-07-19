@@ -24,9 +24,8 @@ contract FeeOnTransferToken is ERC20 {
         if (from != address(0) && to != address(0)) {
             uint256 fee = (amount * FEE_BPS) / BPS_DENOMINATOR;
             uint256 netAmount = amount - fee;
-            super._update(from, address(this), amount); // burn full amount from sender
-            _mint(to, netAmount); // mint net to recipient
-            // fee stays in contract
+            super._update(from, to, netAmount);
+            super._update(from, address(this), fee);
         } else {
             super._update(from, to, amount);
         }

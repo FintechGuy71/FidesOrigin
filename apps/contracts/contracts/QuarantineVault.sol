@@ -434,7 +434,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
 
         totalReleased++;
         totalReleasedAmount += record.amount;
-        // H5 fix: check for underflow before decrementing
+        // M-06 FIX: 显式检查 totalQuarantinedAmount 和 tokenQuarantinedAmount 防止下溢
+        require(totalQuarantinedAmount >= record.amount, "QV: totalQuarantinedAmount underflow");
+        totalQuarantinedAmount -= record.amount;
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 
@@ -492,7 +494,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             record.releasedAt = block.timestamp;
             totalReleased++;
             totalReleasedAmount += record.amount;
-            // H6 fix: check for underflow before decrementing
+            // M-06 FIX: 显式检查防止下溢
+            require(totalQuarantinedAmount >= record.amount, "QV: totalQuarantinedAmount underflow");
+            totalQuarantinedAmount -= record.amount;
             require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
             tokenQuarantinedAmount[record.token] -= record.amount;
 
@@ -537,6 +541,8 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
 
         totalReleased++;
         totalReleasedAmount += record.amount;
+        require(totalQuarantinedAmount >= record.amount, "QV: totalQuarantinedAmount underflow");
+        totalQuarantinedAmount -= record.amount;
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 

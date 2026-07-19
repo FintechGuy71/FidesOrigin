@@ -147,7 +147,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <a href="/tw/" style="color:var(--text-sec);text-decoration:none;font-size:0.85rem;">返回首頁</a>
             <div class="lang-dropdown" id="langDropdownNav" style="position:relative;">
-                <button onclick="toggleDropdown('langDropdownNav',event)" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-size:0.85rem;cursor:pointer;">
+                <button type="button" id="langDropdownBtn" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-size:0.85rem;cursor:pointer;">
                     <span>🌐</span><span>繁體中文</span><span>▾</span>
                 </button>
                 <div class="lang-dropdown-menu" style="position:absolute;top:calc(100% + 6px);right:0;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
@@ -184,7 +184,7 @@
 
         <div class="search-box">
             <input type="text" id="addressInput" placeholder="輸入以太坊地址 (0x...)" maxlength="42" autocomplete="off" spellcheck="false" autocorrect="off">
-            <button onclick="checkAddress()" id="checkBtn">
+            <button type="button"  id="checkBtn">
                 <span id="btnText">查詢風險等級</span>
             </button>
         </div>

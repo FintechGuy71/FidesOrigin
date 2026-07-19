@@ -319,7 +319,7 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
             (bool decodeOk, address[] memory sanctionedAddrs) = tryDecodeAddresses(response);
             if (decodeOk) {
                 for (uint256 i = 0; i < sanctionedAddrs.length; i++) {
-                    if (pendingRiskQueue.length < maxQueueSize) {
+                    if (queueCount < maxQueueSize) {
                         _enqueueRiskUpdate(PendingRiskUpdate({
                             account: sanctionedAddrs[i],
                             score: 100,
@@ -390,6 +390,28 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
      */
     function _decodeAddressesExternal(bytes calldata data) external pure returns (address[] memory) {
         return abi.decode(data, (address[]));
+    }
+
+    /**
+     * @notice H-5 FIX: 处理延迟的 Chainlink 回调请求
+     * @param requestIds 要处理的请求 ID 数组
+     */
+    function processDeferredRequests(bytes32[] calldata requestIds) external onlyRole(OPERATOR_ROLE) {
+        for (uint256 i = 0; i < requestIds.length; i++) {
+            bytes32 requestId = requestIds[i];
+            RequestInfo storage info = requestInfo[requestId];
+            if (!info.fulfilled) revert RequestNotFound();
+            if (!info.deferred) continue;
+
+            info.deferred = false;
+            if (info.error.length == 0 && info.result.length > 0) {
+                _processRiskResponse(info.requestType, info.result, info.requester);
+                emit RiskUpdateFulfilled(requestId, true, block.timestamp);
+            } else {
+                emit RiskUpdateFulfilled(requestId, false, block.timestamp);
+            }
+            emit DeferredRequestProcessed(requestId);
+        }
     }
 
     // ============ Data Source Management (M-1) ============
