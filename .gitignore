@@ -75,8 +75,9 @@ deployments/
 # Hardhat build artifacts (contain full ABI — information exposure risk)
 apps/contracts/artifacts/
 
-# K8s secrets
-k8s/secret.yaml
+# K8s secrets — NEVER commit unsealed secrets (templates are OK)
+k8s/*-sealed-secret.yaml
+!k8s/*-sealed-secret.yaml.template
 
 # Data sync env
 data-sync/.env

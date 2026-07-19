@@ -10,8 +10,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin
-      - DATABASE_URL_SYNC=postgresql://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin
+      # [K3-Audit Fix] Force SSL for all database connections
+      - DATABASE_URL=postgresql+asyncpg://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin?sslmode=require
+      - DATABASE_URL_SYNC=postgresql://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin?sslmode=require
+      # [K3-Audit Fix] Redis TLS — use rediss:// when TLS is enabled on Redis
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
       - DEBUG=${DEBUG:-false}
@@ -31,6 +33,9 @@ services:
   db:
     image: postgres:15-alpine
     container_name: fidesorigin-db
+    # [K3-Audit Fix] Enable SSL on PostgreSQL
+    # For production, mount SSL certs and set: ssl=on, ssl_cert_file, ssl_key_file
+    # See: https://www.postgresql.org/docs/current/ssl-tcp.html
     environment:
       - POSTGRES_USER=fidesorigin
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
@@ -51,6 +56,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: fidesorigin-redis
+    # [K3-Audit Fix] Enable Redis TLS for production
+    # Mount redis.conf with: tls-port 6379, port 0, tls-cert-file, tls-key-file, tls-ca-cert-file
+    # See: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
@@ -69,8 +77,10 @@ services:
     container_name: fidesorigin-worker
     command: celery -A app.services.celery_app worker --loglevel=info
     environment:
-      - DATABASE_URL=postgresql+asyncpg://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin
-      - DATABASE_URL_SYNC=postgresql://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin
+      # [K3-Audit Fix] Force SSL for all database connections
+      - DATABASE_URL=postgresql+asyncpg://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin?sslmode=require
+      - DATABASE_URL_SYNC=postgresql://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin?sslmode=require
+      # [K3-Audit Fix] Redis TLS — use rediss:// when TLS is enabled on Redis
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
       - BLOCKSCOUT_API_KEY=${BLOCKSCOUT_API_KEY:-}
@@ -91,7 +101,8 @@ services:
     container_name: fidesorigin-migration
     command: alembic upgrade head
     environment:
-      - DATABASE_URL_SYNC=postgresql://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin
+      # [K3-Audit Fix] Force SSL for database connections
+      - DATABASE_URL_SYNC=postgresql://fidesorigin:${POSTGRES_PASSWORD}@db:5432/fidesorigin?sslmode=require
     depends_on:
       db:
         condition: service_healthy

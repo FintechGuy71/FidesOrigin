@@ -1,4 +1,4 @@
-# [L-17 Fix] NetworkPolicy: restrict outbound connections to only required endpoints
+# [K3-Audit Fix] NetworkPolicy: restrict outbound connections to only required endpoints
 # Apply this to the fidesorigin-data-publisher namespace.
 #
 # NOTE: Standard Kubernetes NetworkPolicy does NOT support FQDN-based filtering.
@@ -18,10 +18,46 @@
 #   - raw.githubusercontent.com (Metamask phishing list)
 #   - any trust anchor oracles required by FATF pipeline
 #
-# This manifest keeps the standard K8s fallback (allow 443/80 to any) so that
+# This manifest keeps the standard K8s fallback (allow 443 to any) so that
 # workloads continue to function in clusters without Calico/Cilium.
 # Once Calico/Cilium is installed, replace the "allow 443/80 to any" rules
 # with FQDN-based rules. See k8s/networkpolicy-calico.yaml for an example.
+#
+# ── CiliumNetworkPolicy 示例 (供参考，需 Cilium CNI) ──
+# apiVersion: cilium.io/v2
+# kind: CiliumNetworkPolicy
+# metadata:
+#   name: fidesorigin-publisher-egress-fqdn
+#   namespace: fidesorigin
+# spec:
+#   endpointSelector:
+#     matchLabels:
+#       app: fidesorigin-data-publisher
+#   egress:
+#     - toFQDNs:
+#         - matchName: "treasury.gov"
+#         - matchName: "api.chainalysis.com"
+#         - matchName: "api.opensanctions.org"
+#         - matchName: "api.etherscan.io"
+#         - matchName: "thegraph.com"
+#         - matchName: "alchemy.com"
+#         - matchName: "raw.githubusercontent.com"
+#       toPorts:
+#         - ports:
+#             - port: "443"
+#               protocol: TCP
+#     - toEndpoints:
+#         - matchLabels:
+#             k8s:io.kubernetes.pod.namespace: kube-system
+#             k8s:k8s-app: kube-dns
+#       toPorts:
+#         - ports:
+#             - port: "53"
+#               protocol: UDP
+#           rules:
+#             dns:
+#               - matchPattern: "*."
+# ────────────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -55,21 +91,14 @@ spec:
       ports:
         - protocol: UDP
           port: 53
-    # [L-17-Fix] Allow HTTPS to external APIs.
+    # [K3-Audit Fix] Allow HTTPS to external APIs.
     # In clusters with Calico/Cilium, REPLACE this with FQDN-based rules.
-    # Until then, 443/80 to any target is the least-privilege option available
-    # in standard K8s NetworkPolicy.
+    # Until then, 443 to any target is the least-privilege option available
+    # in standard K8s NetworkPolicy. Port 80 is REMOVED — all upstreams must use TLS.
     - to: []
       ports:
         - protocol: TCP
           port: 443
-    # [L-17-Fix] Allow HTTP to external APIs only if needed.
-    # Prefer HTTPS (port 443) for all external traffic; remove port 80
-    # once all upstream dependencies support TLS.
-    - to: []
-      ports:
-        - protocol: TCP
-          port: 80
     # Allow Redis cluster communication (if cluster mode enabled)
     - to:
         - podSelector:

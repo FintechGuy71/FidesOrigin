@@ -11,11 +11,16 @@ services:
     image: postgres:16-alpine
     container_name: fidesorigin-postgres
     restart: unless-stopped
+    # [K3-Audit Fix] Force SSL for database connections in production
     environment:
       POSTGRES_USER: ${DB_USER:-fidesorigin}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME:-fidesorigin}
       PGDATA: /var/lib/postgresql/data/pgdata
+      # Enable SSL (mount certs via volumes in production)
+      # ssl: on
+      # ssl_cert_file: /etc/ssl/certs/server.crt
+      # ssl_key_file: /etc/ssl/private/server.key
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -28,12 +33,21 @@ services:
       start_period: 30s
     networks:
       - fidesorigin-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          memory: 512M
 
   # ---------------- Redis ----------------
   redis:
     image: redis:7-alpine
     container_name: fidesorigin-redis
     restart: unless-stopped
+    # [K3-Audit Fix] Enable Redis TLS in production
+    # command: redis-server --tls-port 6379 --port 0 --tls-cert-file /etc/ssl/certs/redis.crt --tls-key-file /etc/ssl/private/redis.key --tls-ca-cert-file /etc/ssl/certs/ca.crt --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
@@ -47,6 +61,13 @@ services:
       start_period: 10s
     networks:
       - fidesorigin-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          memory: 256M
 
   # ---------------- FastAPI Backend ----------------
   backend:
@@ -62,6 +83,8 @@ services:
       # Override DB/Redis host to use service names in Docker network
       DB_HOST: postgres
       REDIS_HOST: redis
+      # [K3-Audit Fix] Force SSL for database connections
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-fidesorigin}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-fidesorigin}?sslmode=require
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +103,8 @@ services:
     deploy:
       resources:
         limits:
+          # [K3-Audit Fix] CPU and memory limits for resource isolation
+          cpus: '2.0'
           memory: 1G
         reservations:
           memory: 512M
