@@ -123,7 +123,9 @@ class Address(Base):
     first_seen_at = Column(DateTime(timezone=True))
     last_seen_at = Column(DateTime(timezone=True))
     
-    # 元数据存储（使用 meta_info 避免与 SQLAlchemy 的 metadata 冲突）
+    # [M-1 Fix] 使用 meta_info 而非 metadata 作为字段名，
+    # 因为 SQLAlchemy 内部使用 metadata 属性管理表结构元数据（Base.metadata），
+    # 若模型也定义 metadata 列会导致命名冲突和不可预期的行为。
     meta_info = Column(JSON, default=dict)
     
     # 审计字段

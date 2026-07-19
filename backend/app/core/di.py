@@ -56,7 +56,7 @@ class DIContainer:
             logger.warning("cache_connect_failed", error=str(e))
         
         # 初始化 Blockscout 服务
-        self._blockscout = BlockscoutService()
+        self._blockscout = BlockscoutService(cache=self._cache)
         
         # 初始化告警服务
         self._alert = AlertService()
@@ -91,7 +91,7 @@ class DIContainer:
         if not self._cache:
             self._cache = CacheService()
             # 在测试环境中不尝试连接 Redis
-            if os.environ.get("TEST_DATABASE_URL"):
+            if os.environ.get("TESTING", "").lower() == "true":
                 logger.debug("test_mode_skip_redis")
             else:
                 try:
@@ -106,7 +106,7 @@ class DIContainer:
     def blockscout(self) -> BlockscoutService:
         """获取 Blockscout 服务（懒加载）"""
         if not self._blockscout:
-            self._blockscout = BlockscoutService()
+            self._blockscout = BlockscoutService(cache=self.cache)
         return self._blockscout
     
     @property
@@ -167,8 +167,8 @@ def get_container() -> DIContainer:
 async def init_container() -> None:
     """初始化容器"""
     container = get_container()
-    # 测试环境中跳过 Redis 连接
-    if os.environ.get("TEST_DATABASE_URL"):
+    # [M-10 Fix] 使用明确的测试模式标志
+    if os.environ.get("TESTING", "").lower() == "true":
         logger.debug("test_mode_skip_container_init")
         return
     await container.initialize()

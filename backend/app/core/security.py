@@ -456,19 +456,29 @@ async def request_signature_middleware(
     """
     请求签名验证中间件
     
-    对敏感端点验证请求签名，防止重放攻击
+    [M-6 Fix] 扩展保护范围：所有写操作端点（POST/PUT/PATCH/DELETE）到 /api/v1/* 路径
+    以及原有敏感端点，均需验证请求签名以防止重放攻击
     """
-    # 仅对写操作端点验证签名
+    # 对 /api/v1/ 下的所有写操作端点验证签名
+    is_api_write = (
+        request.url.path.startswith("/api/v1/") and
+        request.method in ("POST", "PUT", "PATCH", "DELETE")
+    )
+    # 保留原有的敏感端点列表（读操作也需要保护）
     sensitive_paths = ["/api/v1/address/report", "/api/v1/rules"]
-    is_sensitive = any(request.url.path.startswith(p) for p in sensitive_paths)
+    is_sensitive_path = any(request.url.path.startswith(p) for p in sensitive_paths)
     
-    if is_sensitive and request.method in ("POST", "PUT", "PATCH", "DELETE"):
+    if (is_api_write or is_sensitive_path) and request.method in ("POST", "PUT", "PATCH", "DELETE"):
         timestamp = request.headers.get("X-Request-Timestamp")
         signature = request.headers.get("X-Request-Signature")
         
         if not timestamp or not signature:
-            logger.warning("request_signature_missing", path=request.url.path)
-            raise AuthenticationException("Request signature required")
+            logger.warning("request_signature_missing", path=request.url.path, method=request.method)
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=401,
+                content={"error": {"code": "UNAUTHORIZED", "message": "Request signature required"}}
+            )
         
         # 读取请求体
         body = ""
@@ -480,8 +490,12 @@ async def request_signature_middleware(
         
         signer = get_request_signer()
         if not signer.verify(request.method, request.url.path, timestamp, signature, body):
-            logger.warning("request_signature_invalid", path=request.url.path)
-            raise AuthenticationException("Invalid request signature")
+            logger.warning("request_signature_invalid", path=request.url.path, method=request.method)
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=401,
+                content={"error": {"code": "UNAUTHORIZED", "message": "Invalid request signature"}}
+            )
     
     response = await call_next(request)
     return response

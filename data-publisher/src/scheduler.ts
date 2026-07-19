@@ -122,6 +122,11 @@ export class JobScheduler {
   private async runSyncJob(type: 'full' | 'incremental', jobId: string): Promise<SyncJob> {
     const release = await this.localMutex.acquire();
     const uniqueJobId = `${type}-${Date.now()}`;
+    // [M-7 Fix] 限制单个错误消息长度，防止内存无限增长
+    const MAX_ERROR_LENGTH = 500;
+    const MAX_ERRORS_PER_JOB = 50;
+    const truncateError = (err: string): string =>
+      err.length > MAX_ERROR_LENGTH ? err.slice(0, MAX_ERROR_LENGTH) + '... [truncated]' : err;
     const job: SyncJob = {
       id: uniqueJobId,
       type,
@@ -149,7 +154,7 @@ export class JobScheduler {
         logger.info(`Another instance is running ${type} sync, skipping`);
         job.status = 'skipped';
         job.completedAt = new Date();
-        job.errors.push('Skipped: another instance holds the lock');
+        job.errors.push(truncateError('Skipped: another instance holds the lock'));
         release();
         return job;
       }
@@ -221,7 +226,8 @@ export class JobScheduler {
       const failures = results.filter(r => r.status === 'failed');
       
       for (const f of failures) {
-        job.errors.push(f.error || 'Unknown error');
+        if (job.errors.length >= MAX_ERRORS_PER_JOB) break;
+        job.errors.push(truncateError(f.error || 'Unknown error'));
       }
 
       job.status = 'completed';
@@ -238,7 +244,7 @@ export class JobScheduler {
     } catch (error) {
       job.status = 'failed';
       job.completedAt = new Date();
-      job.errors.push((error as Error).message);
+      job.errors.push(truncateError((error as Error).message));
       
       logger.error(`${type} sync failed`, {
         jobId,

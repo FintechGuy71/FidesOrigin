@@ -33,9 +33,13 @@ class BlockscoutService:
     - 信号量限流（并发控制）
     - 指数退避重试（tenacity）
     - 断路器模式（连续失败时快速失败）
+    - [M-4 Fix] 断路器状态持久化到 Redis，支持多实例共享
     """
     
-    def __init__(self):
+    CIRCUIT_KEY = "circuit:blockscout"
+    CIRCUIT_TTL = 300  # 断路器状态在 Redis 中保留 5 分钟
+    
+    def __init__(self, cache=None):
         self.base_url = settings.BLOCKSCOUT_BASE_URL.rstrip('/')
         self.api_key = settings.BLOCKSCOUT_API_KEY
         self.timeout = settings.BLOCKSCOUT_TIMEOUT
@@ -44,6 +48,7 @@ class BlockscoutService:
         self._failure_count = 0
         self._circuit_open = False
         self._circuit_threshold = 5  # 连续失败阈值
+        self._cache = cache  # [M-4 Fix] 可选的 CacheService 用于持久化断路器状态
     
     async def connect(self) -> None:
         """建立 HTTP 连接"""
@@ -65,6 +70,8 @@ class BlockscoutService:
                 )
             )
             self._semaphore = None  # 延迟初始化
+            # [M-4 Fix] 连接时从 Redis 恢复断路器状态
+            await self._load_circuit_state()
             logger.info("blockscout_service_connected", base_url=self.base_url)
     
     async def close(self) -> None:
@@ -73,6 +80,35 @@ class BlockscoutService:
             await self._client.aclose()
             self._client = None
             logger.info("blockscout_service_disconnected")
+    
+    # [M-4 Fix] 断路器状态持久化方法
+    async def _load_circuit_state(self):
+        """从 Redis 加载断路器状态"""
+        if self._cache is None:
+            return
+        try:
+            state = await self._cache.get_json(self.CIRCUIT_KEY)
+            if state:
+                self._failure_count = state.get("failure_count", self._failure_count)
+                self._circuit_open = state.get("circuit_open", self._circuit_open)
+                if self._circuit_open:
+                    logger.info("blockscout_circuit_state_restored_from_redis",
+                               failure_count=self._failure_count)
+        except Exception as e:
+            logger.warning("blockscout_circuit_load_failed", error=str(e))
+    
+    async def _save_circuit_state(self):
+        """保存断路器状态到 Redis"""
+        if self._cache is None:
+            return
+        try:
+            await self._cache.set_json(
+                self.CIRCUIT_KEY,
+                {"failure_count": self._failure_count, "circuit_open": self._circuit_open},
+                expire=self.CIRCUIT_TTL
+            )
+        except Exception as e:
+            logger.warning("blockscout_circuit_save_failed", error=str(e))
     
     def _get_semaphore(self):
         """延迟初始化信号量"""
@@ -89,15 +125,18 @@ class BlockscoutService:
             )
     
     def _record_success(self):
-        """记录成功，重置失败计数"""
+        """记录成功，重置失败计数并持久化"""
         if self._failure_count > 0:
             self._failure_count = 0
             if self._circuit_open:
                 self._circuit_open = False
                 logger.info("blockscout_circuit_closed")
+            # [M-4 Fix] 异步保存状态
+            import asyncio
+            asyncio.create_task(self._save_circuit_state())
     
     def _record_failure(self):
-        """记录失败，检查断路器"""
+        """记录失败，检查断路器并持久化"""
         self._failure_count += 1
         if self._failure_count >= self._circuit_threshold:
             self._circuit_open = True
@@ -106,6 +145,9 @@ class BlockscoutService:
                 failure_count=self._failure_count,
                 threshold=self._circuit_threshold
             )
+        # [M-4 Fix] 异步保存状态
+        import asyncio
+        asyncio.create_task(self._save_circuit_state())
     
     async def _request(
         self,

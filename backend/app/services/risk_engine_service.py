@@ -295,9 +295,24 @@ class RiskEngineService:
                         description=description or rule.description
                     ))
             
+            # [M-5 Fix] 封顶前先记录所有触发规则，避免信息丢失
+            raw_total_score = total_score
+            triggered_rule_names = [f.name for f in risk_factors]
+            
             # 封顶 100
             total_score = min(total_score, 100)
             risk_level = self._calculate_risk_level(total_score)
+            
+            # 如果发生封顶，记录被截断的原始分数和规则
+            if raw_total_score > 100:
+                logger.warning(
+                    "risk_score_capped",
+                    address=address,
+                    raw_score=raw_total_score,
+                    capped_score=total_score,
+                    triggered_rules=triggered_rule_names,
+                    rules_count=len(risk_factors)
+                )
             
             # 缓存结果
             cache_data = {

@@ -44,8 +44,8 @@ async def lifespan(app: FastAPI):
     # 启动
     logger.info("application_starting", version=__version__, env=settings.APP_ENV)
     
-    # 检查是否在测试环境中（通过环境变量）
-    is_testing = os.environ.get("TEST_DATABASE_URL") is not None
+    # [M-10 Fix] 使用明确的测试模式标志，避免仅通过数据库URL存在性判断
+    is_testing = os.environ.get("TESTING", "").lower() == "true"
     
     try:
         # 初始化数据库（测试环境中跳过，由测试固件管理）
@@ -154,13 +154,16 @@ async def fides_exception_handler(request, exc: FidesException):
         trace_id=getattr(request.state, "trace_id", "unknown")
     )
     
+    # [H-3 Fix] 生产环境不暴露异常详情，防止敏感信息泄露
+    details = exc.details if not settings.is_production else {}
+    
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "error": {
                 "code": exc.error_code,
                 "message": exc.message,
-                "details": exc.details,
+                "details": details,
                 "trace_id": getattr(request.state, "trace_id", "unknown")
             }
         }

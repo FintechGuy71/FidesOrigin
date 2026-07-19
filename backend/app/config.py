@@ -41,11 +41,12 @@ class Settings(BaseSettings):
     @cached_property
     def DATABASE_URL(self) -> str:
         """异步数据库 URL（首次访问后缓存）"""
-        # 测试环境使用环境变量覆盖（必须在导入app.config前设置）
+        # [M-10 Fix] 使用明确的测试模式标志，避免仅通过 TEST_DATABASE_URL 存在性判断
         import os
-        test_url = os.environ.get("TEST_DATABASE_URL")
-        if test_url:
-            return test_url
+        if os.environ.get("TESTING", "").lower() == "true":
+            test_url = os.environ.get("TEST_DATABASE_URL")
+            if test_url:
+                return test_url
         password = self.DB_PASSWORD or os.environ.get("DB_PASSWORD", "")
         if not password:
             # 无密码时使用无密码连接
