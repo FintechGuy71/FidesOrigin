@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import type { Chain } from '@fidesorigin/shared';
 import { CHAIN_NAMES, ADDRESS_LENGTHS, ADDRESS_PREFIXES } from '@fidesorigin/shared';
 
 export interface AddressInputProps {
@@ -7,10 +6,20 @@ export interface AddressInputProps {
   value: string;
   /** Change handler */
   onChange: (address: string) => void;
+  /** Submit handler (called on Enter key) */
+  onSubmit?: () => void;
   /** Selected chain */
-  chain: Chain;
+  chain?: string;
   /** Chain change handler */
-  onChainChange?: (chain: Chain) => void;
+  onChainChange?: (chain: string) => void;
+  /** Input label */
+  label?: string;
+  /** Show example addresses */
+  showExamples?: boolean;
+  /** Show validation state indicator */
+  showValidation?: boolean;
+  /** Loading state */
+  loading?: boolean;
   /** Validation state */
   isValid?: boolean;
   /** Error message */
@@ -42,8 +51,13 @@ export interface AddressInputProps {
 export const AddressInput: React.FC<AddressInputProps> = ({
   value,
   onChange,
-  chain,
+  onSubmit,
+  chain = 'ethereum',
   onChainChange,
+  label,
+  showExamples,
+  showValidation,
+  loading,
   isValid,
   error,
   placeholder = 'Enter blockchain address...',
@@ -70,7 +84,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   const showError = error || (touched && !validateAddress(value) && value.length > 0);
   const showValid = isValid || (touched && validateAddress(value) && value.length > 0);
 
-  const chains = Object.keys(CHAIN_NAMES) as Chain[];
+  const chains = Object.keys(CHAIN_NAMES);
 
   return (
     <div className={`space-y-1 ${className}`}>
@@ -78,7 +92,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
         {onChainChange && (
           <select
             value={chain}
-            onChange={(e) => onChainChange(e.target.value as Chain)}
+            onChange={(e) => onChainChange(e.target.value as string)}
             disabled={disabled}
             className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             aria-label="Select blockchain"

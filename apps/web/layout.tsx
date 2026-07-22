@@ -1,7 +1,7 @@
 
 import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google";
 import Header from "@/components/ui/header";
-import LangSetter from "./components/LangSetter";
+import LangSetter from "./app/components/LangSetter";
 
 const inter = Inter({
   subsets: ["latin"],

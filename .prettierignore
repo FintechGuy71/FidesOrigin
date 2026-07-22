@@ -1,0 +1,13 @@
+node_modules
+.next
+dist
+build
+coverage
+.turbo
+*.log
+sdk/
+subgraph/
+forta-agents/
+data-sync/
+scripts/
+docs/

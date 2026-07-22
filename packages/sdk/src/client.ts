@@ -1,3 +1,4 @@
+import { DEFAULT_API_BASE_URL } from "./config";
 import { isAddress, getAddress } from "ethers";
 import {
   RiskCheckInput,
@@ -43,6 +44,9 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxDelayMs: 30000,
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
+
+/** Maximum valid EIP-155 chain ID (uint32 max) */
+const MAX_EIP155_CHAIN_ID = 0xffffffff;
 
 // ─── HTTP Status to Error Code Mapping ───────────────────────────────────────
 
@@ -311,7 +315,7 @@ export function isValidChainId(chainId: number | string): boolean {
   if (!Number.isSafeInteger(id) || id <= 0) return false;
   // 允许白名单中的 chainId；对于未知链，仍允许但要求在合理范围（1 ~ 2^32）
   // 这里不做严格白名单（避免阻碍新链），但保证数值合理
-  if (id > 0xffffffff) return false;
+  if (id > MAX_EIP155_CHAIN_ID) return false;
   // 已知链直接放行
   if (KNOWN_CHAIN_IDS.has(id)) return true;
   // 未知链仍允许，但保留可扩展的告警钩子
@@ -366,7 +370,15 @@ export class FidesOriginClient {
   }
 
   constructor(config: FidesOriginConfig & { allowBrowserUsage?: boolean; timeoutMs?: number } = {}) {
-    this.baseUrl = (config.baseUrl || "https://api.fidesorigin.com").replace(/\/$/, "");
+    // [LOW-24 FIX] baseUrl 必须显式配置，不再提供默认生产 URL
+    this.baseUrl = (config.baseUrl || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+    if (!this.baseUrl) {
+      throw new FidesOriginError(
+        "[FidesOriginClient] baseUrl is required. No default URL is provided to prevent accidental production calls. " +
+        'Example: { baseUrl: \"https://api.fidesorigin.com\" }',
+        "CONFIG_ERROR"
+      );
+    }
     this.apiKey = config.apiKey;
     this.retryConfig = {
       ...DEFAULT_RETRY_CONFIG,
@@ -376,24 +388,20 @@ export class FidesOriginClient {
     this.timeoutMs = config.timeoutMs ?? config.timeout ?? 30000;
     this.allowBrowserUsage = config.allowBrowserUsage === true;
 
-    // [H-01 修复] 浏览器/Worker 环境下，禁止使用服务端 Secret API Key（除非显式声明）
-    // [High Fix] SSR-safe browser detection: check window only after confirming we're in a browser environment
+    // [H-01 修复] 浏览器/Worker 环境下，禁止使用服务端 Secret API Key
+    // [MEDIUM-7 FIX] 完全阻止非 pk_ 前缀的 key 在浏览器中使用，无论 allowBrowserUsage 设置
     const isBrowser =
       typeof window !== 'undefined' &&
       typeof window.document !== 'undefined' &&
       typeof window.document.createElement === 'function';
 
     if (isBrowser && this.apiKey) {
-      if (!this.apiKey.startsWith('pk_') && !this.allowBrowserUsage) {
-        throw new FidesOriginError(
-          "[FidesOriginClient] Secret API key must not be used in browser/worker. " +
-          "Use a backend proxy or pass allowBrowserUsage=true only with a scoped public token.",
-          "UNAUTHORIZED"
-        );
-      }
       if (!this.apiKey.startsWith('pk_')) {
-        console.warn(
-          '[FidesOriginClient] Browser usage enabled. Ensure this token is a scoped public token.'
+        throw new FidesOriginError(
+          "[FidesOriginClient] Secret API keys are strictly forbidden in browser environments. " +
+          "Use a backend proxy or a public token (pk_*) instead. " +
+          "This restriction cannot be bypassed.",
+          "UNAUTHORIZED"
         );
       }
     }

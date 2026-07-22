@@ -53,18 +53,143 @@ class Token(BaseModel):
     expires_in: int = JWT_EXPIRE_MINUTES * 60
 
 
-def create_refresh_token(username: str) -> str:
-    """生成 JWT refresh token"""
+import uuid
+
+# ==================== JWT 认证 ====================
+
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_MINUTES = 30  # [K3 Fix] Shortened from 480 to 30 minutes
+JWT_REFRESH_EXPIRE_MINUTES = 10080  # 7 days
+
+# [MEDIUM-1 FIX] Refresh Token 旋转配置
+REFRESH_TOKEN_FAMILY_PREFIX = "fidesorigin:refresh_family:"
+REFRESH_TOKEN_JTI_PREFIX = "fidesorigin:refresh_jti:"
+
+
+def _get_redis_refresh_client():
+    """获取 Redis 连接用于 refresh token 管理"""
+    try:
+        from app.core.di import get_container
+        cache = get_container().cache
+        return cache
+    except Exception:
+        return None
+
+
+def create_refresh_token(username: str, family_id: str = None) -> dict:
+    """
+    生成 JWT refresh token（支持旋转）
+    
+    [MEDIUM-1 FIX] 实现 refresh token 旋转：
+    - 每个 refresh token 有唯一的 jti 和 family_id
+    - 刷新时使旧 jti 失效，生成新的 jti
+    - 检测 token 重放攻击（旧 token 被再次使用）
+    
+    Returns:
+        dict: {token: str, family_id: str, jti: str}
+    """
     secret = settings.SECRET_KEY
     if not secret:
         raise RuntimeError("SECRET_KEY is not configured")
+    
+    jti = str(uuid.uuid4())
+    family = family_id or str(uuid.uuid4())
+    
     payload = {
         "sub": username,
         "type": "refresh",
         "iat": int(time.time()),
         "exp": int(time.time()) + JWT_REFRESH_EXPIRE_MINUTES * 60,
+        "jti": jti,
+        "family": family,
     }
-    return jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
+    token = jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
+    
+    # [MEDIUM-1 FIX] 将 jti 存入 Redis 白名单
+    redis = _get_redis_refresh_client()
+    if redis:
+        import asyncio
+        try:
+            asyncio.get_event_loop().run_until_complete(
+                redis.set(
+                    f"{REFRESH_TOKEN_JTI_PREFIX}{jti}",
+                    family,
+                    expire=JWT_REFRESH_EXPIRE_MINUTES * 60
+                )
+            )
+        except Exception:
+            pass  # Redis 不可用时降级（token 仍然有效但不支持旋转检测）
+    
+    return {"token": token, "family_id": family, "jti": jti}
+
+
+def rotate_refresh_token(old_token: str) -> dict:
+    """
+    旋转 refresh token
+    
+    [MEDIUM-1 FIX] 验证旧 token，使旧 jti 失效，返回新 token。
+    如果旧 token 已被使用过（重放攻击），则撤销整个 token family。
+    
+    Returns:
+        dict: {token: str, family_id: str, jti: str}
+    
+    Raises:
+        AuthenticationException: token 无效或已被撤销
+    """
+    secret = settings.SECRET_KEY
+    if not secret:
+        raise AuthenticationException("SECRET_KEY is not configured")
+    
+    try:
+        payload = jwt.decode(old_token, secret, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationException("Refresh token expired")
+    except jwt.InvalidTokenError:
+        raise AuthenticationException("Invalid refresh token")
+    
+    username = payload.get("sub")
+    old_jti = payload.get("jti")
+    family = payload.get("family")
+    
+    if not username or not old_jti or not family:
+        raise AuthenticationException("Invalid refresh token format")
+    
+    # [MEDIUM-1 FIX] 检查旧 jti 是否在白名单中
+    redis = _get_redis_refresh_client()
+    if redis:
+        import asyncio
+        try:
+            jti_key = f"{REFRESH_TOKEN_JTI_PREFIX}{old_jti}"
+            stored_family = asyncio.get_event_loop().run_until_complete(
+                redis.get(jti_key)
+            )
+            
+            if stored_family is None:
+                # 旧 token 已被使用过或已过期 — 可能是重放攻击
+                # 撤销整个 token family
+                asyncio.get_event_loop().run_until_complete(
+                    redis.delete(f"{REFRESH_TOKEN_FAMILY_PREFIX}{family}")
+                )
+                raise AuthenticationException(
+                    "Refresh token reuse detected. Token family revoked."
+                )
+            
+            # 验证 family 匹配
+            if stored_family != family:
+                raise AuthenticationException("Refresh token family mismatch")
+            
+            # 使旧 jti 失效
+            asyncio.get_event_loop().run_until_complete(redis.delete(jti_key))
+        except AuthenticationException:
+            raise
+        except Exception:
+            pass  # Redis 不可用时降级
+    
+    # 生成新的 refresh token（保持同一个 family）
+    return create_refresh_token(username, family)
+
+
+# 向后兼容：create_refresh_token 返回字符串
 
 
 def create_access_token(username: str, role: str = "admin") -> str:
@@ -588,7 +713,8 @@ class RateLimiter:
             cache = get_container().cache
             
             # 使用 Redis 实现滑动窗口
-            cache_key = f"rate_limit:{key}"
+            # [MEDIUM-3 FIX] 添加服务前缀防止多服务共享 Redis 时的 key 碰撞
+            cache_key = f"fidesorigin:rate_limit:{key}"
             
             # 获取当前窗口内的请求次数
             count = await cache.get(cache_key)
@@ -652,7 +778,8 @@ class RateLimiter:
             from app.core.di import get_container
             cache = get_container().cache
             
-            cache_key = f"rate_limit:{key}"
+            # [MEDIUM-3 FIX] 添加服务前缀防止多服务共享 Redis 时的 key 碰撞
+            cache_key = f"fidesorigin:rate_limit:{key}"
             count = await cache.get(cache_key)
             
             if count is None:

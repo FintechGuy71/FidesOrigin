@@ -28,6 +28,17 @@ FidesOrigin 是一个可编程的链上合规协议，采用模块化架构设�
 1. **模块化**: 每个核心功能独立合约，可单独升级
 2. **可组合**: 合约之间通过标准接口交互
 3. **多链**: 支持 Ethereum、Polygon、L2 等多条链
+4. **单一真相源**: `apps/web/` 为前端唯一入口，`packages/sdk/` 为 SDK 唯一入口
+
+> **最近架构修复 (2026-07-23)**:
+> - ✅ 清理根目录幽灵文件（`components/`, `hooks/`, `stores/`, `lib/`, `app/`, `test/frontend/`）
+> - ✅ 合并双轨 SDK（`sdk/` → `packages/sdk/`）
+> - ✅ 统一网站入口（`website/` → `apps/web/public/`）
+> - ✅ 统一测试目录（`test/frontend/` → `apps/web/components/*.test.tsx`）
+> - ✅ 提取共享链配置（`packages/config/src/chains.ts`）
+> - ✅ 后端 DI 容器优化（移除 `asyncio.get_event_loop()`，支持工厂函数）
+> - ✅ API 服务边界明确（`apps/api/` 转为代理层，业务逻辑下沉到 `backend/`）
+> - 计划项已迁移至 [ROADMAP.md](./ROADMAP.md)
 4. **事件驱动**: 所有状态变更通过事件通知子图
 5. **安全优先**: 多重权限控制、紧急暂停、审计日志
 
@@ -55,10 +66,8 @@ FidesOrigin 是一个可编程的链上合规协议，采用模块化架构设�
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            区块链层 (多链)                                     │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  Ethereum   │  │  Polygon    │  │    L2s      │  │     [I-02] Tempo    │  │
-│  │  (Mainnet)    │  │  (Mainnet)  │  │ (Arb/Op/Base)│  │   (Payments L1)     │
-│   — Planned, not    │
-│   yet implemented    │  │
+│  │  Ethereum   │  │  Polygon    │  │    L2s      │  │  (Planned — see    │  │
+│  │  (Mainnet)  │  │  (Mainnet)  │  │ (Arb/Op/Base)│  │   ROADMAP.md)     │  │
 │  │               │  │             │  │              │  │                     │  │
 │  │ ┌─────────┐  │  │ ┌─────────┐  │  │ ┌─────────┐  │  │  ┌─────────┐        │  │
 │  │ │RiskReg  │  │  │ │RiskReg  │  │  │ │RiskReg  │  │  │  │RiskReg  │        │  │
@@ -348,7 +357,7 @@ Fides 专用合规模块，扩展基础合规功能：
 ```
 ┌─────────────────┐
 │   Owner (Multi-sig)  │
-│   2/3 Gnosis Safe    │  ← [I-03] Planned, not yet implemented in code
+│   2/3 Gnosis Safe    │  ← see ROADMAP.md [I-03]
 └────────┬────────┘
          │
     ┌────┴────┐

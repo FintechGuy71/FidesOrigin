@@ -284,6 +284,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
      * @notice 评估交易（会触发下游引擎状态更新，非纯 view 函数）
      * @dev 如需纯预览，使用 quickCheckAddress
      * @dev H-07 FIX: 添加 nonReentrant 修饰符，防止 complianceEngine.checkTransfer 重入攻击
+     * @dev HIGH-2 FIX: 添加访问控制，防止任意地址滥用评估功能操纵统计或探测风险
      */
     function evaluateTransaction(
         address from,
@@ -292,6 +293,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         address token,
         uint256 deadline
     ) external nonReentrant returns (bool allowed, uint256 riskScore) {
+        // [HIGH-2 FIX] 只有交易发起方本人或授权运营方可以评估交易
+        // 防止恶意中间合约/外部地址以任意 from 身份调用，操纵统计数据或批量探测风险
+        if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
+            return (false, 0);
+        }
         if (from == address(0) || to == address(0)) {
             return (false, 0);
         }

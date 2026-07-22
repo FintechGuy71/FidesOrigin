@@ -22,6 +22,15 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    # [MEDIUM-8 FIX] Resource limits to prevent DoS
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - fidesorigin
     healthcheck:
@@ -41,6 +50,15 @@ services:
     #   - "6379:6379"
     volumes:
       - redis-data:/data
+    # [MEDIUM-8 FIX] Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     networks:
       - fidesorigin
     healthcheck:
@@ -62,6 +80,15 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+    # [MEDIUM-8 FIX] Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     networks:
       - fidesorigin
 
@@ -82,6 +109,15 @@ services:
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
     networks:
       - fidesorigin
+    # [MEDIUM-8 FIX] Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     depends_on:
       - prometheus
 

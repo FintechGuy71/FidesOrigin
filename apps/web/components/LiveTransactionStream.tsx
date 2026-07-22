@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { formatAddress } from "./AddressInput";
+import {
+  MOCK_ADDRESSES,
+  MOCK_RISK_LEVELS,
+  MOCK_TRANSACTION_STATUSES,
+  MOCK_TOKENS,
+  MOCK_CHAINS,
+  MOCK_RISK_TAGS,
+  MOCK_TRANSACTION_TYPES,
+} from "@/lib/demo-config";
+
+/** Formats a blockchain address for display (e.g., 0x1234...5678) */
+function formatAddress(address: string, chars: number = 4): string {
+  if (!address || address.length <= chars * 2 + 2) return address;
+  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
+}
 
 export type TransactionStatus = "pending" | "confirmed" | "failed" | "flagged";
 export type RiskLevel = "low" | "medium" | "high" | "critical";
@@ -99,19 +113,12 @@ function useWebSocket(url: string | undefined, onMessage: (data: any) => void) {
 
 // 生成模拟交易数据
 function generateMockTransaction(): Transaction {
-  const addresses = [
-    "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEe",
-    "0x8ba1f109551bD432803012645Hac136c82C3e8C",
-    "0x1f9090aaE28b8a3dCeaDf281B0F12828E676c326",
-    "0x1234567890123456789012345678901234567890",
-    "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
-  ];
-
-  const riskLevels: RiskLevel[] = ["low", "medium", "high", "critical"];
-  const statuses: TransactionStatus[] = ["pending", "confirmed", "flagged"];
-  const tokens = ["ETH", "USDC", "USDT", "DAI", "WBTC"];
-  const chains = ["ethereum", "bsc", "polygon", "arbitrum"];
-  const tags = [["混币器关联"], ["暗网交易"], ["闪电贷"], ["新地址"], []];
+  const addresses = MOCK_ADDRESSES as unknown as string[];
+  const riskLevels = MOCK_RISK_LEVELS as unknown as RiskLevel[];
+  const statuses = MOCK_TRANSACTION_STATUSES as unknown as TransactionStatus[];
+  const tokens = MOCK_TOKENS as unknown as string[];
+  const chains = MOCK_CHAINS as unknown as string[];
+  const tags = MOCK_RISK_TAGS as unknown as string[][];
 
   const from = addresses[Math.floor(Math.random() * addresses.length)];
   let to = addresses[Math.floor(Math.random() * addresses.length)];

@@ -23,6 +23,12 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
 
     using FunctionsRequest for FunctionsRequest.Request;
 
+    // [HIGH-7 FIX] 可配置的 Chainlink Functions JavaScript 源码映射
+    mapping(RequestType => string) public functionsSources;
+
+    // [HIGH-7 FIX] Functions 源码更新事件
+    event FunctionsSourceUpdated(RequestType indexed reqType, string source);
+
     // ============ Constructor ============
 
     constructor(
@@ -170,9 +176,16 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
 
     /**
      * @notice 获取 Functions 源码（内部辅助）
+     * @dev HIGH-7 FIX: 源码不再硬编码，改为从可配置的存储变量读取。
+     *      管理员可通过 setFunctionsSource 动态更新，无需合约升级。
      * @dev M-4: 若返回空字符串则 revert
      */
-    function _getFunctionsSource(RequestType reqType) internal pure returns (string memory) {
+    function _getFunctionsSource(RequestType reqType) internal view returns (string memory) {
+        string memory source = functionsSources[reqType];
+        if (bytes(source).length > 0) {
+            return source;
+        }
+        // Fallback: 保留向后兼容的硬编码默认值（仅对已知类型）
         if (reqType == RequestType.SANCTIONS_SYNC) {
             return "const apiResponse = await Functions.makeHttpRequest({url: args[0]});"
                    "if (apiResponse.error) return Functions.encodeString('error');"
@@ -183,6 +196,16 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
         }
         // M-4: 未知类型返回空字符串，调用方需检查
         return "";
+    }
+
+    /**
+     * @notice [HIGH-7 FIX] 设置/更新 Chainlink Functions JavaScript 源码
+     * @param reqType 请求类型
+     * @param source JavaScript 源码字符串
+     */
+    function setFunctionsSource(RequestType reqType, string calldata source) external onlyRole(ADMIN_ROLE) {
+        functionsSources[reqType] = source;
+        emit FunctionsSourceUpdated(reqType, source);
     }
 
     /**

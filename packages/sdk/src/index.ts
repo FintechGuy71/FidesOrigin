@@ -5,6 +5,14 @@
 
 import type { ClientOptions } from './types';
 
+// Configuration Constants
+export {
+  DEFAULT_API_BASE_URL,
+  DEFAULT_WEBSOCKET_URL,
+  DEFAULT_SEPOLIA_RPC_URL,
+  DEFAULT_RISK_REGISTRY_ADDRESS,
+} from './config';
+
 // Core Client
 export { FidesOriginClient } from './client';
 export type { ClientOptions } from './types';

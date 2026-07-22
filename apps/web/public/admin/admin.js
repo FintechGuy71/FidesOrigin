@@ -536,7 +536,7 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || Object.freeze({
                     labels: ['Admin', 'Operator', 'Viewer', 'Signer'],
                     datasets: [{
                         data: [0, 0, 0, 0],
-                        backgroundColor: ['#8b5cf6', '#06b6d4', '#94a3b8', '#ec4899'],
+                        backgroundColor: ['#c9a96e', '#06b6d4', '#94a3b8', '#ec4899'],
                         borderWidth: 0
                     }]
                 },
@@ -582,7 +582,7 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || Object.freeze({
                     datasets: [{
                         label: '实时TPS',
                         data: Array.from({length: 20}, () => 0),
-                        borderColor: '#8b5cf6',
+                        borderColor: '#c9a96e',
                         backgroundColor: 'rgba(139, 92, 246, 0.1)',
                         fill: true,
                         tension: 0.4

@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./test/setupTests.ts'],
+    setupFiles: ['./apps/web/test/setupTests.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -35,7 +35,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './'),
+      '@': resolve(__dirname, './apps/web'),
       '@fidesorigin/sdk': resolve(__dirname, './packages/sdk/src'),
       react: resolve(__dirname, './node_modules/.pnpm/react@19.2.3/node_modules/react'),
       'react-dom': resolve(__dirname, './node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom'),

@@ -62,9 +62,20 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
     /// @notice [M-2] 紧急暂停冷却
     uint256 public lastPauseAt;
     uint256 public constant MIN_PAUSE_DURATION = 1 hours;
-
-    /// @notice [M-5] 批量操作上限
     uint256 public constant MAX_BATCH_SIZE = 100;
+
+    /// @notice [HIGH-3 FIX] 用户自行提取的最小等待时间（默认 24 小时）
+    uint256 public claimDelay = 24 hours;
+    /// @notice [HIGH-3 FIX] 需要额外审批的记录（运营方可设置）
+    mapping(bytes32 => bool) public claimRequiresApproval;
+
+    /// @notice [HIGH-3 FIX] claimFunds 相关事件
+    event ClaimDelayUpdated(uint256 oldDelay, uint256 newDelay);
+    event ClaimRequiresApprovalSet(bytes32 indexed recordId, bool requiresApproval);
+
+    /// @notice [HIGH-3 FIX] claimFunds 相关错误
+    error ClaimDelayNotMet(uint256 claimableAfter);
+    error ClaimRequiresApprovalError(bytes32 recordId);
 
     /// @notice 事件
     event FundsQuarantined(
@@ -525,6 +536,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
     /**
      * @notice H-06 FIX: 用户自行提取隔离资金（pull-based 模式）
      * @dev 只有 originalOwner 可以调用，不限制 gas，适合合约接收方
+     * @dev HIGH-3 FIX: 新增 claimDelay 等待期和 claimRequiresApproval 检查，
+     *      防止用户在被隔离后立即提取资金绕过 RELEASE_ROLE 审批流程。
+     *      运营方可通过 setClaimRequiresApproval 标记高风险记录为需审批。
      * @param recordId 隔离记录ID
      */
     function claimFunds(bytes32 recordId) external nonReentrant {
@@ -534,6 +548,17 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         if (record.frozen) revert AlreadyFrozen(recordId);
         if (emergencyPaused) revert EmergencyPausedError();
         if (record.originalOwner != msg.sender) revert UnauthorizedRelease();
+
+        // [HIGH-3 FIX] 检查是否需要额外审批（运营方标记的高风险记录）
+        if (claimRequiresApproval[recordId]) {
+            revert ClaimRequiresApprovalError(recordId);
+        }
+
+        // [HIGH-3 FIX] 检查等待期是否已过（默认 24 小时）
+        uint256 claimableAfter = record.timestamp + claimDelay;
+        if (block.timestamp < claimableAfter) {
+            revert ClaimDelayNotMet(claimableAfter);
+        }
 
         record.released = true;
         record.releasedBy = msg.sender;
@@ -609,10 +634,33 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         emit RoleRevokedDetailed(EMERGENCY_ROLE, account, msg.sender, block.timestamp, reason);
     }
 
+    // ============ HIGH-3 FIX: Claim Delay & Approval Management ============
+
     /**
-     * @notice 提取合约中的 ETH（防止 ETH 被意外锁定）
-     * @param to 接收地址
+     * @notice [HIGH-3 FIX] 设置用户 claim 的最小等待时间
+     * @param _delay 新的等待时间（秒）
      */
+    function setClaimDelay(uint256 _delay) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        // 限制最大延迟为 7 天，防止恶意锁定
+        require(_delay <= 7 days, "Delay too large");
+        uint256 old = claimDelay;
+        claimDelay = _delay;
+        emit ClaimDelayUpdated(old, _delay);
+    }
+
+    /**
+     * @notice [HIGH-3 FIX] 设置记录是否需要 RELEASE_ROLE 审批后才能 claim
+     * @param recordId 隔离记录ID
+     * @param _requiresApproval true = 需要 RELEASE_ROLE 审批，false = 正常 claim 流程
+     */
+    function setClaimRequiresApproval(bytes32 recordId, bool _requiresApproval) external onlyRole(EMERGENCY_ROLE) {
+        QuarantineRecord storage record = records[recordId];
+        if (record.timestamp == 0) revert RecordNotFound(recordId);
+        claimRequiresApproval[recordId] = _requiresApproval;
+        emit ClaimRequiresApprovalSet(recordId, _requiresApproval);
+    }
+
+    // ============ ETH Withdrawal ============
     function withdrawETH(address payable to) external onlyRole(EMERGENCY_ROLE) nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         uint256 balance = address(this).balance;

@@ -17,34 +17,84 @@ const fs = require('fs');
 const path = require('path');
 
 // ═══════════════════════════════════════════════════════════════════
-// 现有 Sepolia 部署地址（从 sepolia-latest.json 读取）
+// 现有 Sepolia 部署地址 — 从环境变量或配置文件读取
+// SECURITY FIX (CRIT-2): 不再硬编码地址，支持从环境变量或配置文件加载
 // ═══════════════════════════════════════════════════════════════════
-const EXISTING = {
-    RiskRegistry: {
-        proxy: "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
-        implementation: "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59"
-    },
-    PolicyEngine: {
-        proxy: "0x87089F67A61F9643796AE154663A6a9F21196b38",
-        implementation: "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7"
-    },
-    ComplianceEngine: {
-        proxy: "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
-        implementation: "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807"
-    },
-    QuarantineVault: {
-        address: "0x497176b21CC2EDd90a8725a3023742358311a382"
-    },
-    FidesCompliance: {
-        address: "0x7cc76aD60385f77F0e013f5C2771FCa32a6F97A1"
-    },
-    CompliantStableCoin: {
-        address: "0xC6AC4eB3bc328D9482e243e6E2E5C4e0372a6Cca"
-    },
-    Diamond: {
-        address: "0x9303Df978467839B881b67Ad6C77756D00658A5A"
+const fs = require('fs');
+const path = require('path');
+
+// 加载配置优先级: 1) 环境变量 2) sepolia-deployment.config.json 3) 报错
+function loadExistingAddresses() {
+    // 1. 尝试从环境变量 JSON 读取
+    const envConfig = process.env.FIDES_SEPOLIA_CONFIG;
+    if (envConfig) {
+        try {
+            const parsed = JSON.parse(envConfig);
+            validateAddresses(parsed);
+            console.log("✅ Loaded deployment addresses from FIDES_SEPOLIA_CONFIG env var");
+            return parsed;
+        } catch (e) {
+            console.error("❌ FIDES_SEPOLIA_CONFIG is not valid JSON:", e.message);
+            process.exit(1);
+        }
     }
-};
+
+    // 2. 尝试从配置文件读取
+    const configPath = path.join(__dirname, '..', 'sepolia-deployment.config.json');
+    if (fs.existsSync(configPath)) {
+        try {
+            const parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            validateAddresses(parsed);
+            console.log("✅ Loaded deployment addresses from sepolia-deployment.config.json");
+            return parsed;
+        } catch (e) {
+            console.error("❌ Failed to parse sepolia-deployment.config.json:", e.message);
+            process.exit(1);
+        }
+    }
+
+    // 3. 无配置可用，报错退出
+    console.error(`
+❌ ERROR: No deployment configuration found.
+
+You must provide existing Sepolia contract addresses via ONE of:
+
+  Option A — Environment variable:
+    FIDES_SEPOLIA_CONFIG='{"RiskRegistry":{"proxy":"0x..."},...}' npx hardhat run ...
+
+  Option B — Config file (not in git):
+    Create apps/contracts/sepolia-deployment.config.json with the addresses.
+
+See deploy-v3.0.4-sepolia.js for the expected JSON structure.
+`);
+    process.exit(1);
+}
+
+// 验证地址格式和必需字段
+function validateAddresses(config) {
+    const required = ['RiskRegistry', 'PolicyEngine', 'ComplianceEngine', 'QuarantineVault', 'FidesCompliance'];
+    for (const key of required) {
+        if (!config[key]) {
+            throw new Error(`Missing required contract config: ${key}`);
+        }
+    }
+    // 验证所有地址是有效的 Ethereum 地址
+    const addresses = [];
+    for (const [name, entry] of Object.entries(config)) {
+        const addr = entry.proxy || entry.address;
+        if (!addr || !addr.match(/^0x[a-fA-F0-9]{40}$/)) {
+            throw new Error(`Invalid address for ${name}: ${addr}`);
+        }
+        addresses.push(addr);
+    }
+    // 检查重复地址
+    const unique = new Set(addresses);
+    if (unique.size !== addresses.length) {
+        throw new Error("Duplicate contract addresses detected in configuration");
+    }
+}
+
+const EXISTING = loadExistingAddresses();
 
 // ═══════════════════════════════════════════════════════════════════
 // 部署结果记录

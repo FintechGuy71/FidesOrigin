@@ -7,7 +7,7 @@
   --text: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --accent: #6366f1;
+  --accent: #d4af7a;
   --accent-light: #818cf8;
   --accent-glow: rgba(99,102,241,0.3);
   --success: #22c55e;
@@ -15,7 +15,7 @@
   --danger: #ef4444;
   --gold: #c9a96e;
   --gold-dim: rgba(201,169,110,0.15);
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #c9a96e 100%);
+  --gradient-primary: linear-gradient(135deg, #d4af7a 0%, #c9a96e 50%, #c9a96e 100%);
   --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.12) 0%, transparent 60%),
                     radial-gradient(ellipse 60% 40% at 80% 50%, rgba(139,92,246,0.08) 0%, transparent 50%);
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

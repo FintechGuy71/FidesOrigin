@@ -105,7 +105,7 @@ export class KmsSigner extends AbstractSigner {
   // ─── Internal: AWS KMS Sign + DER→RSV conversion ─────────────────────────
 
   private async _kmsSign(msgHash: string): Promise<string> {
-    const response: SignCommandOutput = await this._kmsClient.send(
+    const response: SignCommandOutput = await (this._kmsClient as any).send(
       new SignCommand({
         KeyId: this._keyId,
         Message: Buffer.from(msgHash.slice(2), 'hex'),
@@ -214,7 +214,7 @@ export class KmsSigner extends AbstractSigner {
     kmsClient: KMSClient,
     keyId: string
   ): Promise<string> {
-    const response = await kmsClient.send(
+    const response = await (kmsClient as any).send(
       new GetPublicKeyCommand({ KeyId: keyId })
     );
     if (!response.PublicKey) {

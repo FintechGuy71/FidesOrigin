@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import RiskScore, { RiskBadge } from "@/components/RiskScore";
-import AddressInput, { isValidEthereumAddress } from "@/components/AddressInput";
+import { AddressInput, RiskBadge, RiskScore } from "@fidesorigin/ui";
+import { isValidEthereumAddress } from "@fidesorigin/shared";
 import LiveTransactionStream, { Transaction } from "@/components/LiveTransactionStream";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
@@ -362,9 +362,9 @@ export default function DemoPage() {
     setRules(loadRules());
   }, []);
 
-  const handleAddressChange = useCallback((value: string, isValid: boolean) => {
+  const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
-    setAddressValid(isValid);
+    setAddressValid(isValidEthereumAddress(value));
     if (error) setError(null);
   }, [error]);
 
@@ -834,7 +834,7 @@ export default function DemoPage() {
                 <div className="pt-4 border-t border-gray-800">
                   <span className="text-gray-400 text-sm">风险标签:</span>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedTx.tags.map((tag) => (
+                    {selectedTx.tags.map((tag: string) => (
                       <span key={tag} className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400">
                         {tag}
                       </span>

@@ -11,6 +11,8 @@ export interface RiskBadgeProps {
   showScore?: boolean;
   /** Score value (if showing score) */
   score?: number;
+  /** Override badge text (instead of using the level label) */
+  text?: string;
   /** Additional CSS classes */
   className?: string;
 }
@@ -29,6 +31,7 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
   size = 'md',
   showScore = false,
   score,
+  text,
   className = '',
 }) => {
   // [Fix] Defensive access: fallback to 'medium' for unknown/invalid levels
@@ -58,6 +61,7 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
         aria-hidden="true"
       />
       {config.label}
+      {text && <span className="ml-1">{text}</span>}
       {showScore && score !== undefined && (
         <span className="opacity-80">({score})</span>
       )}

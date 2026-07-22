@@ -9,6 +9,15 @@ const SUBGRAPH_URL = (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRA
 
 const NETWORK = 'sepolia';
 let API_KEY = window.FIDESORIGIN_API_KEY || '';
+// [LOW-23 FIX] SECURITY WARNING: Never store API keys in localStorage, sessionStorage,
+// or global scope. They are vulnerable to XSS attacks. Use one of:
+//   1. Backend proxy (recommended): API calls go through your own backend
+//   2. httpOnly cookie: Set by backend, inaccessible to JavaScript
+//   3. Scoped public token (pk_*): Rotate frequently, minimal permissions
+// If window.FIDESORIGIN_API_KEY is set, ensure it comes from a secure build-time injection.
+if (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('FIDESORIGIN_API_KEY')) {
+    console.warn('[SECURITY] API key detected in localStorage. This is insecure. Remove it immediately.');
+}
 
 // [M-7 Fix] Backend API base: no hardcoded fallback; must be provided via env/config
 const BACKEND_API = (typeof window !== 'undefined' && window.FIDESORIGIN_BACKEND_URL)
@@ -71,7 +80,13 @@ function setLoading(loading) {
     const text = document.getElementById('btnText');
     btn.disabled = loading;
     if (loading) {
-        text.innerHTML = '<div class="spinner"></div> Checking...';
+        // [MEDIUM-6 FIX] 使用 textContent 替代 innerHTML，防止 XSS
+        // 动态创建 spinner 元素而不是插入 HTML 字符串
+        text.textContent = '';
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        text.appendChild(spinner);
+        text.appendChild(document.createTextNode(' Checking...'));
     } else {
         text.textContent = 'Check Risk Level';
     }
@@ -175,8 +190,9 @@ async function fetchSubgraphRisk(address) {
         console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph query.');
         return null;
     }
-    const query = `query {
-        riskProfile(id: "${address.toLowerCase()}") {
+    // [MEDIUM-4 FIX] 使用 GraphQL 变量替代字符串插值，防止注入攻击
+    const query = `query GetRiskProfile($id: String!) {
+        riskProfile(id: $id) {
             id
             riskScore
             tier
@@ -190,7 +206,7 @@ async function fetchSubgraphRisk(address) {
         const res = await fetch(SUBGRAPH_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query }),
+            body: JSON.stringify({ query, variables: { id: address.toLowerCase() } }),
             signal: controller.signal
         });
         clearTimeout(timeoutId);

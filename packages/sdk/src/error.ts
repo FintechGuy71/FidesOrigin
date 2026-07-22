@@ -18,7 +18,8 @@ export type ErrorCode =
   | 'SERVER_ERROR'
   | 'TIMEOUT'
   | 'UNKNOWN'
-  | 'BAD_REQUEST';
+  | 'BAD_REQUEST'
+  | 'CONFIG_ERROR';
 
 /** Error code to HTTP status mapping */
 export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
@@ -34,6 +35,7 @@ export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   TIMEOUT: 0,
   UNKNOWN: 500,
   BAD_REQUEST: 400,
+  CONFIG_ERROR: 400,
 };
 
 /** Error context for debugging */

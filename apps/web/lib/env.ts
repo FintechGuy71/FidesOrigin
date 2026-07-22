@@ -38,7 +38,7 @@ function parseEnv() {
   });
 
   if (!parsed.success) {
-    const errors = parsed.error.errors.map(
+    const errors = parsed.error.issues.map(
       (e) => `${e.path.join(".")}: ${e.message}`
     );
     const errorMessage = `环境变量验证失败:\n${errors.join("\n")}`;

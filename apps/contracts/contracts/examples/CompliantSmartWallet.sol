@@ -34,6 +34,9 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
 
     /// @notice 已执行的操作哈希（防止重放攻击）
     mapping(bytes32 => bool) public executedOps;
+    /// @notice [HIGH-6 FIX] 钱包级别的单调递增 nonce，增强跨实例重放保护
+    /// @dev 即使 salt 碰撞，不同的 walletNonce 也会生成不同的 opHash
+    uint256 public walletNonce;
 
     // ============ Events ============
 
@@ -73,6 +76,7 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
      * @notice 签名执行 (支持离线签名授权)
      * @dev 钱包owner用私钥签名操作，relayer可代为提交并支付gas
      * @dev 使用 salt 替代全局递增 nonce，支持离线批量签名与并发提交
+     * @dev [HIGH-6 FIX] opHash 现在包含 walletNonce，即使 salt 碰撞也能防止跨实例重放
      * @param op 操作参数
      * @param signature 离线签名 (EIP-191)
      * @param deadline 签名过期时间戳
@@ -90,6 +94,8 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
         // [H-01] 修复：加入 block.chainid 防止跨链重放
         // [M-01] 修复：使用 abi.encode 替代 abi.encodePacked 防止哈希碰撞
         // [M-02] 修复：使用 salt 替代 signatureNonce 支持离线批量签名
+        // [HIGH-6 FIX] 加入 walletNonce 防止同 owner + 同 salt 的跨钱包重放攻击
+        uint256 currentNonce = walletNonce;
         bytes32 opHash = keccak256(abi.encode(
             block.chainid,
             address(this),
@@ -100,7 +106,8 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
             op.token,
             op.tokenAmount,
             salt,
-            deadline
+            deadline,
+            currentNonce
         ));
 
         if (executedOps[opHash]) revert OperationAlreadyExecuted();
@@ -112,6 +119,8 @@ contract CompliantSmartWallet is CompliantSmartWalletBase {
         if (signer == address(0) || signer != owner) revert InvalidSignature();
 
         executedOps[opHash] = true;
+        // [HIGH-6 FIX] 递增钱包 nonce，确保下一次签名的 opHash 必然不同
+        walletNonce = currentNonce + 1;
 
         // [Info] 修复：触发事件供链下索引器追踪
         emit OperationExecuted(opHash, signer, salt);

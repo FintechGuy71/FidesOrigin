@@ -1,0 +1,69 @@
+#!/bin/sh
+# FidesOrigin pre-commit hook — prevent secret leakage
+# Install: cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+
+# ── 1. Check for .env files in staging area ──
+STAGED_ENV=$(git diff --cached --name-only | grep -E '\.env$|\.env\.' || true)
+if [ -n "$STAGED_ENV" ]; then
+    echo "
+🚨 SECURITY ERROR: Attempting to commit .env file(s):"
+    echo "$STAGED_ENV"
+    echo "
+   Remove them from git tracking:"
+    echo "     git rm --cached <file>"
+    echo "   Add to .gitignore if not already there."
+    echo "
+   If you need to commit a template, name it .env.example"
+    exit 1
+fi
+
+# ── 2. Check for common secret patterns in staged files ──
+STAGED_FILES=$(git diff --cached --name-only)
+if [ -z "$STAGED_FILES" ]; then
+    exit 0
+fi
+
+# Patterns to reject (private keys, API keys, passwords)
+PATTERNS='(private[_-]?key|api[_-]?key|secret[_-]?key|password)\s*[:=]\s*["'\''0-9a-zA-Z]{20,}'
+
+# Only check text files
+for file in $STAGED_FILES; do
+    # Skip binary files and already-known safe patterns
+    case "$file" in
+        *.example|*.template|*.md|*.lock|*.json)
+            continue
+            ;;
+    esac
+
+    # Check for high-entropy strings that look like secrets
+    if git show ":$file" 2>/dev/null | grep -iE "$PATTERNS" >/dev/null 2>&1; then
+        echo "
+🚨 SECURITY ERROR: Potential secret detected in $file"
+        echo "   Pattern: private_key / api_key / secret_key / password"
+        echo "   If this is intentional (e.g. test key), add the file to"
+        echo "   .git/info/exclude or use --no-verify (not recommended)."
+        exit 1
+    fi
+done
+
+# ── 3. Check for high-entropy hex strings (private keys) ──
+for file in $STAGED_FILES; do
+    case "$file" in
+        *.example|*.template|*.md|*.lock|*.json)
+            continue
+            ;;
+    esac
+
+    # Detect 0x followed by 64 hex chars (EVM private key pattern)
+    if git show ":$file" 2>/dev/null | grep -E '0x[a-fA-F0-9]{64}' >/dev/null 2>&1; then
+        echo "
+🚨 SECURITY ERROR: Potential EVM private key detected in $file"
+        echo "   Pattern: 0x + 64 hex characters"
+        echo "   Use environment variables or a secure secret manager instead."
+        exit 1
+    fi
+done
+
+echo "✅ Pre-commit security checks passed."

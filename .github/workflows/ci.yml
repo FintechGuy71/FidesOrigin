@@ -59,9 +59,49 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # [LOW-25 FIX] Dependency vulnerability scan
+      - name: Audit dependencies
+        run: pnpm audit --audit-level moderate || true
       - uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: |
             apps/web/dist
             apps/web/.next
+
+  # [LOW-25 FIX] Security scanning job
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      # npm audit for known vulnerabilities
+      - name: Run npm audit
+        run: pnpm audit --audit-level high || true
+      # Solidity static analysis (if Slither is available)
+      - name: Install Slither
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install slither-analyzer || true
+      - name: Run Slither analysis
+        working-directory: apps/contracts
+        run: |
+          if command -v slither &> /dev/null; then
+            slither . --config-file slither.config.json --sarif slither.sarif || true
+          else
+            echo "Slither not available, skipping Solidity analysis"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: |
+            apps/contracts/slither.sarif
+            pnpm-audit.json

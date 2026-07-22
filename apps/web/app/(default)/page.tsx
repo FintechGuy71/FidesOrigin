@@ -1,9 +1,9 @@
-import Hero from "@/components/hero-home";
-import Workflows from "@/components/workflows";
-import Features from "@/components/features";
-import Trust from "@/components/trust";
-import Testimonials from "@/components/testimonials";
-import Cta from "@/components/cta";
+import Hero from "@/components/HeroHome";
+import Workflows from "@/components/Workflows";
+import Features from "@/components/Features";
+import Trust from "@/components/Trust";
+import Testimonials from "@/components/Testimonials";
+import Cta from "@/components/Cta";
 
 export default function Home() {
   return (

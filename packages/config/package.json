@@ -8,7 +8,8 @@
     "./tsconfig": "./tsconfig.json",
     "./eslint": "./eslint.config.js",
     "./tailwind": "./tailwind.config.js",
-    "./postcss": "./postcss.config.js"
+    "./postcss": "./postcss.config.js",
+    "./chains": "./src/chains.ts"
   },
   "files": [
     "tsconfig.json",

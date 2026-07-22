@@ -468,12 +468,13 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
      *      always use the 4-parameter version with an explicit deadline.
      * @dev DEPRECATED: 此函数不提供 deadline 参数，无法防 MEV 攻击。
      *             新代码应使用 4 参数版本的 evaluatePolicy(addr, riskScore, tier, deadline)。
+     * @dev HIGH-4 FIX: 添加 COMPLIANCE_ENGINE_ROLE 访问控制，防止外部地址利用此函数绕过 MEV 保护。
      */
     function evaluatePolicy(
         address addr,
         uint256 riskScore,
         IAssetCompliance.RiskTier tier
-    ) external view returns (ActionType[] memory, bool, bool) {
+    ) external view onlyRole(COMPLIANCE_ENGINE_ROLE) returns (ActionType[] memory, bool, bool) {
         return evaluatePolicy(addr, riskScore, tier, 0);
     }
 

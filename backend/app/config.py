@@ -85,8 +85,8 @@ class Settings(BaseSettings):
             "https://fidesorigin.com",
             "https://www.fidesorigin.com",
             "https://fidesorigin-demo.vercel.app",
-            "http://localhost:3000",
-            "http://localhost:5173",
+            # [MEDIUM-2 NOTE] localhost origins are development-only and MUST NOT be used in production.
+            # Production validation in validate_cors_origins will reject them when APP_ENV=production.
         ],
         description="允许的 CORS 来源"
     )
@@ -113,10 +113,22 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def validate_cors_origins(cls, v):
-        """验证 CORS 配置，生产环境禁止 *"""
+        """验证 CORS 配置，生产环境禁止 * 和 localhost"""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+            origins = [origin.strip() for origin in v.split(",")]
+        else:
+            origins = list(v) if v else []
+
+        # [MEDIUM-2 FIX] 生产环境自动过滤 localhost 来源
+        import os
+        if os.environ.get("APP_ENV") == "production":
+            filtered = [o for o in origins if not o.startswith("http://localhost")]
+            if len(filtered) != len(origins):
+                print("[SECURITY] Removed localhost origins from CORS in production environment")
+            origins = filtered
+            if "*" in origins:
+                raise ValueError("CORS_ORIGINS cannot contain '*' in production")
+        return origins
     
     # ==================== API Key / HMAC 配置 ====================
     # 生产环境必须设置强密钥，不允许使用默认值
@@ -144,6 +156,10 @@ class Settings(BaseSettings):
     ALERT_WEBHOOK_URL: Optional[str] = Field(default=None, description="告警 Webhook URL")
     ALERT_COOLDOWN_MINUTES: int = Field(default=5, description="告警冷却时间")
     
+    # ==================== 请求限制配置 ====================
+    MAX_BODY_SIZE_BYTES: int = Field(default=10_485_760, description="最大请求体大小（10MB）")
+    QUERY_TIMEOUT_SECONDS: int = Field(default=30, description="查询超时时间（秒）")
+
     # ==================== 速率限制配置 ====================
     RATE_LIMIT_ENABLED: bool = Field(default=True, description="是否启用速率限制")
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = Field(default=60, description="每分钟请求数限制")
@@ -200,10 +216,11 @@ class Settings(BaseSettings):
             if self.CORS_ORIGINS == ["*"]:
                 missing.append("CORS_ORIGINS (cannot be '*')")
             
-            # [HIGH Fix #6] 生产环境校验 Admin 密码强度
-            import os as _os
+            # [CRITICAL Fix] 拒绝使用默认/占位符密码
             admin_pwd = _os.environ.get("ADMIN_PASSWORD", "")
-            if admin_pwd:
+            if admin_pwd in ("", "CHANGE_ME_IN_PRODUCTION", "Your_Str0ng!AdminP@ssw0rd"):
+                missing.append("ADMIN_PASSWORD (must be changed from default/placeholder)")
+            elif admin_pwd:
                 self.validate_admin_password(admin_pwd)
             else:
                 missing.append("ADMIN_PASSWORD")

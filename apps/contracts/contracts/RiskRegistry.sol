@@ -85,6 +85,9 @@ contract RiskRegistry is
     uint256 public upgradeTimelockDelay;
     mapping(bytes32 => uint256) public upgradeProposals;
     mapping(address => bytes32) public implementationToProposal;
+    /// @notice [HIGH-5 FIX] 提案覆盖冷却期（防止 DOS：连续重置 timelock）
+    uint256 public constant PROPOSAL_OVERWRITE_COOLDOWN = 1 days;
+    mapping(address => uint256) public lastProposalOverwriteTime;
 
     /// @notice 链ID验证
     uint256 public chainId;
@@ -148,6 +151,7 @@ contract RiskRegistry is
     error BatchTooLarge();
     error LengthMismatch();
     error InvalidRiskTier(uint8 tier);
+    error TooEarly(uint256 when);
 
     // ============ Modifiers ============
 
@@ -469,6 +473,7 @@ contract RiskRegistry is
 
     /**
      * @notice 提案升级新实现
+     * @dev [HIGH-5 FIX] 添加覆盖冷却期，防止 ADMIN 连续重置 timelock 导致 DOS
      */
     function proposeUpgrade(address newImplementation)
         external
@@ -480,11 +485,16 @@ contract RiskRegistry is
         proposalId = keccak256(abi.encodePacked(newImplementation, block.timestamp, msg.sender, block.number));
         uint256 executeAfter = block.timestamp + upgradeTimelockDelay;
 
-        // Check for existing proposal and warn (don't block, but log)
+        // [HIGH-5 FIX] 检查覆盖冷却期
         bytes32 existingProposalId = implementationToProposal[newImplementation];
         if (existingProposalId != bytes32(0) && upgradeProposals[existingProposalId] > block.timestamp) {
-            // Overwrite only if the existing proposal's timelock hasn't expired
+            // 已有未过期的提案，检查冷却期
+            uint256 lastOverwrite = lastProposalOverwriteTime[newImplementation];
+            if (lastOverwrite != 0 && block.timestamp < lastOverwrite + PROPOSAL_OVERWRITE_COOLDOWN) {
+                revert TooEarly(lastOverwrite + PROPOSAL_OVERWRITE_COOLDOWN);
+            }
             delete upgradeProposals[existingProposalId];
+            lastProposalOverwriteTime[newImplementation] = block.timestamp;
         }
 
         upgradeProposals[proposalId] = executeAfter;

@@ -263,6 +263,28 @@ export const ADDRESS_PREFIXES: Record<string, string[]> = {
   solana: [],
 } as const;
 
+/** Validates an Ethereum address format (0x + 40 hex chars) */
+export function isValidEthereumAddress(address: string): boolean {
+  if (!address) return false;
+  const cleanAddress = address.trim();
+  return /^0x[a-fA-F0-9]{40}$/.test(cleanAddress);
+}
+
+/** Validates a Solana address format (32-44 base58 chars) */
+export function isValidSolanaAddress(address: string): boolean {
+  if (!address) return false;
+  const cleanAddress = address.trim();
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(cleanAddress);
+}
+
+/** Detects chain type from address format */
+export function detectChainFromAddress(address: string): string | null {
+  if (!address) return null;
+  if (isValidEthereumAddress(address)) return 'ethereum';
+  if (isValidSolanaAddress(address)) return 'solana';
+  return null;
+}
+
 // ============================================================================
 // API Configuration
 // ============================================================================

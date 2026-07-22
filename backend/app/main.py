@@ -24,7 +24,7 @@ from app.core.middleware import (
     session_timeout_middleware,
     request_signature_middleware,
 )
-from app.core.security import get_hmac_validator, get_current_user
+from app.core.security import get_current_user
 from app.database import init_db
 
 # 配置日志
@@ -245,35 +245,75 @@ async def api_version(
     }
 
 
-# ==================== 请求大小限制 ====================
+# ==================== 请求大小限制（在 body 读取前） ====================
+# [MEDIUM-5 FIX] 使用 StreamingMiddleware 在流式读取 body 时实时检查大小，
+# 防止 Content-Length 头被伪造导致超大 body 被读入内存。
 
-@app.middleware("http")
-async def request_size_limit(request, call_next):
-    """请求大小限制中间件"""
-    MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class ContentSizeLimitMiddleware(BaseHTTPMiddleware):
+    """
+    请求大小限制中间件 — 在 body 读取前阻止超大请求
     
-    content_length = request.headers.get("content-length")
-    if content_length:
-        try:
-            size = int(content_length)
-            if size > MAX_BODY_SIZE:
-                logger.warning("request_too_large", 
+    通过覆盖 receive() 方法，在流式读取 body 的过程中实时检查大小，
+    防止恶意客户端发送超大 body 导致内存耗尽。
+    """
+    def __init__(self, app, max_body_size: int = 10 * 1024 * 1024):
+        super().__init__(app)
+        self.max_body_size = max_body_size
+
+    async def dispatch(self, request, call_next):
+        # 先检查 Content-Length 头
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                size = int(content_length)
+                if size > self.max_body_size:
+                    logger.warning("request_too_large", 
+                                 path=request.url.path, 
+                                 size=size, 
+                                 max_size=self.max_body_size)
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "error": {
+                                "code": "REQUEST_TOO_LARGE",
+                                "message": f"Request body too large. Max size: {self.max_body_size} bytes"
+                            }
+                        }
+                    )
+            except ValueError:
+                pass
+        
+        # 流式读取 body 并实时检查大小
+        body_parts = []
+        total_size = 0
+        
+        async for chunk in request.stream():
+            total_size += len(chunk)
+            if total_size > self.max_body_size:
+                logger.warning("request_too_large_streaming", 
                              path=request.url.path, 
-                             size=size, 
-                             max_size=MAX_BODY_SIZE)
+                             size=total_size, 
+                             max_size=self.max_body_size)
                 return JSONResponse(
                     status_code=413,
                     content={
                         "error": {
                             "code": "REQUEST_TOO_LARGE",
-                            "message": f"Request body too large. Max size: {MAX_BODY_SIZE} bytes"
+                            "message": f"Request body too large. Max size: {self.max_body_size} bytes"
                         }
                     }
                 )
-        except ValueError:
-            pass
-    
-    return await call_next(request)
+            body_parts.append(chunk)
+        
+        # 重新构建请求 body（FastAPI 依赖 request.body()）
+        if body_parts:
+            request._body = b"".join(body_parts)
+        
+        return await call_next(request)
+
+app.add_middleware(ContentSizeLimitMiddleware, max_body_size=settings.MAX_BODY_SIZE_BYTES)
 
 
 # ==================== SQL 查询超时 ====================
@@ -283,8 +323,8 @@ async def sql_query_timeout(request, call_next):
     """SQL 查询超时中间件"""
     import asyncio
     
-    # 设置查询超时（秒）
-    QUERY_TIMEOUT = 30
+    # [HIGH-3 Fix] Extract magic numbers to settings
+    QUERY_TIMEOUT = settings.QUERY_TIMEOUT_SECONDS
     
     try:
         response = await asyncio.wait_for(call_next(request), timeout=QUERY_TIMEOUT)

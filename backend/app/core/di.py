@@ -2,7 +2,6 @@
 FidesOrigin 依赖注入容器（重构版）
 统一管理所有服务的生命周期和依赖关系
 """
-import asyncio
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -95,16 +94,6 @@ class DIContainer:
         """获取缓存服务（懒加载）"""
         if not self._cache:
             self._cache = CacheService()
-            # 在测试环境中不尝试连接 Redis
-            if os.environ.get("TESTING", "").lower() == "true":
-                logger.debug("test_mode_skip_redis")
-            else:
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        loop.create_task(self._cache.connect())
-                except Exception:
-                    pass
         return self._cache
     
     @property
@@ -180,15 +169,20 @@ class DIContainer:
         )
 
 
-# 全局容器实例
+# 全局容器实例（向后兼容，建议新代码使用 create_container）
 _container: Optional[DIContainer] = None
 
 
+def create_container() -> DIContainer:
+    """创建新的 DI 容器实例（用于测试隔离）"""
+    return DIContainer()
+
+
 def get_container() -> DIContainer:
-    """获取全局 DI 容器"""
+    """获取全局 DI 容器（懒初始化）"""
     global _container
     if _container is None:
-        _container = DIContainer()
+        _container = create_container()
     return _container
 
 
