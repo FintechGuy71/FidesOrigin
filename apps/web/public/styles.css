@@ -167,6 +167,9 @@ img { max-width: 100%; display: block; }
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 #langToggleBtn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
 #langMenu {
@@ -199,7 +202,7 @@ img { max-width: 100%; display: block; }
   position: fixed;
   inset: 0;
   background: var(--bg);
-  z-index: 999;
+  z-index: 1002;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -236,13 +239,7 @@ img { max-width: 100%; display: block; }
   color: var(--text-secondary);
   transition: color 0.2s;
 }
-.mobile-menu .lang-row a:hover,
-.mobile-menu .lang-row a:first-child { color: var(--accent); }
-
-@media (max-width: 900px) {
-  .nav-links { display: none; }
-  .nav-mobile-btn { display: block; }
-}
+.mobile-menu .lang-row a:hover { color: var(--accent); }
 
 /* ─── Wallet Connect in Nav ─────────────────────────────────────── */
 .wallet-connect-wrap {
@@ -311,12 +308,12 @@ img { max-width: 100%; display: block; }
 @media (max-width: 900px) {
   .nav-left { display: none; }
   .nav-actions { display: none; }
-  .nav-mobile-btn { display: block; }
+  .nav-mobile-btn {
+    display: block;
+    grid-column: 3;
+    justify-self: end;
+  }
   .nav-inner { padding: 0 20px; }
-  .wallet-connect-wrap { margin-top: 12px; width: 100%; }
-  .wallet-btn { width: 100%; justify-content: center; }
-  .wallet-connected { flex-direction: column; width: 100%; gap: 8px; }
-  .wallet-info { width: 100%; justify-content: space-between; }
 }
 
 /* ─── Hero ──────────────────────────────────────────────────────── */
@@ -391,6 +388,7 @@ img { max-width: 100%; display: block; }
   background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
   background-clip: text;
 }
 .lead {
@@ -490,6 +488,7 @@ img { max-width: 100%; display: block; }
   background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
   background-clip: text;
 }
 .label {
@@ -836,7 +835,264 @@ img { max-width: 100%; display: block; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Reduced Motion ────────────────────────────────────────────── */
+/* ─── Scroll-to-top ─────────────────────────────────────────────── */
+.scroll-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  z-index: 998;
+  pointer-events: none;
+}
+.scroll-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.scroll-top:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+/* ─── Mobile Wallet ─────────────────────────────────────────────── */
+.mobile-wallet-area {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 280px;
+}
+#mobile-wallet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text);
+  transition: all 0.2s;
+}
+#mobile-wallet-btn:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+#mobile-wallet-connected {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+#mobile-wallet-address {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  word-break: break-all;
+  text-align: center;
+}
+#mobile-wallet-disconnect {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#mobile-wallet-disconnect:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* ─── Code Copy Button ──────────────────────────────────────────── */
+.code-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-sans);
+}
+.code-copy-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+  border-color: var(--border-light);
+}
+.code-copy-btn.copied {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--success);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+.code-block {
+  position: relative;
+}
+
+/* ─── Utility Classes for Inline Style Removal ──────────────────── */
+
+/* Gradient orbs */
+.hero .gradient-orb:nth-of-type(1) {
+  width: 600px; height: 600px;
+  background: var(--accent);
+  top: -200px; right: -100px;
+  opacity: 0.08;
+}
+.hero .gradient-orb:nth-of-type(2) {
+  width: 400px; height: 400px;
+  background: #c9a96e;
+  bottom: -100px; left: -100px;
+  opacity: 0.06;
+}
+
+/* Section intro centered text */
+.section-intro {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.section-intro.wide {
+  max-width: 800px;
+}
+
+/* Secondary background */
+.bg-secondary {
+  background: var(--bg-secondary);
+}
+
+/* Wallet compliance section */
+.wallet-compliance {
+  padding-top: 0;
+}
+
+/* Trust section no top padding */
+.trust-section {
+  padding-top: 0;
+}
+
+/* Section title / lead spacing */
+.section-title {
+  margin-top: 12px;
+}
+.section-lead {
+  margin-top: 16px;
+}
+
+/* Hero lead top margin */
+.hero-lead {
+  margin-top: 20px;
+}
+
+/* Developer grid (two column) */
+.dev-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .dev-grid { grid-template-columns: 1fr; gap: 40px; }
+}
+
+/* Developer steps list */
+.dev-steps {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dev-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.dev-step-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 24px;
+}
+
+/* Code accent color */
+.code-accent {
+  color: var(--accent);
+}
+
+/* Button sizes */
+.btn-sm {
+  font-size: 0.875rem;
+}
+
+/* Dev action buttons */
+.dev-actions {
+  margin-top: 32px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* CTA buttons row */
+.cta-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+/* Light button variant */
+.btn-light {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* Compliance details spacing */
+.compliance-details {
+  margin-top: 12px;
+}
+
+/* Oneline section */
+.oneline-lead {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  font-weight: 600;
+  color: var(--text);
+}
+.accent-light-text {
+  color: var(--accent-light);
+}
+
+/* Centered wrapper */
+.centered-wrap {
+  text-align: center;
+  margin-top: 40px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal, .animate-fadeInUp {
     opacity: 1;

@@ -73,7 +73,7 @@
         </div>
         <a href="#contact" class="nav-cta">Get Started</a>
       </div>
-      <button class="nav-mobile-btn"  aria-label="Menu">
+      <button class="nav-mobile-btn" aria-label="Menu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -81,27 +81,35 @@
 
   <!-- Mobile Menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-menu-close" >
+    <button class="mobile-menu-close">
       <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
     </button>
-    <a href="#features" >Features</a>
-    <a href="#how-it-works" >How It Works</a>
-    <a href="#security" >Security</a>
-    <a href="#developers" >Docs</a>
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#security">Security</a>
+    <a href="#developers">Docs</a>
     <div class="lang-row">
       <a href="/">EN</a>
       <a href="/cn/">CN</a>
       <a href="/tw/">TW</a>
       <a href="/jp/">JP</a>
     </div>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected">
+      <span id="mobile-wallet-address"></span>
+      <button id="mobile-wallet-disconnect" aria-label="Disconnect wallet">Disconnect</button>
+    </div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="Connect wallet">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+      Connect
+    </button>
   </div>
 
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-bg"></div>
     <canvas id="particles-canvas"></canvas>
-    <div class="gradient-orb" style="width:600px;height:600px;background:var(--accent);top:-200px;right:-100px;opacity:0.08;"></div>
-    <div class="gradient-orb" style="width:400px;height:400px;background:#c9a96e;bottom:-100px;left:-100px;opacity:0.06;"></div>
+    <div class="gradient-orb"></div>
+    <div class="gradient-orb"></div>
     <div class="container hero-content">
       <div class="hero-badge animate-fadeInUp">
         <span class="dot"></span>
@@ -111,7 +119,7 @@
         Programmable<br>
         <span>On-Chain Compliance</span>
       </h1>
-      <p class="lead animate-fadeInUp animate-delay-2" style="margin-top:20px;">
+      <p class="lead animate-fadeInUp animate-delay-2 hero-lead">
         Real-time risk control for the on-chain financial world. Screen every transaction, quarantine suspicious flows, and enforce policies deterministically — with zero off-chain dependency.
       </p>
       <div class="hero-buttons animate-fadeInUp animate-delay-3">
@@ -125,20 +133,20 @@
   </section>
 
   <!-- Wallet Compliance Panel -->
-  <section class="section" id="wallet-compliance" style="padding-top:0;">
+  <section class="section wallet-compliance" id="wallet-compliance">
     <div class="container">
       <div class="compliance-panel" id="compliance-panel">
         <h4>On-Chain Compliance Status</h4>
         <div class="compliance-result" id="compliance-result">
           <div id="compliance-status">Checking…</div>
-          <div id="compliance-details" style="margin-top:12px;"></div>
+          <div id="compliance-details" class="compliance-details"></div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Trust Section -->
-  <section class="section" style="padding-top:0;">
+  <section class="section trust-section">
     <div class="container">
       <div class="trust-bar reveal">
         <div class="trust-stat">
@@ -164,10 +172,10 @@
   <!-- Features Section -->
   <section class="section" id="features">
     <div class="container">
-      <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto;">
+      <div class="reveal section-intro">
         <p class="micro">Features</p>
-        <h2 class="h2" style="margin-top:12px;">Everything you need for on-chain compliance</h2>
-        <p class="lead" style="margin-top:16px;">A full-stack compliance protocol built from the ground up for Web3.</p>
+        <h2 class="h2 section-title">Everything you need for on-chain compliance</h2>
+        <p class="lead section-lead">A full-stack compliance protocol built from the ground up for Web3.</p>
       </div>
       <div class="features-grid">
         <div class="feature-card reveal">
@@ -217,12 +225,12 @@
   </section>
 
   <!-- How It Works -->
-  <section class="section" id="how-it-works" style="background:var(--bg-secondary);">
+  <section class="section bg-secondary" id="how-it-works">
     <div class="container">
-      <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto;">
+      <div class="reveal section-intro">
         <p class="micro">How It Works</p>
-        <h2 class="h2" style="margin-top:12px;">Three layers of protection</h2>
-        <p class="lead" style="margin-top:16px;">Risk Registry → Policy Engine → Compliance Engine. Every transaction is screened before it reaches the chain.</p>
+        <h2 class="h2 section-title">Three layers of protection</h2>
+        <p class="lead section-lead">Risk Registry → Policy Engine → Compliance Engine. Every transaction is screened before it reaches the chain.</p>
       </div>
       <div class="steps">
         <div class="step reveal">
@@ -249,34 +257,34 @@
   <!-- Security & Compliance -->
   <section class="section" id="security">
     <div class="container">
-      <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto;">
+      <div class="reveal section-intro">
         <p class="micro">Security & Compliance</p>
-        <h2 class="h2" style="margin-top:12px;">Built for regulated finance</h2>
-        <p class="lead" style="margin-top:16px;">Meet global compliance standards without compromising on decentralization.</p>
+        <h2 class="h2 section-title">Built for regulated finance</h2>
+        <p class="lead section-lead">Meet global compliance standards without compromising on decentralization.</p>
       </div>
       <div class="compliance-grid">
         <div class="compliance-item reveal">
           <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <h3 style="margin-top:12px;font-size:1rem;">OFAC</h3>
-          <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:4px;">SDN List Screening</p>
+          <h3>OFAC</h3>
+          <p>SDN List Screening</p>
           <span class="badge">Active</span>
         </div>
         <div class="compliance-item reveal">
           <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
-          <h3 style="margin-top:12px;font-size:1rem;">FATF</h3>
-          <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:4px;">Travel Rule Ready</p>
+          <h3>FATF</h3>
+          <p>Travel Rule Ready</p>
           <span class="badge">Active</span>
         </div>
         <div class="compliance-item reveal">
           <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-          <h3 style="margin-top:12px;font-size:1rem;">VASP</h3>
-          <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:4px;">Virtual Asset Service</p>
+          <h3>VASP</h3>
+          <p>Virtual Asset Service</p>
           <span class="badge">Compatible</span>
         </div>
         <div class="compliance-item reveal">
           <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <h3 style="margin-top:12px;font-size:1rem;">SOC 2</h3>
-          <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:4px;">Type II Audit</p>
+          <h3>SOC 2</h3>
+          <p>Type II Audit</p>
           <span class="badge">In Progress</span>
         </div>
       </div>
@@ -284,30 +292,30 @@
   </section>
 
   <!-- Developer Experience -->
-  <section class="section" id="developers" style="background:var(--bg-secondary);">
+  <section class="section bg-secondary" id="developers">
     <div class="container">
-      <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
+      <div class="dev-grid">
         <div class="reveal">
           <p class="micro">Developer Experience</p>
-          <h2 class="h2" style="margin-top:12px;">Integrate in three lines</h2>
-          <p class="lead" style="margin-top:16px;">Inherit the risk engine at the smart contract level. Every token transfer is automatically screened against on-chain risk profiles.</p>
-          <div style="margin-top:32px;display:flex;flex-direction:column;gap:16px;">
-            <div style="display:flex;align-items:flex-start;gap:16px;">
-              <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);min-width:24px;">01</span>
-              <p class="body-sm">Inherit <code style="color:var(--accent);">CompliantStableCoin</code> or wire <code style="color:var(--accent);">FidesCompliance</code> into your transfer hook</p>
+          <h2 class="h2 section-title">Integrate in three lines</h2>
+          <p class="lead section-lead">Inherit the risk engine at the smart contract level. Every token transfer is automatically screened against on-chain risk profiles.</p>
+          <div class="dev-steps">
+            <div class="dev-step">
+              <span class="dev-step-num">01</span>
+              <p class="body-sm">Inherit <code class="code-accent">CompliantStableCoin</code> or wire <code class="code-accent">FidesCompliance</code> into your transfer hook</p>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:16px;">
-              <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);min-width:24px;">02</span>
+            <div class="dev-step">
+              <span class="dev-step-num">02</span>
               <p class="body-sm">Configure risk thresholds and policies via the admin dashboard or directly on-chain</p>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:16px;">
-              <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);min-width:24px;">03</span>
+            <div class="dev-step">
+              <span class="dev-step-num">03</span>
               <p class="body-sm">Every transfer is screened, enforced, and logged — deterministically on-chain</p>
             </div>
           </div>
-          <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;">
-            <a href="#" class="btn btn-primary" style="font-size:0.875rem;">View Documentation</a>
-            <a href="#" class="btn btn-secondary" style="font-size:0.875rem;">Download SDK</a>
+          <div class="dev-actions">
+            <a href="#" class="btn btn-primary btn-sm">View Documentation</a>
+            <a href="#" class="btn btn-secondary btn-sm">Download SDK</a>
           </div>
         </div>
         <div class="reveal">
@@ -349,8 +357,8 @@
       <div class="cta-section reveal">
         <h2 class="h1">Ready to build with on-chain compliance?</h2>
         <p>Get in touch to request access to the FidesOrigin protocol, SDK, and documentation.</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;">
-          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary" style="background:rgba(255,255,255,0.2);color:white;border-color:rgba(255,255,255,0.3);">
+        <div class="cta-buttons">
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary btn-light">
             contact@fidesorigin.com
           </a>
         </div>
@@ -363,8 +371,8 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="/" class="nav-logo" style="font-size:1.125rem;">
-            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" style="width:28px;height:28px;border-radius:6px;object-fit:cover;">
+          <a href="/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
             FidesOrigin
           </a>
           <p>Programmable on-chain compliance for the future of finance.</p>
@@ -532,6 +540,40 @@
     (function() {
       // Do not auto-redirect based on IP. User manually selects language.
     })();
+
+    // ===== Scroll-to-top =====
+    (function() {
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '↑';
+      btn.setAttribute('aria-label', 'Scroll to top');
+      document.body.appendChild(btn);
+      window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      });
+      btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+
+    // ===== Code copy buttons =====
+    document.querySelectorAll('.code-block').forEach(function(block) {
+      var btn = document.createElement('button');
+      btn.className = 'code-copy-btn';
+      btn.textContent = 'Copy';
+      btn.setAttribute('aria-label', 'Copy code');
+      btn.addEventListener('click', function() {
+        var code = block.querySelector('code') || block.querySelector('pre');
+        if (code) {
+          navigator.clipboard.writeText(code.textContent).then(function() {
+            btn.textContent = 'Copied';
+            btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+          });
+        }
+      });
+      block.appendChild(btn);
+    });
   </script>
 </body>
 </html>

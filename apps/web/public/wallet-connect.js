@@ -95,6 +95,16 @@
     if (e) e.innerHTML = html;
   }
 
+  function showBlock(id, visible) {
+    const e = el(id);
+    if (e) e.style.display = visible ? '' : 'none';
+  }
+
+  function bindClick(id, handler) {
+    const e = el(id);
+    if (e) e.addEventListener('click', handler);
+  }
+
   // ── Ethers.js loader ────────────────────────────────────────────────
   async function loadEthers() {
     if (ethersLib) return ethersLib;
@@ -326,6 +336,11 @@
     show('wallet-connected', true);
     setText('wallet-address', shorten(currentAddress));
 
+    // Mobile
+    showBlock('mobile-wallet-btn', false);
+    show('mobile-wallet-connected', true);
+    setText('mobile-wallet-address', shorten(currentAddress));
+
     // Update network badge
     const cfg = CONFIG[currentNetwork];
     const badge = el('wallet-network');
@@ -337,11 +352,9 @@
     // Show compliance panel
     show('compliance-panel', true);
 
-    // Update disconnect button
-    const disconnectBtn = el('wallet-disconnect');
-    if (disconnectBtn) {
-      disconnectBtn.onclick = disconnectWallet;
-    }
+    // Update disconnect buttons
+    bindClick('wallet-disconnect', disconnectWallet);
+    bindClick('mobile-wallet-disconnect', disconnectWallet);
   }
 
   function updateUIDisconnected() {
@@ -350,23 +363,27 @@
     show('compliance-panel', false);
     show('compliance-result', false);
     setText('wallet-address', '');
+
+    // Mobile
+    showBlock('mobile-wallet-btn', true);
+    show('mobile-wallet-connected', false);
+    setText('mobile-wallet-address', '');
   }
 
   // ── Init ────────────────────────────────────────────────────────────
   function init() {
     if (!hasWallet()) {
       // No wallet: show button but it will prompt to install
-      const btn = el('wallet-btn');
-      if (btn) {
-        btn.onclick = () => {
-          alert('Please install MetaMask or another Web3 wallet to connect.\n\nDownload: https://metamask.io');
-        };
-      }
+      var noWalletHandler = function() {
+        alert('Please install MetaMask or another Web3 wallet to connect.\n\nDownload: https://metamask.io');
+      };
+      bindClick('wallet-btn', noWalletHandler);
+      bindClick('mobile-wallet-btn', noWalletHandler);
       return;
     }
 
-    const btn = el('wallet-btn');
-    if (btn) btn.onclick = connectWallet;
+    bindClick('wallet-btn', connectWallet);
+    bindClick('mobile-wallet-btn', connectWallet);
 
     // Try auto-connect if previously connected
     const eth = getEthereum();
