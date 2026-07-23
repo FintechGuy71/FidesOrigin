@@ -90,12 +90,20 @@ dataSources:
         - name: PolicyEngine
           file: ./abis/PolicyEngine.json
       eventHandlers:
-        - event: IssuerPolicySet(indexed address,(uint256,uint256,bool,bool,bool,bool,uint256))
+        - event: IssuerPolicySet(indexed address,uint256,uint256,bool,bool,uint256)
           handler: handleIssuerPolicySet
-        - event: WalletPolicySet(indexed address,(uint256,uint256,uint256,uint256,bool,bool,bool,address[],address[]))
+        - event: WalletPolicySet(indexed address)
           handler: handleWalletPolicySet
-        - event: PolicyEvaluated(indexed address,indexed address,indexed address,uint256,uint8,string)
-          handler: handlePolicyEvaluated
+        - event: TransferEvaluated(indexed address,indexed address,uint256,uint8)
+          handler: handleTransferEvaluated
+        - event: RuleCreated(indexed bytes32,string,uint8)
+          handler: handleRuleCreated
+        - event: RuleUpdated(indexed bytes32,string,uint8)
+          handler: handleRuleUpdated
+        - event: RuleActivated(indexed bytes32)
+          handler: handleRuleActivated
+        - event: RuleDeactivated(indexed bytes32)
+          handler: handleRuleDeactivated
       file: ./src/mappings/policyEngine.ts
   - kind: ethereum
     name: FidesCompliance
@@ -112,24 +120,29 @@ dataSources:
         - FidesRiskProfile
         - FidesComplianceCheck
         - FidesTransactionBlocked
+        - FidesTransactionQuarantined
         - FidesAuditLog
         - FidesRule
       abis:
         - name: FidesCompliance
           file: ./abis/FidesCompliance.json
       eventHandlers:
-        - event: RiskProfileUpdated(indexed address,uint8,uint256,indexed address,bytes32,uint256)
-          handler: handleRiskProfileUpdated
-        - event: ComplianceCheck(indexed address,indexed address,uint256,bool,indexed bytes32,uint256)
-          handler: handleComplianceCheck
-        - event: TransactionBlocked(indexed address,indexed address,uint256,string,uint256)
+        - event: TransactionChecked(indexed address,indexed address,uint256,address,bool,uint256,uint256,uint256)
+          handler: handleTransactionChecked
+        - event: TransactionBlocked(indexed address,indexed address,uint256,address,string,uint256,uint256)
           handler: handleTransactionBlocked
-        - event: AuditLogCreated(indexed uint256,uint8,indexed address,bytes32,uint256)
-          handler: handleAuditLogCreated
-        - event: RuleCreated(indexed bytes32,string,uint8,indexed address,uint256)
-          handler: handleRuleCreated
-        - event: RuleUpdated(indexed bytes32,uint8,indexed address,uint256)
-          handler: handleRuleUpdated
+        - event: TransactionQuarantined(indexed address,indexed address,uint256,address,bytes32,uint256,uint256)
+          handler: handleTransactionQuarantined
+        - event: EmergencyModeActivated(uint256,uint256)
+          handler: handleEmergencyModeActivated
+        - event: EmergencyModeDeactivated(uint256,uint256)
+          handler: handleEmergencyModeDeactivated
+        - event: RoleGrantedDetailed(indexed bytes32,indexed address,indexed address,uint256,string)
+          handler: handleRoleGrantedDetailed
+        - event: RoleRevokedDetailed(indexed bytes32,indexed address,indexed address,uint256,string)
+          handler: handleRoleRevokedDetailed
+        - event: WhitelistUpdated(indexed address,bool,indexed address,uint256)
+          handler: handleWhitelistUpdated
       file: ./src/mappings/fidesCompliance.ts
   - kind: ethereum
     name: CompliantStableCoin

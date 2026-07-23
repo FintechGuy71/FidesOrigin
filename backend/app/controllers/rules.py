@@ -93,6 +93,32 @@ async def get_rules(
 
 
 @router.get(
+    "/categories",
+    response_model=List[str],
+    summary="获取规则类别列表",
+    description="获取所有可用的规则类别",
+    responses={
+        401: {"model": ErrorResponse, "description": "未授权"},
+        429: {"model": ErrorResponse, "description": "请求过于频繁"},
+    }
+)
+async def get_rule_categories(
+    repo: RuleRepository = Depends(get_rule_repo),
+    current_user: str = Depends(get_current_user)
+):
+    """获取规则类别列表"""
+    try:
+        return await repo.get_categories()
+        
+    except Exception as e:
+        logger.error("get_categories_failed", error_type=type(e).__name__)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="获取规则类别失败"
+        )
+
+
+@router.get(
     "/{rule_id}",
     response_model=RiskRuleResponse,
     summary="获取规则详情",
@@ -286,31 +312,6 @@ async def delete_rule(
             detail="删除规则失败"
         )
 
-
-@router.get(
-    "/categories",
-    response_model=List[str],
-    summary="获取规则类别列表",
-    description="获取所有可用的规则类别",
-    responses={
-        401: {"model": ErrorResponse, "description": "未授权"},
-        429: {"model": ErrorResponse, "description": "请求过于频繁"},
-    }
-)
-async def get_rule_categories(
-    repo: RuleRepository = Depends(get_rule_repo),
-    current_user: str = Depends(get_current_user)
-):
-    """获取规则类别列表"""
-    try:
-        return await repo.get_categories()
-        
-    except Exception as e:
-        logger.error("get_categories_failed", error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取规则类别失败"
-        )
 
 
 @router.post(

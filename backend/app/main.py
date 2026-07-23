@@ -247,14 +247,12 @@ async def general_exception_handler(request, exc: Exception):
 # 导入 Controller
 from app.controllers import addresses, auth, monitor, rules, transactions
 
-# API v1 路由
-api_v1_prefix = "/api/v1"
-
-app.include_router(auth.router, prefix=api_v1_prefix)
-app.include_router(addresses.router, prefix=api_v1_prefix)
-app.include_router(transactions.router, prefix=api_v1_prefix)
-app.include_router(rules.router, prefix=api_v1_prefix)
-app.include_router(monitor.router, prefix=api_v1_prefix)
+# API v1 路由（controller 中已定义完整前缀 /api/v1/*）
+app.include_router(auth.router)
+app.include_router(addresses.router)
+app.include_router(transactions.router)
+app.include_router(rules.router)
+app.include_router(monitor.router)
 
 # 版本信息端点
 @app.get("/api/version", tags=["版本信息"])

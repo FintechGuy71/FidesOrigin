@@ -17,7 +17,8 @@ describe('FidesCompliance', function () {
   describe('Deployment', function () {
     it('should set correct admin roles', async function () {
       expect(await fidesCompliance.hasRole(await fidesCompliance.ADMIN_ROLE(), owner.address)).to.be.true;
-      // DEFAULT_ADMIN_ROLE is intentionally removed (S-06 fix)
+      // DEFAULT_ADMIN_ROLE is granted to deployer in initialize()
+      expect(await fidesCompliance.hasRole(await fidesCompliance.DEFAULT_ADMIN_ROLE(), owner.address)).to.be.true;
     });
   });
 

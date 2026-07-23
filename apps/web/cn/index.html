@@ -3,393 +3,392 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
   <title>FidesOrigin — 实时链上合规</title>
   <meta name="description" content="原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-  <style>
-    .mobile-menu { display: none; }
-    @media (max-width: 900px) { .mobile-menu { display: flex; } }
-
-    .lang-dropdown { position: relative; display: inline-block; margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border); }
-    .lang-dropdown-toggle { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-    .lang-dropdown-toggle:hover { border-color: var(--border-light); color: var(--text); }
-    .lang-dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; min-width: 140px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 6px; display: none; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-    .lang-dropdown.open .lang-dropdown-menu { display: block; }
-    .lang-dropdown-menu a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; transition: all 0.15s; white-space: nowrap; cursor: pointer; }
-    .lang-dropdown-menu a:hover { background: rgba(255,255,255,0.04); color: var(--text); }
-    .lang-dropdown-menu a.active { background: var(--accent-glow); color: var(--accent-light); font-weight: 600; }
-    .footer-bottom .lang-dropdown { margin-left: 0; padding-left: 0; border-left: none; }
-    @media (max-width: 900px) { 
-      .nav .lang-dropdown { display: none; margin: 16px 0 0 0; padding: 16px 0 0 0; border-left: none; border-top: 1px solid var(--border); }
-      .nav.show .lang-dropdown { display: block; }
-      .lang-dropdown-menu { right: auto; left: 0; }
-    }
-
-    /* Brand hero */
-    .brand-hero { padding: 120px 0 80px; text-align: center; }
-    @media (max-width: 600px) {
-      .brand-hero { padding: 76px 0 40px; }
-      .brand-hero .eyebrow { margin-bottom: 20px; font-size: 0.75rem; padding: 5px 12px; }
-      .brand-hero h1 { font-size: clamp(1.7rem, 5vw, 2.2rem); }
-      .brand-hero .subtitle { font-size: 1rem; margin-top: 16px; max-width: 100%; }
-      .brand-hero .hero-cta { margin-top: 24px; }
-    }
-    .brand-hero .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 100px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; margin-bottom: 32px; }
-    .brand-hero .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
-    .brand-hero h1 { font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
-    .brand-hero h1 .gradient-text { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .brand-hero .subtitle { max-width: 560px; margin: 24px auto 0; font-size: 1.1rem; color: var(--text-secondary); line-height: 1.6; }
-    .brand-hero .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 40px; }
-
-    /* One-liner section */
-    .oneline { padding: 60px 0; text-align: center; border-top: 1px solid var(--border); }
-    .oneline p { font-size: clamp(1.2rem, 2.5vw, 1.6rem); font-weight: 600; color: var(--text); max-width: 800px; margin: 0 auto; line-height: 1.5; }
-    .oneline p span { color: var(--accent-light); }
-
-    /* How it works — 3 steps */
-    .steps { padding: 80px 0; }
-    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 48px; }
-    @media (max-width: 900px) { .steps-grid { grid-template-columns: 1fr; } }
-    .step { text-align: center; }
-    .step-num { width: 48px; height: 48px; border-radius: 50%; background: var(--gradient-primary); color: white; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-    .step h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
-    .step p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; max-width: 280px; margin: 0 auto; }
-
-    /* Trust bar */
-    .trust-bar { padding: 48px 0; text-align: center; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .trust-bar .trust-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
-    .trust-items { display: flex; align-items: center; justify-content: center; gap: 32px; flex-wrap: wrap; }
-    .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); }
-    .trust-item .flag { font-size: 1.1rem; }
-    .trust-item .check { color: var(--success); font-weight: 700; }
-
-    /* Code preview */
-    .code-preview { padding: 80px 0; }
-    .code-preview-header { text-align: center; margin-bottom: 32px; }
-    .code-preview-header h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
-    .code-preview-header p { color: var(--text-secondary); font-size: 0.9rem; }
-
-    .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 48px; }
-    .diff-item { display: flex; gap: 16px; padding: 24px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); }
-    @media (max-width: 900px) { .diff-grid { grid-template-columns: 1fr; gap: 20px; } }
-    .diff-item .diff-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--gradient-primary); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .diff-item h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
-    .diff-item p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
-
-    @media (max-width: 600px) {
-      .diff-grid { grid-template-columns: 1fr; gap: 20px; }
-      .diff-item { padding: 16px; gap: 12px; }
-      .step p { max-width: 100%; }
-    }
-  </style>
-  <meta name="theme-color" content="#0a0e1a">
-  <meta name="msapplication-TileColor" content="#0a0e1a">
-  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
-  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
-  <meta name="twitter:site" content="@fidesorigin">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "FidesOrigin",
-    "url": "https://fidesorigin.com",
-    "logo": "https://fidesorigin.com/brand/logo-dark-icon.png",
-    "description": "Real-time on-chain compliance for tokenized assets, stablecoins, and AI Agents.",
-    "sameAs": ["https://github.com/FintechGuy71/FidesOrigin"],
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "email": "contact@fidesorigin.com",
-      "contactType": "sales"
-    }
-  }
-  </script>
-  <link rel="canonical" href="https://fidesorigin.com/cn/">
   <meta property="og:title" content="FidesOrigin — 实时链上合规">
   <meta property="og:description" content="原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fidesorigin.com/cn/">
-  <meta property="og:site_name" content="FidesOrigin">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/cn/">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
   <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
   <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
-  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
 </head>
 <body>
-  <a href="#main-content" class="skip-link">跳转到主要内容</a>
-  <header class="header">
-    <div class="container header-inner">
-      <a href="/" class="logo">
-        <div class="logo-icon" style="width:32px;height:32px;border-radius:8px;overflow:hidden;flex-shrink:0;">
-          <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" style="width:100%;height:100%;object-fit:cover;display:block;">
-        </div>
-        <span class="logo-text">FidesOrigin</span>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/zh-CN/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
+        FidesOrigin
       </a>
-      <nav class="nav">
-        <a href="#how">工作原理</a>
-        <a href="#diff">为何选择我们</a>
-        <a href="#demo">演示</a>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
-        <div class="lang-dropdown" id="langDropdownNav">
-          <button class="lang-dropdown-toggle" >
-            <span>🌐</span>
-            <span>English</span>
-            <span>▾</span>
+      <div class="nav-left">
+        <a href="#features">功能特性</a>
+        <a href="#how-it-works">工作原理</a>
+        <a href="#security">安全合规</a>
+        <a href="#developers">文档</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="Language">
+            CN
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </button>
-          <div class="lang-dropdown-menu">
-            <a data-lang="en">English</a>
-            <a data-lang="cn" class="active">简体中文</a>
-            <a data-lang="tw">繁體中文</a>
+          <div id="langMenu">
+            <a href="/">English</a>
+            <a href="/cn/">简体中文</a>
+            <a href="/tw/">繁體中文</a>
+            <a href="/jp/">日本語</a>
           </div>
         </div>
-        <!-- Wallet Connect -->
+        <div class="nav-divider"></div>
         <div class="wallet-connect-wrap">
-          <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
-            连接钱包
+          <button class="wallet-btn" id="wallet-btn" aria-label="连接">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+            连接
           </button>
           <div class="wallet-connected" id="wallet-connected">
             <div class="wallet-info">
               <span class="wallet-address" id="wallet-address"></span>
               <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
             </div>
-            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect wallet">断开</button>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="断开">断开</button>
           </div>
         </div>
-      </nav>
-      <button class="mobile-menu" onclick="document.querySelector('.nav').classList.toggle('show')" style="background:none;border:none;color:var(--text);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <a href="#contact" class="nav-cta">开始使用</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
-  </header>
+  </nav>
 
-  <main id="main-content">
-
-  <!-- Wallet Compliance Panel -->
-  <section class="section" id="wallet-compliance" style="padding-top:0;">
-    <div class="container">
-      <div class="compliance-panel" id="compliance-panel">
-        <h4>链上合规状态</h4>
-        <div class="compliance-result" id="compliance-result">
-          <div id="compliance-status">检查中…</div>
-          <div id="compliance-details" style="margin-top:12px;"></div>
-        </div>
-      </div>
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="#features">功能特性</a>
+    <a href="#how-it-works">工作原理</a>
+    <a href="#security">安全合规</a>
+    <a href="#developers">文档</a>
+    <div class="lang-row">
+      <a href="/">EN</a>
+      <a href="/cn/">CN</a>
+      <a href="/tw/">TW</a>
+      <a href="/jp/">JP</a>
     </div>
-  </section>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected">
+      <span id="mobile-wallet-address"></span>
+      <button id="mobile-wallet-disconnect" aria-label="断开">断开</button>
+    </div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="连接">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+      连接
+    </button>
+  </div>
 
-  <!-- Brand Hero -->
-  <section class="brand-hero">
-    <div class="container">
-      <div class="eyebrow fade-in delay-1">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="gradient-orb"></div>
+    <div class="gradient-orb"></div>
+    <div class="container hero-content">
+      <div class="hero-badge animate-fadeInUp">
         <span class="dot"></span>
-        <span>链上合规基础设施</span>
+        Sepolia 测试网已上线
       </div>
-      <h1 class="fade-in delay-2">
+      <h1 class="display animate-fadeInUp animate-delay-1">
         实时链上风控<br>
-        <span class="gradient-text">原生区块链执行</span>
+        <span>原生区块链执行</span>
       </h1>
-      <p class="subtitle fade-in delay-3">
+      <p class="lead animate-fadeInUp animate-delay-2 hero-lead">
         不是查询工具。不是API。FidesOrigin是嵌入式智能合约逻辑，在交易确认前决定其是否通过。
       </p>
-      <div class="hero-cta fade-in delay-3">
-        <a href="#demo" class="btn btn-primary">体验演示</a>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn btn-secondary">在 GitHub 查看</a>
+      <div class="hero-buttons animate-fadeInUp animate-delay-3">
+        <a href="#contact" class="btn btn-primary">
+          开始使用
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
+        </a>
+        <a href="/admin/" class="btn btn-secondary">查看演示</a>
       </div>
     </div>
   </section>
 
-  <!-- One-liner -->
-  <section class="oneline">
+  <!-- Wallet Compliance Panel -->
+  <section class="section wallet-compliance" id="wallet-compliance">
     <div class="container">
-      <p>
-        稳定币和代币化资产被困在闭环中。<br>
-        <span>我们解锁它们。</span>
-      </p>
+      <div class="compliance-panel" id="compliance-panel">
+        <h4>检查中…</h4>
+        <div class="compliance-result" id="compliance-result">
+          <div id="compliance-status">检查中…</div>
+          <div id="compliance-details" class="compliance-details"></div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- 工作原理 -->
-  <section class="section steps" id="how">
+  <!-- Trust Section -->
+  <section class="section trust-section">
     <div class="container">
-      <div class="section-header">
-        <h2>工作原理</h2>
-        <p>三层架构。一次决策。零延迟。</p>
+      <div class="trust-bar reveal">
+        <div class="trust-stat">
+          <div class="number" data-count="20645" data-prefix="" data-suffix="+">0</div>
+          <div class="label">风险地址</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="202" data-prefix="" data-suffix="">0</div>
+          <div class="label">测试通过</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="50" data-prefix="" data-suffix="ms">0</div>
+          <div class="label">链上检查</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="7" data-prefix="" data-suffix="">0</div>
+          <div class="label">网络</div>
+        </div>
       </div>
-      <div class="steps-grid">
-        <div class="step fade-in delay-1">
-          <div class="step-num">1</div>
-          <h3>AI标注风险</h3>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">Features</p>
+        <h2 class="h2 section-title">Everything you need for on-chain compliance</h2>
+        <p class="lead section-lead">A full-stack compliance protocol built from the ground up for Web3.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3>链上执行</h3>
+          <p>风险决策以智能合约逻辑运行——而非从外部 API 查询。无延迟、无黑盒、无单点故障。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          </div>
+          <h3>热插拔策略</h3>
+          <p>无需升级核心合约即可部署新风险策略。按客户、按司法管辖区的规则实时更新。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3>AI 智能体原生</h3>
+          <p>自主智能体直接在链上查询风险状态并执行合规。7×24 运营无需人工守门。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3>隐私保护</h3>
+          <p>基于 Merkle 的风险承诺在不暴露敏感地址数据的情况下验证合规性。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+          </div>
+          <h3>多链支持</h3>
+          <p>为 Ethereum、Base 等构建。跨链风险画像，统一治理。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <h3>开发者 API</h3>
+          <p>RESTful API、WebSocket 流、TypeScript SDK。数小时集成，而非数周。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section bg-secondary" id="how-it-works">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">How It Works</p>
+        <h2 class="h2 section-title">Three layers of protection</h2>
+        <p class="lead section-lead">Risk Registry &rarr; Policy Engine &rarr; Compliance Engine. Every transaction is screened before it reaches the chain.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-number">1</div>
+          <h3>AI 标注风险</h3>
           <p>图神经网络将链上和链下数据处理为风险标签——持续更新。</p>
         </div>
-        <div class="step fade-in delay-2">
-          <div class="step-num">2</div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">2</div>
           <h3>链上验证</h3>
-          <p>风险标签经Merkle证明并推送至智能合约。每个地址&lt;50毫秒完成检查。</p>
+          <p>风险标签经 Merkle 证明并推送至智能合约。每个地址 <50 毫秒完成检查。</p>
         </div>
-        <div class="step fade-in delay-3">
-          <div class="step-num">3</div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">3</div>
           <h3>交易决策</h3>
-          <p>放行/拦截/标记/暂留——在交易执行前原子化执行。无需API调用。无黑盒。</p>
+          <p>放行 / 拦截 / 标记 / 暂留——在交易执行前原子化执行。无需 API 调用。无黑盒。</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Key Differentiators -->
-  <section class="section" id="diff">
-    <div class="container">
-      <div class="section-header">
-        <h2>为何选择 FidesOrigin</h2>
-        <p>不是仪表盘。不是API调用。是决定交易的嵌入式逻辑。</p>
-      </div>
-      <div class="diff-grid">
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <div>
-            <h3>链上执行</h3>
-            <p>风险决策以智能合约逻辑运行——而非从外部API查询。无延迟、无黑盒、无单点故障。</p>
-          </div>
-        </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          </div>
-          <div>
-            <h3>热插拔策略</h3>
-            <p>无需升级核心合约即可部署新风险策略。按客户、按司法管辖区的规则实时更新。</p>
-          </div>
-        </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          </div>
-          <div>
-            <h3>AI智能体原生</h3>
-            <p>自主智能体直接在链上查询风险状态并执行合规。7×24运营无需人工守门。</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 使用场景 -->
+  <!-- Use Cases -->
   <section class="section" id="use-cases">
     <div class="container">
-      <div class="section-header">
-        <h2>使用场景</h2>
-        <p>解决真实问题的真实保护。</p>
+      <div class="reveal section-intro">
+        <p class="micro">Use Cases</p>
+        <h2 class="h2 section-title">Real protection for real problems</h2>
+        <p class="lead section-lead">Built for stablecoin issuers, RWA platforms, smart wallets, and AI agents.</p>
       </div>
-      <div class="diff-grid">
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <div>
-            <h3>稳定币发行方</h3>
-            <p>将OFAC/联合国制裁检查嵌入每一次铸造、销毁和转账。满足香港和欧盟MiCA合规要求，无需链下摩擦。</p>
-          </div>
+          <h3>稳定币发行方</h3>
+          <p>将 OFAC / 联合国制裁检查嵌入每一次铸造、销毁和转账。满足香港和欧盟 MiCA 合规要求，无需链下摩擦。</p>
         </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
-          <div>
-            <h3>RWA平台</h3>
-            <p>在任何代币化证券转手前验证合格投资者身份和司法管辖区。始终保持最新的链上KYC。</p>
-          </div>
+          <h3>RWA 平台</h3>
+          <p>在任何代币化证券转手前验证合格投资者身份和司法管辖区。始终保持最新的链上 KYC。</p>
         </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
           </div>
-          <div>
-            <h3>P2P支付保护</h3>
-            <p><strong>资金到账即自动隔离。</strong>当黑名单地址向您的钱包发送ETH或ERC-20时，收款在合约层面即被拦截。对于无法拦截的代币，资金被即时隔离——冻结、可审计、与可支出余额分离。</p>
-          </div>
+          <h3>P2P 支付保护</h3>
+          <p>资金到账即自动隔离。当黑名单地址向您的钱包发送 ETH 或 ERC-20 时，收款在合约层面即被拦截。</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Trust Bar -->
-  <section class="trust-bar">
+  <!-- Security & Compliance -->
+  <section class="section" id="security">
     <div class="container">
-      <div class="trust-label">合规就绪</div>
-      <div class="trust-items">
-        <div class="trust-item"><span class="flag">🇭🇰</span> Hong Kong Stablecoin Ordinance <span class="check">✓</span></div>
-        <div class="trust-item"><span class="flag">🇪🇺</span> MiCA Framework <span class="check">✓</span></div>
-        <div class="trust-item"><span class="flag">🇺🇸</span> GENIUS Act / OFAC SDN <span class="check">✓</span></div>
+      <div class="reveal section-intro">
+        <p class="micro">安全与合规</p>
+        <h2 class="h2 section-title">为受监管金融而生</h2>
+        <p class="lead section-lead">Meet global compliance standards without compromising on decentralization.</p>
+      </div>
+      <div class="compliance-grid">
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h3>OFAC</h3>
+          <p>SDN 名单筛查</p>
+          <span class="badge">已启用</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+          <h3>FATF</h3>
+          <p>Travel Rule 就绪</p>
+          <span class="badge">已启用</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          <h3>VASP</h3>
+          <p>虚拟资产服务</p>
+          <span class="badge">兼容</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <h3>香港稳定币条例</h3>
+          <p>合规就绪</p>
+          <span class="badge">已启用</span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Code Preview -->
-  <section class="section code-preview" id="demo">
+  <!-- Developer Experience -->
+  <section class="section bg-secondary" id="developers">
     <div class="container">
-      <div class="code-preview-header">
-        <h2>为AI智能体打造</h2>
-        <p>自主智能体原生查询风险——无需人工守门。</p>
-      </div>
-      <div class="code-block">
-        <div class="code-header">
-          <span>Integration</span>
-          <span class="lang-tag">Solidity</span>
+      <div class="dev-grid">
+        <div class="reveal">
+          <p class="micro">Developer Experience</p>
+          <h2 class="h2 section-title">为 AI 智能体打造</h2>
+          <p class="lead section-lead">自主智能体原生查询风险——无需人工守门。在智能合约层面继承风险引擎，每笔代币转账自动根据链上风险画像进行筛查。</p>
+          <div class="dev-steps">
+            <div class="dev-step">
+              <span class="dev-step-num">01</span>
+              <p class="body-sm">继承 <code class='code-accent'>CompliantStableCoin</code> 或在转账钩子中接入 <code class='code-accent'>FidesCompliance</code></p>
+            </div>
+            <div class="dev-step">
+              <span class="dev-step-num">02</span>
+              <p class="body-sm">通过管理后台或直接链上配置风险阈值和策略</p>
+            </div>
+            <div class="dev-step">
+              <span class="dev-step-num">03</span>
+              <p class="body-sm">每笔转账都会被筛查、执行并记录——确定性链上执行</p>
+            </div>
+          </div>
+          <div class="dev-actions">
+            <a href="#" class="btn btn-primary btn-sm">Documentation</a>
+            <a href="#" class="btn btn-secondary btn-sm">Download SDK</a>
+          </div>
         </div>
-        <pre><code><span class="code-comment">// 每笔交易前，智能体链上检查风险</span>
-<span class="code-keyword">bool</span> isSafe = riskRegistry.verifyAddress(
+        <div class="reveal">
+          <div class="code-block">
+            <div class="code-header">
+              <span>Integration</span>
+              <span>Solidity</span>
+            </div>
+            <div class="code-body">
+<pre><span class="comment">// 每笔交易前，智能体链上检查风险</span>
+<span class="kw">bool</span> isSafe = riskRegistry.verifyAddress(
     counterparty,
     expectedRiskScore,
-    <span class="code-string">"BLACK"</span>,
+    <span class="str">"BLACK"</span>,
     merkleProof
 );
 
-<span class="code-keyword">require</span>(isSafe, <span class="code-string">"被合规策略拦截"</span>);
-complianceEngine.recordDecision(<span class="code-keyword">msg.sender</span>, counterparty, amount, <span class="code-number">0</span>);
-swap.execute(counterparty, amount);</code></pre>
-      </div>
-      <div style="text-align:center; margin-top:28px;">
-        <a href="/cn/address-check.html" class="btn btn-secondary">Try 风险扫描 →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Protocol Metrics -->
-  <section class="section trust-section">
-    <div class="container">
-      <div class="stats-row">
-        <div class="stat-item">
-          <div class="stat-num">20,645+</div>
-          <div class="stat-label">风险地址</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">202</div>
-          <div class="stat-label">测试通过</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">&lt;50ms</div>
-          <div class="stat-label">链上检查</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">7</div>
-          <div class="stat-label">网络</div>
+<span class="kw">require</span>(isSafe, <span class="str">"被合规策略拦截"</span>);
+complianceEngine.recordDecision(<span class="kw">msg.sender</span>, counterparty, amount, <span class="num">0</span>);
+swap.execute(counterparty, amount);</pre>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
-  <section class="section">
+  <!-- Contact / CTA -->
+  <section class="section" id="contact">
     <div class="container">
-      <div class="cta-box">
-        <h2>开始构建</h2>
-        <p>开源。生产就绪。MIT许可证。</p>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" class="btn">在 GitHub 探索</a>
+      <div class="cta-section reveal">
+        <h2 class="h1">开始构建</h2>
+        <p>开源。生产就绪。MIT 许可证。</p>
+        <div class="cta-buttons">
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary btn-light">
+            contact@fidesorigin.com
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -399,185 +398,203 @@ swap.execute(counterparty, amount);</code></pre>
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="logo-icon" style="width:28px;height:28px;border-radius:6px;overflow:hidden;flex-shrink:0;">
-              <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" style="width:100%;height:100%;object-fit:cover;display:block;">
-            </div>
-            <span style="font-weight:700;">FidesOrigin</span>
-          </div>
-          <p>为代币化资产、稳定币和AI智能体提供实时链上合规。</p>
+          <a href="/zh-CN/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>为代币化资产、稳定币和 AI 智能体提供实时链上合规。</p>
         </div>
         <div class="footer-col">
           <h4>产品</h4>
-          <a href="/cn/address-check.html">风险扫描</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
-          <span style="display:block;color:var(--text-muted);font-size:0.85rem;padding:4px 0;">文档 — 即将推出</span>
+          <a href="#features">功能特性</a>
+          <a href="#how-it-works">工作原理</a>
+          <a href="#security">安全合规</a>
+          <a href="/admin/">Dashboard</a>
         </div>
         <div class="footer-col">
-          <h4>联系</h4>
-          <a href="mailto:contact@fidesorigin.com">contact@fidesorigin.com</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
-          <a href="https://discord.gg/eM8CA6WA9r" target="_blank">Discord</a>
+          <h4>开发者</h4>
+          <a href="#developers">文档</a>
+          <a href="#">API Reference</a>
+          <a href="#">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>公司</h4>
+          <a href="mailto:contact@fidesorigin.com">联系我们</a>
+          <a href="#">Blog</a>
+          <a href="#">隐私政策</a>
+          <a href="#">服务条款</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 FidesOrigin. MIT许可证。</span>
-        <div class="lang-dropdown" id="langDropdownFooter">
-          <button class="lang-dropdown-toggle" >
-            <span>🌐</span>
-            <span>English</span>
-            <span>▾</span>
-          </button>
-          <div class="lang-dropdown-menu">
-            <a data-lang="en">English</a>
-            <a data-lang="cn" class="active">简体中文</a>
-            <a data-lang="tw">繁體中文</a>
-          </div>
-        </div>
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>Built with &hearts; for the on-chain financial world.</p>
       </div>
     </div>
   </footer>
-  </main>
-  <button class="scroll-top" id="scrollTop"  aria-label="Scroll to top">↑</button>
 
-  <script>
-    // Scroll-to-top visibility
-    const scrollTopBtn = document.getElementById('scrollTop');
-    window.addEventListener('scroll', () => {
-      scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+  <script nonce="2726c7f26c" src="/wallet-connect.js"></script>
+  <script nonce="2726c7f26c">
+    // ===== Mobile Menu =====
+    function toggleMobileMenu() {
+      document.getElementById('mobileMenu').classList.toggle('active');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var mobileBtn = document.querySelector('.nav-mobile-btn');
+      if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu);
+      document.querySelectorAll('#mobileMenu a').forEach(function(link) {
+        link.addEventListener('click', toggleMobileMenu);
+      });
     });
 
-    // Code copy buttons
-    document.querySelectorAll('.code-block').forEach(block => {
-      const btn = document.createElement('button');
+    // ===== Language Menu =====
+    function toggleLangMenu(e) {
+      e.stopPropagation();
+      var menu = document.getElementById('langMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.addEventListener('click', toggleLangMenu);
+    });
+    document.addEventListener('click', function() {
+      var menu = document.getElementById('langMenu');
+      if (menu) menu.style.display = 'none';
+    });
+
+    // ===== Intersection Observer for scroll animations =====
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+
+    // ===== Counter Animation =====
+    (function() {
+      function animateCounter(el) {
+        var target = parseFloat(el.dataset.count);
+        if (isNaN(target)) return;
+        var prefix = el.dataset.prefix || '';
+        var suffix = el.dataset.suffix || '';
+        var duration = 2000;
+        var start = performance.now();
+        var isFloat = target % 1 !== 0;
+
+        function update(now) {
+          var progress = Math.min((now - start) / duration, 1);
+          var ease = 1 - Math.pow(1 - progress, 3);
+          var current = target * ease;
+          if (isFloat) {
+            el.textContent = prefix + current.toFixed(1) + suffix;
+          } else {
+            el.textContent = prefix + Math.floor(current).toLocaleString() + suffix;
+          }
+          if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      }
+
+      var counterObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting && !entry.target.dataset.animated) {
+            entry.target.dataset.animated = '1';
+            animateCounter(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+
+      document.querySelectorAll('[data-count]').forEach(function(el) {
+        counterObserver.observe(el);
+      });
+    })();
+
+    // ===== Particle Canvas =====
+    (function() {
+      var canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var particles = [];
+      var PARTICLE_COUNT = 60;
+
+      function resize() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      for (var i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          radius: Math.random() * 1.5 + 0.5,
+          opacity: Math.random() * 0.4 + 0.1
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(99, 102, 241, ' + p.opacity + ')';
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    // ===== Scroll-to-top =====
+    (function() {
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '&uarr;';
+      btn.setAttribute('aria-label', '回到顶部');
+      document.body.appendChild(btn);
+      window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      });
+      btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+
+    // ===== Code copy buttons =====
+    document.querySelectorAll('.code-block').forEach(function(block) {
+      var btn = document.createElement('button');
       btn.className = 'code-copy-btn';
       btn.textContent = '复制';
-      btn.setAttribute('aria-label', '复制代码');
-      btn.addEventListener('click', () => {
-        const code = block.querySelector('code');
+      btn.setAttribute('aria-label', '复制');
+      btn.addEventListener('click', function() {
+        var code = block.querySelector('code') || block.querySelector('pre');
         if (code) {
-          navigator.clipboard.writeText(code.textContent).then(() => {
+          navigator.clipboard.writeText(code.textContent).then(function() {
             btn.textContent = '已复制';
             btn.classList.add('copied');
-            setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000);
+            setTimeout(function() { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000);
           });
         }
       });
       block.appendChild(btn);
     });
-
-    // Count-up animation for stats
-    function animateCountUp() {
-      const counters = document.querySelectorAll('.stat-num');
-      counters.forEach(counter => {
-        const target = parseInt(counter.textContent.replace(/\D/g, ''));
-        const suffix = counter.textContent.replace(/[\d,]/g, '');
-        const duration = 1500;
-        const start = performance.now();
-        function update(now) {
-          const elapsed = now - start;
-          const progress = Math.min(elapsed / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3);
-          const current = Math.round(target * eased);
-          counter.textContent = current.toLocaleString() + suffix;
-          if (progress < 1) requestAnimationFrame(update);
-        }
-        requestAnimationFrame(update);
-      });
-    }
-
-    const statsObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animateCountUp();
-          statsObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.5 });
-
-    const statsSection = document.querySelector('.trust-section');
-    if (statsSection) statsObserver.observe(statsSection);
-
-    // Trust bar emoji font fallback
-    document.querySelectorAll('.trust-item .flag').forEach(el => {
-      el.style.fontFamily = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-    });
   </script>
-
-  <script>
-    async function detectLang() {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-        const cc = data.country_code;
-        if (cc === 'CN') return 'cn';
-        if (cc === 'TW' || cc === 'HK') return 'tw';
-        return 'en';
-      } catch (e) {
-        const lang = navigator.language || navigator.userLanguage;
-        if (lang.startsWith('zh-Hans') || lang === 'zh-CN') return 'cn';
-        if (lang.startsWith('zh-Hant') || lang === 'zh-TW') return 'tw';
-        return 'en';
-      }
-    }
-
-    function getBasePath() {
-      const path = window.location.pathname;
-      if (path.includes('/cn/') || path.includes('/tw/')) return '../';
-      return './';
-    }
-
-    function getLangPath(lang) {
-      const base = getBasePath();
-      if (lang === 'en') return base;
-      return base + lang + '/';
-    }
-
-    function switchLang(lang) {
-      localStorage.setItem('lang-pref', lang);
-      window.location.href = getLangPath(lang);
-    }
-
-    function toggleDropdown(id, event) {
-      event.stopPropagation();
-      const dropdown = document.getElementById(id);
-      const isOpen = dropdown.classList.contains('open');
-      document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
-      if (!isOpen) dropdown.classList.add('open');
-    }
-
-    function closeAllDropdowns() {
-      document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
-    }
-
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('.lang-dropdown')) closeAllDropdowns();
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeAllDropdowns();
-    });
-
-    async function init() {
-      const saved = localStorage.getItem('lang-pref');
-      if (saved) return;
-      if (!sessionStorage.getItem('lang-checked')) {
-        sessionStorage.setItem('lang-checked', '1');
-        const detected = await detectLang();
-        const current = document.documentElement.lang;
-        let currentCode = 'en';
-        if (current === 'zh-CN') currentCode = 'cn';
-        else if (current === 'zh-TW') currentCode = 'tw';
-        if (detected !== currentCode) {
-          window.location.href = getLangPath(detected);
-        }
-      }
-    }
-    init();
-  </script>
-  <script src="/wallet-connect.js"></script>
 </body>
 </html>

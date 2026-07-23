@@ -183,23 +183,12 @@ type HourlyStats @entity {
   txCount: BigInt!                     # 交易计数（替代TPS）
 }
 
-# ========== Leaderboard & Ranking ==========
-
-type TopRiskAddress @entity {
-  id: ID!                              # 地址
-  riskScore: Int!
-  tier: RiskTier!
-  checkCount: Int!
-  blockCount: Int!
-  lastActive: BigInt!
-  isSanctioned: Boolean!
-}
-
 enum RiskTier {
   UNKNOWN
   LOW
   MEDIUM
   HIGH
+  CRITICAL
 }
 
 enum Decision {
@@ -257,16 +246,6 @@ type TokenPolicy @entity {
 
 # ========== FidesCompliance ==========
 
-type FidesRiskProfile @entity {
-  id: ID!                              # 地址
-  level: RiskLevel!
-  score: BigInt!
-  tags: [String!]!
-  lastUpdated: BigInt!
-  updatedBy: String!
-  reasonHash: String!
-}
-
 type FidesComplianceCheck @entity {
   id: ID!                              # txHash
   from: String!
@@ -279,6 +258,17 @@ type FidesComplianceCheck @entity {
 }
 
 type FidesTransactionBlocked @entity {
+  id: ID!                              # txHash-logIndex
+  from: String!
+  to: String!
+  amount: BigInt!
+  reason: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type FidesTransactionQuarantined @entity {
   id: ID!                              # txHash-logIndex
   from: String!
   to: String!

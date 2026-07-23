@@ -96,12 +96,14 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
 
     /**
      * @notice H-5 FIX: 预言机提取质押 ETH
+     * @dev L-12 FIX: 使用 .call 替代 .transfer，避免智能合约接收方因 2300 gas 限制而失败
      * @param amount 提取金额
      */
-    function unstake(uint256 amount) external {
+    function unstake(uint256 amount) external nonReentrant {
         require(oracleStakes[msg.sender] >= amount, "Insufficient stake balance");
         oracleStakes[msg.sender] -= amount;
-        payable(msg.sender).transfer(amount);
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "ETH transfer failed");
         emit OracleUnstaked(msg.sender, amount);
     }
 

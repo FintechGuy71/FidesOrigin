@@ -79,11 +79,6 @@ TestingSessionLocal = async_sessionmaker(
 )
 
 
-# [LOW Fix #22] get_db 已在 di.py 中定义，此处仅 re-export 以保持向后兼容
-# 不再重复定义，避免与 di.py 中的版本产生不一致
-from app.core.di import get_db as get_db  # noqa: F401, E402
-
-
 async def init_db():
     """初始化数据库（创建所有表）"""
     async with get_async_engine().begin() as conn:

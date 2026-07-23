@@ -55,12 +55,6 @@ class Token(BaseModel):
 
 import uuid
 
-# ==================== JWT 认证 ====================
-
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_MINUTES = 30  # [K3 Fix] Shortened from 480 to 30 minutes
-JWT_REFRESH_EXPIRE_MINUTES = 10080  # 7 days
-
 # [MEDIUM-1 FIX] Refresh Token 旋转配置
 REFRESH_TOKEN_FAMILY_PREFIX = "fidesorigin:refresh_family:"
 REFRESH_TOKEN_JTI_PREFIX = "fidesorigin:refresh_jti:"

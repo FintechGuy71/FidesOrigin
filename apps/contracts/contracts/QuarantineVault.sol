@@ -572,7 +572,8 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         tokenQuarantinedAmount[record.token] -= record.amount;
 
         if (record.token == address(0)) {
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
+            // H-06 FIX: 限制 gas 为 2300 防止重入攻击，与 releaseFunds 保持一致
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 2300}("");
             require(ok, "ETH claim failed");
         } else {
             IERC20(record.token).safeTransfer(record.originalOwner, record.amount);

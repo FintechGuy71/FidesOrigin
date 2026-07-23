@@ -119,7 +119,7 @@ describe('CompliantStableCoin', function () {
       await stableCoin.connect(owner).toggleCompliance(true);
       expect(await stableCoin.complianceEnabled()).to.be.true;
 
-      // [K3 Fix C-17] Compliance enabled for testing - previously disabled
+      await stableCoin.connect(owner).toggleCompliance(false);
       expect(await stableCoin.complianceEnabled()).to.be.false;
     });
 

@@ -27,9 +27,9 @@ class TestCacheBasicOperations:
         result = await cache_service.set("test_key", "test_value")
         assert result is False  # Redis 未连接
 
-        # get 也应返回 None
+        # get 返回 L1 内存缓存中的值（即使 Redis 未连接）
         value = await cache_service.get("test_key")
-        assert value is None
+        assert value == "test_value"
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent_key(self, cache_service):

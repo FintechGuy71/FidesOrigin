@@ -13,6 +13,7 @@ import os
 os.environ["TESTING"] = "true"
 os.environ["TEST_DATABASE_URL"] = "postgresql+asyncpg://fidesorigin:fidesorigin@localhost:5432/fidesorigin_test"
 os.environ["DB_PASSWORD"] = "fidesorigin"
+os.environ["SECRET_KEY"] = "test-secret-key-at-least-32-characters-long"
 
 import asyncio
 from contextlib import asynccontextmanager
@@ -24,7 +25,8 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
-from app.database import get_db, Base
+from app.database import Base
+from app.core.di import get_db
 
 TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]
 
@@ -33,11 +35,6 @@ test_engine = create_async_engine(
     TEST_DATABASE_URL,
     poolclass=NullPool,
 )
-
-
-# 使用 pytest-asyncio 推荐的配置方式替代自定义 event_loop fixture
-# 在 pytest.ini 中已配置 asyncio_mode = auto 和 asyncio_default_fixture_loop_scope = session
-# 不再需要使用自定义 event_loop fixture
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -93,7 +90,7 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     from app.core.di import get_container
     import app.core.di as di_module
     import app.core.security as security_module
-    from app.core.security import get_current_api_key
+    from app.core.security import get_current_api_key, get_current_user
     
     # 保存原始的 get_db 函数
     original_get_db = di_module.get_db
@@ -135,10 +132,14 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     
     if noauth_marker:
         # [Fix #7] 仅在 noauth 标记时绕过认证和安全中间件
-        async def mock_get_current_api_key(*args, **kwargs):
+        async def mock_get_current_api_key():
             return "test-api-key"
         
+        async def mock_get_current_user():
+            return "test-user"
+        
         app.dependency_overrides[get_current_api_key] = mock_get_current_api_key
+        app.dependency_overrides[get_current_user] = mock_get_current_user
         
         # 覆盖请求签名中间件（测试环境跳过签名验证）
         async def mock_request_signature_middleware(request, call_next):
@@ -189,6 +190,7 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     container.get_risk_engine = original_get_risk_engine
     security_module.request_signature_middleware = original_request_signature_middleware
     
-    # 恢复 API Key 认证
-    if get_current_api_key in app.dependency_overrides:
-        del app.dependency_overrides[get_current_api_key]
+    # 恢复认证覆盖
+    for dep in (get_current_api_key, get_current_user):
+        if dep in app.dependency_overrides:
+            del app.dependency_overrides[dep]

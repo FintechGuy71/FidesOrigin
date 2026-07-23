@@ -1,6 +1,6 @@
 """
-FidesOrigin Blockscout 服务（重构版）
-策略模式：封装外部 API 调用，支持重试、限流、断路器
+FidesOrigin Blockscout 服务(重构版)
+策略模式:封装外部 API 调用,支持重试、限流、断路器
 """
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -11,17 +11,17 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 from app.config import get_settings
 from app.core.exceptions import BlockscoutAPIException
 
-# [P1-006 Fix] 断路器开路专用异常，避免 tenacity 无效重试
+# [P1-006 Fix] 断路器开路专用异常,避免 tenacity 无效重试
 class CircuitBreakerOpenException(BlockscoutAPIException):
-    """断路器已开路，无需重试"""
+    """断路器已开路,无需重试"""
     def __init__(self, message: str = "Circuit breaker is open - too many consecutive failures"):
         super().__init__(message=message, status_code=503)
 
-# 向后兼容别名：旧代码使用 BlockscoutAPIError
+# 向后兼容别名:旧代码使用 BlockscoutAPIError
 BlockscoutAPIError = BlockscoutAPIException
 from app.core.logging import get_logger
 
-# [LOW Fix #25] 不再使用 pickle 进行序列化/反序列化，改用 JSON
+# [LOW Fix #25] 不再使用 pickle 进行序列化/反序列化,改用 JSON
 # pickle 反序列化存在任意代码执行风险
 import json as _json_for_pickle_replacement
 
@@ -32,19 +32,19 @@ settings = get_settings()
 class BlockscoutService:
     """
     Blockscout API 服务
-    
-    设计模式：策略模式（封装不同数据源策略）
-    特性：
-    - 连接池管理（httpx.AsyncClient）
-    - 信号量限流（并发控制）
-    - 指数退避重试（tenacity）
-    - 断路器模式（连续失败时快速失败）
-    - [M-4 Fix] 断路器状态持久化到 Redis，支持多实例共享
+
+    设计模式:策略模式(封装不同数据源策略)
+    特性:
+    - 连接池管理(httpx.AsyncClient)
+    - 信号量限流(并发控制)
+    - 指数退避重试(tenacity)
+    - 断路器模式(连续失败时快速失败)
+    - [M-4 Fix] 断路器状态持久化到 Redis,支持多实例共享
     """
-    
+
     CIRCUIT_KEY = "circuit:blockscout"
     CIRCUIT_TTL = 300  # 断路器状态在 Redis 中保留 5 分钟
-    
+
     def __init__(self, cache=None):
         self.base_url = settings.BLOCKSCOUT_BASE_URL.rstrip('/')
         self.api_key = settings.BLOCKSCOUT_API_KEY
@@ -55,7 +55,7 @@ class BlockscoutService:
         self._circuit_open = False
         self._circuit_threshold = 5  # 连续失败阈值
         self._cache = cache  # [M-4 Fix] 可选的 CacheService 用于持久化断路器状态
-    
+
     async def connect(self) -> None:
         """建立 HTTP 连接"""
         if self._client is None or self._client.is_closed:
@@ -65,7 +65,7 @@ class BlockscoutService:
             }
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-            
+
             self._client = httpx.AsyncClient(
                 headers=headers,
                 timeout=httpx.Timeout(self.timeout),
@@ -76,16 +76,16 @@ class BlockscoutService:
                 )
             )
             self._semaphore = asyncio.Semaphore(settings.BLOCKSCOUT_RATE_LIMIT)
-            # [P0-001 Fix] 信号量已在 connect() 中同步初始化，避免竞态条件
+            # [P0-001 Fix] 信号量已在 connect() 中同步初始化,避免竞态条件
             logger.info("blockscout_service_connected", base_url=self.base_url)
-    
+
     async def close(self) -> None:
         """关闭 HTTP 连接"""
         if self._client and not self._client.is_closed:
             await self._client.aclose()
             self._client = None
             logger.info("blockscout_service_disconnected")
-    
+
     # [M-4 Fix] 断路器状态持久化方法
     async def _load_circuit_state(self):
         """从 Redis 加载断路器状态"""
@@ -101,7 +101,7 @@ class BlockscoutService:
                                failure_count=self._failure_count)
         except Exception as e:
             logger.warning("blockscout_circuit_load_failed", error=str(e))
-    
+
     async def _save_circuit_state(self):
         """保存断路器状态到 Redis"""
         if self._cache is None:
@@ -114,21 +114,21 @@ class BlockscoutService:
             )
         except Exception as e:
             logger.warning("blockscout_circuit_save_failed", error=str(e))
-    
+
     def _get_semaphore(self):
-        """获取已初始化的信号量（P0-001 修复：信号量已在 connect() 中同步初始化）"""
+        """获取已初始化的信号量(P0-001 修复:信号量已在 connect() 中同步初始化)"""
         if self._semaphore is None:
-            # 安全回退：如果 connect() 未被调用，延迟初始化（非竞态安全，但保证可用）
+            # 安全回退:如果 connect() 未被调用,延迟初始化(非竞态安全,但保证可用)
             self._semaphore = asyncio.Semaphore(settings.BLOCKSCOUT_RATE_LIMIT)
         return self._semaphore
-    
+
     def _check_circuit(self):
         """检查断路器状态"""
         if self._circuit_open:
             raise CircuitBreakerOpenException()
-    
+
     def _record_success(self):
-        """记录成功，重置失败计数并持久化"""
+        """记录成功,重置失败计数并持久化"""
         if self._failure_count > 0:
             self._failure_count = 0
             if self._circuit_open:
@@ -137,9 +137,9 @@ class BlockscoutService:
             # [M-4 Fix] 异步保存状态
             import asyncio
             asyncio.create_task(self._save_circuit_state())
-    
+
     def _record_failure(self):
-        """记录失败，检查断路器并持久化"""
+        """记录失败,检查断路器并持久化"""
         self._failure_count += 1
         if self._failure_count >= self._circuit_threshold:
             self._circuit_open = True
@@ -151,7 +151,7 @@ class BlockscoutService:
         # [M-4 Fix] 异步保存状态
         import asyncio
         asyncio.create_task(self._save_circuit_state())
-    
+
     async def _request(
         self,
         method: str,
@@ -200,25 +200,39 @@ class BlockscoutService:
                 self._record_failure()
                 logger.error("blockscout_unexpected_error", error=str(e), url=url)
                 raise BlockscoutAPIException(f"Unexpected error: {str(e)}")
-    
-def _should_retry_blockscout(exc):
-    """排除断路器开路异常，其他 BlockscoutAPIException 允许重试"""
-    return isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)
-    
+
+    # ==================== 重试装饰器辅助函数 ====================
+
+    def _should_retry(self, exc: Exception) -> bool:
+        """排除断路器开路异常，其他 BlockscoutAPIException 允许重试"""
+        return isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)
+
+    # ==================== API 方法 ====================
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(_should_retry_blockscout),
+        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
         reraise=True
     )
     async def get_address_info(self, address: str) -> Dict[str, Any]:
         """获取地址基本信息"""
         return await self._request("GET", f"/addresses/{address}")
-    
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(_should_retry_blockscout),
+        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
+        reraise=True
+    )
+    async def get_address_info(self, address: str) -> Dict[str, Any]:
+        """获取地址基本信息"""
+        return await self._request("GET", f"/addresses/{address}")
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
         reraise=True
     )
     async def get_address_transactions(
@@ -233,21 +247,21 @@ def _should_retry_blockscout(exc):
             f"/addresses/{address}/transactions",
             params={"limit": limit, "page": page}
         )
-    
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(_should_retry_blockscout),
+        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
         reraise=True
     )
     async def get_transaction(self, tx_hash: str) -> Dict[str, Any]:
         """获取交易详情"""
         return await self._request("GET", f"/transactions/{tx_hash}")
-    
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(_should_retry_blockscout),
+        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
         reraise=True
     )
     async def get_address_token_transfers(
@@ -261,11 +275,11 @@ def _should_retry_blockscout(exc):
             f"/addresses/{address}/token-transfers",
             params={"limit": limit}
         )
-    
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(_should_retry_blockscout),
+        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
         reraise=True
     )
     async def get_address_internal_transactions(
@@ -279,15 +293,15 @@ def _should_retry_blockscout(exc):
             f"/addresses/{address}/internal-transactions",
             params={"limit": limit}
         )
-    
+
     # ==================== 聚合查询 ====================
-    
+
     async def get_address_stats(self, address: str) -> Dict[str, Any]:
         """获取地址统计信息"""
         try:
             info = await self.get_address_info(address)
             transactions = await self.get_address_transactions(address, limit=1)
-            
+
             return {
                 "address": address,
                 "balance": info.get("balance", "0"),
@@ -303,9 +317,9 @@ def _should_retry_blockscout(exc):
         except Exception as e:
             logger.error("blockscout_stats_error", error=str(e), address=address)
             raise BlockscoutAPIException(f"Failed to get stats: {str(e)}")
-    
+
     # ==================== 批量操作 ====================
-    
+
     async def batch_get_transactions(
         self,
         tx_hashes: List[str],
@@ -313,9 +327,9 @@ def _should_retry_blockscout(exc):
     ) -> List[Optional[Dict[str, Any]]]:
         """批量获取交易详情"""
         import asyncio
-        
+
         semaphore = asyncio.Semaphore(max_concurrent)
-        
+
         async def fetch_with_limit(tx_hash: str) -> Optional[Dict[str, Any]]:
             async with semaphore:
                 try:
@@ -327,20 +341,20 @@ def _should_retry_blockscout(exc):
                         error=str(e)
                     )
                     return None
-        
+
         tasks = [fetch_with_limit(tx_hash) for tx_hash in tx_hashes]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         return [r for r in results if isinstance(r, dict)]
 
 
-# ==================== 向后兼容：全局单例管理 ====================
+# ==================== 向后兼容:全局单例管理 ====================
 
 _blockscout_service_instance: Optional[BlockscoutService] = None
 
 
 def get_blockscout_client() -> BlockscoutService:
-    """获取 Blockscout 服务单例（向后兼容旧代码）"""
+    """获取 Blockscout 服务单例(向后兼容旧代码)"""
     global _blockscout_service_instance
     if _blockscout_service_instance is None:
         _blockscout_service_instance = BlockscoutService()

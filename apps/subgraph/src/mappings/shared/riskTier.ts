@@ -5,6 +5,7 @@ export function getRiskTier(tierValue: i32): string {
   if (tierValue === 1) return 'LOW';
   if (tierValue === 2) return 'MEDIUM';
   if (tierValue === 3) return 'HIGH';
+  if (tierValue === 4) return 'CRITICAL';
   log.warning(
     '[getRiskTier] Unknown tierValue received: {}. Returning UNKNOWN.',
     [tierValue.toString()]

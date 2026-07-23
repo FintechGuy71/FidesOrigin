@@ -1101,3 +1101,18 @@ img { max-width: 100%; display: block; }
     transition: none;
   }
 }
+
+/* ─── String literal color in code blocks ──────────────────────── */
+.code-body .str { color: #98c379; }
+.code-body .num { color: #d19a66; }
+
+/* ─── Use Cases section (shares features-grid) ─────────────────── */
+#use-cases .features-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 900px) {
+  #use-cases .features-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  #use-cases .features-grid { grid-template-columns: 1fr; }
+}

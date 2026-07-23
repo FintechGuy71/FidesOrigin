@@ -419,22 +419,28 @@ contract RiskRegistryV2 is
         }
     }
 
+    /**
+     * @notice 移除制裁
+     * @dev M-05 FIX: 恢复 pre-sanction 档案时，显式清除制裁位，防止
+     *      恢复后 _packedProfiles 与 sanctionedAddresses 状态不一致。
+     */
     function removeSanction(address account) external onlyRole(ADMIN_ROLE) validAddress(account) {
         // only process and emit if address was actually sanctioned
         if (sanctionedAddresses[account]) {
-            uint256 packed = _packedProfiles[account];
-            if (_unpackIsSanctioned(packed)) {
-                _packedProfiles[account] = packed & ~uint256(1 << 16);
+            // M-05 FIX: Restore pre-sanction score/tier BEFORE clearing sanctionedAddresses,
+            // and mask out the sanctioned bit to ensure consistency.
+            uint256 prePacked = preSanctionProfiles[account];
+            if (prePacked != 0) {
+                // Clear sanctioned bit (bit 16) to prevent inconsistency with sanctionedAddresses mapping
+                _packedProfiles[account] = prePacked & ~(uint256(1) << 16);
+                delete preSanctionProfiles[account];
+            } else {
+                // No pre-sanction record: just clear the sanctioned bit
+                uint256 packed = _packedProfiles[account];
+                _packedProfiles[account] = packed & ~(uint256(1) << 16);
             }
             sanctionedAddresses[account] = false;
             if (totalSanctioned > 0) totalSanctioned--;
-            
-            // M-05 FIX: Restore pre-sanction score/tier if available
-            uint256 prePacked = preSanctionProfiles[account];
-            if (prePacked != 0) {
-                _packedProfiles[account] = prePacked;
-                delete preSanctionProfiles[account];
-            }
             
             emit SanctionRemoved(account);
         }
@@ -671,6 +677,15 @@ contract RiskRegistryV2 is
     function unpause() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
+
+    // M-05 FIX: Store pre-sanction packed profiles for restoration
+    mapping(address => uint256) public preSanctionProfiles;
+    
+    // L-09 FIX: Upgrade proposal tracking
+    mapping(bytes32 => uint256) public upgradeProposals;
+
+    // C-3 FIX: 版本号，用于防止从不兼容版本直接升级
+    uint256 public version;
 
     // ============ Admin: Backfill Counters ============
 

@@ -2,6 +2,7 @@
 FidesOrigin 配置管理（重构版）
 集中管理所有环境变量，消除分散的 os.getenv 调用
 """
+import os
 from functools import cached_property, lru_cache
 from typing import List, Optional
 
@@ -42,7 +43,6 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         """异步数据库 URL（首次访问后缓存）"""
         # [M-10 Fix] 使用明确的测试模式标志，避免仅通过 TEST_DATABASE_URL 存在性判断
-        import os
         if os.environ.get("TESTING", "").lower() == "true":
             test_url = os.environ.get("TEST_DATABASE_URL")
             if test_url:
@@ -120,7 +120,6 @@ class Settings(BaseSettings):
             origins = list(v) if v else []
 
         # [MEDIUM-2 FIX] 生产环境自动过滤 localhost 来源
-        import os
         if os.environ.get("APP_ENV") == "production":
             filtered = [o for o in origins if not o.startswith("http://localhost")]
             if len(filtered) != len(origins):
@@ -217,7 +216,7 @@ class Settings(BaseSettings):
                 missing.append("CORS_ORIGINS (cannot be '*')")
             
             # [CRITICAL Fix] 拒绝使用默认/占位符密码
-            admin_pwd = _os.environ.get("ADMIN_PASSWORD", "")
+            admin_pwd = os.environ.get("ADMIN_PASSWORD", "")
             if admin_pwd in ("", "CHANGE_ME_IN_PRODUCTION", "Your_Str0ng!AdminP@ssw0rd"):
                 missing.append("ADMIN_PASSWORD (must be changed from default/placeholder)")
             elif admin_pwd:

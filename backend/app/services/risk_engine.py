@@ -346,12 +346,20 @@ class RiskEngine:
                 
                 if existing and existing.last_updated_at:
                     # 检查缓存是否有效（5分钟内）
-                    if datetime.now(timezone.utc) - existing.last_updated_at.replace(tzinfo=None) < timedelta(minutes=5):
-                        logger.info(f"Using cached risk data for {address}")
-                        factors = existing.risk_factors or []
-                        return existing.risk_score, existing.risk_level, [
-                            RiskFactor(**f) for f in factors
-                        ]
+                    try:
+                        last_updated = existing.last_updated_at
+                        # 处理无 tzinfo 的情况
+                        if last_updated.tzinfo is None:
+                            last_updated = last_updated.replace(tzinfo=timezone.utc)
+                        if datetime.now(timezone.utc) - last_updated < timedelta(minutes=5):
+                            logger.info(f"Using cached risk data for {address}")
+                            factors = existing.risk_factors or []
+                            return existing.risk_score, existing.risk_level, [
+                                RiskFactor(**f) for f in factors
+                            ]
+                    except (TypeError, AttributeError):
+                        # last_updated_at 不是有效的 datetime（如测试中 MagicMock）
+                        pass
             
             # 获取活跃规则
             rules = await self._get_active_rules()

@@ -8,13 +8,16 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
   <title>FidesOrigin — Programmable On-Chain Compliance</title>
   <meta name="description" content="Real-time risk control for the on-chain financial world. Programmable compliance engine for stablecoins, smart wallets, and DeFi protocols.">
   <meta property="og:title" content="FidesOrigin — Programmable On-Chain Compliance">
-  <meta property="og:description" content="Real-time risk control for the on-chain financial world.">
+  <meta property="og:description" content="Real-time risk control for the on-chain financial world. Programmable compliance engine for stablecoins, smart wallets, and DeFi protocols.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fidesorigin.com/">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="canonical" href="https://fidesorigin.com/">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
   <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
@@ -24,8 +27,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
-  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
-  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="icon" href="/brand/logo-dark-icon.png">
   <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
 </head>
@@ -59,7 +60,7 @@
         </div>
         <div class="nav-divider"></div>
         <div class="wallet-connect-wrap">
-          <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
+          <button class="wallet-btn" id="wallet-btn" aria-label="Connect">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
             Connect
           </button>
@@ -68,7 +69,7 @@
               <span class="wallet-address" id="wallet-address"></span>
               <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
             </div>
-            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect wallet">Disconnect</button>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect">Disconnect</button>
           </div>
         </div>
         <a href="#contact" class="nav-cta">Get Started</a>
@@ -96,9 +97,9 @@
     </div>
     <div class="mobile-wallet-area" id="mobile-wallet-connected">
       <span id="mobile-wallet-address"></span>
-      <button id="mobile-wallet-disconnect" aria-label="Disconnect wallet">Disconnect</button>
+      <button id="mobile-wallet-disconnect" aria-label="Disconnect">Disconnect</button>
     </div>
-    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="Connect wallet">
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="Connect">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
       Connect
     </button>
@@ -136,7 +137,7 @@
   <section class="section wallet-compliance" id="wallet-compliance">
     <div class="container">
       <div class="compliance-panel" id="compliance-panel">
-        <h4>On-Chain Compliance Status</h4>
+        <h4>Checking…</h4>
         <div class="compliance-result" id="compliance-result">
           <div id="compliance-status">Checking…</div>
           <div id="compliance-details" class="compliance-details"></div>
@@ -150,11 +151,11 @@
     <div class="container">
       <div class="trust-bar reveal">
         <div class="trust-stat">
-          <div class="number" data-count="10000">0</div>
+          <div class="number" data-count="10000" data-prefix="" data-suffix="">0</div>
           <div class="label">Addresses Screened</div>
         </div>
         <div class="trust-stat">
-          <div class="number" data-count="99.9" data-suffix="%">0</div>
+          <div class="number" data-count="99.9" data-prefix="" data-suffix="%">0</div>
           <div class="label">Uptime</div>
         </div>
         <div class="trust-stat">
@@ -162,7 +163,7 @@
           <div class="label">Protected</div>
         </div>
         <div class="trust-stat">
-          <div class="number" data-count="20" data-suffix="K+">0</div>
+          <div class="number" data-count="20" data-prefix="" data-suffix="K+">0</div>
           <div class="label">Risk Records</div>
         </div>
       </div>
@@ -208,7 +209,7 @@
         </div>
         <div class="feature-card reveal">
           <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.131A8 8 0 008 8m0 0a8 8 0 00-8 8c0 2.472.345 4.865.99 7.131M8 8a8 8 0 008 8m0 0a8 8 0 008-8m-8 8v4m0 0h8m-8 0H4"/></svg>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.131A8 8 0 008 8m0 0a8 8 0 008 8m0 0a8 8 0 008-8m-8 8v4m0 0h8m-8 0H4"/></svg>
           </div>
           <h3>Privacy-Preserving</h3>
           <p>Merkle-based risk commitments verify compliance without revealing sensitive address data.</p>
@@ -230,7 +231,7 @@
       <div class="reveal section-intro">
         <p class="micro">How It Works</p>
         <h2 class="h2 section-title">Three layers of protection</h2>
-        <p class="lead section-lead">Risk Registry → Policy Engine → Compliance Engine. Every transaction is screened before it reaches the chain.</p>
+        <p class="lead section-lead">Risk Registry &rarr; Policy Engine &rarr; Compliance Engine. Every transaction is screened before it reaches the chain.</p>
       </div>
       <div class="steps">
         <div class="step reveal">
@@ -249,6 +250,40 @@
           <div class="step-number">3</div>
           <h3>Compliance Engine</h3>
           <p>Deterministic on-chain enforcement. Every transfer is evaluated — no bypass path, no off-chain dependency.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="section" id="use-cases">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">Use Cases</p>
+        <h2 class="h2 section-title">Real protection for real problems</h2>
+        <p class="lead section-lead">Built for stablecoin issuers, RWA platforms, smart wallets, and AI agents.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Stablecoin Issuers</h3>
+          <p>Embed OFAC / UN sanctions checks into every mint, burn, and transfer. Meet Hong Kong and EU MiCA compliance without off-chain friction.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>RWA Platforms</h3>
+          <p>Verify accredited investor status and jurisdiction before any tokenized security changes hands. Always-updated on-chain KYC.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <h3>Smart Wallets</h3>
+          <p>Risk checks embedded in the wallet contract itself. All transactions evaluated before execution — bypass impossible even via raw contract calls.</p>
         </div>
       </div>
     </div>
@@ -302,7 +337,7 @@
           <div class="dev-steps">
             <div class="dev-step">
               <span class="dev-step-num">01</span>
-              <p class="body-sm">Inherit <code class="code-accent">CompliantStableCoin</code> or wire <code class="code-accent">FidesCompliance</code> into your transfer hook</p>
+              <p class="body-sm">Inherit <code class='code-accent'>CompliantStableCoin</code> or wire <code class='code-accent'>FidesCompliance</code> into your transfer hook</p>
             </div>
             <div class="dev-step">
               <span class="dev-step-num">02</span>
@@ -314,7 +349,7 @@
             </div>
           </div>
           <div class="dev-actions">
-            <a href="#" class="btn btn-primary btn-sm">View Documentation</a>
+            <a href="#" class="btn btn-primary btn-sm">Documentation</a>
             <a href="#" class="btn btn-secondary btn-sm">Download SDK</a>
           </div>
         </div>
@@ -326,12 +361,12 @@
             </div>
             <div class="code-body">
 <pre><span class="comment">// Your stablecoin inherits on-chain risk screening</span>
-<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {
+<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {{
 
     <span class="kw">function</span> <span class="func">_update</span>(
         <span class="kw">address</span> from, <span class="kw">address</span> to,
         <span class="kw">uint256</span> amount
-    ) <span class="kw">internal override</span> {
+    ) <span class="kw">internal override</span> {{
         <span class="comment">// Evaluate before transfer executes</span>
         (<span class="kw">bool</span> allowed, <span class="kw">uint256</span> risk) =
             fides.<span class="func">evaluateTransaction</span>(
@@ -342,8 +377,8 @@
             <span class="kw">revert</span> <span class="func">ComplianceViolation</span>(from, to, risk);
 
         <span class="kw">super</span>.<span class="func">_update</span>(from, to, amount);
-    }
-}</pre>
+    }}
+}}</pre>
             </div>
           </div>
         </div>
@@ -389,7 +424,7 @@
           <a href="#developers">Documentation</a>
           <a href="#">API Reference</a>
           <a href="#">SDK</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
         </div>
         <div class="footer-col">
           <h4>Company</h4>
@@ -400,16 +435,14 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>© 2026 FidesOrigin. All rights reserved.</p>
-        <p>Built with 💜 for the on-chain financial world.</p>
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>Built with &hearts; for the on-chain financial world.</p>
       </div>
     </div>
   </footer>
 
   <script nonce="2726c7f26c" src="/wallet-connect.js"></script>
   <script nonce="2726c7f26c">
-    // [M-4 Fix] All event handlers attached via addEventListener instead of inline onclick
-    
     // ===== Mobile Menu =====
     function toggleMobileMenu() {
       document.getElementById('mobileMenu').classList.toggle('active');
@@ -458,6 +491,7 @@
     (function() {
       function animateCounter(el) {
         var target = parseFloat(el.dataset.count);
+        if (isNaN(target)) return;
         var prefix = el.dataset.prefix || '';
         var suffix = el.dataset.suffix || '';
         var duration = 2000;
@@ -536,16 +570,11 @@
       draw();
     })();
 
-    // ===== No auto-redirect: language preference only =====
-    (function() {
-      // Do not auto-redirect based on IP. User manually selects language.
-    })();
-
     // ===== Scroll-to-top =====
     (function() {
       var btn = document.createElement('button');
       btn.className = 'scroll-top';
-      btn.innerHTML = '↑';
+      btn.innerHTML = '&uarr;';
       btn.setAttribute('aria-label', 'Scroll to top');
       document.body.appendChild(btn);
       window.addEventListener('scroll', function() {
@@ -561,7 +590,7 @@
       var btn = document.createElement('button');
       btn.className = 'code-copy-btn';
       btn.textContent = 'Copy';
-      btn.setAttribute('aria-label', 'Copy code');
+      btn.setAttribute('aria-label', 'Copy');
       btn.addEventListener('click', function() {
         var code = block.querySelector('code') || block.querySelector('pre');
         if (code) {

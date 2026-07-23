@@ -8,6 +8,7 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
   <title>FidesOrigin — 可程式化鏈上合規</title>
   <meta name="description" content="原生鏈上執行的可程式合規。面向穩定幣、RWA和AI智能體。">
   <meta property="og:title" content="FidesOrigin — 可程式化鏈上合規">
@@ -15,8 +16,8 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fidesorigin.com/tw/">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
-  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="canonical" href="https://fidesorigin.com/tw/">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
   <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
@@ -34,7 +35,7 @@
   <!-- Navigation -->
   <nav class="nav">
     <div class="nav-inner">
-      <a href="/tw/" class="nav-logo">
+      <a href="/zh-TW/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
         FidesOrigin
       </a>
@@ -59,7 +60,7 @@
         </div>
         <div class="nav-divider"></div>
         <div class="wallet-connect-wrap">
-          <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
+          <button class="wallet-btn" id="wallet-btn" aria-label="連接">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
             連接
           </button>
@@ -68,7 +69,7 @@
               <span class="wallet-address" id="wallet-address"></span>
               <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
             </div>
-            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect wallet">斷開</button>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="斷開">斷開</button>
           </div>
         </div>
         <a href="#contact" class="nav-cta">開始使用</a>
@@ -96,119 +97,159 @@
     </div>
     <div class="mobile-wallet-area" id="mobile-wallet-connected">
       <span id="mobile-wallet-address"></span>
-      <button id="mobile-wallet-disconnect" aria-label="Disconnect wallet">斷開</button>
+      <button id="mobile-wallet-disconnect" aria-label="斷開">斷開</button>
     </div>
-    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="Connect wallet">
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="連接">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
       連接
     </button>
   </div>
 
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="gradient-orb"></div>
+    <div class="gradient-orb"></div>
+    <div class="container hero-content">
+      <div class="hero-badge animate-fadeInUp">
+        <span class="dot"></span>
+        Sepolia 測試網已上線
+      </div>
+      <h1 class="display animate-fadeInUp animate-delay-1">
+        可程式化鏈上合規<br>
+        <span>原生區塊鏈執行</span>
+      </h1>
+      <p class="lead animate-fadeInUp animate-delay-2 hero-lead">
+        不是查詢工具。不是API。FidesOrigin是嵌入式智能合約邏輯，在交易確認前決定其是否通過。
+      </p>
+      <div class="hero-buttons animate-fadeInUp animate-delay-3">
+        <a href="#contact" class="btn btn-primary">
+          開始使用
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
+        </a>
+        <a href="/admin/" class="btn btn-secondary">查看演示</a>
+      </div>
+    </div>
+  </section>
+
   <!-- Wallet Compliance Panel -->
-  <section class="section" id="wallet-compliance">
+  <section class="section wallet-compliance" id="wallet-compliance">
     <div class="container">
       <div class="compliance-panel" id="compliance-panel">
-        <h4>鏈上合規狀態</h4>
+        <h4>檢查中…</h4>
         <div class="compliance-result" id="compliance-result">
           <div id="compliance-status">檢查中…</div>
-          <div id="compliance-details"></div>
+          <div id="compliance-details" class="compliance-details"></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Brand Hero -->
-  <section class="brand-hero">
+  <!-- Trust Section -->
+  <section class="section trust-section">
     <div class="container">
-      <div class="eyebrow fade-in delay-1">
-        <span class="dot"></span>
-        <span>鏈上合規基礎設施</span>
-      </div>
-      <h1 class="fade-in delay-2">
-        即時鏈上風控<br>
-        <span class="gradient-text">原生區塊鏈執行</span>
-      </h1>
-      <p class="subtitle fade-in delay-3">
-        不是查詢工具。不是API。FidesOrigin是嵌入式智能合約邏輯，在交易確認前決定其是否通過。
-      </p>
-      <div class="hero-cta fade-in delay-3">
-        <a href="#developers" class="btn btn-primary">體驗演示</a>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn btn-secondary">在 GitHub 查看</a>
+      <div class="trust-bar reveal">
+        <div class="trust-stat">
+          <div class="number" data-count="20645" data-prefix="" data-suffix="+">0</div>
+          <div class="label">風險地址</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="202" data-prefix="" data-suffix="">0</div>
+          <div class="label">測試通過</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="50" data-prefix="" data-suffix="ms">0</div>
+          <div class="label">鏈上檢查</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="7" data-prefix="" data-suffix="">0</div>
+          <div class="label">網絡</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- One-liner -->
-  <section class="oneline">
+  <!-- Features Section -->
+  <section class="section" id="features">
     <div class="container">
-      <p>
-        穩定幣和代幣化資產被困在閉環中。<br>
-        <span>我們解鎖它們。</span>
-      </p>
+      <div class="reveal section-intro">
+        <p class="micro">Features</p>
+        <h2 class="h2 section-title">Everything you need for on-chain compliance</h2>
+        <p class="lead section-lead">A full-stack compliance protocol built from the ground up for Web3.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3>鏈上執行</h3>
+          <p>風險決策以智能合約邏輯運行——而非從外部API查詢。無延遲、無黑盒、無單點故障。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          </div>
+          <h3>熱插拔策略</h3>
+          <p>無需升級核心合約即可部署新風險策略。按客戶、按司法管轄區的規則即時更新。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3>AI智能體原生</h3>
+          <p>自主智能體直接在鏈上查詢風險狀態並執行合規。7×24運營無需人工守門。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3>隱私保護</h3>
+          <p>基於 Merkle 的風險承諾在不暴露敏感地址數據的情況下驗證合規性。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+          </div>
+          <h3>多鏈支持</h3>
+          <p>為 Ethereum、Base 等構建。跨鏈風險畫像，統一治理。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <h3>開發者 API</h3>
+          <p>RESTful API、WebSocket 流、TypeScript SDK。數小時集成，而非數周。</p>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- How It Works -->
-  <section class="section steps" id="how-it-works">
+  <section class="section bg-secondary" id="how-it-works">
     <div class="container">
-      <div class="section-header">
-        <h2>工作原理</h2>
-        <p>三層架構。一次決策。零延遲。</p>
+      <div class="reveal section-intro">
+        <p class="micro">How It Works</p>
+        <h2 class="h2 section-title">Three layers of protection</h2>
+        <p class="lead section-lead">Risk Registry &rarr; Policy Engine &rarr; Compliance Engine. Every transaction is screened before it reaches the chain.</p>
       </div>
-      <div class="steps-grid">
-        <div class="step fade-in delay-1">
-          <div class="step-num">1</div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-number">1</div>
           <h3>AI標註風險</h3>
           <p>圖神經網絡將鏈上和鏈下數據處理為風險標籤——持續更新。</p>
         </div>
-        <div class="step fade-in delay-2">
-          <div class="step-num">2</div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">2</div>
           <h3>鏈上驗證</h3>
-          <p>風險標籤經Merkle證明並推送至智能合約。每個地址&lt;50毫秒完成檢查。</p>
+          <p>風險標籤經 Merkle 證明並推送至智能合約。每個地址 <50 毫秒完成檢查。</p>
         </div>
-        <div class="step fade-in delay-3">
-          <div class="step-num">3</div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">3</div>
           <h3>交易決策</h3>
-          <p>放行/攔截/標記/暫留——在交易執行前原子化執行。無需API調用。無黑盒。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Key Differentiators -->
-  <section class="section" id="features">
-    <div class="container">
-      <div class="section-header">
-        <h2>為何選擇 FidesOrigin</h2>
-        <p>不是儀表盤。不是API調用。是決定交易的嵌入式邏輯。</p>
-      </div>
-      <div class="diff-grid">
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <div>
-            <h3>鏈上執行</h3>
-            <p>風險決策以智能合約邏輯運行——而非從外部API查詢。無延遲、無黑盒、無單點故障。</p>
-          </div>
-        </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          </div>
-          <div>
-            <h3>熱插拔策略</h3>
-            <p>無需升級核心合約即可部署新風險策略。按客戶、按司法管轄區的規則即時更新。</p>
-          </div>
-        </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          </div>
-          <div>
-            <h3>AI智能體原生</h3>
-            <p>自主智能體直接在鏈上查詢風險狀態並執行合規。7×24運營無需人工守門。</p>
-          </div>
+          <p>放行/攔截/標記/暫留——在交易執行前原子化執行。無需 API 調用。無黑盒。</p>
         </div>
       </div>
     </div>
@@ -217,115 +258,137 @@
   <!-- Use Cases -->
   <section class="section" id="use-cases">
     <div class="container">
-      <div class="section-header">
-        <h2>使用場景</h2>
-        <p>解決真實問題的真實保護。</p>
+      <div class="reveal section-intro">
+        <p class="micro">Use Cases</p>
+        <h2 class="h2 section-title">Real protection for real problems</h2>
+        <p class="lead section-lead">Built for stablecoin issuers, RWA platforms, smart wallets, and AI agents.</p>
       </div>
-      <div class="diff-grid">
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <div>
-            <h3>穩定幣發行方</h3>
-            <p>將OFAC/聯合國制裁檢查嵌入每一次鑄造、銷毀和轉賬。滿足香港和歐盟MiCA合規要求，無需鏈下摩擦。</p>
-          </div>
+          <h3>穩定幣發行方</h3>
+          <p>將 OFAC / 聯合國制裁檢查嵌入每一次鑄造、銷毀和轉賬。滿足香港和歐盟 MiCA 合規要求，無需鏈下摩擦。</p>
         </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
-          <div>
-            <h3>RWA平台</h3>
-            <p>在任何代幣化證券轉手前驗證合格投資者身份和司法管轄區。始終保持最新的鏈上KYC。</p>
-          </div>
+          <h3>RWA平台</h3>
+          <p>在任何代幣化證券轉手前驗證合格投資者身份和司法管轄區。始終保持最新的鏈上 KYC。</p>
         </div>
-        <div class="diff-item">
-          <div class="diff-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
           </div>
-          <div>
-            <h3>P2P支付保護</h3>
-            <p><strong>資金到賬即自動隔離。</strong>當黑名單地址向您的錢包發送ETH或ERC-20時，收款在合約層面即被攔截。對於無法攔截的代幣，資金被即時隔離——凍結、可審計、與可支出餘額分離。</p>
-          </div>
+          <h3>P2P支付保護</h3>
+          <p>資金到賬即自動隔離。當黑名單地址向您的錢包發送 ETH 或 ERC-20 時，收款在合約層面即被攔截。</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Trust Bar -->
-  <section class="trust-bar" id="security">
+  <!-- Security & Compliance -->
+  <section class="section" id="security">
     <div class="container">
-      <div class="trust-label">合規就緒</div>
-      <div class="trust-items">
-        <div class="trust-item"><span class="flag">🇭🇰</span> Hong Kong Stablecoin Ordinance <span class="check">✓</span></div>
-        <div class="trust-item"><span class="flag">🇪🇺</span> MiCA Framework <span class="check">✓</span></div>
-        <div class="trust-item"><span class="flag">🇺🇸</span> GENIUS Act / OFAC SDN <span class="check">✓</span></div>
+      <div class="reveal section-intro">
+        <p class="micro">安全與合規</p>
+        <h2 class="h2 section-title">為受監管金融而生</h2>
+        <p class="lead section-lead">Meet global compliance standards without compromising on decentralization.</p>
+      </div>
+      <div class="compliance-grid">
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h3>OFAC</h3>
+          <p>SDN 名單篩查</p>
+          <span class="badge">已啟用</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+          <h3>FATF</h3>
+          <p>Travel Rule 就緒</p>
+          <span class="badge">已啟用</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          <h3>VASP</h3>
+          <p>虛擬資產服務</p>
+          <span class="badge">兼容</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <h3>香港穩定幣條例</h3>
+          <p>合規就緒</p>
+          <span class="badge">已啟用</span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Code Preview -->
-  <section class="section code-preview" id="developers">
+  <!-- Developer Experience -->
+  <section class="section bg-secondary" id="developers">
     <div class="container">
-      <div class="code-preview-header">
-        <h2>為AI智能體打造</h2>
-        <p>自主智能體原生查詢風險——無需人工守門。</p>
-      </div>
-      <div class="code-block">
-        <div class="code-header">
-          <span>Integration</span>
-          <span class="lang-tag">Solidity</span>
+      <div class="dev-grid">
+        <div class="reveal">
+          <p class="micro">Developer Experience</p>
+          <h2 class="h2 section-title">為 AI 智能體打造</h2>
+          <p class="lead section-lead">自主智能體原生查詢風險——無需人工守門。在智能合約層面繼承風險引擎，每筆代幣轉賬自動根據鏈上風險畫像進行篩查。</p>
+          <div class="dev-steps">
+            <div class="dev-step">
+              <span class="dev-step-num">01</span>
+              <p class="body-sm">繼承 <code class='code-accent'>CompliantStableCoin</code> 或在轉賬钩子中接入 <code class='code-accent'>FidesCompliance</code></p>
+            </div>
+            <div class="dev-step">
+              <span class="dev-step-num">02</span>
+              <p class="body-sm">通過管理後台或直接鏈上配置風險閾值和策略</p>
+            </div>
+            <div class="dev-step">
+              <span class="dev-step-num">03</span>
+              <p class="body-sm">每筆轉賬都會被篩查、執行並記錄——確定性鏈上執行</p>
+            </div>
+          </div>
+          <div class="dev-actions">
+            <a href="#" class="btn btn-primary btn-sm">Documentation</a>
+            <a href="#" class="btn btn-secondary btn-sm">Download SDK</a>
+          </div>
         </div>
-        <pre><code><span class="code-comment">// 每筆交易前，智能體鏈上檢查風險</span>
-<span class="code-keyword">bool</span> isSafe = riskRegistry.verifyAddress(
+        <div class="reveal">
+          <div class="code-block">
+            <div class="code-header">
+              <span>Integration</span>
+              <span>Solidity</span>
+            </div>
+            <div class="code-body">
+<pre><span class="comment">// 每筆交易前，智能體鏈上檢查風險</span>
+<span class="kw">bool</span> isSafe = riskRegistry.verifyAddress(
     counterparty,
     expectedRiskScore,
-    <span class="code-string">"BLACK"</span>,
+    <span class="str">"BLACK"</span>,
     merkleProof
 );
 
-<span class="code-keyword">require</span>(isSafe, <span class="code-string">"被合規策略攔截"</span>);
-complianceEngine.recordDecision(<span class="code-keyword">msg.sender</span>, counterparty, amount, <span class="code-number">0</span>);
-swap.execute(counterparty, amount);</code></pre>
-      </div>
-      <div class="code-cta">
-        <a href="/tw/address-check.html" class="btn btn-secondary">Try 風險掃描 →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Protocol Metrics -->
-  <section class="section trust-section">
-    <div class="container">
-      <div class="stats-row">
-        <div class="stat-item">
-          <div class="stat-num">20,645+</div>
-          <div class="stat-label">風險地址</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">202</div>
-          <div class="stat-label">測試通過</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">&lt;50ms</div>
-          <div class="stat-label">鏈上檢查</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">7</div>
-          <div class="stat-label">網絡</div>
+<span class="kw">require</span>(isSafe, <span class="str">"被合規策略攔截"</span>);
+complianceEngine.recordDecision(<span class="kw">msg.sender</span>, counterparty, amount, <span class="num">0</span>);
+swap.execute(counterparty, amount);</pre>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
+  <!-- Contact / CTA -->
   <section class="section" id="contact">
     <div class="container">
-      <div class="cta-box">
-        <h2>開始構建</h2>
-        <p>開源。生產就緒。MIT許可證。</p>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn">在 GitHub 探索</a>
+      <div class="cta-section reveal">
+        <h2 class="h1">開始構建</h2>
+        <p>開源。生產就緒。MIT 許可證。</p>
+        <div class="cta-buttons">
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary btn-light">
+            contact@fidesorigin.com
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -335,11 +398,11 @@ swap.execute(counterparty, amount);</code></pre>
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="/tw/" class="nav-logo">
+          <a href="/zh-TW/" class="nav-logo">
             <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
             FidesOrigin
           </a>
-          <p>為代幣化資產、穩定幣和AI智能體提供即時鏈上合規。</p>
+          <p>為代幣化資產、穩定幣和 AI 智能體提供即時鏈上合規。</p>
         </div>
         <div class="footer-col">
           <h4>產品</h4>
@@ -353,7 +416,7 @@ swap.execute(counterparty, amount);</code></pre>
           <a href="#developers">文檔</a>
           <a href="#">API 參考</a>
           <a href="#">SDK</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
         </div>
         <div class="footer-col">
           <h4>公司</h4>
@@ -364,18 +427,14 @@ swap.execute(counterparty, amount);</code></pre>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>© 2026 FidesOrigin. 保留所有權利。</p>
-        <p>為鏈上金融世界用心打造 💜</p>
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>Built with &hearts; for the on-chain financial world.</p>
       </div>
     </div>
   </footer>
 
-  <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">↑</button>
-
   <script nonce="2726c7f26c" src="/wallet-connect.js"></script>
   <script nonce="2726c7f26c">
-    // [M-4 Fix] All event handlers attached via addEventListener instead of inline onclick
-
     // ===== Mobile Menu =====
     function toggleMobileMenu() {
       document.getElementById('mobileMenu').classList.toggle('active');
@@ -414,6 +473,7 @@ swap.execute(counterparty, amount);</code></pre>
           }
         });
       }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
       document.querySelectorAll('.reveal').forEach(function(el) {
         observer.observe(el);
       });
@@ -423,11 +483,13 @@ swap.execute(counterparty, amount);</code></pre>
     (function() {
       function animateCounter(el) {
         var target = parseFloat(el.dataset.count);
+        if (isNaN(target)) return;
         var prefix = el.dataset.prefix || '';
         var suffix = el.dataset.suffix || '';
         var duration = 2000;
         var start = performance.now();
         var isFloat = target % 1 !== 0;
+
         function update(now) {
           var progress = Math.min((now - start) / duration, 1);
           var ease = 1 - Math.pow(1 - progress, 3);
@@ -441,6 +503,7 @@ swap.execute(counterparty, amount);</code></pre>
         }
         requestAnimationFrame(update);
       }
+
       var counterObserver = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
           if (entry.isIntersecting && !entry.target.dataset.animated) {
@@ -449,6 +512,7 @@ swap.execute(counterparty, amount);</code></pre>
           }
         });
       }, { threshold: 0.5 });
+
       document.querySelectorAll('[data-count]').forEach(function(el) {
         counterObserver.observe(el);
       });
@@ -461,12 +525,14 @@ swap.execute(counterparty, amount);</code></pre>
       var ctx = canvas.getContext('2d');
       var particles = [];
       var PARTICLE_COUNT = 60;
+
       function resize() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
       }
       resize();
       window.addEventListener('resize', resize);
+
       for (var i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
           x: Math.random() * canvas.width,
@@ -477,6 +543,7 @@ swap.execute(counterparty, amount);</code></pre>
           opacity: Math.random() * 0.4 + 0.1
         });
       }
+
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (var i = 0; i < particles.length; i++) {
@@ -495,76 +562,39 @@ swap.execute(counterparty, amount);</code></pre>
       draw();
     })();
 
-    // ===== No auto-redirect: language preference only =====
-    (function() {
-      // Do not auto-redirect based on IP. User manually selects language.
-    })();
-
     // ===== Scroll-to-top =====
     (function() {
-      var scrollTopBtn = document.getElementById('scrollTop');
-      if (!scrollTopBtn) return;
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '&uarr;';
+      btn.setAttribute('aria-label', '回到頂部');
+      document.body.appendChild(btn);
       window.addEventListener('scroll', function() {
-        scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+        btn.classList.toggle('visible', window.scrollY > 400);
       });
-      scrollTopBtn.addEventListener('click', function() {
+      btn.addEventListener('click', function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     })();
 
     // ===== Code copy buttons =====
-    (function() {
-      document.querySelectorAll('.code-block').forEach(function(block) {
-        var btn = document.createElement('button');
-        btn.className = 'code-copy-btn';
-        btn.textContent = '複製';
-        btn.setAttribute('aria-label', '複製程式碼');
-        btn.addEventListener('click', function() {
-          var code = block.querySelector('code');
-          if (code) {
-            navigator.clipboard.writeText(code.textContent).then(function() {
-              btn.textContent = '已複製';
-              btn.classList.add('copied');
-              setTimeout(function() { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
-            });
-          }
-        });
-        block.appendChild(btn);
+    document.querySelectorAll('.code-block').forEach(function(block) {
+      var btn = document.createElement('button');
+      btn.className = 'code-copy-btn';
+      btn.textContent = '複製';
+      btn.setAttribute('aria-label', '複製');
+      btn.addEventListener('click', function() {
+        var code = block.querySelector('code') || block.querySelector('pre');
+        if (code) {
+          navigator.clipboard.writeText(code.textContent).then(function() {
+            btn.textContent = '已複製';
+            btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
+          });
+        }
       });
-    })();
-
-    // ===== Count-up animation for stats =====
-    (function() {
-      function animateCountUp() {
-        var counters = document.querySelectorAll('.stat-num');
-        counters.forEach(function(counter) {
-          var text = counter.textContent;
-          var target = parseInt(text.replace(/\D/g, '')) || 0;
-          var suffix = text.replace(/[\d,<]/g, '');
-          var duration = 1500;
-          var start = performance.now();
-          function update(now) {
-            var elapsed = now - start;
-            var progress = Math.min(elapsed / duration, 1);
-            var eased = 1 - Math.pow(1 - progress, 3);
-            var current = Math.round(target * eased);
-            counter.textContent = current.toLocaleString() + suffix;
-            if (progress < 1) requestAnimationFrame(update);
-          }
-          requestAnimationFrame(update);
-        });
-      }
-      var statsObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting) {
-            animateCountUp();
-            statsObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.5 });
-      var statsSection = document.querySelector('.trust-section');
-      if (statsSection) statsObserver.observe(statsSection);
-    })();
+      block.appendChild(btn);
+    });
   </script>
 </body>
 </html>
