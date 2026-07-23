@@ -93,9 +93,9 @@ img { max-width: 100%; display: block; }
   gap: 4px;
 }
 .nav-links > a {
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-secondary);
   transition: all 0.2s ease;
@@ -105,11 +105,12 @@ img { max-width: 100%; display: block; }
   background: rgba(255,255,255,0.04);
 }
 .nav-cta {
-  padding: 8px 18px !important;
+  padding: 6px 14px !important;
   background: var(--accent-dim) !important;
   border: 1px solid rgba(139,126,200,0.2) !important;
   color: var(--accent) !important;
   font-weight: 600 !important;
+  font-size: 0.8rem !important;
 }
 .nav-cta:hover {
   background: rgba(139,126,200,0.18) !important;
@@ -222,9 +223,9 @@ img { max-width: 100%; display: block; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--border-light);
