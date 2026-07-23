@@ -32,17 +32,20 @@
   <nav class="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
-        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" style="width:32px;height:32px;border-radius:8px;object-fit:cover;">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
         FidesOrigin
       </a>
-      <div class="nav-links">
+      <div class="nav-left">
         <a href="#features">Features</a>
         <a href="#how-it-works">How It Works</a>
         <a href="#security">Security</a>
         <a href="#developers">Docs</a>
-        <div class="lang-dropdown" style="position:relative;">
-          <button class="theme-toggle" id="langToggleBtn" aria-label="Language" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.8rem;">
-            EN ▾
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="Language">
+            EN
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div id="langMenu" style="position:absolute;top:100%;right:0;min-width:120px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:4px;display:none;z-index:100;">
             <a href="/" style="display:block;padding:8px 12px;font-size:0.8125rem;color:var(--text-primary);text-decoration:none;border-radius:4px;background:var(--card-bg);">English</a>
@@ -51,11 +54,11 @@
             <a href="/jp/" style="display:block;padding:8px 12px;font-size:0.8125rem;color:var(--text-secondary);text-decoration:none;border-radius:4px;">日本語</a>
           </div>
         </div>
-        <!-- Wallet Connect -->
+        <div class="nav-divider"></div>
         <div class="wallet-connect-wrap">
           <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
-            Connect Wallet
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+            Connect
           </button>
           <div class="wallet-connected" id="wallet-connected">
             <div class="wallet-info">

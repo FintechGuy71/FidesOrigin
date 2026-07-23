@@ -278,6 +278,10 @@ img { max-width: 100%; display: block; }
 .wallet-disconnect:hover { color: var(--danger); border-color: var(--danger); }
 
 @media (max-width: 900px) {
+  .nav-left { display: none; }
+  .nav-actions { display: none; }
+  .nav-mobile-btn { display: block; }
+  .nav-inner { padding: 0 20px; }
   .wallet-connect-wrap { margin-top: 12px; width: 100%; }
   .wallet-btn { width: 100%; justify-content: center; }
   .wallet-connected { flex-direction: column; width: 100%; gap: 8px; }
