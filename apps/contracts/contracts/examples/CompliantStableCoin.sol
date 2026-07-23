@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/IAccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "../interfaces/IAssetCompliance.sol";
 
@@ -76,6 +77,7 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
     error LengthMismatch();
     error InvalidLength();
     error InvalidPolicy();
+    error ComplianceEngineNotSet();
     
     // ============ Constructor ============
     
@@ -392,6 +394,19 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
     
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
+    }
+
+    /**
+     * @notice 向 ComplianceEngine 申请 OPERATOR_ROLE
+     * @dev 需要 ComplianceEngine 的 ADMIN 在部署后调用，
+     *      或部署脚本自动执行
+     */
+    function claimOperatorRole() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (address(complianceEngine) == address(0)) revert ComplianceEngineNotSet();
+        IAccessControl(address(complianceEngine)).grantRole(
+            keccak256("OPERATOR_ROLE"),
+            address(this)
+        );
     }
     
     // ============ Internal Helpers ============

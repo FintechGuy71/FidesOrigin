@@ -8,22 +8,22 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 /**
  * @title RiskRegistryV2
- * @notice RiskRegistry 存储兼容升级版 — 三方共识审计修复 V2.3.1
- * @dev 基于 UUPS 代理模式，保持 v0.2.1 存储布局完全兼容
+ * @notice RiskRegistry 存储兼容升级版 - 三方共识审计修复 V2.3.1
+ * @dev 基于 UUPS 代理模式,保持 v0.2.1 存储布局完全兼容
  * @dev VERSION: 2.3.1
  *
  * ⚠️ 升级路径警告:
  * - ✅ 可从 v0.2.1 (RiskRegistry V1 初版) 直接升级
- * - ❌ 不可从 V1.x (RiskRegistry 1.2.x) 直接升级，因为存储布局不兼容
+ * - ❌ 不可从 V1.x (RiskRegistry 1.2.x) 直接升级,因为存储布局不兼容
  *   V1.x 使用 `mapping(address => RiskProfile)` 而 V2 使用位打包 `_packedProfiles`
  *   直接升级会导致所有风险数据丢失/损坏
- * 如需从 V1.x 迁移，请部署新的 V2 合约并通过批量更新迁移数据
+ * 如需从 V1.x 迁移,请部署新的 V2 合约并通过批量更新迁移数据
  *
  * 存储兼容性说明:
- * - Slot 0-7: 与 v0.2.1 完全一致（_packedProfiles, _lastUpdateTime, _profileTags,
- *   sanctionedAddresses, _addressTags, _addressTagList, contractRegistry, entityAddresses）
- * - Slot 8+: 新增变量（totalProfiles, totalHighRisk 等）
- * - __gap: 39（未改变）
+ * - Slot 0-7: 与 v0.2.1 完全一致(_packedProfiles, _lastUpdateTime, _profileTags,
+ *   sanctionedAddresses, _addressTags, _addressTagList, contractRegistry, entityAddresses)
+ * - Slot 8+: 新增变量(totalProfiles, totalHighRisk 等)
+ * - __gap: 39(未改变)
  */
 
 contract RiskRegistryV2 is
@@ -38,7 +38,7 @@ contract RiskRegistryV2 is
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @notice I-17 NOTE: DEFAULT_ADMIN_ROLE 是 OpenZeppelin 内置的超级管理员角色。
-    ///         部署完成后，应将其转移给 FidesOriginTimelock 合约，
+    ///         部署完成后,应将其转移给 FidesOriginTimelock 合约,
     ///         以实现去中心化管理和防止单点权力集中。
     ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
 
@@ -52,8 +52,8 @@ contract RiskRegistryV2 is
 
     /// @notice 位打包的风险档案映射 (v0.2.1 遗留)
     /// @dev 位布局: [0-7] riskScore, [8-15] tier, [16] isSanctioned, [17-80] lastUpdated(uint64)
-    /// @dev M-04 NOTE: lastUpdated 使用 uint64 存储，最大可表示至 2106-02-07 06:28:15 UTC。
-    ///      此限制已知且可接受，远超项目预期生命周期。
+    /// @dev M-04 NOTE: lastUpdated 使用 uint64 存储,最大可表示至 2106-02-07 06:28:15 UTC。
+    ///      此限制已知且可接受,远超项目预期生命周期。
     mapping(address => uint256) private _packedProfiles;
 
     /// @notice 最后更新时间 (v0.2.1 遗留)
@@ -104,7 +104,7 @@ contract RiskRegistryV2 is
     uint256 public constant MAX_TAGS_PER_ADDRESS = 10;
     uint256 public constant BATCH_MAX_SIZE = 100;
 
-    /// @dev D2-016: 升级时间锁（秒），生产环境应配合 Timelock 使用
+    /// @dev D2-016: 升级时间锁(秒),生产环境应配合 Timelock 使用
     uint256 public constant UPGRADE_TIMELOCK = 48 hours;
 
     /// @notice C-3 FIX: 只允许从 V2.x 版本升级
@@ -125,7 +125,7 @@ contract RiskRegistryV2 is
     event SanctionRemoved(address indexed account);
     event ContractRegistered(address indexed contractAddr, bytes32 contractType, bool verified);
 
-    /// @dev D2-016: 升级提案事件（配合链下 timelock 服务）
+    /// @dev D2-016: 升级提案事件(配合链下 timelock 服务)
     event UpgradeProposed(address indexed proposedImplementation, uint256 proposedAt, string reason);
 
     // ============ Errors ============
@@ -144,6 +144,16 @@ contract RiskRegistryV2 is
         _;
     }
 
+    // H-04 FIX: 手动实现重入保护(不破坏 UUPS 存储布局)
+    uint256 private _reentrancyStatus;
+
+    modifier nonReentrant() {
+        require(_reentrancyStatus != 2, "ReentrancyGuard: reentrant call");
+        _reentrancyStatus = 2;
+        _;
+        _reentrancyStatus = 1;
+    }
+
     // ============ Constructor ============
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -151,18 +161,22 @@ contract RiskRegistryV2 is
     }
 
     // ============ V2 Upgrade Initializer ============
-    /// @notice V2 升级初始化函数 — 仅可在从 V1 升级时调用一次
+    /// @notice V2 升级初始化函数 - 仅可在从 V1 升级时调用一次
     function initializeV2() external reinitializer(2) onlyRole(ADMIN_ROLE) {
         chainId = block.chainid;
         version = 2; // C-3 FIX: 标记当前版本为 V2
+        _reentrancyStatus = 1; // H-04 FIX: 初始化重入保护状态
         // totalProfiles / totalHighRisk / totalSanctioned 保持默认值 0
-        // 如需回填历史数据，可在升级后通过 batch migration 完成
+        // 如需回填历史数据,可在升级后通过 batch migration 完成
     }
 
-    /// @notice V2.2→V2.3 升级占位函数 — 无存储变更，无需 reinitializer
-    /// @dev 用于 V2.2/V2.3/V2.3.1 版本的纯逻辑升级，不引入新存储变量
+    /// @notice V2.2→V2.3 升级占位函数 - 无存储变更,无需 reinitializer
+    /// @dev 用于 V2.2/V2.3/V2.3.1 版本的纯逻辑升级,不引入新存储变量
     function initializeV2_2() external reinitializer(3) onlyRole(ADMIN_ROLE) {
         // V2.2/V2.3/V2.3.1: pure logic fixes only, no storage changes
+        if (_reentrancyStatus == 0) {
+            _reentrancyStatus = 1; // H-04 FIX: 确保重入保护状态已初始化
+        }
     }
 
     // L-09 FIX: RiskRegistryV2 now uses UPGRADE_TIMELOCK for upgrades
@@ -174,14 +188,14 @@ contract RiskRegistryV2 is
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
-        // C-3 FIX: 版本兼容性检查 — 防止从不兼容的版本直接升级
+        // C-3 FIX: 版本兼容性检查 - 防止从不兼容的版本直接升级
         // 确保 RiskRegistryV2 仅从 V2.x 或其他兼容版本升级
-        // V1.x 使用不同的存储布局（struct-based vs bit-packed），直接升级会导致数据损坏
+        // V1.x 使用不同的存储布局(struct-based vs bit-packed),直接升级会导致数据损坏
         require(version >= UPGRADE_FROM_VERSION, "Incompatible upgrade: must be V2 or higher");
-        
-        // H-02 FIX: 版本兼容性检查 — 防止从不兼容的版本直接升级
+
+        // H-02 FIX: 版本兼容性检查 - 防止从不兼容的版本直接升级
         // 确保 RiskRegistryV2 仅从 v0.2.1 或其他 V2.x 版本升级
-        // V1.x (RiskRegistry 1.2.x) 使用不同的存储布局，直接升级会导致数据损坏
+        // V1.x (RiskRegistry 1.2.x) 使用不同的存储布局,直接升级会导致数据损坏
         bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
         uint256 executeAfter = upgradeProposals[proposalId];
         require(executeAfter != 0, "No proposal for implementation");
@@ -289,18 +303,18 @@ contract RiskRegistryV2 is
         emit RiskProfileUpdated(account, riskScore, RiskTier(tier), sanctionedStatus);
     }
 
-    // ============ Batch Update (V2.3: H1 fix — added tags parameter) ============
+    // ============ Batch Update (V2.3: H1 fix - added tags parameter) ============
 
     /**
      * @notice 批量更新风险档案
-     * @dev V2.3 fix H1: 添加 tags 参数，批量发布的地址也带上标签
+     * @dev V2.3 fix H1: 添加 tags 参数,批量发布的地址也带上标签
      * @dev L-04 NOTE: Batch updates intentionally skip MIN_UPDATE_INTERVAL for efficiency.
      *      This is consistent with emergency sanction behavior.
      * @param accounts 目标地址数组
      * @param riskScores 风险评分数组
      * @param tiers 风险等级数组
      * @param isSanctionedList 制裁状态数组
-     * @param tags 标签二维数组（每个地址一组 tags）
+     * @param tags 标签二维数组(每个地址一组 tags)
      */
     function batchUpdateRiskProfiles(
         address[] calldata accounts,
@@ -308,7 +322,7 @@ contract RiskRegistryV2 is
         uint8[] calldata tiers,
         bool[] calldata isSanctionedList,
         bytes32[][] calldata tags
-    ) external onlyRole(ORACLE_ROLE) whenNotPaused {
+    ) external onlyRole(ORACLE_ROLE) whenNotPaused nonReentrant {
         uint256 count = accounts.length;
         if (count != riskScores.length || count != tiers.length || count != isSanctionedList.length || count != tags.length) {
             revert LengthMismatch();
@@ -376,7 +390,7 @@ contract RiskRegistryV2 is
         address[] calldata accounts,
         string calldata reason
     ) external onlyRole(ADMIN_ROLE) {
-        // M-06 FIX: 批量大小限制，防止 gas 耗尽
+        // M-06 FIX: 批量大小限制,防止 gas 耗尽
         require(accounts.length <= 100, "Batch too large");
         // L-03: Emergency sanctions intentionally bypass MIN_UPDATE_INTERVAL for immediate response.
         // This is a design decision: sanctioned addresses must be flagged without delay.
@@ -421,10 +435,10 @@ contract RiskRegistryV2 is
 
     /**
      * @notice 移除制裁
-     * @dev M-05 FIX: 恢复 pre-sanction 档案时，显式清除制裁位，防止
+     * @dev M-05 FIX: 恢复 pre-sanction 档案时,显式清除制裁位,防止
      *      恢复后 _packedProfiles 与 sanctionedAddresses 状态不一致。
      */
-    function removeSanction(address account) external onlyRole(ADMIN_ROLE) validAddress(account) {
+    function removeSanction(address account) external onlyRole(ADMIN_ROLE) validAddress(account) nonReentrant {
         // only process and emit if address was actually sanctioned
         if (sanctionedAddresses[account]) {
             // M-05 FIX: Restore pre-sanction score/tier BEFORE clearing sanctionedAddresses,
@@ -441,7 +455,7 @@ contract RiskRegistryV2 is
             }
             sanctionedAddresses[account] = false;
             if (totalSanctioned > 0) totalSanctioned--;
-            
+
             emit SanctionRemoved(account);
         }
     }
@@ -513,7 +527,7 @@ contract RiskRegistryV2 is
         bytes32 contractType,
         bool verified,
         uint8 riskScore
-    ) external onlyRole(OPERATOR_ROLE) validAddress(contractAddr) {
+    ) external onlyRole(OPERATOR_ROLE) validAddress(contractAddr) nonReentrant {
         contractRegistry[contractAddr] = ContractInfo({
             isVerified: verified,
             riskScore: riskScore,
@@ -527,7 +541,7 @@ contract RiskRegistryV2 is
     // ============ V2: New / Fixed View Functions ============
 
     /**
-     * @notice 获取完整风险档案 (V2: 返回 struct，兼容旧版 getRiskProfile)
+     * @notice 获取完整风险档案 (V2: 返回 struct,兼容旧版 getRiskProfile)
      */
     function getRiskProfile(address account) external view returns (
         uint8 riskScore,
@@ -568,7 +582,7 @@ contract RiskRegistryV2 is
             addr,
             uint32(_unpackLastUpdated(packed)),
             _unpackTier(packed),
-            100, // sourceConfidence: 旧版无此字段，返回默认值
+            100, // sourceConfidence: 旧版无此字段,返回默认值
             isSanc,
             packed != 0,
             _addressTagList[addr]
@@ -576,7 +590,7 @@ contract RiskRegistryV2 is
     }
 
     /**
-     * @notice M-08 FIX: 轻量版 getProfile，仅返回核心 4 个字段，节省 gas
+     * @notice M-08 FIX: 轻量版 getProfile,仅返回核心 4 个字段,节省 gas
      */
     function getProfileLight(address addr) external view returns (
         uint256 riskScore,
@@ -644,7 +658,7 @@ contract RiskRegistryV2 is
             account,
             uint32(_unpackLastUpdated(packed)),
             _unpackTier(packed),
-            100, // sourceConfidence: 旧版无此字段，返回默认值
+            100, // sourceConfidence: 旧版无此字段,返回默认值
             _unpackIsSanctioned(packed),
             packed != 0
         );
@@ -680,20 +694,20 @@ contract RiskRegistryV2 is
 
     // M-05 FIX: Store pre-sanction packed profiles for restoration
     mapping(address => uint256) public preSanctionProfiles;
-    
+
     // L-09 FIX: Upgrade proposal tracking
     mapping(bytes32 => uint256) public upgradeProposals;
 
-    // C-3 FIX: 版本号，用于防止从不兼容版本直接升级
+    // C-3 FIX: 版本号,用于防止从不兼容版本直接升级
     uint256 public version;
 
     // ============ Admin: Backfill Counters ============
 
     /**
-     * @notice 回填历史数据计数器（V2 升级后计数器为 0）
-     * @dev 仅 ADMIN_ROLE 可调用，一次性操作
+     * @notice 回填历史数据计数器(V2 升级后计数器为 0)
+     * @dev 仅 ADMIN_ROLE 可调用,一次性操作
      * @param _totalProfiles 历史总档案数
-     * @param _totalHighRisk 历史高风险数（riskScore >= 80）
+     * @param _totalHighRisk 历史高风险数(riskScore >= 80)
      * @param _totalSanctioned 历史制裁数
      */
     function backfillCounters(
@@ -708,15 +722,6 @@ contract RiskRegistryV2 is
         lastGlobalUpdate = block.timestamp;
     }
 
-    // M-05 FIX: Store pre-sanction packed profiles for restoration
-    mapping(address => uint256) public preSanctionProfiles;
-    
-    // L-09 FIX: Upgrade proposal tracking
-    mapping(bytes32 => uint256) public upgradeProposals;
-
-    // C-3 FIX: 版本号，用于防止从不兼容版本直接升级
-    uint256 public version;
-    
     // ============ Storage Gap ============
-    uint256[34] private __gap;
+    uint256[33] private __gap;
 }

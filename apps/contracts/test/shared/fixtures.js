@@ -106,6 +106,12 @@ async function deployFidesOriginFixture() {
   );
   await stableCoin.waitForDeployment();
 
+  // H-03 FIX: Grant stableCoin the OPERATOR_ROLE on ComplianceEngine so postTransferHook works
+  await complianceEngine.connect(owner).grantRole(
+    await complianceEngine.OPERATOR_ROLE(),
+    await stableCoin.getAddress()
+  );
+
   // 9. Deploy QuarantineVault
   const QuarantineVault = await ethers.getContractFactory('QuarantineVault');
   const quarantineVault = await QuarantineVault.deploy();
