@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
-    <title>FidesOrigin - Address Risk Check</title>
-    <meta name="description" content="Check Ethereum address risk in real-time. FidesOrigin scans 20,000+ risk addresses across OFAC, Chainalysis, and more.">
+    <title>FidesOrigin - 住所リスクチェック</title>
+    <meta name="description" content="イーサリアム住所のリスクをリアルタイムで確認。FidesOriginはOFAC、Chainalysisなど20,000件以上のリスク住所をスキャンします。">
     <meta name="theme-color" content="#0f172a">
-    <meta property="og:title" content="FidesOrigin - Address Risk Check">
-    <meta property="og:description" content="Check Ethereum address risk in real-time. FidesOrigin scans 20,000+ risk addresses across OFAC, Chainalysis, and more.">
+    <meta property="og:title" content="FidesOrigin - 住所リスクチェック">
+    <meta property="og:description" content="イーサリアム住所のリスクをリアルタイムで確認。FidesOriginはOFAC、Chainalysisなど20,000件以上のリスク住所をスキャンします。">
     <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fidesorigin.com/address-check.html">
@@ -132,8 +132,8 @@
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "FidesOrigin Address Risk Check",
-      "description": "Check Ethereum address risk in real-time against 20,000+ known risk addresses.",
+      "name": "FidesOrigin 住所リスクチェック",
+      "description": "20,000件以上の既知のリスク住所に対して、イーサリアム住所のリスクをリアルタイムで確認。",
       "url": "https://fidesorigin.com/address-check.html",
       "isPartOf": {
         "@type": "WebSite",
@@ -152,15 +152,16 @@
             <span>FidesOrigin</span>
         </a>
         <div style="display:flex;align-items:center;gap:12px;">
-            <a href="/" style="color:var(--text-sec);text-decoration:none;font-size:0.85rem;">Back to Home</a>
+            <a href="/" style="color:var(--text-sec);text-decoration:none;font-size:0.85rem;">ホームに戻る</a>
             <div class="lang-dropdown" id="langDropdownNav" style="position:relative;">
                 <button type="button" id="langDropdownBtn" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-size:0.85rem;cursor:pointer;">
-                    <span>🌐</span><span>English</span><span>▾</span>
+                    <span>🌐</span><span>日本語</span><span>▾</span>
                 </button>
                 <div class="lang-dropdown-menu" style="position:absolute;top:calc(100% + 6px);right:0;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-                    <a href="/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;background:rgba(99,102,241,0.15);color:#818cf8;font-weight:600;">English</a>
+                    <a href="/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;">English</a>
                     <a href="/cn/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;">简体中文</a>
                     <a href="/tw/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;">繁體中文</a>
+                    <a href="/jp/address-check.html" style="display:block;padding:8px 12px;border-radius:6px;color:var(--text-sec);text-decoration:none;font-size:0.85rem;cursor:pointer;background:rgba(99,102,241,0.15);color:#818cf8;font-weight:600;">日本語</a>
                 </div>
             </div>
         </div>
@@ -170,67 +171,67 @@
 
     <div class="container" style="padding-top:80px;">
         <div class="header">
-            <h1>FidesOrigin Address Risk Check</h1>
-            <p>Query 20,645+ risk addresses in real time</p>
+            <h1>FidesOrigin 住所リスクチェック</h1>
+            <p>20,645件以上のリスク住所をリアルタイムで検索</p>
         </div>
 
         <div class="stats-bar">
             <div class="stat-box">
                 <div class="num" id="totalCount">--</div>
-                <div class="label">Total Addresses</div>
+                <div class="label">総住所数</div>
             </div>
             <div class="stat-box">
                 <div class="num" id="blackCount">--</div>
-                <div class="label">Blacklist</div>
+                <div class="label">ブラックリスト</div>
             </div>
             <div class="stat-box">
                 <div class="num" id="greyCount">--</div>
-                <div class="label">Greylist</div>
+                <div class="label">グレーリスト</div>
             </div>
         </div>
 
         <div class="search-box">
-            <input type="text" id="addressInput" placeholder="Enter Ethereum address (0x...)" maxlength="42" autocomplete="off" spellcheck="false" autocorrect="off">
+            <input type="text" id="addressInput" placeholder="イーサリアム住所を入力 (0x...)" maxlength="42" autocomplete="off" spellcheck="false" autocorrect="off">
             <button type="button"  id="checkBtn">
-                <span id="btnText">Check Risk Level</span>
+                <span id="btnText">リスクレベルを確認</span>
             </button>
         </div>
 
         <div class="result-box" id="resultBox">
             <div style="text-align: center; margin-bottom: 20px;">
-                <div class="risk-badge" id="riskBadge">Checking...</div>
+                <div class="risk-badge" id="riskBadge">確認中...</div>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Address</span>
+                <span class="detail-label">住所</span>
                 <span class="detail-value" id="resultAddr">-</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Risk Score</span>
+                <span class="detail-label">リスクスコア</span>
                 <span class="detail-value" id="resultScore">-</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Risk Tier</span>
+                <span class="detail-label">リスク層</span>
                 <span class="detail-value" id="resultTier">-</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Source</span>
+                <span class="detail-label">ソース</span>
                 <span class="detail-value" id="resultSource">-</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Tags</span>
+                <span class="detail-label">タグ</span>
                 <span class="detail-value" id="resultTags">-</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Entity Name</span>
+                <span class="detail-label">エンティティ名</span>
                 <span class="detail-value" id="resultEntity">-</span>
             </div>
         </div>
 
         <div class="footer">
-            <p><a href="/" style="color:var(--accent);text-decoration:none;">← Back to FidesOrigin</a></p>
-            <p>Data Sources: OFAC, Chainalysis, Etherscan, Uniswap, PoolTogether, and more</p>
-            <p>Merkle Root: <code id="merkleRoot">--</code></p>
-            <p><a href="https://fidesorigin.com">fidesorigin.com</a> | <a href="/admin/">Admin Panel</a></p>
+            <p><a href="/" style="color:var(--accent);text-decoration:none;">← FidesOrigin に戻る</a></p>
+            <p>データソース：OFAC、Chainalysis、Etherscan、Uniswap、PoolTogether、その他</p>
+            <p>マークルルート： <code id="merkleRoot">--</code></p>
+            <p><a href="https://fidesorigin.com">fidesorigin.com</a> | <a href="/admin/">管理パネル</a></p>
         </div>
     </div>
 
