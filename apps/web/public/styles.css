@@ -67,54 +67,87 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 60px;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
 }
 .nav-logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 600;
+  font-size: 1.05rem;
   color: var(--text);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+  flex-shrink: 0;
 }
 .nav-logo-icon {
-  width: 32px; height: 32px;
-  border-radius: 8px;
+  width: 28px; height: 28px;
+  border-radius: 7px;
   object-fit: cover;
   flex-shrink: 0;
 }
-.nav-links {
+.nav-left {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 32px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
-.nav-links > a {
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
+.nav-left > a {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #8a8f9e;
+  transition: color 0.2s ease;
+  position: relative;
+  white-space: nowrap;
 }
-.nav-links > a:hover {
-  color: var(--text);
-  background: rgba(255,255,255,0.04);
+.nav-left > a:hover {
+  color: #c4c8d4;
+}
+.nav-left > a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+  border-radius: 1px;
+}
+.nav-left > a:hover::after {
+  width: 100%;
+}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.nav-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.08);
+  flex-shrink: 0;
 }
 .nav-cta {
-  padding: 6px 14px !important;
-  background: var(--accent-dim) !important;
-  border: 1px solid rgba(139,126,200,0.2) !important;
-  color: var(--accent) !important;
-  font-weight: 600 !important;
-  font-size: 0.8rem !important;
+  padding: 5px 14px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(139,126,200,0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 .nav-cta:hover {
-  background: rgba(139,126,200,0.18) !important;
-  border-color: rgba(139,126,200,0.35) !important;
+  background: rgba(139,126,200,0.18);
+  border-color: rgba(139,126,200,0.35);
 }
 .nav-mobile-btn {
   display: none;
