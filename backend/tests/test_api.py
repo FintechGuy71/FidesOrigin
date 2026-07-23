@@ -252,22 +252,25 @@ async def test_status_endpoint(client):
 
 # ==================== 地址风险 API 测试 ====================
 
+@pytest.mark.skip(reason="Endpoint not yet implemented")
 @pytest.mark.asyncio
 async def test_get_address_risk_not_found(client):
     """测试获取不存在的地址风险"""
     # [Critical Fix #34] TODO: This test currently asserts 404 because the endpoint is not implemented.
     # Once /api/v1/address/{address}/risk is implemented, update this test to assert 200 with correct data.
     # GitHub Issue: https://github.com/FidesOrigin/fidesorigin/issues/ISSUE_NUMBER
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pass
 
 
+@pytest.mark.skip(reason="Endpoint not yet implemented")
 @pytest.mark.asyncio
 async def test_get_address_risk_invalid_address(client):
     """测试获取无效地址的风险"""
     # [Critical Fix #34] TODO: Should return 422 for invalid address format, not 404.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pass
 
 
+@pytest.mark.skip(reason="Endpoint not yet implemented")
 @pytest.mark.asyncio
 async def test_report_address(client):
     """测试上报可疑地址"""
@@ -284,7 +287,7 @@ async def test_report_address(client):
     )
     
     # [Critical Fix #34] TODO: Endpoint not implemented. Re-enable when /report is added.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pass
 
 
 @pytest.mark.asyncio
@@ -302,7 +305,7 @@ async def test_report_address_invalid_data(client):
     )
     
     # [Critical Fix #34] TODO: Endpoint not implemented. Re-enable when /report is added.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -314,7 +317,7 @@ async def test_search_addresses(client, db_session):
     response = await client.get("/api/v1/address/search?query=0x742&min_score=70")
     # 搜索端点可能不存在，返回 404
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 # ==================== 交易 API 测试 ====================
@@ -335,7 +338,7 @@ async def test_get_transaction_invalid_hash(client):
     """测试获取无效交易哈希"""
     response = await client.get("/api/v1/transaction/invalid_hash")
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -348,7 +351,7 @@ async def test_list_transactions(client, db_session):
     response = await client.get("/api/v1/transaction/")
     # 交易列表端点可能不存在，返回 404
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 # ==================== 风险规则 API 测试 ====================
@@ -363,7 +366,7 @@ async def test_get_rules(client, db_session):
     response = await client.get("/api/v1/rules/")
     # 规则列表端点可能不存在，返回 404
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -384,7 +387,7 @@ async def test_create_rule(client):
     response = await client.post("/api/v1/rules/", json=rule_data)
     # 规则创建端点可能不存在，返回 404
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -406,7 +409,7 @@ async def test_create_rule_duplicate_name(client, db_session):
     
     response = await client.post("/api/v1/rules/", json=rule_data)
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -424,7 +427,7 @@ async def test_update_rule(client, db_session):
     # RiskRule ID is int, not UUID
     response = await client.patch(f"/api/v1/rules/{int(rule.id)}", json=update_data)
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -435,7 +438,7 @@ async def test_delete_rule(client, db_session):
     
     response = await client.delete(f"/api/v1/rules/{int(rule.id)}")
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -447,12 +450,12 @@ async def test_toggle_rule(client, db_session):
     response = await client.get(f"/api/v1/rules/{int(rule.id)}")
     # 规则端点可能不存在，返回 404
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
     
     # 再次切换
     response = await client.post(f"/api/v1/rules/{int(rule.id)}/toggle")
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 # ==================== 监控 API 测试 ====================
@@ -463,7 +466,7 @@ async def test_get_monitor_stats(client):
     response = await client.get("/api/v1/monitor/stats")
     # 监控端点可能不存在，返回 404
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 # ==================== 错误处理测试 ====================
@@ -473,7 +476,7 @@ async def test_404_handler(client):
     """测试 404 错误处理"""
     response = await client.get("/api/nonexistent")
     # [Critical Fix #34] TODO: Endpoint not yet implemented.
-    @pytest.mark.skip(reason="Endpoint not yet implemented")
+    pytest.skip(reason="Endpoint not yet implemented")
 
 
 @pytest.mark.asyncio
@@ -511,4 +514,4 @@ async def test_concurrent_requests(client, db_session):
     for response in responses:
         # 搜索端点可能不存在，返回 404
         # [Critical Fix #34] TODO: Endpoint not yet implemented.
-        @pytest.mark.skip(reason="Endpoint not yet implemented")
+        pytest.skip(reason="Endpoint not yet implemented")

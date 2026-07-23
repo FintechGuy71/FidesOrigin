@@ -33,7 +33,7 @@ class AlertService:
         self.webhook_url = settings.ALERT_WEBHOOK_URL
         self.enabled = settings.ALERT_ENABLED
         self.cooldown_minutes = settings.ALERT_COOLDOWN_MINUTES
-        self._last_alert_time: Optional[datetime] = None
+        self._last_alert_time: Dict[str, datetime] = {}  # 按告警类型分别维护冷却时间
         self._alert_counts: Dict[str, int] = {}  # 按类型统计
     
     def _should_alert(self, alert_type: str) -> bool:
@@ -42,9 +42,11 @@ class AlertService:
             return False
         
         now = datetime.now(timezone.utc)
-        if (self._last_alert_time is None or
-                now - self._last_alert_time > timedelta(minutes=self.cooldown_minutes)):
-            self._last_alert_time = now
+        last_time = self._last_alert_time.get(alert_type)
+        
+        if (last_time is None or
+                now - last_time > timedelta(minutes=self.cooldown_minutes)):
+            self._last_alert_time[alert_type] = now
             self._alert_counts[alert_type] = self._alert_counts.get(alert_type, 0) + 1
             return True
         return False
@@ -144,6 +146,6 @@ class AlertService:
             "enabled": self.enabled,
             "webhook_configured": bool(self.webhook_url),
             "cooldown_minutes": self.cooldown_minutes,
-            "last_alert_time": self._last_alert_time.isoformat() if self._last_alert_time else None,
+            "last_alert_time": {k: v.isoformat() for k, v in self._last_alert_time.items()},
             "alert_counts": self._alert_counts.copy()
         }

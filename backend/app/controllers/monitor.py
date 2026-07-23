@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.core.di import get_db, get_ws_manager
+from app.core.di import get_db, get_ws_manager, get_container
 from app.core.exceptions import AuthenticationException, FidesException
 from app.core.logging import get_logger
 from app.models import AddressRisk, RiskEvent, Transaction
@@ -159,7 +159,6 @@ async def monitor_stream(
         ))
         
         # 发送初始地址风险信息
-        from app.core.di import get_container
         addr_repo = get_container().get_address_repository(db)
         
         for address in address_list:

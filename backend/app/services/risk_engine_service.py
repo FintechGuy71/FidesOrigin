@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.core.exceptions import RiskCalculationException
 from app.core.logging import get_logger
-from app.models import Address, AddressRisk, RiskEvent, RiskLevel, RiskRule, RiskStatus, Transaction
+from app.models import Address, AddressReport, AddressRisk, RiskEvent, RiskLevel, RiskRule, RiskStatus, Transaction
 from app.repositories.address_repository import AddressRepository
 from app.repositories.rule_repository import RuleRepository
 from app.repositories.transaction_repository import TransactionRepository
@@ -58,7 +58,25 @@ class ReportedAddressStrategy(RiskRuleStrategy):
         db: AsyncSession,
         blockscout: BlockscoutService
     ) -> Tuple[float, str]:
-        # AddressReport 模型不存在，跳过举报检查
+        # [P0-002 Fix] 查询 AddressReport 模型实现举报检查
+        result = await db.execute(
+            select(func.count(AddressReport.id))
+            .where(
+                AddressReport.address == address,
+                AddressReport.chain == chain,
+                AddressReport.status == "confirmed"  # 只统计已确认的举报
+            )
+        )
+        report_count = result.scalar() or 0
+        
+        if report_count > 0:
+            condition = rule.condition or {}
+            weight = rule.risk_weight
+            impact = rule.risk_score_impact or 50
+            # 每增加一个举报，增加一定分数（上限 100）
+            score = min(report_count * impact, 100) * weight
+            return score, f"地址被举报 {report_count} 次"
+        
         return 0, ""
 
 
@@ -115,7 +133,7 @@ class AddressAgeStrategy(RiskRuleStrategy):
             if first_tx:
                 try:
                     first_tx_time = datetime.fromisoformat(first_tx.replace('Z', '+00:00'))
-                    age_days = (datetime.now(timezone.utc) - first_tx_time.replace(tzinfo=None)).days
+                    age_days = (datetime.now(timezone.utc) - first_tx_time).days
                     
                     condition = rule.condition or {}
                     min_days = condition.get("min_days", 7)
@@ -151,10 +169,15 @@ class LargeTransferStrategy(RiskRuleStrategy):
         
         from sqlalchemy import cast, Numeric
         
+        from sqlalchemy import or_
+        
         result = await db.execute(
             select(Transaction)
             .where(
-                Transaction.address == address,
+                or_(
+                    Transaction.from_address == address,
+                    Transaction.to_address == address
+                ),
                 cast(Transaction.value, Numeric) >= threshold_wei
             )
             .order_by(Transaction.block_timestamp.desc())
@@ -404,29 +427,32 @@ class RiskEngineService:
             value_wei = int(tx_data.get("value", "0"))
             value_eth = value_wei / 10**18
             
-            # 检查发送方风险
+            # 检查关联地址风险（用 set 去重，避免自转账重复计算）
+            addresses_to_check = set()
             if from_addr:
-                from_score, from_level, _ = await self.calculate_address_risk(from_addr, chain)
-                if from_score > 50:
-                    indicators.append({
-                        "type": "high_risk_sender",
-                        "address": from_addr,
-                        "score": from_score,
-                        "level": from_level.value,
-                    })
-                    total_score += from_score * 0.6
-            
-            # 检查接收方风险
+                addresses_to_check.add(from_addr)
             if to_addr:
-                to_score, to_level, _ = await self.calculate_address_risk(to_addr, chain)
-                if to_score > 50:
-                    indicators.append({
-                        "type": "high_risk_receiver",
-                        "address": to_addr,
-                        "score": to_score,
-                        "level": to_level.value,
-                    })
-                    total_score += to_score * 0.6
+                addresses_to_check.add(to_addr)
+            
+            for addr in addresses_to_check:
+                score, level, _ = await self.calculate_address_risk(addr, chain)
+                if score > 50:
+                    if addr == from_addr:
+                        indicators.append({
+                            "type": "high_risk_sender",
+                            "address": addr,
+                            "score": score,
+                            "level": level.value,
+                        })
+                        total_score += score * 0.6
+                    if addr == to_addr:
+                        indicators.append({
+                            "type": "high_risk_receiver",
+                            "address": addr,
+                            "score": score,
+                            "level": level.value,
+                        })
+                        total_score += score * 0.6
             
             # 检查大额交易
             if value_eth > 100:

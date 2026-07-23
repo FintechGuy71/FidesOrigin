@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.di import get_db, get_risk_engine
+from app.core.di import get_db, get_risk_engine, get_container
 from app.core.exceptions import FidesException, NotFoundException
 from app.core.logging import get_logger
 from app.schemas import (
@@ -67,7 +67,6 @@ async def get_transaction_risk(
             if indicator.get("type") in ["high_risk_sender", "high_risk_receiver"]:
                 addr = indicator.get("address")
                 if addr:
-                    from app.core.di import get_container
                     addr_repo = get_container().get_address_repository(db)
                     addr_risk = await addr_repo.get_by_address(addr, chain)
                     if addr_risk:
@@ -134,7 +133,6 @@ async def get_transaction(
     tx_hash = validate_tx_hash(tx_hash)
     
     try:
-        from app.core.di import get_container
         tx_repo = get_container().get_transaction_repository(db)
         tx = await tx_repo.get_by_tx_hash(tx_hash, chain)
         
@@ -235,7 +233,6 @@ async def list_transactions(
     - **min_risk_score/max_risk_score**: 风险评分范围过滤
     """
     try:
-        from app.core.di import get_container
         tx_repo = get_container().get_transaction_repository(db)
         
         total, transactions = await tx_repo.list(
@@ -268,7 +265,7 @@ async def list_transactions(
                 "block_timestamp": tx.block_timestamp,
                 "risk_score": float(tx.risk_score) if tx.risk_score else 0,
                 "risk_level": tx.risk_level.value if hasattr(tx.risk_level, 'value') else tx.risk_level,
-                "risk_indicators": tx.risk_factors or [],
+                "risk_indicators": tx.risk_indicators or [],
                 "status": tx.status,
                 "analyzed_at": tx.block_timestamp,
                 "created_at": tx.created_at

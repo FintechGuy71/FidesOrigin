@@ -1,7 +1,7 @@
 """
 FidesOrigin Pydantic 数据模型（用于 API 请求/响应）
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -221,7 +221,7 @@ class RiskEventResponse(BaseResponse):
 class MonitorStreamMessage(BaseModel):
     """监控流消息"""
     type: str = Field(..., description="消息类型: transaction/risk_alert/system")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     data: Dict[str, Any] = Field(..., description="消息数据")
 
 
@@ -238,7 +238,7 @@ class HealthCheckResponse(BaseModel):
     """健康检查响应"""
     status: str = Field(..., description="服务状态")
     version: str = Field(..., description="版本号")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     database: str = Field(..., description="数据库状态")
     services: Dict[str, str] = Field(default_factory=dict, description="服务状态")
 
@@ -248,7 +248,7 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="错误类型")
     message: str = Field(..., description="错误消息")
     details: Optional[Dict[str, Any]] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class APIInfoResponse(BaseModel):

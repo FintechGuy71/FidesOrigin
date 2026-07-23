@@ -6,10 +6,16 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import httpx
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from app.config import get_settings
 from app.core.exceptions import BlockscoutAPIException
+
+# [P1-006 Fix] 断路器开路专用异常，避免 tenacity 无效重试
+class CircuitBreakerOpenException(BlockscoutAPIException):
+    """断路器已开路，无需重试"""
+    def __init__(self, message: str = "Circuit breaker is open - too many consecutive failures"):
+        super().__init__(message=message, status_code=503)
 
 # 向后兼容别名：旧代码使用 BlockscoutAPIError
 BlockscoutAPIError = BlockscoutAPIException
@@ -69,9 +75,8 @@ class BlockscoutService:
                     max_keepalive_connections=10
                 )
             )
-            self._semaphore = None  # 延迟初始化
-            # [M-4 Fix] 连接时从 Redis 恢复断路器状态
-            await self._load_circuit_state()
+            self._semaphore = asyncio.Semaphore(settings.BLOCKSCOUT_RATE_LIMIT)
+            # [P0-001 Fix] 信号量已在 connect() 中同步初始化，避免竞态条件
             logger.info("blockscout_service_connected", base_url=self.base_url)
     
     async def close(self) -> None:
@@ -111,18 +116,16 @@ class BlockscoutService:
             logger.warning("blockscout_circuit_save_failed", error=str(e))
     
     def _get_semaphore(self):
-        """延迟初始化信号量"""
+        """获取已初始化的信号量（P0-001 修复：信号量已在 connect() 中同步初始化）"""
         if self._semaphore is None:
+            # 安全回退：如果 connect() 未被调用，延迟初始化（非竞态安全，但保证可用）
             self._semaphore = asyncio.Semaphore(settings.BLOCKSCOUT_RATE_LIMIT)
         return self._semaphore
     
     def _check_circuit(self):
         """检查断路器状态"""
         if self._circuit_open:
-            raise BlockscoutAPIException(
-                "Circuit breaker is open - too many consecutive failures",
-                status_code=503
-            )
+            raise CircuitBreakerOpenException()
     
     def _record_success(self):
         """记录成功，重置失败计数并持久化"""
@@ -198,12 +201,14 @@ class BlockscoutService:
                 logger.error("blockscout_unexpected_error", error=str(e), url=url)
                 raise BlockscoutAPIException(f"Unexpected error: {str(e)}")
     
-    # ==================== 地址相关 API ====================
+def _should_retry_blockscout(exc):
+    """排除断路器开路异常，其他 BlockscoutAPIException 允许重试"""
+    return isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)
     
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type(BlockscoutAPIException),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_info(self, address: str) -> Dict[str, Any]:
@@ -213,7 +218,7 @@ class BlockscoutService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type(BlockscoutAPIException),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_transactions(
@@ -232,7 +237,7 @@ class BlockscoutService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type(BlockscoutAPIException),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_transaction(self, tx_hash: str) -> Dict[str, Any]:
@@ -242,7 +247,7 @@ class BlockscoutService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type(BlockscoutAPIException),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_token_transfers(
@@ -260,7 +265,7 @@ class BlockscoutService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type(BlockscoutAPIException),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_internal_transactions(

@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.di import get_db
+from app.core.di import get_db, get_container
 from app.core.exceptions import ConflictException, FidesException, NotFoundException
 from app.core.logging import get_logger
 from app.schemas import (
@@ -30,7 +30,6 @@ from app.core.security import get_current_user
 
 def get_rule_repo(db: AsyncSession = Depends(get_db)) -> RuleRepository:
     """获取规则 Repository 依赖"""
-    from app.core.di import get_container
     return get_container().get_rule_repository(db)
 
 

@@ -5,6 +5,7 @@ Redis 连接池管理 + 多级缓存策略 + 缓存穿透保护
 import json
 import pickle
 import json as _json_compat  # [LOW Fix #25] 使用 JSON 替代 pickle
+from datetime import datetime, timezone
 from typing import Any, List, Optional, TypeVar, Union
 
 import redis.asyncio as redis
@@ -65,7 +66,33 @@ class CacheService:
             raise RuntimeError("Cache service not connected. Call connect() first.")
         return self._redis
     
-    # ==================== Key 生成器 ====================
+    # L1 内存缓存默认 TTL（秒），比 Redis 更短以平衡一致性和性能
+    L1_DEFAULT_TTL = 60
+    
+    def _is_local_expired(self, key: str) -> bool:
+        """检查 L1 内存缓存是否过期"""
+        expire_at = self._local_ttl.get(key)
+        if expire_at is None:
+            return True
+        return datetime.now(timezone.utc).timestamp() > expire_at
+    
+    def _set_local(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+        """写入 L1 内存缓存"""
+        self._local_cache[key] = value
+        self._local_ttl[key] = datetime.now(timezone.utc).timestamp() + (ttl or self.L1_DEFAULT_TTL)
+    
+    def _get_local(self, key: str) -> Any:
+        """读取 L1 内存缓存，过期返回 None"""
+        if self._is_local_expired(key):
+            self._local_cache.pop(key, None)
+            self._local_ttl.pop(key, None)
+            return None
+        return self._local_cache.get(key)
+    
+    def _delete_local(self, key: str) -> None:
+        """删除 L1 内存缓存"""
+        self._local_cache.pop(key, None)
+        self._local_ttl.pop(key, None)
     
     @staticmethod
     def key(*parts: str) -> str:
@@ -91,11 +118,22 @@ class CacheService:
     # ==================== 基础操作 ====================
     
     async def get(self, key: str) -> Optional[str]:
-        """获取字符串缓存"""
+        """获取字符串缓存（L1 -> L2）"""
+        # 1. 优先查 L1 内存缓存
+        local_value = self._get_local(key)
+        if local_value is not None:
+            return local_value
+        
+        # 2. L1 未命中，查 Redis
         if self._redis is None:
             return None
         value = await self._redis.get(key)
-        return value.decode() if value else None
+        if value:
+            result = value.decode()
+            # 回写 L1
+            self._set_local(key, result)
+            return result
+        return None
     
     async def set(
         self,
@@ -104,12 +142,18 @@ class CacheService:
         expire: Optional[int] = None,
         nx: bool = False
     ) -> bool:
-        """设置字符串缓存"""
+        """设置字符串缓存（L1 + L2）"""
+        # 写入 L1
+        self._set_local(key, value, ttl=expire)
+        
+        # 写入 Redis
         if self._redis is None:
             return False
         return await self._redis.set(key, value, ex=expire, nx=nx)
     
     async def delete(self, key: str) -> int:
+        """删除缓存（L1 + L2）"""
+        self._delete_local(key)
         if self._redis is None:
             return 0
         return await self._redis.delete(key)
@@ -249,7 +293,7 @@ class CacheService:
         4. 执行 factory 获取数据
         5. 数据为空时缓存空值（防止缓存穿透）
         """
-        # 1. 先查缓存
+        # 1. 先查缓存（L1 + L2）
         cached = await self.get_json(key)
         if cached is not None:
             if cached == "__NULL__":

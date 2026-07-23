@@ -170,12 +170,9 @@ class AddressRepository:
         )
         
         if query:
-            # [HIGH-8 FIX] 使用 SQLAlchemy 参数化查询防止 SQL 注入
-            # 1. 转义 SQL LIKE 通配符
+            # [P2-005 FIX] 前缀匹配利用索引，query 参数已做 LIKE 通配符转义
             safe_query = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-            # 2. 使用 ilike 的参数化版本（SQLAlchemy 自动绑定参数）
-            #    生成的 SQL: address ILIKE %(pattern)s ESCAPE '\\'
-            pattern = f"%{safe_query}%"
+            pattern = f"{safe_query}%"
             base_query = base_query.where(
                 AddressRisk.address.ilike(pattern, escape="\\")
             )

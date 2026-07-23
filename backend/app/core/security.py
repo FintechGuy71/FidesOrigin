@@ -726,8 +726,9 @@ class RateLimiter:
             if count >= self.requests_per_minute:
                 return False
             
-            # 增加计数
+            # 增加计数并刷新 TTL，避免计数器永不过期
             await cache.incr(cache_key)
+            await cache.expire(cache_key, 60)
             return True
             
         except Exception as e:

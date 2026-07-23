@@ -2,8 +2,7 @@
 FidesOrigin 规则 Repository（重构版）
 数据访问层：封装所有风险规则相关的数据库操作
 """
-from typing import List, Optional, Tuple, Tuple
-from uuid import UUID
+from typing import List, Optional, Tuple
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -139,7 +138,7 @@ class RuleRepository:
         await self.db.flush()
         logger.info("rule_deleted", rule_id=str(rule_id), name=rule.name)
     
-    async def toggle(self, rule_id: UUID, updated_by: str = "system") -> RiskRule:
+    async def toggle(self, rule_id: int, updated_by: str = "system") -> RiskRule:
         """切换规则状态"""
         rule = await self.get_by_id(rule_id)
         if not rule:

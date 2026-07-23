@@ -91,9 +91,12 @@ class DIContainer:
     
     @property
     def cache(self) -> CacheService:
-        """获取缓存服务（懒加载）"""
-        if not self._cache:
-            self._cache = CacheService()
+        """获取缓存服务（由 lifespan 初始化，不支持懒加载）"""
+        if self._cache is None:
+            raise RuntimeError(
+                "CacheService not initialized. "
+                "Call container.initialize() before accessing cache."
+            )
         return self._cache
     
     @property
@@ -206,6 +209,7 @@ async def shutdown_container() -> None:
 
 # ==================== FastAPI 依赖函数 ====================
 
+@asynccontextmanager
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     获取数据库会话（FastAPI 依赖）

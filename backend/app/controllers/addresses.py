@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.di import get_db, get_risk_engine
+from app.core.di import get_db, get_risk_engine, get_container
 from app.core.exceptions import (
     ConflictException,
     FidesException,
@@ -73,7 +73,6 @@ async def get_address_risk(
         )
         
         # 获取风险记录（刚创建/更新的）
-        from app.core.di import get_container
         repo = get_container().get_address_repository(db)
         address_risk = await repo.get_by_address(address, chain)
         
@@ -147,7 +146,6 @@ async def report_address(
     address = validate_address(address)
     
     try:
-        from app.core.di import get_container
         repo = get_container().get_address_repository(db)
         
         # 检查是否已存在相同的上报
@@ -224,7 +222,6 @@ async def get_address_events(
     address = validate_address(address)
     
     try:
-        from app.core.di import get_container
         repo = get_container().get_address_repository(db)
         events = await repo.get_events(address, limit=limit, severity=severity)
         
@@ -268,7 +265,6 @@ async def search_addresses(
     - **min_score/max_score**: 风险评分范围
     """
     try:
-        from app.core.di import get_container
         repo = get_container().get_address_repository(db)
         
         total, items = await repo.search(

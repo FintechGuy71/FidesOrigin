@@ -2,6 +2,7 @@
 FidesOrigin 主入口（重构版）
 使用 lifespan 管理应用生命周期
 """
+import asyncio
 import os
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -44,6 +45,9 @@ async def lifespan(app: FastAPI):
     # 启动
     logger.info("application_starting", version=__version__, env=settings.APP_ENV)
     
+    # [P2-004 FIX] 启动 WebSocket 自动清理后台任务
+    cleanup_task = None
+    
     # [M-10 Fix] 使用明确的测试模式标志，避免仅通过数据库URL存在性判断
     is_testing = os.environ.get("TESTING", "").lower() == "true"
     
@@ -62,6 +66,22 @@ async def lifespan(app: FastAPI):
         
         logger.info("application_started")
         
+        # [P2-004 FIX] 启动 WebSocket 自动清理后台任务（每 60 秒清理一次）
+        async def _websocket_cleanup_loop():
+            while True:
+                try:
+                    await asyncio.sleep(60)
+                    manager = get_container().ws_manager
+                    cleaned = await manager.cleanup_stale_connections(max_age_seconds=300)
+                    if cleaned > 0:
+                        logger.info("websocket_auto_cleanup", cleaned=cleaned)
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    logger.warning("websocket_cleanup_error", error=str(e))
+        
+        cleanup_task = asyncio.create_task(_websocket_cleanup_loop())
+        
     except Exception as e:
         logger.error("application_startup_failed", error=str(e))
         raise
@@ -70,6 +90,14 @@ async def lifespan(app: FastAPI):
     
     # 关闭
     logger.info("application_shutting_down")
+    
+    # [P2-004 FIX] 取消 WebSocket 清理任务
+    if cleanup_task is not None:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
     
     try:
         await shutdown_container()
