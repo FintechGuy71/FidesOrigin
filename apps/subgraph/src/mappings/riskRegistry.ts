@@ -113,7 +113,7 @@ export function handleAddressTagged(event: AddressTagged): void {
   if (!profile) {
     profile = new RiskProfile(account);
     profile.tags = [];
-    profile.riskScore = BigInt.fromI32(0);
+    profile.riskScore = 0;
     profile.tier = 'UNKNOWN';
     profile.lastUpdated = event.block.timestamp;
     profile.isSanctioned = false;
@@ -215,7 +215,7 @@ export function handleContractRegistered(event: ContractRegistered): void {
   if (!profile) {
     profile = new RiskProfile(contractAddr);
     profile.tags = [];
-    profile.riskScore = BigInt.fromI32(0);
+    profile.riskScore = 0;
     profile.tier = 'UNKNOWN';
     profile.isSanctioned = false;
   }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -48,6 +48,20 @@
             <a href="/" style="display:block;padding:8px 12px;font-size:0.8125rem;color:var(--text-primary);text-decoration:none;border-radius:4px;background:var(--card-bg);">English</a>
             <a href="/cn/" style="display:block;padding:8px 12px;font-size:0.8125rem;color:var(--text-secondary);text-decoration:none;border-radius:4px;">简体中文</a>
             <a href="/tw/" style="display:block;padding:8px 12px;font-size:0.8125rem;color:var(--text-secondary);text-decoration:none;border-radius:4px;">繁體中文</a>
+          </div>
+        </div>
+        <!-- Wallet Connect -->
+        <div class="wallet-connect-wrap">
+          <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+            Connect Wallet
+          </button>
+          <div class="wallet-connected" id="wallet-connected">
+            <div class="wallet-info">
+              <span class="wallet-address" id="wallet-address"></span>
+              <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
+            </div>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect wallet">Disconnect</button>
           </div>
         </div>
         <a href="#contact" class="nav-cta">Get Started</a>
@@ -99,6 +113,19 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
         </a>
         <a href="/admin/" class="btn btn-secondary">View Demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wallet Compliance Panel -->
+  <section class="section" id="wallet-compliance" style="padding-top:0;">
+    <div class="container">
+      <div class="compliance-panel" id="compliance-panel">
+        <h4>On-Chain Compliance Status</h4>
+        <div class="compliance-result" id="compliance-result">
+          <div id="compliance-status">Checking…</div>
+          <div id="compliance-details" style="margin-top:12px;"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -364,6 +391,7 @@
     </div>
   </footer>
 
+  <script nonce="2726c7f26c" src="/wallet-connect.js"></script>
   <script nonce="2726c7f26c">
     // [M-4 Fix] All event handlers attached via addEventListener instead of inline onclick
     

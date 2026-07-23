@@ -73,6 +73,20 @@
                 <a href="#docs" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">ドキュメント</a>
                 <a href="/jp/blog/why-on-chain-compliance.html" class="text-[13px] text-[#8b8b94] hover:text-[#f0f0f2] transition-colors">ブログ</a>
                 <a href="mailto:contact@fidesorigin.com" class="btn-primary text-xs">お問い合わせ</a>
+                <!-- Wallet Connect -->
+                <div class="wallet-connect-wrap">
+                  <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+                    ウォレット接続
+                  </button>
+                  <div class="wallet-connected" id="wallet-connected">
+                    <div class="wallet-info">
+                      <span class="wallet-address" id="wallet-address"></span>
+                      <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
+                    </div>
+                    <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect wallet">切断</button>
+                  </div>
+                </div>
                 <div class="lang-dropdown" id="langDropdown">
                     <button class="lang-dropdown-btn" onclick="toggleLang()" aria-expanded="false" aria-haspopup="true" aria-controls="langMenu">
                         日本語
@@ -93,6 +107,19 @@
     </nav>
 
     <main id="main-content">
+    <!-- Wallet Compliance Panel -->
+    <section class="py-8" id="wallet-compliance">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="compliance-panel" id="compliance-panel">
+                <h4>オンチェーン・コンプライアンス状態</h4>
+                <div class="compliance-result" id="compliance-result">
+                    <div id="compliance-status">確認中…</div>
+                    <div id="compliance-details" style="margin-top:12px;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Hero -->
     <section class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
         <div class="glow w-[500px] h-[500px] bg-[#b8945f] -top-60 -right-40"></div>
@@ -734,5 +761,6 @@
             }
         })();
     </script>
+    <script src="/wallet-connect.js"></script>
 </body>
 </html>

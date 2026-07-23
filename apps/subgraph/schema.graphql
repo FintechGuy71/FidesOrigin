@@ -91,6 +91,7 @@ type PolicyEvaluation @entity {
 type WalletPolicy @entity {
   id: ID!                              # wallet address
   wallet: String!
+  version: Int!
   maxTxValue: BigInt!
   maxTokenTxAmount: BigInt!
   dailyEthLimit: BigInt!

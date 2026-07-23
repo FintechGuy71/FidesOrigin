@@ -134,15 +134,29 @@
         <a href="#demo">演示</a>
         <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank">GitHub</a>
         <div class="lang-dropdown" id="langDropdownNav">
-          <button class="lang-dropdown-toggle" onclick="toggleDropdown('langDropdownNav', event)">
+          <button class="lang-dropdown-toggle" >
             <span>🌐</span>
             <span>English</span>
             <span>▾</span>
           </button>
           <div class="lang-dropdown-menu">
-            <a onclick="switchLang('en')">English</a>
-            <a onclick="switchLang('cn')">简体中文</a>
-            <a onclick="switchLang('tw')" class="active">繁體中文</a>
+            <a data-lang="en">English</a>
+            <a data-lang="cn">简体中文</a>
+            <a data-lang="tw" class="active">繁體中文</a>
+          </div>
+        </div>
+        <!-- Wallet Connect -->
+        <div class="wallet-connect-wrap">
+          <button class="wallet-btn" id="wallet-btn" aria-label="Connect wallet">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+            連接錢包
+          </button>
+          <div class="wallet-connected" id="wallet-connected">
+            <div class="wallet-info">
+              <span class="wallet-address" id="wallet-address"></span>
+              <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
+            </div>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect wallet">斷開</button>
           </div>
         </div>
       </nav>
@@ -153,6 +167,19 @@
   </header>
 
   <main id="main-content">
+
+  <!-- Wallet Compliance Panel -->
+  <section class="section" id="wallet-compliance" style="padding-top:0;">
+    <div class="container">
+      <div class="compliance-panel" id="compliance-panel">
+        <h4>鏈上合規狀態</h4>
+        <div class="compliance-result" id="compliance-result">
+          <div id="compliance-status">檢查中…</div>
+          <div id="compliance-details" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Brand Hero -->
   <section class="brand-hero">
@@ -396,22 +423,22 @@ swap.execute(counterparty, amount);</code></pre>
       <div class="footer-bottom">
         <span>© 2026 FidesOrigin. MIT許可證。</span>
         <div class="lang-dropdown" id="langDropdownFooter">
-          <button class="lang-dropdown-toggle" onclick="toggleDropdown('langDropdownFooter', event)">
+          <button class="lang-dropdown-toggle" >
             <span>🌐</span>
             <span>English</span>
             <span>▾</span>
           </button>
           <div class="lang-dropdown-menu">
-            <a onclick="switchLang('en')">English</a>
-            <a onclick="switchLang('cn')">简体中文</a>
-            <a onclick="switchLang('tw')" class="active">繁體中文</a>
+            <a data-lang="en">English</a>
+            <a data-lang="cn">简体中文</a>
+            <a data-lang="tw" class="active">繁體中文</a>
           </div>
         </div>
       </div>
     </div>
   </footer>
   </main>
-  <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll to top">↑</button>
+  <button class="scroll-top" id="scrollTop"  aria-label="Scroll to top">↑</button>
 
   <script>
     // Scroll-to-top visibility
@@ -551,5 +578,6 @@ swap.execute(counterparty, amount);</code></pre>
     }
     init();
   </script>
+  <script src="/wallet-connect.js"></script>
 </body>
 </html>

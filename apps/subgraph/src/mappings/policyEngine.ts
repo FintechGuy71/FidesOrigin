@@ -76,41 +76,41 @@ export function handleWalletPolicySet(event: WalletPolicySet): void {
   let policyData = event.params.policy;
 
   // [High Fix #26] Ensure WalletPolicy entity is always persisted.
-  let policy = WalletPolicy.load(wallet);
-  if (!policy) {
-    policy = new WalletPolicy(wallet);
-    policy.wallet = wallet;
-    policy.version = 0;
+  let walletPolicy = WalletPolicy.load(wallet);
+  if (!walletPolicy) {
+    walletPolicy = new WalletPolicy(wallet);
+    walletPolicy.wallet = wallet;
+    walletPolicy.version = 0;
   }
 
   // [Medium Fix #29] Track WalletPolicy version for audit trail.
-  let previousVersion = policy.version || 0;
-  policy.version = previousVersion + 1;
+  let previousVersion = walletPolicy.version || 0;
+  walletPolicy.version = previousVersion + 1;
 
-  policy.maxTxValue = policyData.maxTxValue;
-  policy.maxTokenTxAmount = policyData.maxTokenTxAmount;
-  policy.dailyEthLimit = policyData.dailyEthLimit;
-  policy.dailyTokenLimit = policyData.dailyTokenLimit;
-  policy.blockContractCalls = policyData.blockContractCalls;
-  policy.blockUnknownTokens = policyData.blockUnknownTokens;
-  policy.requireWhitelist = policyData.requireWhitelist;
+  walletPolicy.maxTxValue = policyData.maxTxValue;
+  walletPolicy.maxTokenTxAmount = policyData.maxTokenTxAmount;
+  walletPolicy.dailyEthLimit = policyData.dailyEthLimit;
+  walletPolicy.dailyTokenLimit = policyData.dailyTokenLimit;
+  walletPolicy.blockContractCalls = policyData.blockContractCalls;
+  walletPolicy.blockUnknownTokens = policyData.blockUnknownTokens;
+  walletPolicy.requireWhitelist = policyData.requireWhitelist;
 
   let allowedDex: string[] = [];
   for (let i = 0; i < policyData.allowedDex.length; i++) {
     allowedDex.push(policyData.allowedDex[i].toHexString());
   }
-  policy.allowedDex = allowedDex;
+  walletPolicy.allowedDex = allowedDex;
 
   let blockedContracts: string[] = [];
   for (let i = 0; i < policyData.blockedContracts.length; i++) {
     blockedContracts.push(policyData.blockedContracts[i].toHexString());
   }
-  policy.blockedContracts = blockedContracts;
+  walletPolicy.blockedContracts = blockedContracts;
 
-  policy.updatedAt = event.block.timestamp;
-  policy.blockNumber = event.block.number;
-  policy.transactionHash = event.transaction.hash.toHexString();
-  policy.save();
+  walletPolicy.updatedAt = event.block.timestamp;
+  walletPolicy.blockNumber = event.block.number;
+  walletPolicy.transactionHash = event.transaction.hash.toHexString();
+  walletPolicy.save();
 
   log.info('WalletPolicySet: {} maxTxValue={} dailyEthLimit={}', [
     wallet,
