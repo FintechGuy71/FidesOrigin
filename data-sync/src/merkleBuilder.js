@@ -50,9 +50,12 @@ function buildMerkleTree(addresses) {
   while (currentLayer.length > 1) {
     const nextLayer = [];
     for (let i = 0; i < currentLayer.length; i += 2) {
-      // 排序后哈希（防止第二原像攻击）
+      // [Audit-Fix #17] Add 0x01 prefix for internal node domain separation.
+      // This prevents second-preimage attacks by ensuring internal node hashes
+      // can never collide with leaf hashes (which use 0x00 prefix).
       const [left, right] = [currentLayer[i], currentLayer[i + 1]];
-      const hash = ethers.keccak256(ethers.concat([left, right]));
+      const internalPrefix = ethers.toUtf8Bytes('\x01');
+      const hash = ethers.keccak256(ethers.concat([internalPrefix, left, right]));
       nextLayer.push(hash);
     }
     layers.push(nextLayer);

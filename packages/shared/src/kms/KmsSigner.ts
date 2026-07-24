@@ -62,12 +62,14 @@ export class KmsSigner extends AbstractSigner {
   private readonly _kmsClient: KMSClient;
   private readonly _keyId: string;
   private readonly _address: string;
+  private readonly _chainId?: number;
 
-  constructor(kmsClient: KMSClient, keyId: string, address: string, provider?: Provider) {
+  constructor(kmsClient: KMSClient, keyId: string, address: string, provider?: Provider, chainId?: number) {
     super(provider);
     this._kmsClient = kmsClient;
     this._keyId = keyId;
     this._address = address;
+    this._chainId = chainId;
   }
 
   async getAddress(): Promise<string> {
@@ -83,7 +85,8 @@ export class KmsSigner extends AbstractSigner {
     const populated = await this.populateTransaction(tx);
     const txObj = Transaction.from(populated);
     const unsignedHash = txObj.unsignedHash;
-    const flatSig = await this._kmsSign(unsignedHash);
+    const chainId = txObj.chainId ?? this._chainId;
+    const flatSig = await this._kmsSign(unsignedHash, chainId);
     const sig = Signature.from(flatSig);
     txObj.signature = sig;
     return txObj.serialized;
@@ -99,12 +102,12 @@ export class KmsSigner extends AbstractSigner {
   }
 
   connect(provider: Provider): KmsSigner {
-    return new KmsSigner(this._kmsClient, this._keyId, this._address, provider);
+    return new KmsSigner(this._kmsClient, this._keyId, this._address, provider, this._chainId);
   }
 
   // ─── Internal: AWS KMS Sign + DER→RSV conversion ─────────────────────────
 
-  private async _kmsSign(msgHash: string): Promise<string> {
+  private async _kmsSign(msgHash: string, chainId?: number): Promise<string> {
     const response: SignCommandOutput = await (this._kmsClient as any).send(
       new SignCommand({
         KeyId: this._keyId,
@@ -121,15 +124,16 @@ export class KmsSigner extends AbstractSigner {
     return this._derToRSV(
       Buffer.from(response.Signature),
       msgHash,
-      this._address
+      this._address,
+      chainId ?? this._chainId
     );
   }
 
   /**
    * Convert DER-encoded ECDSA signature to flat RSV hex string.
-   * Handles s-normalization (low-s) and v recovery.
+   * Handles s-normalization (low-s), EIP-155 chain-specific v, and recovery.
    */
-  private _derToRSV(derSig: Buffer, msgHash: string, address: string): string {
+  private _derToRSV(derSig: Buffer, msgHash: string, address: string, chainId?: number): string {
     let offset = 0;
 
     // SEQUENCE
@@ -171,8 +175,18 @@ export class KmsSigner extends AbstractSigner {
         ? '0x' + (secp256k1N - sVal).toString(16).padStart(64, '0')
         : sHex;
 
-    // Recovery ID brute-force
-    for (let v = 27; v <= 28; v++) {
+    // Recovery ID brute-force: EIP-155 first, then legacy fallback
+    const vCandidates: number[] = [];
+
+    if (chainId !== undefined && chainId !== 0) {
+      // EIP-155 chain-specific v values
+      const baseV = 35 + chainId * 2;
+      vCandidates.push(baseV, baseV + 1);
+    }
+    // Legacy v values (fallback for pre-EIP-155 or mainnet)
+    vCandidates.push(27, 28);
+
+    for (const v of vCandidates) {
       try {
         const pubKey = SigningKey.recoverPublicKey(msgHash, {
           r: rHex,
@@ -332,7 +346,15 @@ export async function createSigner(
 
     const kmsClient = new KMSClient({ region });
     const address = await KmsSigner.deriveAddress(kmsClient, keyId);
-    return new KmsSigner(kmsClient, keyId, address, provider);
+    // Derive chainId from provider if available
+    let chainId: number | undefined;
+    if (provider) {
+      try {
+        const network = await provider.getNetwork();
+        chainId = Number(network.chainId);
+      } catch { /* ignore */ }
+    }
+    return new KmsSigner(kmsClient, keyId, address, provider, chainId);
   }
 
   // ─── Local Mode ────────────────────────────────────────────────────────

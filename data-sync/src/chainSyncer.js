@@ -148,10 +148,18 @@ function parseDerSignature(derHex) {
     .toString('hex')
     .replace(/^0+/, '')
     .padStart(64, '0');
-  const sHex = Buffer.from(s)
+  let sHex = Buffer.from(s)
     .toString('hex')
     .replace(/^0+/, '')
     .padStart(64, '0');
+
+  // [P0-Fix] Enforce low-s normalization (BIP-62 / EIP-2) to prevent signature malleability
+  const secp256k1N = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141');
+  const halfN = secp256k1N / BigInt(2);
+  const sVal = BigInt('0x' + sHex);
+  if (sVal > halfN) {
+    sHex = (secp256k1N - sVal).toString(16).padStart(64, '0');
+  }
 
   return { r: '0x' + rHex, s: '0x' + sHex };
 }

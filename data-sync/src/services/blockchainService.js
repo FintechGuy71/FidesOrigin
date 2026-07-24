@@ -225,7 +225,9 @@ class BlockchainSyncService {
       const address = this._deriveAddressFromPublicKey(publicKey);
 
       // Create a minimal signer wrapper
-      this.wallet = new AWSKMSWalletAdapter(kmsClient, awsKmsKeyId, address, this.provider, awsRegion);
+      const network = await this.provider.getNetwork();
+      const chainId = Number(network.chainId);
+      this.wallet = new AWSKMSWalletAdapter(kmsClient, awsKmsKeyId, address, this.provider, awsRegion, chainId);
       logger.info('AWS KMS wallet initialized', { address: address.substring(0, 10) + '...' });
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
@@ -818,12 +820,13 @@ class BaseKMSAdapter {
  * Extends ethers.AbstractSigner for full ethers v6 compatibility.
  */
 class AWSKMSWalletAdapter extends ethers.AbstractSigner {
-  constructor(kmsClient, keyId, address, provider, region) {
+  constructor(kmsClient, keyId, address, provider, region, chainId) {
     super(provider);
     this._kmsClient = kmsClient;
     this._keyId = keyId;
     this._address = address;
     this._region = region;
+    this._chainId = chainId;
   }
 
   async getAddress() { return this._address; }
@@ -836,7 +839,8 @@ class AWSKMSWalletAdapter extends ethers.AbstractSigner {
   async signTransaction(tx) {
     const populated = await ethers.Transaction.from(tx).populate();
     const unsignedHash = populated.unsignedHash;
-    const flatSig = await this._kmsSign(unsignedHash);
+    const chainId = populated.chainId ?? this._chainId;
+    const flatSig = await this._kmsSign(unsignedHash, chainId);
     const sig = ethers.Signature.from({
       r: flatSig.slice(0, 66),
       s: '0x' + flatSig.slice(66, 130),
@@ -851,10 +855,10 @@ class AWSKMSWalletAdapter extends ethers.AbstractSigner {
   }
 
   connect(provider) {
-    return new AWSKMSWalletAdapter(this._kmsClient, this._keyId, this._address, provider, this._region);
+    return new AWSKMSWalletAdapter(this._kmsClient, this._keyId, this._address, provider, this._region, this._chainId);
   }
 
-  async _kmsSign(msgHash) {
+  async _kmsSign(msgHash, chainId) {
     const { SignCommand } = await import('@aws-sdk/client-kms');
     const response = await this._kmsClient.send(new SignCommand({
       KeyId: this._keyId,
@@ -867,10 +871,10 @@ class AWSKMSWalletAdapter extends ethers.AbstractSigner {
       throw new Error('KMS signing failed: no signature returned');
     }
 
-    return this._derToRSV(Buffer.from(response.Signature), msgHash, this._address);
+    return this._derToRSV(Buffer.from(response.Signature), msgHash, this._address, chainId ?? this._chainId);
   }
 
-  _derToRSV(derSig, msgHash, address) {
+  _derToRSV(derSig, msgHash, address, chainId) {
     let offset = 0;
     if (derSig[offset++] !== 0x30) throw new Error('Invalid DER signature: expected SEQUENCE');
     offset += this._readDerLength(derSig, offset);
@@ -896,7 +900,14 @@ class AWSKMSWalletAdapter extends ethers.AbstractSigner {
     const sVal = BigInt(sHex);
     const sNormalized = sVal > halfN ? '0x' + (BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141') - sVal).toString(16).padStart(64, '0') : sHex;
 
-    for (let v = 27; v <= 28; v++) {
+    const vCandidates = [];
+    if (chainId !== undefined && chainId !== 0) {
+      const baseV = 35 + chainId * 2;
+      vCandidates.push(baseV, baseV + 1);
+    }
+    vCandidates.push(27, 28);
+
+    for (const v of vCandidates) {
       try {
         const pubKey = ethers.SigningKey.recoverPublicKey(msgHash, { r: rHex, s: sNormalized, v });
         const recovered = '0x' + ethers.keccak256('0x' + pubKey.slice(4)).slice(26);
