@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文档 — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin 文档。快速开始、核心概念、架构概览。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/cn/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/cn/">首页</a>
+        <a href="/cn/docs/">文档</a>
+        <a href="/blog/">博客</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:120px;max-width:800px;">
+    <h1 style="font-size:2.5rem;font-weight:600;margin-bottom:1rem;">文档</h1>
+    <p style="color:var(--text-secondary);font-size:1.125rem;margin-bottom:3rem;">将链上合规集成到您的协议所需的一切。</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:3rem;">
+      <a href="/cn/docs/api.html" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">⚡</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">API 参考</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">地址风险检查、规则管理和风险评估的 REST API 端点。</p>
+      </a>
+      <a href="/cn/docs/sdk.html" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">📦</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">SDK</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">用于钱包集成、地址筛选和事件订阅的 JavaScript SDK。</p>
+      </a>
+      <a href="/blog/" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">📝</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">博客</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">深入探讨链上合规、风险引擎和 DeFi 监管。</p>
+      </a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">💻</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">GitHub</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">源代码、问题和贡献。</p>
+      </a>
+    </div>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">快速开始</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">1. 检查地址</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>curl https://api.fidesorigin.com/api/v1/addresses/0x... \
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">2. 安装 SDK</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>npm install @fidesorigin/sdk</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">3. Solidity 集成</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
+
+contract MyToken is CompliantStableCoin {
+    constructor() CompliantStableCoin("MyToken", "MTK") {}
+}</code></pre>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">核心概念</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">链上风险执行</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">风险检查在交易内部执行，而非通过外部 API 调用。确定性、零延迟、不可绕过。</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">风险等级</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">五个级别：UNKNOWN、LOW、MEDIUM、HIGH、CRITICAL。每个级别触发不同的执行操作。</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">策略引擎</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">每个资产可配置规则：最大交易金额、日限额、制裁地址拦截、KYC 要求。</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">隔离金库</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">可疑转账被托管在隔离金库中，直到人工审核或满足自动化条件。</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom:4rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">架构概览</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🔗</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">RiskRegistryV2</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">链上存储 20,000+ 风险档案、制裁名单和实体标签。</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">⚙️</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">ComplianceEngine</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">策略评估、转账钩子、隔离管理。</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🪙</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">CompliantStableCoin</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">内置合规钩子的 ERC20 示例。继承用于您自己的代币。</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">📊</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">Subgraph</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">索引链上事件，用于实时查询和分析。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="border-top:1px solid var(--border);padding:40px 0;">
+    <div class="container">
+      <p style="text-align:center;color:var(--text-muted);font-size:0.8125rem;">
+        © 2026 FidesOrigin. <a href="/cn/privacy.html" style="color:var(--accent);">隐私政策</a> | <a href="/cn/terms.html" style="color:var(--accent);">服务条款</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

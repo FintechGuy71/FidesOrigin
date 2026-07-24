@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ドキュメント — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin ドキュメント。クイックスタート、核心概念、アーキテクチャ概要。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/jp/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/jp/">ホーム</a>
+        <a href="/jp/docs/">ドキュメント</a>
+        <a href="/blog/">ブログ</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:120px;max-width:800px;">
+    <h1 style="font-size:2.5rem;font-weight:600;margin-bottom:1rem;">ドキュメント</h1>
+    <p style="color:var(--text-secondary);font-size:1.125rem;margin-bottom:3rem;">プロトコルにオンチェーン・コンプライアンスを統合するために必要なすべて。</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:3rem;">
+      <a href="/jp/docs/api.html" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">⚡</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">API リファレンス</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">住所リスクチェック、ルール管理、リスク評価の REST API エンドポイント。</p>
+      </a>
+      <a href="/jp/docs/sdk.html" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">📦</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">SDK</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">ウォレット統合、住所スクリーニング、イベント購読用 JavaScript SDK。</p>
+      </a>
+      <a href="/blog/" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">📝</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">ブログ</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">オンチェーン・コンプライアンス、リスクエンジン、DeFi 規制の深掘り。</p>
+      </a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">💻</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">GitHub</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">ソースコード、イシュー、コントリビューション。</p>
+      </a>
+    </div>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">クイックスタート</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">1. 住所をチェック</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>curl https://api.fidesorigin.com/api/v1/addresses/0x... \
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">2. SDK をインストール</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>npm install @fidesorigin/sdk</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">3. Solidity 統合</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
+
+contract MyToken is CompliantStableCoin {
+    constructor() CompliantStableCoin("MyToken", "MTK") {}
+}</code></pre>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">核心概念</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">オンチェーン・リスク・エンフォースメント</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">リスクチェックはトランザクション内で実行され、外部 API 呼び出しではありません。決定論的、ゼロレイテンシ、回避不可能。</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">リスクティア</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">5 レベル：UNKNOWN、LOW、MEDIUM、HIGH、CRITICAL。各レベルは異なるエンフォースメント・アクションをトリガーします。</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">ポリシー・エンジン</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">アセットごとに設定可能なルール：最大取引金額、日次制限、制裁住所ブロック、KYC 要件。</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">隔離金庫</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">怪しい転送は、手動レビューまたは自動化条件が満たされるまで、隔離金庫に保持されます。</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom:4rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">アーキテクチャ概要</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🔗</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">RiskRegistryV2</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">20,000+ リスクプロファイル、制裁リスト、エンティティタグのオンチェーン・ストレージ。</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">⚙️</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">ComplianceEngine</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">ポリシー評価、転送フック、隔離管理。</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🪙</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">CompliantStableCoin</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">組み込みコンプライアンス・フックを持つ ERC20 の例。独自のトークンに継承します。</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">📊</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">Subgraph</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">リアルタイム・クエリと分析のためのオンチェーン・イベントのインデックス。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="border-top:1px solid var(--border);padding:40px 0;">
+    <div class="container">
+      <p style="text-align:center;color:var(--text-muted);font-size:0.8125rem;">
+        © 2026 FidesOrigin. <a href="/jp/privacy.html" style="color:var(--accent);">プライバシーポリシー</a> | <a href="/jp/terms.html" style="color:var(--accent);">利用規約</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

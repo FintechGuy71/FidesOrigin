@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <<title>SDK — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin JavaScript SDK. Install, configure, and integrate on-chain compliance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/jp/">ホーム</a>
+        <a href="/jp/docs/">ドキュメント</a>
+        <a href="/jp/docs/sdk.html">SDK</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:120px;max-width:800px;">
+    <h1 style="font-size:2.5rem;font-weight:600;margin-bottom:1rem;">SDK</h1>
+    <p style="color:var(--text-secondary);font-size:1.125rem;margin-bottom:3rem;">JavaScript SDK for wallet integration and on-chain compliance.</p>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Installation</h2>
+      <div style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin-bottom:1rem;">
+        <code>npm install @fidesorigin/sdk</code>
+      </div>
+      <div style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);">
+        <code>yarn add @fidesorigin/sdk</code>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Quick Start</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">Initialize SDK</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>import { FidesOrigin } from '@fidesorigin/sdk';
+
+const fides = new FidesOrigin({
+  apiKey: 'YOUR_API_KEY',
+  network: 'sepolia' // or 'mainnet', 'base'
+});</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">Check Address Risk</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>const result = await fides.evaluateAddress('0x...');
+
+console.log(result.riskTier); // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+console.log(result.isSanctioned); // true or false</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">Subscribe to Events</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>fides.on('RiskDetected', (event) => {
+  console.log('Risk detected:', event.address, event.riskTier);
+});
+
+fides.on('SanctionAdded', (event) => {
+  console.log('Sanction added:', event.address);
+});</code></pre>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Core API</h2>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left;padding:12px;color:var(--text);font-weight:600;">Method</th>
+              <th style="text-align:left;padding:12px;color:var(--text);font-weight:600;">Returns</th>
+              <th style="text-align:left;padding:12px;color:var(--text);font-weight:600;">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);font-size:0.75rem;">connect(provider)</td>
+              <td style="padding:12px;color:var(--text-secondary);">Promise&lt;void&gt;</td>
+              <td style="padding:12px;color:var(--text-secondary);">Connect to Web3 provider</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);font-size:0.75rem;">evaluateAddress(addr)</td>
+              <td style="padding:12px;color:var(--text-secondary);">Promise&lt;RiskProfile&gt;</td>
+              <td style="padding:12px;color:var(--text-secondary);">Get risk profile for address</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);font-size:0.75rem;">evaluateTx(tx)</td>
+              <td style="padding:12px;color:var(--text-secondary);">Promise&lt;TxResult&gt;</td>
+              <td style="padding:12px;color:var(--text-secondary);">Pre-screen transaction</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);font-size:0.75rem;">subscribe(event)</td>
+              <td style="padding:12px;color:var(--text-secondary);">EventEmitter</td>
+              <td style="padding:12px;color:var(--text-secondary);">Subscribe to on-chain events</td>
+            </tr>
+            <tr>
+              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);font-size:0.75rem;">disconnect()</td>
+              <td style="padding:12px;color:var(--text-secondary);">void</td>
+              <td style="padding:12px;color:var(--text-secondary);">Clean up connections</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Solidity Integration</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Import FidesOrigin contracts directly into your Solidity project:</p>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@fidesorigin/contracts/CompliantStableCoin.sol";
+
+contract MyStableCoin is CompliantStableCoin {
+    constructor()
+        CompliantStableCoin("MyStableCoin", "MSC")
+    {
+        // Configure policy
+        policy = IssuerPolicy({
+            maxTxAmount: 1_000_000 * 10**6,
+            dailyLimit: 10_000_000 * 10**6,
+            allowMediumRisk: true,
+            allowHighRisk: false,
+            blockMixer: true,
+            requireDestinationKYC: true,
+            cooldownPeriod: 24 hours
+        });
+    }
+}</code></pre>
+      </div>
+    </section>
+
+    <section style="margin-bottom:4rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Types</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>interface RiskProfile {
+  address: string;
+  riskScore: number;
+  riskTier: 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  isSanctioned: boolean;
+  tags: string[];
+  entityName: string;
+  lastUpdated: string;
+}
+
+interface TxResult {
+  allowed: boolean;
+  riskScore: number;
+  riskTier: string;
+  quarantineRequired: boolean;
+  reason: string | null;
+}</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="border-top:1px solid var(--border);padding:40px 0;">
+    <div class="container">
+      <p style="text-align:center;color:var(--text-muted);font-size:0.8125rem;">
+        © 2026 FidesOrigin. <a href="/jp/privacy.html" style="color:var(--accent);">Privacy Policy</a> | <a href="/jp/terms.html" style="color:var(--accent);">Terms of Service</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
