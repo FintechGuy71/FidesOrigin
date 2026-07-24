@@ -3,121 +3,254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
   <title>Privacy Policy — FidesOrigin</title>
   <meta name="description" content="FidesOrigin privacy policy. How we handle data, cookies, and user information.">
+  <meta property="og:title" content="Privacy Policy — FidesOrigin">
+  <meta property="og:description" content="FidesOrigin privacy policy.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/privacy.html">
+  <link rel="canonical" href="https://fidesorigin.com/privacy.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/privacy.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/privacy.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/privacy.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/privacy.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
+  <style nonce="2726c7f26c">
+    .legal-page { padding: 120px 0 80px; }
+    .legal-page .container { max-width: 800px; }
+    .legal-page h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+    .legal-page .last-updated { color: var(--text-secondary); margin-bottom: 3rem; font-size: 0.9rem; }
+    .legal-section { margin-bottom: 2.5rem; }
+    .legal-section h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+    .legal-section p, .legal-section li { color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.75rem; }
+    .legal-section ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+    .legal-section a { color: var(--accent); transition: opacity 0.2s; }
+    .legal-section a:hover { opacity: 0.8; text-decoration: underline; }
+    .legal-section strong { color: var(--text); font-weight: 600; }
+    @media (max-width: 768px) {
+      .legal-page { padding: 100px 0 60px; }
+    }
+  </style>
 </head>
 <body>
-  <nav class="nav">
+
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
         FidesOrigin
       </a>
       <div class="nav-left">
-        <a href="/">Home</a>
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#security">Security</a>
+        <a href="/#developers">Docs</a>
       </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="Language">
+            EN
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/privacy.html">English</a>
+            <a href="/cn/privacy.html">简体中文</a>
+            <a href="/tw/privacy.html">繁體中文</a>
+            <a href="/jp/privacy.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/#contact" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </div>
   </nav>
 
-  <main class="container" style="padding-top:120px;max-width:720px;">
-    <h1 style="font-size:2rem;font-weight:600;margin-bottom:2rem;">Privacy Policy</h1>
-    <p style="color:var(--text-secondary);margin-bottom:2rem;">Last updated: July 2026</p>
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="Close menu">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="/#features">Features</a>
+    <a href="/#how-it-works">How It Works</a>
+    <a href="/#security">Security</a>
+    <a href="/#developers">Docs</a>
+    <div class="lang-row">
+      <a href="/privacy.html">EN</a>
+      <a href="/cn/privacy.html">CN</a>
+      <a href="/tw/privacy.html">TW</a>
+      <a href="/jp/privacy.html">JP</a>
+    </div>
+    <a href="/#contact" class="nav-cta" style="margin-top:16px;">Get Started</a>
+  </div>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">1. Overview</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        FidesOrigin is an on-chain compliance protocol. By design, we minimize data collection. 
-        This policy explains what limited data we handle and how we protect it.
-      </p>
-    </section>
+  <!-- Main Content -->
+  <main class="legal-page">
+    <div class="container">
+      <h1>Privacy Policy</h1>
+      <p class="last-updated">Last updated: July 2026</p>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">2. Information We Collect</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        <strong>On-chain data:</strong> All risk assessments and compliance checks happen on-chain. 
-        Transaction data is public by nature of blockchain technology and is not collected by us.
-      </p>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        <strong>Website analytics:</strong> We use minimal analytics to understand website usage. 
-        This may include IP address (anonymized), browser type, and pages visited.
-      </p>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        <strong>Wallet connections:</strong> When you connect a wallet, we only read your public address. 
-        We never request transaction signing or access to private keys.
-      </p>
-    </section>
+      <section class="legal-section">
+        <h2>1. Overview</h2>
+        <p>FidesOrigin is an on-chain compliance protocol. By design, we minimize data collection. This policy explains what limited data we handle and how we protect it.</p>
+      </section>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">3. How We Use Information</h2>
-      <ul style="color:var(--text-secondary);line-height:1.7;padding-left:1.5rem;">
-        <li>To provide and improve our services</li>
-        <li>To respond to support requests</li>
-        <li>To analyze website usage patterns</li>
-        <li>To comply with legal obligations</li>
-      </ul>
-    </section>
+      <section class="legal-section">
+        <h2>2. Information We Collect</h2>
+        <p><strong>On-chain data:</strong> All risk assessments and compliance checks happen on-chain. Transaction data is public by nature of blockchain technology and is not collected by us.</p>
+        <p><strong>Website analytics:</strong> We use minimal analytics to understand website usage. This may include IP address (anonymized), browser type, and pages visited.</p>
+        <p><strong>Wallet connections:</strong> When you connect a wallet, we only read your public address. We never request transaction signing or access to private keys.</p>
+      </section>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">4. Cookies</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        We use essential cookies for website functionality. We do not use tracking cookies 
-        for advertising purposes. You can disable cookies in your browser settings.
-      </p>
-    </section>
+      <section class="legal-section">
+        <h2>3. How We Use Information</h2>
+        <ul>
+          <li>To provide and improve our services</li>
+          <li>To respond to support requests</li>
+          <li>To analyze website usage patterns</li>
+          <li>To comply with legal obligations</li>
+        </ul>
+      </section>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">5. Third-Party Services</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        We use the following third-party services:
-      </p>
-      <ul style="color:var(--text-secondary);line-height:1.7;padding-left:1.5rem;">
-        <li><strong>Vercel:</strong> Website hosting</li>
-        <li><strong>The Graph:</strong> Blockchain data indexing</li>
-        <li><strong>RPC Providers:</strong> Blockchain node access</li>
-      </ul>
-    </section>
+      <section class="legal-section">
+        <h2>4. Cookies</h2>
+        <p>We use essential cookies for website functionality. We do not use tracking cookies for advertising purposes. You can disable cookies in your browser settings.</p>
+      </section>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">6. Data Security</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        We implement industry-standard security measures. However, no system is completely secure. 
-        Users are responsible for securing their own wallet private keys.
-      </p>
-    </section>
+      <section class="legal-section">
+        <h2>5. Third-Party Services</h2>
+        <p>We use the following third-party services:</p>
+        <ul>
+          <li><strong>Vercel:</strong> Website hosting</li>
+          <li><strong>The Graph:</strong> Blockchain data indexing</li>
+          <li><strong>RPC Providers:</strong> Blockchain node access</li>
+        </ul>
+      </section>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">7. Your Rights</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        Depending on your jurisdiction, you may have rights to access, correct, or delete your personal data. 
-        Contact us at <a href="mailto:privacy@fidesorigin.com" style="color:var(--accent);">privacy@fidesorigin.com</a>.
-      </p>
-    </section>
+      <section class="legal-section">
+        <h2>6. Data Security</h2>
+        <p>We implement industry-standard security measures. However, no system is completely secure. Users are responsible for securing their own wallet private keys.</p>
+      </section>
 
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">8. Changes to This Policy</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">
-        We may update this policy from time to time. Changes will be posted on this page with an updated date.
-      </p>
-    </section>
+      <section class="legal-section">
+        <h2>7. Your Rights</h2>
+        <p>Depending on your jurisdiction, you may have rights to access, correct, or delete your personal data. Contact us at <a href="mailto:privacy@fidesorigin.com">privacy@fidesorigin.com</a>.</p>
+      </section>
 
-    <section style="margin-bottom:4rem;">
-      <h2 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem;">9. Contact</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;">
-        For privacy-related questions, contact us at <a href="mailto:privacy@fidesorigin.com" style="color:var(--accent);">privacy@fidesorigin.com</a>.
-      </p>
-    </section>
+      <section class="legal-section">
+        <h2>8. Changes to This Policy</h2>
+        <p>We may update this policy from time to time. Changes will be posted on this page with an updated date.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>9. Contact</h2>
+        <p>For privacy-related questions, contact us at <a href="mailto:privacy@fidesorigin.com">privacy@fidesorigin.com</a>.</p>
+      </section>
+    </div>
   </main>
 
-  <footer class="footer" style="border-top:1px solid var(--border);padding:40px 0;">
+  <!-- Footer -->
+  <footer class="footer">
     <div class="container">
-      <p style="text-align:center;color:var(--text-muted);font-size:0.8125rem;">
-        © 2026 FidesOrigin. <a href="/privacy.html" style="color:var(--accent);">Privacy Policy</a> | <a href="/terms.html" style="color:var(--accent);">Terms of Service</a>
-      </p>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>Programmable on-chain compliance for the future of finance.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/#features">Features</a>
+          <a href="/#how-it-works">How It Works</a>
+          <a href="/#security">Security</a>
+          <a href="/admin/">Dashboard</a>
+        </div>
+        <div class="footer-col">
+          <h4>Developers</h4>
+          <a href="/docs/" target="_blank" rel="noopener">Documentation</a>
+          <a href="/docs/api.html" target="_blank" rel="noopener">API Reference</a>
+          <a href="/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="mailto:contact@fidesorigin.com">Contact</a>
+          <a href="/blog/" target="_blank" rel="noopener">Blog</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>Built with &hearts; for the on-chain financial world.</p>
+      </div>
     </div>
   </footer>
+
+  <script nonce="2726c7f26c">
+    // Mobile Menu
+    function toggleMobileMenu() {
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var mobileBtn = document.querySelector('.nav-mobile-btn');
+      if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu);
+      document.querySelectorAll('#mobileMenu a').forEach(function(link) {
+        link.addEventListener('click', toggleMobileMenu);
+      });
+    });
+
+    // Language Menu
+    function toggleLangMenu(e) {
+      e.stopPropagation();
+      var menu = document.getElementById('langMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.addEventListener('click', toggleLangMenu);
+    });
+    document.addEventListener('click', function() {
+      var menu = document.getElementById('langMenu');
+      if (menu) menu.style.display = 'none';
+    });
+
+    // Scroll-to-top
+    (function() {
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '&uarr;';
+      btn.setAttribute('aria-label', 'Scroll to top');
+      document.body.appendChild(btn);
+      window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      });
+      btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+  </script>
 </body>
 </html>
