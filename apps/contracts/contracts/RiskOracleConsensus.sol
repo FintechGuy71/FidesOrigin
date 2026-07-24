@@ -10,6 +10,20 @@ import "./RiskOracleStorage.sol";
  */
 abstract contract RiskOracleConsensus is RiskOracleStorage {
 
+    // H-04 FIX: 手动实现重入保护（避免引入新的继承链）
+    uint256 private _reentrancyStatus;
+
+    modifier nonReentrant() {
+        require(_reentrancyStatus != 2, "ReentrancyGuard: reentrant call");
+        _reentrancyStatus = 2;
+        _;
+        _reentrancyStatus = 1;
+    }
+
+    constructor() {
+        _reentrancyStatus = 1;
+    }
+
     /// @notice M-10 FIX: 最大授权预言机数量，防止 _resetConfirmations 等遍历操作的 gas 膨胀
     uint256 public constant MAX_ORACLES = 50;
 

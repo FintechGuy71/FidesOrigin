@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin documentation. Quick start, core concepts, architecture overview.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/">Home</a>
+        <a href="/docs/">Docs</a>
+        <a href="/blog/">Blog</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:120px;max-width:800px;">
+    <h1 style="font-size:2.5rem;font-weight:600;margin-bottom:1rem;">Documentation</h1>
+    <p style="color:var(--text-secondary);font-size:1.125rem;margin-bottom:3rem;">Everything you need to integrate on-chain compliance into your protocol.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:3rem;">
+      <a href="/docs/api.html" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">⚡</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">API Reference</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">REST API endpoints for address risk checks, rules management, and risk assessment.</p>
+      </a>
+      <a href="/docs/sdk.html" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">📦</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">SDK</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">JavaScript SDK for wallet integration, address screening, and event subscriptions.</p>
+      </a>
+      <a href="/blog/" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">📝</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">Blog</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">Deep dives into on-chain compliance, risk engines, and DeFi regulation.</p>
+      </a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;transition:all 0.2s;">
+        <div style="font-size:1.5rem;margin-bottom:12px;">💻</div>
+        <h3 style="font-size:1.125rem;font-weight:600;margin-bottom:8px;color:var(--text);">GitHub</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">Source code, issues, and contributions.</p>
+      </a>
+    </div>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Quick Start</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">1. Check an Address</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>curl https://api.fidesorigin.com/api/v1/addresses/0x... \
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">2. Install SDK</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>npm install @fidesorigin/sdk</code></pre>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent);">3. Integrate in Solidity</h3>
+        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin:0;"><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
+
+contract MyToken is CompliantStableCoin {
+    constructor() CompliantStableCoin("MyToken", "MTK") {}
+}</code></pre>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Core Concepts</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">On-Chain Risk Enforcement</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">Risk checks execute inside the transaction, not via external API calls. Deterministic, zero-latency, un-bypassable.</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">Risk Tiers</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">Five levels: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. Each tier triggers different enforcement actions.</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">Policy Engine</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">Configurable rules per asset: max transaction amount, daily limits, sanctioned address blocking, KYC requirements.</p>
+        </div>
+        <div style="padding:20px;">
+          <h4 style="font-weight:600;margin-bottom:8px;color:var(--text);">Quarantine Vault</h4>
+          <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;">Suspicious transfers are held in escrow until manual review or automated criteria are met.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom:4rem;">
+      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Architecture Overview</h2>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🔗</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">RiskRegistryV2</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">On-chain storage for 20,000+ risk profiles, sanctions lists, and entity tags.</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">⚙️</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">ComplianceEngine</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">Policy evaluation, transfer hooks, and quarantine management.</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">🪙</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">CompliantStableCoin</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">Example ERC20 with built-in compliance hooks. Inherit for your own token.</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">📊</div>
+            <div>
+              <h4 style="font-weight:600;color:var(--text);">Subgraph</h4>
+              <p style="color:var(--text-secondary);font-size:0.8125rem;">Indexed on-chain events for real-time queries and analytics.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="border-top:1px solid var(--border);padding:40px 0;">
+    <div class="container">
+      <p style="text-align:center;color:var(--text-muted);font-size:0.8125rem;">
+        © 2026 FidesOrigin. <a href="/privacy.html" style="color:var(--accent);">Privacy Policy</a> | <a href="/terms.html" style="color:var(--accent);">Terms of Service</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
