@@ -127,18 +127,20 @@ class BlockscoutService:
         if self._circuit_open:
             raise CircuitBreakerOpenException()
 
-    def _record_success(self):
+    async def _record_success(self):
         """记录成功,重置失败计数并持久化"""
         if self._failure_count > 0:
             self._failure_count = 0
             if self._circuit_open:
                 self._circuit_open = False
                 logger.info("blockscout_circuit_closed")
-            # [M-4 Fix] 异步保存状态
-            import asyncio
-            asyncio.create_task(self._save_circuit_state())
+            # [P0-4 Fix] 使用 await 替代 asyncio.create_task() 避免同步上下文中调用竞态
+            try:
+                await self._save_circuit_state()
+            except Exception as e:
+                logger.warning("blockscout_circuit_save_failed", error=str(e))
 
-    def _record_failure(self):
+    async def _record_failure(self):
         """记录失败,检查断路器并持久化"""
         self._failure_count += 1
         if self._failure_count >= self._circuit_threshold:
@@ -148,9 +150,11 @@ class BlockscoutService:
                 failure_count=self._failure_count,
                 threshold=self._circuit_threshold
             )
-        # [M-4 Fix] 异步保存状态
-        import asyncio
-        asyncio.create_task(self._save_circuit_state())
+        # [P0-4 Fix] 使用 await 替代 asyncio.create_task() 避免同步上下文中调用竞态
+        try:
+            await self._save_circuit_state()
+        except Exception as e:
+            logger.warning("blockscout_circuit_save_failed", error=str(e))
 
     async def _request(
         self,
@@ -178,10 +182,10 @@ class BlockscoutService:
                     json=json_data
                 )
                 response.raise_for_status()
-                self._record_success()
+                await self._record_success()
                 return response.json()
             except httpx.HTTPStatusError as e:
-                self._record_failure()
+                await self._record_failure()
                 logger.error(
                     "blockscout_http_error",
                     status_code=e.response.status_code,
@@ -193,11 +197,11 @@ class BlockscoutService:
                     status_code=e.response.status_code
                 )
             except httpx.RequestError as e:
-                self._record_failure()
+                await self._record_failure()
                 logger.error("blockscout_request_error", error=str(e), url=url)
                 raise BlockscoutAPIException(f"Request failed: {str(e)}")
             except Exception as e:
-                self._record_failure()
+                await self._record_failure()
                 logger.error("blockscout_unexpected_error", error=str(e), url=url)
                 raise BlockscoutAPIException(f"Unexpected error: {str(e)}")
 

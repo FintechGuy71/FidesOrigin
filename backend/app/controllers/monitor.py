@@ -1,6 +1,6 @@
 """
-FidesOrigin 监控 Controller（重构版）
-API 层：WebSocket 实时监控 + 统计信息
+FidesOrigin 监控 Controller(重构版)
+API 层:WebSocket 实时监控 + 统计信息
 """
 import asyncio
 import json
@@ -37,7 +37,7 @@ async def _validate_origin(websocket: WebSocket) -> bool:
     """[HIGH Fix #9] 验证 WebSocket 请求的 Origin header"""
     origin = websocket.headers.get("origin", "")
     if not origin:
-        # 非浏览器客户端（如 curl）可能不携带 Origin，允许无 Origin 连接但记录日志
+        # 非浏览器客户端(如 curl)可能不携带 Origin,允许无 Origin 连接但记录日志
         logger.debug("websocket_no_origin_header")
         return True
     return origin in _ALLOWED_WS_ORIGINS
@@ -46,24 +46,24 @@ async def _validate_origin(websocket: WebSocket) -> bool:
 @router.websocket("/stream")
 async def monitor_stream(
     websocket: WebSocket,
-    addresses: str = Query(default="", description="监控的地址列表，逗号分隔"),
+    addresses: str = Query(default="", description="监控的地址列表,逗号分隔"),
     min_risk_score: float = Query(default=0.0, ge=0, le=100, description="最小风险评分"),
     db: AsyncSession = Depends(get_db),
     manager: WebSocketManager = Depends(get_ws_manager)
 ):
     """
     WebSocket 实时监控流
-    
-    连接参数：
-    - **addresses**: 要监控的地址列表，逗号分隔
+
+    连接参数:
+    - **addresses**: 要监控的地址列表,逗号分隔
     - **min_risk_score**: 只推送风险评分高于此值的交易
-    
-    认证流程（[CRITICAL Fix #1]）：
-    1. 客户端先建立 WebSocket 连接（不传递 api_key）
+
+    认证流程([CRITICAL Fix #1]):
+    1. 客户端先建立 WebSocket 连接(不传递 api_key)
     2. 连接后发送 {"type": "auth", "api_key": "<your-key>"} 进行认证
     3. 认证成功后开始推送数据
-    
-    消息格式：
+
+    消息格式:
     ```json
     {
         "type": "transaction|risk_alert|system",
@@ -76,14 +76,14 @@ async def monitor_stream(
     if not await _validate_origin(websocket):
         await websocket.close(code=4003, reason="Origin not allowed")
         return
-    
+
     # 解析地址列表
     address_list = [addr.strip().lower() for addr in addresses.split(",") if addr.strip()]
-    
+
     if not address_list:
         await websocket.close(code=4000, reason="No addresses provided")
         return
-    
+
     # 验证地址格式
     for addr in address_list:
         try:
@@ -91,21 +91,21 @@ async def monitor_stream(
         except Exception:
             await websocket.close(code=4001, reason="Invalid address format")
             return
-    
+
     # [CRITICAL Fix #1] WebSocket 认证改为连接后通过消息发送
-    # 不再从 query_params 读取 api_key（避免 URL 明文传输）
-    # 先接受连接，然后等待客户端发送 auth 消息
+    # 不再从 query_params 读取 api_key(避免 URL 明文传输)
+    # 先接受连接,然后等待客户端发送 auth 消息
     await websocket.accept()
-    
+
     try:
-        # 等待认证消息（超时 10 秒）
+        # 等待认证消息(超时 10 秒)
         auth_data = await asyncio.wait_for(websocket.receive_text(), timeout=10.0)
         auth_msg = json.loads(auth_data)
-        
+
         if auth_msg.get("type") != "auth" or not auth_msg.get("api_key"):
             await websocket.close(code=4001, reason="Authentication required: send {\"type\": \"auth\", \"api_key\": \"...\"}")
             return
-        
+
         api_key = auth_msg["api_key"]
     except asyncio.TimeoutError:
         await websocket.close(code=4001, reason="Authentication timeout")
@@ -113,39 +113,41 @@ async def monitor_stream(
     except (json.JSONDecodeError, KeyError):
         await websocket.close(code=4001, reason="Invalid auth message")
         return
-    
+
     # [Audit Fix #9] 验证 API Key
     from app.core.security import verify_api_key
     if not await verify_api_key(api_key, db):
-        # [Audit Fix #9] 增加随机延迟到 100-500ms，防止时序攻击
-        await asyncio.sleep(secrets.randbelow(400) / 1000 + 0.1)
-        await websocket.close(code=4001, reason="Invalid API key")
-        # [Audit Fix #9] 安全清除 API Key 内存引用
-        auth_msg.clear() if hasattr(auth_msg, 'clear') else None
+        # [P0-2 Fix] 安全清除 API Key 内存引用 — 必须在 return 之前执行
+        if auth_msg and hasattr(auth_msg, 'clear'):
+            auth_msg.clear()
         auth_data = ""
         api_key = ""
         del auth_msg, auth_data, api_key
+        # [Audit Fix #9] 增加随机延迟到 100-500ms，防止时序攻击
+        await asyncio.sleep(secrets.randbelow(400) / 1000 + 0.1)
+        await websocket.close(code=4001, reason="Invalid API key")
         return
-    
-    # [Audit Fix #9] 验证通过后立即清除 API Key 内存引用
-    auth_msg.clear() if hasattr(auth_msg, 'clear') else None
+
+    # [P0-2 Fix] 验证通过后立即清除 API Key 内存引用
+    if auth_msg and hasattr(auth_msg, 'clear'):
+        auth_msg.clear()
     auth_data = ""
     api_key = ""
     del auth_msg, auth_data, api_key
-    
+
     # 生成客户端 ID - 使用加密安全的随机数
     client_id = f"ws_{secrets.token_urlsafe(16)}"
-    
+
     subscription = MonitorSubscription(
         addresses=address_list,
         min_risk_score=min_risk_score
     )
-    
+
     # 连接管理
     connected = await manager.connect(websocket, client_id, subscription)
     if not connected:
         return
-    
+
     try:
         # 发送连接成功消息
         await manager.send_message(client_id, MonitorStreamMessage(
@@ -157,13 +159,13 @@ async def monitor_stream(
                 "min_risk_score": min_risk_score
             }
         ))
-        
+
         # 发送初始地址风险信息
         addr_repo = get_container().get_address_repository(db)
-        
+
         for address in address_list:
             addr_risk = await addr_repo.get_by_address(address)
-            
+
             if addr_risk:
                 await manager.send_message(client_id, MonitorStreamMessage(
                     type="risk_alert",
@@ -175,31 +177,31 @@ async def monitor_stream(
                         "status": addr_risk.status.value
                     }
                 ))
-        
+
         # 保持连接并处理客户端消息
         while True:
             try:
-                # 等待客户端消息（心跳或配置更新）
+                # 等待客户端消息(心跳或配置更新)
                 data = await asyncio.wait_for(
                     websocket.receive_text(),
                     timeout=settings.MONITOR_WS_PING_INTERVAL
                 )
-                
+
                 try:
                     message = json.loads(data)
                     msg_type = message.get("type")
-                    
+
                     if msg_type == "ping":
                         await manager.send_message(client_id, MonitorStreamMessage(
                             type="system",
                             data={"event": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
                         ))
-                    
+
                     elif msg_type == "update_subscription":
                         # 更新订阅配置
                         new_addresses = message.get("addresses", [])
                         new_min_score = message.get("min_risk_score", min_risk_score)
-                        
+
                         # 重新建立连接
                         manager.disconnect(client_id)
                         new_subscription = MonitorSubscription(
@@ -207,7 +209,7 @@ async def monitor_stream(
                             min_risk_score=new_min_score
                         )
                         await manager.connect(websocket, client_id, new_subscription)
-                        
+
                         await manager.send_message(client_id, MonitorStreamMessage(
                             type="system",
                             data={
@@ -215,27 +217,27 @@ async def monitor_stream(
                                 "addresses": new_addresses
                             }
                         ))
-                    
+
                     elif msg_type == "get_stats":
                         stats = manager.get_stats()
                         await manager.send_message(client_id, MonitorStreamMessage(
                             type="system",
                             data={"event": "stats", "stats": stats}
                         ))
-                
+
                 except json.JSONDecodeError:
                     await manager.send_message(client_id, MonitorStreamMessage(
                         type="system",
                         data={"event": "error", "message": "Invalid JSON"}
                     ))
-            
+
             except asyncio.TimeoutError:
                 # 发送心跳
                 try:
                     await manager.send_heartbeat(client_id)
                 except Exception:
                     break
-    
+
     except WebSocketDisconnect:
         logger.info("websocket_client_disconnected", client_id=client_id)
     except Exception as e:

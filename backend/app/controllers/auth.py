@@ -6,6 +6,8 @@ import os
 import secrets as _secrets
 from typing import Optional
 
+import bcrypt
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
@@ -26,6 +28,40 @@ settings = get_settings()
 router = APIRouter(prefix="/api/v1/auth", tags=["认证"])
 
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+# [P0-3 Fix] Admin 密码哈希缓存（避免每次重新计算）
+_admin_password_hash: Optional[bytes] = None
+
+
+def _get_admin_password_hash() -> bytes:
+    """
+    [P0-3 Fix] 获取 Admin 密码的 bcrypt 哈希。
+    
+    如果环境变量 ADMIN_PASSWORD 是明文，则自动哈希并缓存。
+    如果已经是 bcrypt 哈希（以 $2 开头），直接使用。
+    返回空 bytes 表示未配置。
+    """
+    global _admin_password_hash
+    if _admin_password_hash is not None:
+        return _admin_password_hash
+    
+    pwd = os.environ.get("ADMIN_PASSWORD", "")
+    if not pwd:
+        return b""
+    
+    # 检测是否已是 bcrypt 哈希
+    if pwd.startswith(("$2a$", "$2b$", "$2x$", "$2y$")):
+        _admin_password_hash = pwd.encode()
+    else:
+        # 明文密码：哈希后缓存，并发出安全警告
+        _admin_password_hash = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt())
+        logger.warning(
+            "admin_password_plaintext_detected",
+            message="ADMIN_PASSWORD is stored in plaintext. "
+                    "Please set a bcrypt-hashed password (e.g. generated via 'python -c \"import bcrypt; print(bcrypt.hashpw(b\\\"yourpassword\\\", bcrypt.gensalt()).decode())\"')"
+        )
+    
+    return _admin_password_hash
 
 
 class LoginRequest(BaseModel):
@@ -57,21 +93,23 @@ async def login(body: LoginRequest):
     管理员登录
 
     使用环境变量 ADMIN_USERNAME / ADMIN_PASSWORD 验证。
+    ADMIN_PASSWORD 支持 bcrypt 哈希格式（推荐）或明文（会发出警告）。
     返回 JWT token，后续请求通过 `Authorization: Bearer <token>` 携带。
     """
     admin_username = os.environ.get("ADMIN_USERNAME", "admin")
-    admin_password = os.environ.get("ADMIN_PASSWORD", "")
+    admin_password_hash = _get_admin_password_hash()
 
-    if not admin_password:
+    if not admin_password_hash:
         logger.error("ADMIN_PASSWORD not configured")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Server authentication not configured",
         )
 
-    # 常数时间比较防止时序攻击
+    # 常数时间比较用户名（防止时序攻击）
     username_ok = _secrets.compare_digest(body.username, admin_username)
-    password_ok = _secrets.compare_digest(body.password, admin_password)
+    # [P0-3 Fix] 使用 bcrypt 进行密码哈希比较
+    password_ok = bcrypt.checkpw(body.password.encode(), admin_password_hash)
 
     if not (username_ok and password_ok):
         logger.warning("login_failed", username=body.username[:16])

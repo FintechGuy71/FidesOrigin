@@ -70,7 +70,7 @@ def _get_redis_refresh_client():
         return None
 
 
-def create_refresh_token(username: str, family_id: str = None) -> dict:
+async def create_refresh_token(username: str, family_id: str = None) -> dict:
     """
     生成 JWT refresh token（支持旋转）
     
@@ -102,14 +102,11 @@ def create_refresh_token(username: str, family_id: str = None) -> dict:
     # [MEDIUM-1 FIX] 将 jti 存入 Redis 白名单
     redis = _get_redis_refresh_client()
     if redis:
-        import asyncio
         try:
-            asyncio.get_event_loop().run_until_complete(
-                redis.set(
-                    f"{REFRESH_TOKEN_JTI_PREFIX}{jti}",
-                    family,
-                    expire=JWT_REFRESH_EXPIRE_MINUTES * 60
-                )
+            await redis.set(
+                f"{REFRESH_TOKEN_JTI_PREFIX}{jti}",
+                family,
+                expire=JWT_REFRESH_EXPIRE_MINUTES * 60
             )
         except Exception:
             pass  # Redis 不可用时降级（token 仍然有效但不支持旋转检测）
@@ -117,7 +114,7 @@ def create_refresh_token(username: str, family_id: str = None) -> dict:
     return {"token": token, "family_id": family, "jti": jti}
 
 
-def rotate_refresh_token(old_token: str) -> dict:
+async def rotate_refresh_token(old_token: str) -> dict:
     """
     旋转 refresh token
     
@@ -151,19 +148,14 @@ def rotate_refresh_token(old_token: str) -> dict:
     # [MEDIUM-1 FIX] 检查旧 jti 是否在白名单中
     redis = _get_redis_refresh_client()
     if redis:
-        import asyncio
         try:
             jti_key = f"{REFRESH_TOKEN_JTI_PREFIX}{old_jti}"
-            stored_family = asyncio.get_event_loop().run_until_complete(
-                redis.get(jti_key)
-            )
+            stored_family = await redis.get(jti_key)
             
             if stored_family is None:
                 # 旧 token 已被使用过或已过期 — 可能是重放攻击
                 # 撤销整个 token family
-                asyncio.get_event_loop().run_until_complete(
-                    redis.delete(f"{REFRESH_TOKEN_FAMILY_PREFIX}{family}")
-                )
+                await redis.delete(f"{REFRESH_TOKEN_FAMILY_PREFIX}{family}")
                 raise AuthenticationException(
                     "Refresh token reuse detected. Token family revoked."
                 )
@@ -173,14 +165,14 @@ def rotate_refresh_token(old_token: str) -> dict:
                 raise AuthenticationException("Refresh token family mismatch")
             
             # 使旧 jti 失效
-            asyncio.get_event_loop().run_until_complete(redis.delete(jti_key))
+            await redis.delete(jti_key)
         except AuthenticationException:
             raise
         except Exception:
             pass  # Redis 不可用时降级
     
     # 生成新的 refresh token（保持同一个 family）
-    return create_refresh_token(username, family)
+    return await create_refresh_token(username, family)
 
 
 # 向后兼容：create_refresh_token 返回字符串
