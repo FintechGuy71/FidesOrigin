@@ -2,8 +2,9 @@
 FidesOrigin Blockscout 服务(重构版)
 策略模式:封装外部 API 调用,支持重试、限流、断路器
 """
+import asyncio
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
@@ -28,6 +29,51 @@ import json as _json_for_pickle_replacement
 logger = get_logger(__name__)
 settings = get_settings()
 
+# [P2-7 Fix] SSRF 防护 — 允许的 Blockscout URL 白名单
+_ALLOWED_BLOCKSCOUT_HOSTS = frozenset({
+    "blockscout.com",
+    "eth.blockscout.com",
+    "sepolia.blockscout.com",
+    "polygon.blockscout.com",
+    "optimism.blockscout.com",
+    "arbitrum.blockscout.com",
+    "base.blockscout.com",
+    "gnosis.blockscout.com",
+    "celo.blockscout.com",
+    "sokol.blockscout.com",
+    "localhost",
+    "127.0.0.1",
+})
+
+
+def _validate_blockscout_url(url: str) -> bool:
+    """
+    [P2-7 Fix] 验证 Blockscout URL 是否在白名单中
+    
+    防止 SSRF 攻击，确保只访问合法的 Blockscout 实例。
+    """
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            logger.warning("blockscout_invalid_scheme", scheme=parsed.scheme, url=url)
+            return False
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        # 检查 hostname 是否在白名单中（支持子域名匹配）
+        hostname_lower = hostname.lower()
+        if hostname_lower in _ALLOWED_BLOCKSCOUT_HOSTS:
+            return True
+        # 检查是否以白名单中的域名结尾（如 eth.blockscout.com）
+        for allowed in _ALLOWED_BLOCKSCOUT_HOSTS:
+            if hostname_lower == allowed or hostname_lower.endswith(f".{allowed}"):
+                return True
+        logger.warning("blockscout_url_not_in_allowlist", hostname=hostname, url=url)
+        return False
+    except Exception as e:
+        logger.warning("blockscout_url_validation_error", error=str(e), url=url)
+        return False
+
 
 class BlockscoutService:
     """
@@ -46,7 +92,15 @@ class BlockscoutService:
     CIRCUIT_TTL = 300  # 断路器状态在 Redis 中保留 5 分钟
 
     def __init__(self, cache=None):
-        self.base_url = settings.BLOCKSCOUT_BASE_URL.rstrip('/')
+        raw_url = settings.BLOCKSCOUT_BASE_URL.rstrip('/')
+        # [P2-7 Fix] SSRF 防护：初始化时校验 base_url
+        if raw_url and not _validate_blockscout_url(raw_url):
+            raise BlockscoutAPIException(
+                f"BLOCKSCOUT_BASE_URL '{raw_url}' is not in the allowed whitelist. "
+                f"Allowed hosts: {', '.join(sorted(_ALLOWED_BLOCKSCOUT_HOSTS))}",
+                status_code=400
+            )
+        self.base_url = raw_url
         self.api_key = settings.BLOCKSCOUT_API_KEY
         self.timeout = settings.BLOCKSCOUT_TIMEOUT
         self._semaphore = None
@@ -173,6 +227,14 @@ class BlockscoutService:
         
         url = urljoin(f"{self.base_url}/", endpoint.lstrip('/'))
         
+        # [P2-7 Fix] SSRF 二次校验：确保拼接后的 URL 仍在白名单中
+        if not _validate_blockscout_url(url):
+            logger.error("blockscout_url_blocked_by_ssrf_filter", url=url)
+            raise BlockscoutAPIException(
+                f"URL '{url}' is not in the allowed Blockscout whitelist",
+                status_code=403
+            )
+        
         async with self._get_semaphore():
             try:
                 response = await self._client.request(
@@ -212,16 +274,6 @@ class BlockscoutService:
         return isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)
 
     # ==================== API 方法 ====================
-
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
-        reraise=True
-    )
-    async def get_address_info(self, address: str) -> Dict[str, Any]:
-        """获取地址基本信息"""
-        return await self._request("GET", f"/addresses/{address}")
 
     @retry(
         stop=stop_after_attempt(3),
