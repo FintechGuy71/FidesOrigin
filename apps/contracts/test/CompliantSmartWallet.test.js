@@ -22,10 +22,12 @@ describe('CompliantSmartWallet', function () {
     user1 = fixture.user1;
     user2 = fixture.user2;
 
-    // Disable compliance engine integration since ComplianceEngine.sol
-    // does not implement IWalletCompliance (preExecutionHook, postExecutionHook, etc.)
-    // This is a contract-level architecture issue.
     // [K3 Fix C-17] Compliance enabled for testing - previously disabled
+
+    // Set up risk profiles for addresses used in compliance checks
+    await riskRegistry.connect(owner).updateRiskProfile(user1.address, 10, 1, [], false);
+    await riskRegistry.connect(owner).updateRiskProfile(user2.address, 10, 1, [], false);
+    await riskRegistry.connect(owner).updateRiskProfile(walletOwner.address, 10, 1, [], false);
 
     // Fund wallet with ETH
     await owner.sendTransaction({
@@ -181,8 +183,12 @@ describe('CompliantSmartWallet', function () {
 
   describe('Compliance Toggle', function () {
     it('should allow owner to toggle compliance', async function () {
-      // [K3 Fix C-17] Compliance enabled for testing - previously disabled
+      // [K3 Fix C-17] Compliance enabled for testing - default is true
+      expect(await wallet.complianceEnabled()).to.be.true;
+      await wallet.connect(walletOwner).setComplianceEnabled(false);
       expect(await wallet.complianceEnabled()).to.be.false;
+      await wallet.connect(walletOwner).setComplianceEnabled(true);
+      expect(await wallet.complianceEnabled()).to.be.true;
     });
   });
 

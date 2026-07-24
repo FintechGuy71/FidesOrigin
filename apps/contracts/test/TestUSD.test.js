@@ -19,6 +19,12 @@ describe('TestUSD', function () {
     user2 = fixture.user2;
     user3 = fixture.user3;
 
+    // Set up risk profiles for addresses used in batch transfers (compliance hook)
+    const riskRegistry = fixture.riskRegistry;
+    await riskRegistry.connect(owner).updateRiskProfile(user1.address, 10, 1, [], false);
+    await riskRegistry.connect(owner).updateRiskProfile(user2.address, 10, 1, [], false);
+    await riskRegistry.connect(owner).updateRiskProfile(user3.address, 10, 1, [], false);
+
     // Fund users
     await testUSD.transfer(user1.address, ethers.parseEther('10000'));
     await testUSD.transfer(user2.address, ethers.parseEther('10000'));

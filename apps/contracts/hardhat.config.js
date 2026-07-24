@@ -2,8 +2,8 @@ require('@nomicfoundation/hardhat-ethers');
 require('@nomicfoundation/hardhat-chai-matchers');
 // [WORKAROUND] @openzeppelin/hardhat-upgrades requires @openzeppelin/upgrades-core which
 // is a pnpm workspace dependency. In npm-only environments, the transitive deps don't resolve.
-// Uncomment when running in a pnpm-enabled environment:
-// require('@openzeppelin/hardhat-upgrades');
+// Now enabled since we are in a pnpm workspace:
+require('@openzeppelin/hardhat-upgrades');
 require('dotenv').config();
 
 // [HIGH-9 FIX] 私钥加载与安全验证

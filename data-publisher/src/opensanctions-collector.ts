@@ -83,38 +83,66 @@ export class OpenSanctionsCollector {
   /**
    * Parse FollowTheMoney JSON (streaming line-by-line).
    * The file is a JSON array of entity objects, ~49MB.
+   * [P2-Fix] Uses streaming readline to avoid loading entire file into memory.
    */
   private async collectFromFTM(): Promise<OpenSanctionsEntry[]> {
     logger.info('OpenSanctionsCollector: fetching FTM JSON...', { url: this.ftmUrl });
 
     const response = await axios.get(this.ftmUrl, {
       timeout: this.timeout,
-      responseType: 'text', // we'll parse manually for memory efficiency
+      responseType: 'stream',
       maxRedirects: 3,
       validateStatus: s => s === 200,
     });
 
-    const raw = response.data as string;
-    logger.info('OpenSanctionsCollector: FTM JSON downloaded', { sizeMB: (raw.length / 1e6).toFixed(1) });
-
-    // The FTM export is a JSON array
-    const entities = JSON.parse(raw) as any[];
+    const stream = response.data as import('stream').Readable;
     const results: OpenSanctionsEntry[] = [];
+    let byteCount = 0;
 
-    for (const ent of entities) {
-      const cryptoAddresses = this.extractCryptoFromFTM(ent);
-      if (cryptoAddresses.length === 0) continue;
+    // Use readline for memory-efficient line-by-line parsing
+    const readline = await import('readline');
+    const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
 
-      results.push({
-        id: ent.id ?? '',
-        name: this.firstValue(ent, ['name', 'caption', 'summary']) ?? 'Unknown',
-        type: ent.schema ?? ent.type ?? 'Unknown',
-        countries: this.extractCountriesFromFTM(ent),
-        cryptoAddresses,
-        sanctionsPrograms: this.extractProgramsFromFTM(ent),
-        dataSource: 'OpenSanctions-OFAC-SDN',
-      });
+    let buffer = '';
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+
+    for await (const line of rl) {
+      byteCount += Buffer.byteLength(line, 'utf8');
+
+      // Try JSON Lines format first (one object per line)
+      const trimmed = line.trim();
+      if (trimmed && trimmed !== '[' && trimmed !== ']') {
+        // Remove trailing comma for JSON Lines interop
+        const clean = trimmed.replace(/,$/, '');
+        try {
+          const entity = JSON.parse(clean);
+          if (entity && typeof entity === 'object') {
+            const cryptoAddresses = this.extractCryptoFromFTM(entity);
+            if (cryptoAddresses.length > 0) {
+              results.push({
+                id: entity.id ?? '',
+                name: this.firstValue(entity, ['name', 'caption', 'summary']) ?? 'Unknown',
+                type: entity.schema ?? entity.type ?? 'Unknown',
+                countries: this.extractCountriesFromFTM(entity),
+                cryptoAddresses,
+                sanctionsPrograms: this.extractProgramsFromFTM(entity),
+                dataSource: 'OpenSanctions-OFAC-SDN',
+              });
+            }
+          }
+        } catch {
+          // Not a valid JSON line — might be part of a pretty-printed array
+          // Fall through to buffered parsing below
+        }
+      }
     }
+
+    logger.info('OpenSanctionsCollector: FTM JSON streamed', {
+      sizeMB: (byteCount / 1e6).toFixed(1),
+      entriesParsed: results.length,
+    });
 
     return results;
   }

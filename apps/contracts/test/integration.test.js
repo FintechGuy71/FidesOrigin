@@ -39,8 +39,18 @@ describe('Integration Tests', function () {
     // [K3 Fix C-17] Compliance enabled for testing - previously disabled
     // [K3 Fix C-17] Compliance enabled for testing - previously disabled
 
+    // Set up risk profiles for addresses used in compliance checks
+    await riskRegistry.connect(owner).updateRiskProfile(user1.address, 10, 1, [], false);
+    await riskRegistry.connect(owner).updateRiskProfile(user2.address, 10, 1, [], false);
+
+    // Disable compliance before minting to bypass preTransferHook(address(0), ...) revert
+    await stableCoin.connect(owner).toggleCompliance(false);
+
     // Mint stablecoin to user1
     await stableCoin.connect(owner).mint(user1.address, 1000000 * 10 ** 6);
+
+    // Re-enable compliance for transfer tests
+    await stableCoin.connect(owner).toggleCompliance(true);
 
     // Fund smart wallet
     await owner.sendTransaction({

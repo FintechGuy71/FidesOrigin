@@ -86,7 +86,7 @@ export class KmsSigner extends AbstractSigner {
     const txObj = Transaction.from(populated);
     const unsignedHash = txObj.unsignedHash;
     const chainId = txObj.chainId ?? this._chainId;
-    const flatSig = await this._kmsSign(unsignedHash, chainId);
+    const flatSig = await this._kmsSign(unsignedHash, chainId ? Number(chainId) : undefined);
     const sig = Signature.from(flatSig);
     txObj.signature = sig;
     return txObj.serialized;

@@ -23,11 +23,11 @@ jobs:
           version: 11.6.0
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
-      # [K3-Audit Fix] Secret scanning with TruffleHog (pinned to commit SHA)
+      # [K3-Audit Fix] Secret scanning with TruffleHog
       - name: Secret Scan
-        uses: trufflesecurity/trufflehog@7e78ca385fb82c19568ee7be322a41e8b0875c0b  # v3.81.1
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           path: ./
           base: main

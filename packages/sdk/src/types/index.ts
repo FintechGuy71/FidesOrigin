@@ -1,30 +1,73 @@
 /**
  * FidesOrigin SDK Type Definitions
+ *
+ * [P1-Fix] Unified type definitions — merged from types.ts into types/index.ts.
+ * This is the single source of truth for all SDK types.
  */
 
 // ============================================================================
-// New SDK Client Types (Phase 4)
+// Request / Input Types
 // ============================================================================
 
 export interface RiskCheckInput {
   /** Ethereum address to check */
   address: string;
-  /** Optional chain ID (defaults to Ethereum mainnet: 1) */
-  chainId?: number | string;
+  /** Chain ID or chain name (defaults to 1 / ethereum) */
+  chainId: number | string;
+  /** Transaction amount (optional) */
+  amount?: string;
 }
 
 export interface BatchRiskCheckInput {
   /** Array of Ethereum addresses to check */
   addresses: string[];
-  /** Optional chain ID for all addresses */
-  chainId?: number | string;
+  /** Chain ID or chain name (defaults to 1 / ethereum) */
+  chainId: number | string;
+  /** Transaction amount (optional) */
+  amount?: string;
 }
 
+export interface BatchRiskCheckRequest {
+  /** Addresses to check */
+  addresses: string[];
+  /** Blockchain chain */
+  chain?: Chain;
+  /** Chain ID or chain name */
+  chainId?: number | string;
+  /** Include detailed information */
+  detailed?: boolean;
+  /** Transaction amount (optional) */
+  amount?: string;
+}
+
+// ============================================================================
+// Response / Result Types
+// ============================================================================
+
 export interface RiskCheckResult {
-  /** Risk score (0-100) */
+  /** Address assessed */
+  address: string;
+  /** Chain */
+  chain: Chain;
+  /** Overall risk score (0-100) */
+  overallScore: number;
+  /** Overall risk level */
+  overallLevel: RiskLevel;
+  /** Individual risk category scores */
+  scores: RiskScore[];
+  /** All risk flags */
+  flags: RiskFlag[];
+  /** Address type classification */
+  addressType: AddressType;
+  /** Assessment timestamp */
+  timestamp: string;
+  /** Related entities (exchanges, mixers, etc.) */
+  relatedEntities?: Entity[];
+  /** Transaction statistics */
+  transactionStats?: TransactionStats;
+  /** Risk score (alias for overallScore) */
   riskScore?: number;
-  score?: number;
-  /** Risk level */
+  /** Risk level (alias for overallLevel) */
   riskLevel?: string;
   /** Risk tags */
   tags?: string[];
@@ -56,119 +99,50 @@ export interface BatchRiskCheckResult {
   };
 }
 
+export interface BatchRiskCheckResponse {
+  /** Address risk results */
+  results: AddressRisk[];
+  /** Failed addresses */
+  failed?: string[];
+}
+
 export interface DashboardStats {
-  /** Transactions blocked today */
-  todayBlocked: number;
-  /** Change percentage from yesterday */
-  todayBlockedChange: number;
-  /** Total risk addresses detected */
-  riskAddresses: number;
-  /** Change percentage */
-  riskAddressesChange: number;
-  /** Compliance rate percentage */
-  complianceRate: number;
-  /** Compliance rate change */
-  complianceRateChange: number;
-  /** Total monitored transactions */
-  monitoredTransactions: number;
-  /** Monitored transactions change */
-  monitoredTransactionsChange: number;
-}
-
-export interface ComplianceRule {
-  /** Rule ID */
-  id: string;
-  /** Rule name */
-  name: string;
-  /** Rule description */
-  description: string;
-  /** Whether the rule is enabled */
-  enabled: boolean;
-  /** Risk threshold (0-100) */
-  threshold: number;
-  /** Action to take when triggered */
-  action: 'flag' | 'block' | 'review';
-}
-
-export interface WebSocketConfig {
-  /** WebSocket URL (defaults to wss:// version of baseUrl) */
-  url?: string;
-  /** API key for authentication */
-  apiKey?: string;
-  /** Auto reconnect on disconnect */
-  autoReconnect?: boolean;
-  /** Reconnect interval in ms */
-  reconnectInterval?: number;
-  /** Maximum reconnect attempts */
-  maxReconnectAttempts?: number;
-}
-
-export interface RetryConfig {
-  /** Maximum number of retry attempts */
-  maxRetries: number;
-  /** Base delay between retries in ms */
-  baseDelayMs: number;
-  /** Maximum delay between retries in ms */
-  maxDelayMs: number;
-  /** HTTP status codes that trigger retry */
-  retryableStatusCodes: number[];
-}
-
-export interface FidesOriginConfig {
-  /** API base URL (default: https://api.fidesorigin.com) */
-  baseUrl?: string;
-  /** API key for authentication */
-  apiKey?: string;
-  /** Custom retry configuration */
-  retryConfig?: Partial<RetryConfig>;
-  /** Enable debug logging */
-  debug?: boolean;
-  /** Request timeout in milliseconds (default: 30000) */
-  timeout?: number;
-  /** Custom headers */
-  headers?: Record<string, string>;
+  /** Total addresses assessed */
+  totalAddresses: number;
+  /** High risk addresses count */
+  highRiskCount: number;
+  /** Medium risk addresses count */
+  mediumRiskCount: number;
+  /** Low risk addresses count */
+  lowRiskCount: number;
+  /** Last update timestamp */
+  lastUpdated: string;
+  /** Transactions blocked today (legacy field) */
+  todayBlocked?: number;
+  /** Total risk addresses detected (legacy field) */
+  riskAddresses?: number;
+  /** Compliance rate percentage (legacy field) */
+  complianceRate?: number;
+  /** Total monitored transactions (legacy field) */
+  monitoredTransactions?: number;
 }
 
 // ============================================================================
-// Core Types
-// ============================================================================
-
-export interface ApiResponse<T> {
-  /** Response data */
-  data: T;
-  /** Response status */
-  status: number;
-  /** Response message */
-  message?: string;
-}
-
-export interface ApiError {
-  /** Error code */
-  code: string;
-  /** Error message */
-  message: string;
-  /** Additional error details */
-  details?: Record<string, unknown>;
-  /** HTTP status code */
-  status?: number;
-}
-
-// ============================================================================
-// Risk Assessment Types
+// Core / Shared Types
 // ============================================================================
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
 export type AddressType = 'wallet' | 'contract' | 'exchange' | 'mixer' | 'unknown';
 
-export type Chain = 
-  | 'ethereum' 
-  | 'bitcoin' 
-  | 'polygon' 
-  | 'bsc' 
-  | 'arbitrum' 
-  | 'optimism' 
-  | 'base' 
+export type Chain =
+  | 'ethereum'
+  | 'bitcoin'
+  | 'polygon'
+  | 'bsc'
+  | 'arbitrum'
+  | 'optimism'
+  | 'base'
   | 'solana';
 
 export interface RiskFlag {
@@ -247,20 +221,28 @@ export interface RiskCheckOptions {
   includeStats?: boolean;
 }
 
-export interface BatchRiskCheckRequest {
-  /** Addresses to check */
-  addresses: string[];
-  /** Blockchain chain */
-  chain?: Chain;
-  /** Include detailed information */
-  detailed?: boolean;
+// ============================================================================
+// API Types
+// ============================================================================
+
+export interface ApiResponse<T> {
+  /** Response data */
+  data: T;
+  /** Response status */
+  status: number;
+  /** Response message */
+  message?: string;
 }
 
-export interface BatchRiskCheckResponse {
-  /** Address risk results */
-  results: AddressRisk[];
-  /** Failed addresses */
-  failed?: string[];
+export interface ApiError {
+  /** Error code */
+  code: string;
+  /** Error message */
+  message: string;
+  /** Additional error details */
+  details?: Record<string, unknown>;
+  /** HTTP status code */
+  status?: number;
 }
 
 // ============================================================================
@@ -269,12 +251,12 @@ export interface BatchRiskCheckResponse {
 
 export type RuleStatus = 'active' | 'inactive' | 'draft';
 
-export type RuleOperator = 
-  | 'equals' 
-  | 'not_equals' 
-  | 'greater_than' 
-  | 'less_than' 
-  | 'contains' 
+export type RuleOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'greater_than'
+  | 'less_than'
+  | 'contains'
   | 'not_contains'
   | 'in'
   | 'not_in';
@@ -351,6 +333,8 @@ export interface RuleListOptions {
   page?: number;
   /** Items per page */
   limit?: number;
+  /** Items offset */
+  offset?: number;
 }
 
 export interface RuleListResponse {
@@ -364,11 +348,28 @@ export interface RuleListResponse {
   limit: number;
 }
 
+export interface ComplianceRule {
+  /** Rule ID */
+  id: string;
+  /** Rule name */
+  name: string;
+  /** Rule description */
+  description: string;
+  /** Is rule active */
+  active: boolean;
+  /** Rule conditions */
+  conditions: RuleCondition[];
+  /** Rule actions */
+  actions: RuleAction[];
+  /** Created timestamp */
+  createdAt: string;
+}
+
 // ============================================================================
 // WebSocket Types
 // ============================================================================
 
-export type WebSocketEventType = 
+export type WebSocketEventType =
   | 'risk.update'
   | 'alert.new'
   | 'rule.match'
@@ -443,13 +444,26 @@ export interface WebSocketOptions {
   subscriptions?: string[];
 }
 
+export interface WebSocketConfig {
+  /** WebSocket URL (defaults to wss:// version of baseUrl) */
+  url?: string;
+  /** API key for authentication */
+  apiKey?: string;
+  /** Auto reconnect on disconnect */
+  autoReconnect?: boolean;
+  /** Reconnect interval in ms */
+  reconnectInterval?: number;
+  /** Maximum reconnect attempts */
+  maxReconnectAttempts?: number;
+}
+
 // ============================================================================
 // React Hook Types
 // ============================================================================
 
 export interface UseRiskCheckOptions {
-  /** API client instance */
-  client: FidesOriginClient;
+  /** SDK client options (will construct a new client) */
+  options?: ClientOptions;
   /** Polling interval in milliseconds (0 to disable) */
   pollInterval?: number;
   /** Enable on mount */
@@ -473,57 +487,96 @@ export interface UseRiskCheckReturn extends UseRiskCheckState {
 }
 
 // ============================================================================
-// Client Interface
+// Config / Client Types
+// ============================================================================
+
+export interface RetryConfig {
+  /** Maximum number of retry attempts */
+  maxRetries: number;
+  /** Base delay between retries in ms */
+  baseDelayMs: number;
+  /** Maximum delay between retries in ms */
+  maxDelayMs: number;
+  /** HTTP status codes that trigger retry */
+  retryableStatusCodes: number[];
+}
+
+export interface FidesOriginConfig {
+  /** API base URL (default: https://api.fidesorigin.com) */
+  baseUrl?: string;
+  /** API key for authentication */
+  apiKey?: string;
+  /** Custom retry configuration */
+  retryConfig?: Partial<RetryConfig>;
+  /** Enable debug logging */
+  debug?: boolean;
+  /** Request timeout in milliseconds (default: 30000) */
+  timeout?: number;
+  /** Custom headers */
+  headers?: Record<string, string>;
+}
+
+/** SDK client options (extends config with browser/timeout overrides) */
+export type ClientOptions = FidesOriginConfig & {
+  allowBrowserUsage?: boolean;
+  timeoutMs?: number;
+};
+
+// ============================================================================
+// Client Interface (matches actual FidesOriginClient implementation)
 // ============================================================================
 
 export interface FidesOriginClient {
   /** Client configuration */
   readonly config: FidesOriginConfig;
-  
+
   /** Check single address risk */
-  checkAddress(address: string, options?: RiskCheckOptions): Promise<AddressRisk>;
-  
+  checkRisk(input: RiskCheckInput): Promise<RiskCheckResult>;
+
   /** Check multiple addresses */
-  checkBatchAddresses(request: BatchRiskCheckRequest): Promise<BatchRiskCheckResponse>;
-  
+  batchCheckRisk(input: BatchRiskCheckInput): Promise<BatchRiskCheckResult>;
+
+  /** Get latest address risk snapshot */
+  getAddressRisk(address: string): Promise<AddressRisk>;
+
+  /** Get dashboard stats */
+  getDashboardStats(): Promise<DashboardStats>;
+
   /** List rules */
   listRules(options?: RuleListOptions): Promise<RuleListResponse>;
-  
-  /** Get rule by ID */
-  getRule(ruleId: string): Promise<Rule>;
-  
+
   /** Create new rule */
-  createRule(request: CreateRuleRequest): Promise<Rule>;
-  
+  createRule(req: CreateRuleRequest): Promise<Rule>;
+
   /** Update rule */
-  updateRule(ruleId: string, request: UpdateRuleRequest): Promise<Rule>;
-  
+  updateRule(id: string, req: UpdateRuleRequest): Promise<Rule>;
+
   /** Delete rule */
-  deleteRule(ruleId: string): Promise<void>;
-  
+  deleteRule(id: string): Promise<void>;
+
   /** Create WebSocket connection */
-  createWebSocket(options?: WebSocketOptions): FidesOriginWebSocket;
+  createWebSocket(config?: WebSocketConfig): FidesOriginWebSocket;
 }
 
 export interface FidesOriginWebSocket {
   /** WebSocket connection state */
-  readonly isConnected: boolean;
-  
+  isConnected(): boolean;
+
   /** Connect to WebSocket */
-  connect(): void;
-  
+  connect(): Promise<void>;
+
   /** Disconnect from WebSocket */
   disconnect(): void;
-  
+
   /** Subscribe to events */
   subscribe(eventTypes: WebSocketEventType[]): void;
-  
+
   /** Unsubscribe from events */
   unsubscribe(eventTypes: WebSocketEventType[]): void;
-  
+
   /** Register event handler */
   on(event: WebSocketEventType, handler: WebSocketEventHandler): void;
-  
+
   /** Remove event handler */
   off(event: WebSocketEventType, handler: WebSocketEventHandler): void;
 }

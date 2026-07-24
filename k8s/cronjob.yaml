@@ -53,8 +53,11 @@ spec:
               type: RuntimeDefault
           containers:
             - name: batch-sync
-              image: fidesorigin/data-publisher:latest
-              imagePullPolicy: Always
+              # [P2-Fix] Image digest pinned for supply-chain security.
+              # Replace <DIGEST> with the actual sha256 digest from your registry.
+              # Example: fidesorigin/data-publisher@sha256:abc123...
+              image: fidesorigin/data-publisher@sha256:PLACEHOLDER_DIGEST
+              imagePullPolicy: IfNotPresent
               command:
                 - node
                 - dist/scripts/batch-sync.js

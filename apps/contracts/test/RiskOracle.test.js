@@ -107,6 +107,8 @@ describe('RiskOracle', function () {
     beforeEach(async function () {
       await riskOracle.addAuthorizedOracle(user1.address);
       await riskOracle.setRequiredConfirmations(1);
+      // H-5 FIX: Stake ETH for oracles to meet minimum stake requirement
+      await riskOracle.connect(user1).stake({ value: ethers.parseEther('2') });
     });
 
     it('should submit oracle response and update risk profile', async function () {
@@ -150,6 +152,8 @@ describe('RiskOracle', function () {
       // First confirmation mines a block, second confirmation must be in a later block.
       await riskOracle.addAuthorizedOracle(operator.address);
       await riskOracle.setRequiredConfirmations(2);
+      // Stake for operator too
+      await riskOracle.connect(operator).stake({ value: ethers.parseEther('2') });
       const futureDeadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
 
       const responseHash = ethers.solidityPackedKeccak256(

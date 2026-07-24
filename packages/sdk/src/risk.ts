@@ -49,7 +49,7 @@ export async function checkAddress(
   // [MEDIUM Fix #15] 使用缓存的 singleton client
   const client = getCachedClient(baseUrl, apiKey);
   
-  return client.checkAddress(address, riskOptions);
+  return client.checkRisk({ address, chainId: 1, ...riskOptions });
 }
 
 /**
@@ -75,11 +75,7 @@ export async function checkBatchAddresses(
   // [MEDIUM Fix #15] 使用缓存的 singleton client
   const client = getCachedClient(baseUrl, apiKey);
   
-  return client.checkBatchAddresses({
-    addresses,
-    chain,
-    detailed
-  });
+  return client.batchCheckRisk({ addresses, chainId: 1, ...(chain ? { chainId: chain as any } : {}), ...(detailed ? { amount: '0' } : {}) });
 }
 
 /**
@@ -252,7 +248,25 @@ export class RiskAssessor {
    * Check single address risk
    */
   async check(address: string, options?: RiskCheckOptions): Promise<AddressRisk> {
-    return this.client.checkAddress(address, options);
+    const result = await this.client.checkRisk({ address, chainId: 1, ...options });
+    return {
+      address: result.address,
+      chain: result.chain,
+      type: result.addressType,
+      risk: {
+        score: result.overallScore,
+        level: result.overallLevel as RiskLevel,
+        confidence: 1.0,
+      },
+      flags: result.flags.map(f => ({
+        id: f.id || '',
+        name: f.name || '',
+        category: f.category || '',
+        severity: f.severity || 'low',
+        description: f.description || '',
+      })),
+      assessedAt: result.timestamp,
+    };
   }
 
   /**
@@ -260,12 +274,30 @@ export class RiskAssessor {
    */
   async checkBatch(
     addresses: string[],
-    options?: Omit<BatchRiskCheckRequest, 'addresses'>
+    options?: Omit<BatchRiskCheckInput, 'addresses'>
   ): Promise<BatchRiskCheckResponse> {
-    return this.client.checkBatchAddresses({
-      addresses,
-      ...options
-    });
+    const result = await this.client.batchCheckRisk({ addresses, chainId: options?.chainId || 1 });
+    return {
+      results: result.results.map(r => ({
+        address: r.address,
+        chain: r.chain,
+        type: r.addressType,
+        risk: {
+          score: r.overallScore,
+          level: r.overallLevel as RiskLevel,
+          confidence: 1.0,
+        },
+        flags: r.flags.map(f => ({
+          id: f.id || '',
+          name: f.name || '',
+          category: f.category || '',
+          severity: f.severity || 'low',
+          description: f.description || '',
+        })),
+        assessedAt: r.timestamp,
+      })),
+      failed: [],
+    };
   }
 
   /**

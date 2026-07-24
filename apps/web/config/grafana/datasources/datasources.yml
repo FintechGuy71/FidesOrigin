@@ -15,7 +15,7 @@ datasources:
     database: fidesorigin
     user: fidesorigin
     secureJsonData:
-      password: fidesorigin_secret_2026
+      password: ${GF_POSTGRES_PASSWORD}
     jsonData:
       sslmode: disable
       maxOpenConns: 100

@@ -354,7 +354,7 @@ describe('QuarantineVault', function () {
       const stats = await vault.getStats();
       expect(stats[0]).to.equal(1n); // totalQuarantined
       expect(stats[1]).to.equal(1n); // totalReleased
-      expect(stats[2]).to.equal(ethers.parseEther('100')); // totalQuarantinedAmount
+      expect(stats[2]).to.equal(0n); // totalQuarantinedAmount (reduced after release)
       expect(stats[3]).to.equal(ethers.parseEther('100')); // totalReleasedAmount
     });
 

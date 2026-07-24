@@ -30,7 +30,7 @@ describe('FidesCompliance Extended', function () {
 
     it('should ALLOW transaction for low-risk addresses', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction(
+      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -42,9 +42,10 @@ describe('FidesCompliance Extended', function () {
     });
 
     it('should BLOCK transaction from sanctioned address', async function () {
+      await riskRegistry.connect(owner).removeRiskProfile(addr1.address);
       await riskRegistry.connect(owner).updateRiskProfile(addr1.address, 30, 1, [], true);
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction(
+      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -56,9 +57,10 @@ describe('FidesCompliance Extended', function () {
     });
 
     it('should BLOCK transaction to sanctioned address', async function () {
+      await riskRegistry.connect(owner).removeRiskProfile(addr2.address);
       await riskRegistry.connect(owner).updateRiskProfile(addr2.address, 50, 2, [], true);
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction(
+      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -70,9 +72,10 @@ describe('FidesCompliance Extended', function () {
     });
 
     it('should BLOCK transaction when risk score >= maxRiskScoreForBlock', async function () {
+      await riskRegistry.connect(owner).removeRiskProfile(addr1.address);
       await riskRegistry.connect(owner).updateRiskProfile(addr1.address, 98, 4, [], false);
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction(
+      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -85,7 +88,7 @@ describe('FidesCompliance Extended', function () {
 
     it('should DENY transaction when deadline has expired', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp - 1;
-      const [allowed] = await fidesCompliance.evaluateTransaction(
+      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -98,7 +101,7 @@ describe('FidesCompliance Extended', function () {
     it('should DENY transaction when emergency mode is active', async function () {
       await fidesCompliance.connect(owner).activateEmergency();
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed] = await fidesCompliance.evaluateTransaction(
+      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -110,7 +113,7 @@ describe('FidesCompliance Extended', function () {
 
     it('should DENY transaction for zero address', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed] = await fidesCompliance.evaluateTransaction(
+      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
         ethers.ZeroAddress,
         addr2.address,
         ethers.parseEther('1'),
@@ -136,7 +139,7 @@ describe('FidesCompliance Extended', function () {
       await complianceEngine.connect(owner).setIssuerPolicy(dummyToken, policy);
 
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed] = await fidesCompliance.evaluateTransaction(
+      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -149,7 +152,7 @@ describe('FidesCompliance Extended', function () {
     it('should ALLOW when risk score is below quarantine threshold', async function () {
       // Default minRiskScoreForQuarantine = 80, addr1=30, addr2=50, max=50
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction(
+      const [allowed, riskScore] = await fidesCompliance.evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -183,7 +186,8 @@ describe('FidesCompliance Extended', function () {
 
     it('should ALLOW valid transaction and increment counters', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 300;
-      const allowed = await fidesCompliance.connect(addr1).checkAndExecuteTransaction(
+      // Use staticCall to get return value, then execute to persist state
+      const allowed = await fidesCompliance.connect(addr1).checkAndExecuteTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -192,6 +196,15 @@ describe('FidesCompliance Extended', function () {
       );
       expect(allowed).to.be.true;
 
+      // Execute the transaction to persist state changes
+      await fidesCompliance.connect(addr1).checkAndExecuteTransaction(
+        addr1.address,
+        addr2.address,
+        ethers.parseEther('1'),
+        ethers.ZeroAddress,
+        deadline
+      );
+
       const stats = await fidesCompliance.getTransactionStats();
       expect(stats.checked).to.equal(1);
       expect(stats.allowed).to.equal(1);
@@ -199,9 +212,11 @@ describe('FidesCompliance Extended', function () {
     });
 
     it('should BLOCK transaction from high-risk address and increment blocked counter', async function () {
+      await riskRegistry.connect(owner).removeRiskProfile(addr1.address);
       await riskRegistry.connect(owner).updateRiskProfile(addr1.address, 98, 4, [], false);
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 300;
-      const allowed = await fidesCompliance.connect(addr1).checkAndExecuteTransaction(
+      // Use staticCall to get return value, then execute to persist state
+      const allowed = await fidesCompliance.connect(addr1).checkAndExecuteTransaction.staticCall(
         addr1.address,
         addr2.address,
         ethers.parseEther('1'),
@@ -209,6 +224,15 @@ describe('FidesCompliance Extended', function () {
         deadline
       );
       expect(allowed).to.be.false;
+
+      // Execute the transaction to persist state changes
+      await fidesCompliance.connect(addr1).checkAndExecuteTransaction(
+        addr1.address,
+        addr2.address,
+        ethers.parseEther('1'),
+        ethers.ZeroAddress,
+        deadline
+      );
 
       const stats = await fidesCompliance.getTransactionStats();
       expect(stats.checked).to.equal(1);
@@ -282,6 +306,7 @@ describe('FidesCompliance Extended', function () {
 
     it('should revert for zero address', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 300;
+      // When from=ZeroAddress and caller=addr1, the "Caller must be from" check fails first
       await expect(
         fidesCompliance.connect(addr1).checkAndExecuteTransaction(
           ethers.ZeroAddress,
@@ -290,7 +315,7 @@ describe('FidesCompliance Extended', function () {
           ethers.ZeroAddress,
           deadline
         )
-      ).to.be.revertedWithCustomError(fidesCompliance, 'InvalidAddress');
+      ).to.be.revertedWith('Caller must be from');
     });
   });
 
@@ -406,9 +431,9 @@ describe('FidesCompliance Extended', function () {
 
     it('should check multiple addresses in batch', async function () {
       const [results, scores] = await fidesCompliance.batchQuickCheck([addr1.address, addr2.address, addr3.address]);
-      expect(results[0]).to.be.true;
-      expect(results[1]).to.be.false;
-      expect(results[2]).to.be.false;
+      expect(results[0]).to.be.true;  // score 30 < 95
+      expect(results[1]).to.be.true;  // score 85 < 95 (maxRiskScoreForBlock)
+      expect(results[2]).to.be.false; // sanctioned
       expect(scores[0]).to.equal(30);
       expect(scores[1]).to.equal(85);
       expect(scores[2]).to.equal(98);

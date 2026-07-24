@@ -117,14 +117,17 @@ async function deployFidesOriginFixture() {
   const quarantineVault = await QuarantineVault.deploy();
   await quarantineVault.waitForDeployment();
 
-  // 10. Deploy FidesCompliance (NOT upgradeable - has constructor with args)
+  // 10. Deploy FidesCompliance (UUPS upgradeable via proxy)
   const FidesCompliance = await ethers.getContractFactory('FidesCompliance');
-  const fidesCompliance = await FidesCompliance.deploy(
+  const fidesCompliance = await upgrades.deployProxy(FidesCompliance, [
     await complianceEngine.getAddress(),
     await riskRegistry.getAddress(),
     await policyEngine.getAddress(),
     await quarantineVault.getAddress()
-  );
+  ], {
+    initializer: 'initialize',
+    unsafeAllow: ['constructor']
+  });
   await fidesCompliance.waitForDeployment();
 
   // 10-1. C-01 FIX: Grant FidesCompliance the OPERATOR_ROLE on ComplianceEngine

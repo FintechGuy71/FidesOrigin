@@ -1,0 +1,14 @@
+{
+  "../../node_modules/.pnpm/@aws-sdk+client-kms@3.1075.0/node_modules/@aws-sdk/core/dist-es/submodules/client/util-user-agent-browser/createUserAgentStringParsingProvider.js -> bowser": {
+    "id": null,
+    "files": []
+  },
+  "../../node_modules/.pnpm/@aws-sdk+client-kms@3.1075.0/node_modules/@smithy/core/dist-es/submodules/protocols/HttpProtocol.js -> @smithy/core/event-streams": {
+    "id": null,
+    "files": []
+  },
+  "../../node_modules/.pnpm/node_modules/@smithy/core/dist-es/submodules/protocols/HttpProtocol.js -> @smithy/core/event-streams": {
+    "id": null,
+    "files": []
+  }
+}

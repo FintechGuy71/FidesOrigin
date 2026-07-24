@@ -7,23 +7,22 @@ describe('DiamondComplianceEngine', function () {
   let owner, addr1, addr2, operator;
   let riskRegistry, policyEngine;
 
-  // Helper to get function selectors from a contract factory
-  async function getSelectors(contractFactory) {
+  // Helper to get function selectors from a contract factory, excluding already-used ones
+  async function getSelectorsExcluding(contractFactory, usedSelectors) {
     const fragmentKeys = Object.keys(contractFactory.interface.fragments);
     const selectors = [];
     for (const key of fragmentKeys) {
       const fragment = contractFactory.interface.fragments[key];
       if (fragment.type === 'function') {
-        selectors.push(contractFactory.interface.getFunction(fragment.name).selector);
+        const sig = fragment.format();
+        const selector = contractFactory.interface.getFunction(sig).selector;
+        if (!usedSelectors.has(selector)) {
+          selectors.push(selector);
+          usedSelectors.add(selector);
+        }
       }
     }
     return selectors;
-  }
-
-  // Helper to get unique selectors (avoid duplicates)
-  async function getUniqueSelectors(contractFactory) {
-    const allSelectors = await getSelectors(contractFactory);
-    return [...new Set(allSelectors)];
   }
 
   beforeEach(async function () {
@@ -70,11 +69,12 @@ describe('DiamondComplianceEngine', function () {
     walletComplianceFacet = await WalletComplianceFacet.deploy();
     await walletComplianceFacet.waitForDeployment();
 
-    // Build diamond cut
+    // Build diamond cut with global deduplication to avoid "function already exists"
+    const usedSelectors = new Set();
     const cut = [];
 
     // DiamondCutFacet
-    const diamondCutSelectors = await getUniqueSelectors(DiamondCutFacet);
+    const diamondCutSelectors = await getSelectorsExcluding(DiamondCutFacet, usedSelectors);
     cut.push({
       facetAddress: await diamondCutFacet.getAddress(),
       action: 0, // Add
@@ -82,15 +82,15 @@ describe('DiamondComplianceEngine', function () {
     });
 
     // DiamondLoupeFacet
-    const diamondLoupeSelectors = await getUniqueSelectors(DiamondLoupeFacet);
+    const diamondLoupeSelectors = await getSelectorsExcluding(DiamondLoupeFacet, usedSelectors);
     cut.push({
       facetAddress: await diamondLoupeFacet.getAddress(),
       action: 0,
       functionSelectors: diamondLoupeSelectors
     });
 
-    // AdminFacet
-    const adminSelectors = await getUniqueSelectors(AdminFacet);
+    // AdminFacet (adds AccessControl functions first)
+    const adminSelectors = await getSelectorsExcluding(AdminFacet, usedSelectors);
     cut.push({
       facetAddress: await adminFacet.getAddress(),
       action: 0,
@@ -98,7 +98,7 @@ describe('DiamondComplianceEngine', function () {
     });
 
     // ComplianceCoreFacet
-    const coreSelectors = await getUniqueSelectors(ComplianceCoreFacet);
+    const coreSelectors = await getSelectorsExcluding(ComplianceCoreFacet, usedSelectors);
     cut.push({
       facetAddress: await complianceCoreFacet.getAddress(),
       action: 0,
@@ -106,7 +106,7 @@ describe('DiamondComplianceEngine', function () {
     });
 
     // AssetComplianceFacet
-    const assetSelectors = await getUniqueSelectors(AssetComplianceFacet);
+    const assetSelectors = await getSelectorsExcluding(AssetComplianceFacet, usedSelectors);
     cut.push({
       facetAddress: await assetComplianceFacet.getAddress(),
       action: 0,
@@ -114,7 +114,7 @@ describe('DiamondComplianceEngine', function () {
     });
 
     // WalletComplianceFacet
-    const walletSelectors = await getUniqueSelectors(WalletComplianceFacet);
+    const walletSelectors = await getSelectorsExcluding(WalletComplianceFacet, usedSelectors);
     cut.push({
       facetAddress: await walletComplianceFacet.getAddress(),
       action: 0,
@@ -134,6 +134,29 @@ describe('DiamondComplianceEngine', function () {
       ])
     );
     await diamond.waitForDeployment();
+
+    // [K3 Fix] Merge all facet ABIs into diamond instance so ethers.js can encode facet function calls
+    const diamondAddress = await diamond.getAddress();
+    const allFragments = [
+      ...DiamondCutFacet.interface.fragments,
+      ...DiamondLoupeFacet.interface.fragments,
+      ...AdminFacet.interface.fragments,
+      ...ComplianceCoreFacet.interface.fragments,
+      ...AssetComplianceFacet.interface.fragments,
+      ...WalletComplianceFacet.interface.fragments,
+    ];
+    const uniqueFragments = [];
+    const seen = new Set();
+    for (const f of allFragments) {
+      if (f.type === 'function' || f.type === 'event' || f.type === 'error') {
+        const sig = f.type === 'function' ? f.format('full') : f.format();
+        if (!seen.has(sig)) {
+          seen.add(sig);
+          uniqueFragments.push(f);
+        }
+      }
+    }
+    diamond = new ethers.Contract(diamondAddress, uniqueFragments, owner);
   });
 
   describe('Deployment', function () {
@@ -186,15 +209,20 @@ describe('DiamondComplianceEngine', function () {
       const testFacet = await TestFacet.deploy();
       await testFacet.waitForDeployment();
 
-      const selector = testFacet.interface.getFunction('facets').selector;
+      // Use a unique selector that doesn't exist in the diamond yet
+      const uniqueSelector = '0x12345678';
       const cut = [{
         facetAddress: await testFacet.getAddress(),
         action: 0, // Add
-        functionSelectors: [selector]
+        functionSelectors: [uniqueSelector]
       }];
 
       await expect(diamond.diamondCut(cut, ethers.ZeroAddress, '0x'))
         .to.not.be.reverted;
+
+      // Verify it was added
+      const facet = await diamond.facetAddress(uniqueSelector);
+      expect(facet).to.equal(await testFacet.getAddress());
     });
 
     it('should allow owner to replace a facet function', async function () {
@@ -217,28 +245,27 @@ describe('DiamondComplianceEngine', function () {
     });
 
     it('should allow owner to remove a facet function', async function () {
-      // First add a dummy function we can remove
-      const TestFacet = await ethers.getContractFactory('DiamondLoupeFacet');
-      const testFacet = await TestFacet.deploy();
-      await testFacet.waitForDeployment();
-
-      const selector = testFacet.interface.getFunction('facets').selector;
+      // First add a unique function selector we can remove
+      const uniqueSelector = '0xabcdef01';
       const addCut = [{
-        facetAddress: await testFacet.getAddress(),
+        facetAddress: await diamondLoupeFacet.getAddress(),
         action: 0,
-        functionSelectors: [selector]
+        functionSelectors: [uniqueSelector]
       }];
       await diamond.diamondCut(addCut, ethers.ZeroAddress, '0x');
+
+      // Verify it exists
+      expect(await diamond.facetAddress(uniqueSelector)).to.equal(await diamondLoupeFacet.getAddress());
 
       // Now remove it
       const removeCut = [{
         facetAddress: ethers.ZeroAddress,
         action: 2, // Remove
-        functionSelectors: [selector]
+        functionSelectors: [uniqueSelector]
       }];
       await diamond.diamondCut(removeCut, ethers.ZeroAddress, '0x');
 
-      const facet = await diamond.facetAddress(selector);
+      const facet = await diamond.facetAddress(uniqueSelector);
       expect(facet).to.equal(ethers.ZeroAddress);
     });
 
@@ -300,7 +327,7 @@ describe('DiamondComplianceEngine', function () {
       const newAdmin = await NewAdminFacet.deploy();
       await newAdmin.waitForDeployment();
 
-      const selectors = await getUniqueSelectors(NewAdminFacet);
+      const selectors = await getSelectorsExcluding(NewAdminFacet, new Set());
       const cut = [{
         facetAddress: await newAdmin.getAddress(),
         action: 1, // Replace
@@ -329,7 +356,7 @@ describe('DiamondComplianceEngine', function () {
       const newCore = await NewCoreFacet.deploy();
       await newCore.waitForDeployment();
 
-      const selectors = await getUniqueSelectors(NewCoreFacet);
+      const selectors = await getSelectorsExcluding(NewCoreFacet, new Set());
       const cut = [{
         facetAddress: await newCore.getAddress(),
         action: 1,
@@ -346,13 +373,21 @@ describe('DiamondComplianceEngine', function () {
 
   describe('AdminFacet', function () {
     it('should allow admin to pause and unpause', async function () {
-      await expect(diamond.pause())
-        .to.emit(diamond, 'ContractPaused')
-        .withArgs(owner.address, await ethers.provider.getBlock('latest').then(b => b.timestamp));
+      const tx1 = await diamond.pause();
+      const receipt1 = await tx1.wait();
+      const pausedEvent = receipt1.logs.find(l => l.fragment && l.fragment.name === 'ContractPaused');
+      expect(pausedEvent).to.exist;
+      expect(pausedEvent.args[0]).to.equal(owner.address);
 
-      await expect(diamond.unpause())
-        .to.emit(diamond, 'ContractUnpaused')
-        .withArgs(owner.address, await ethers.provider.getBlock('latest').then(b => b.timestamp));
+      // Advance time to avoid same timestamp issues
+      await ethers.provider.send('evm_increaseTime', [2]);
+      await ethers.provider.send('evm_mine');
+
+      const tx2 = await diamond.unpause();
+      const receipt2 = await tx2.wait();
+      const unpausedEvent = receipt2.logs.find(l => l.fragment && l.fragment.name === 'ContractUnpaused');
+      expect(unpausedEvent).to.exist;
+      expect(unpausedEvent.args[0]).to.equal(owner.address);
     });
 
     it('should revert when non-admin tries to pause', async function () {
@@ -432,11 +467,14 @@ describe('DiamondComplianceEngine', function () {
       const qListLen = await diamond.getQuarantineListLength();
       expect(qListLen).to.equal(1);
 
-      const qId = await diamond.quarantineList(0);
+      // Get the quarantine ID from the paginated list
+      const records = await diamond.getQuarantineListPaginated(0, 1);
+      const qId = records[0];
+
       await diamond.connect(operator).releaseQuarantine(qId);
 
-      const record = await diamond.getQuarantineRecord(qId);
-      expect(record.released).to.be.true;
+      const releasedRecord = await diamond.getQuarantineRecord(qId);
+      expect(releasedRecord.released).to.be.true;
     });
 
     it('should track total checks, blocked, and quarantined counts', async function () {
@@ -606,6 +644,16 @@ describe('DiamondComplianceEngine', function () {
   });
 
   describe('WalletComplianceFacet', function () {
+    beforeEach(async function () {
+      // Grant OPERATOR_ROLE to owner and diamond address for validateOperation/validateBatch tests
+      const OPERATOR_ROLE = await diamond.OPERATOR_ROLE();
+      await diamond.grantRoleWithReason(OPERATOR_ROLE, owner.address, 'test setup');
+      // Diamond address needs OPERATOR_ROLE because validateOperation internally calls
+      // validateTransfer via external call (IAssetCompliance(address(this)).validateTransfer)
+      const diamondAddress = await diamond.getAddress();
+      await diamond.grantRoleWithReason(OPERATOR_ROLE, diamondAddress, 'diamond self-call');
+    });
+
     it('should validate operation for clean owner', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(addr1.address, 30, 1, [], false);
       await riskRegistry.connect(owner).updateRiskProfile(addr2.address, 20, 1, [], false);

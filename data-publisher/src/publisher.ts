@@ -642,8 +642,13 @@ export class BlockchainPublisher {
       tier: profile.tier,
     });
 
-    // Wait for confirmation
-    const receipt = await tx.wait(1); // Wait for 1 confirmation
+    // Wait for confirmation with timeout (120s) to prevent infinite hanging
+    const receipt = await Promise.race([
+      tx.wait(1),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Transaction confirmation timeout after 120s')), 120_000)
+      ),
+    ]);
 
     if (!receipt) {
       throw new Error('Transaction receipt not received');

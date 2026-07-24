@@ -18,6 +18,11 @@ describe('FidesOrigin Contract Suite', function () {
         complianceEngine = fixture.complianceEngine;
         testUSD = fixture.testUSD;
 
+        // Set up risk profiles for addresses used in batch transfers (compliance hook)
+        await riskRegistry.connect(owner).updateRiskProfile(user1.address, 10, 1, [], false);
+        await riskRegistry.connect(owner).updateRiskProfile(user2.address, 10, 1, [], false);
+        await riskRegistry.connect(owner).updateRiskProfile(user3.address, 10, 1, [], false);
+
         // Grant oracle role to owner for testing
         const ORACLE_ROLE = await riskRegistry.ORACLE_ROLE();
         await riskRegistry.grantRole(ORACLE_ROLE, owner.address);
@@ -37,6 +42,10 @@ describe('FidesOrigin Contract Suite', function () {
         });
 
         it('should allow ORACLE_ROLE to update risk profile', async function () {
+            // Advance time to bypass MIN_UPDATE_INTERVAL (1 hour)
+            await network.provider.send('evm_increaseTime', [3601]);
+            await network.provider.send('evm_mine');
+
             await riskRegistry.connect(owner).updateRiskProfile(
                 user1.address,
                 50,
@@ -51,6 +60,10 @@ describe('FidesOrigin Contract Suite', function () {
         });
 
         it('should correctly identify sanctioned addresses', async function () {
+            // Advance time to bypass MIN_UPDATE_INTERVAL (1 hour)
+            await network.provider.send('evm_increaseTime', [3601]);
+            await network.provider.send('evm_mine');
+
             await riskRegistry.connect(owner).updateRiskProfile(
                 user2.address,
                 100,
@@ -64,12 +77,20 @@ describe('FidesOrigin Contract Suite', function () {
         });
 
         it('should allow emergency sanction via updateRiskProfile', async function () {
+            // Advance time to bypass MIN_UPDATE_INTERVAL (1 hour)
+            await network.provider.send('evm_increaseTime', [3601]);
+            await network.provider.send('evm_mine');
+
             await riskRegistry.connect(owner).updateRiskProfile(user3.address, 100, 3, [], true);
             const profile = await riskRegistry.getProfile(user3.address);
             expect(profile[5]).to.be.true;
         });
 
         it('should batch update risk profiles', async function () {
+            // Advance time to bypass MIN_UPDATE_INTERVAL (1 hour)
+            await network.provider.send('evm_increaseTime', [3601]);
+            await network.provider.send('evm_mine');
+
             const accounts = [user1.address, user2.address];
             const scores = [30, 70];
             const tiers = [1, 3];
@@ -98,6 +119,10 @@ describe('FidesOrigin Contract Suite', function () {
         });
 
         it('should block transfers with sanctioned addresses', async function () {
+            // Advance time to bypass MIN_UPDATE_INTERVAL (1 hour)
+            await network.provider.send('evm_increaseTime', [3601]);
+            await network.provider.send('evm_mine');
+
             await riskRegistry.connect(owner).updateRiskProfile(user2.address, 100, 3, [], true);
             expect((await riskRegistry.getProfile(user2.address))[5]).to.be.true;
 
@@ -203,6 +228,10 @@ describe('FidesOrigin Contract Suite', function () {
 
     describe('Integration Tests', function () {
         it('should complete full compliance flow', async function () {
+            // Advance time to bypass MIN_UPDATE_INTERVAL (1 hour)
+            await network.provider.send('evm_increaseTime', [3601]);
+            await network.provider.send('evm_mine');
+
             await riskRegistry.connect(owner).updateRiskProfile(user1.address, 20, 1, [], false);
 
             const policy = {

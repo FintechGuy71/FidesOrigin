@@ -679,7 +679,13 @@ async function publishBatches(
         validTags,
         { gasLimit }
       );
-      const receipt = await tx.wait(1);
+      // [P1-Fix] Add timeout to prevent infinite hanging on tx.wait()
+      const receipt = await Promise.race([
+        tx.wait(1),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Transaction confirmation timeout after 120s')), 120_000)
+        ),
+      ]);
 
       // receipt can be null if the network drops the tx before confirmation
       if (!receipt) {
