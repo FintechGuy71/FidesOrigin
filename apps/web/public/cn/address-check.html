@@ -261,7 +261,12 @@
             const text = document.getElementById('btnText');
             btn.disabled = loading;
             if (loading) {
-                text.innerHTML = '<div class="spinner"></div> 查询中...';
+                // [SECURITY FIX] 使用 createElement 替代 innerHTML，防止 XSS
+                text.textContent = '';
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                text.appendChild(spinner);
+                text.appendChild(document.createTextNode(' 查询中...'));
             } else {
                 text.textContent = '查询风险等级';
             }
