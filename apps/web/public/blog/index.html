@@ -1,129 +1,351 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>FidesOrigin Blog — Insights on On-Chain Compliance</title>
-    <meta name="description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
-    <meta name="theme-color" content="#0a0a0a">
-    <meta property="og:title" content="FidesOrigin Blog — Insights on On-Chain Compliance">
-    <meta property="og:description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="/brand/og-image.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="FidesOrigin Blog — Insights on On-Chain Compliance">
-    <meta name="twitter:description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
-    <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
-    <link rel="canonical" href="https://fidesorigin.com/blog/">
-    <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/">
-    <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/">
-    <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/">
-    <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/">
-    <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="icon" href="/brand/logo-dark-icon.png">
-    <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
-    <link rel="stylesheet" href="/styles.css">
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "name": "FidesOrigin",
-          "url": "https://fidesorigin.com",
-          "logo": "https://fidesorigin.com/brand/logo-dark-full.png",
-          "sameAs": ["https://github.com/FintechGuy71/FidesOrigin"]
-        },
-        {
-          "@type": "WebSite",
-          "name": "FidesOrigin Blog",
-          "url": "https://fidesorigin.com/blog/"
-        }
-      ]
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>FidesOrigin Blog — Insights on On-Chain Compliance</title>
+  <meta name="description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
+  <meta property="og:title" content="FidesOrigin Blog — Insights on On-Chain Compliance">
+  <meta property="og:description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/blog/">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/blog/">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="icon" href="../brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="../brand/logo-dark-icon.png">
+  <style>
+    /* Blog page-specific styles */
+    .blog-hero {
+      position: relative;
+      padding: 160px 0 60px;
+      overflow: hidden;
     }
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Page-specific overrides */
-    </style>
+    .blog-hero .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .blog-hero .glow-1 {
+      width: 400px; height: 400px;
+      background: var(--accent);
+      top: -100px; right: -100px;
+    }
+    .blog-hero-content {
+      position: relative;
+      z-index: 1;
+    }
+    .blog-hero .display {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .blog-hero .display span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hr-fade {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      margin: 0 auto;
+      max-width: 800px;
+    }
+    .blog-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      transition: all 0.3s ease;
+    }
+    .blog-card:hover {
+      border-color: var(--border-light);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+    }
+    .blog-card h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .blog-card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .blog-card .tag {
+      display: inline-block;
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--accent-dim);
+      margin-right: 8px;
+    }
+    .blog-card .date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .blog-card svg {
+      width: 20px; height: 20px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .blog-cta {
+      text-align: center;
+      padding: 80px 40px;
+    }
+    .blog-cta .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: none;
+    }
+    .blog-cta .btn-primary:hover {
+      background: var(--gold);
+      transform: translateY(-1px);
+    }
+    @media (max-width: 640px) {
+      .blog-card { flex-direction: column; align-items: flex-start; }
+      .blog-hero { padding: 120px 0 40px; }
+    }
+  </style>
 </head>
-<body class="grain">
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-[#1a1a1f] focus:text-sm focus:rounded">Skip to content</a>
+<body>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 nav-bar border-b border-white/[0.04]">
-        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-            <a href="/" class="flex items-center">
-                <img src="/brand/logo-dark-full.png" alt="FidesOrigin" class="h-8 w-auto" loading="lazy">
-            </a>
-            <div class="flex items-center gap-3">
-                <a href="/" class="btn-secondary text-xs">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    Back to home
-                </a>
-            </div>
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#security">Security</a>
+        <a href="/docs/">Docs</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="Language">
+            EN
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/blog/">English</a>
+            <a href="/cn/blog/">简体中文</a>
+            <a href="/tw/blog/">繁體中文</a>
+            <a href="/jp/blog/">日本語</a>
+          </div>
         </div>
-    </nav>
+        <div class="nav-divider"></div>
+        <div class="wallet-connect-wrap">
+          <button class="wallet-btn" id="wallet-btn" aria-label="Connect">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+            Connect
+          </button>
+          <div class="wallet-connected" id="wallet-connected">
+            <div class="wallet-info">
+              <span class="wallet-address" id="wallet-address"></span>
+              <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
+            </div>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect">Disconnect</button>
+          </div>
+        </div>
+        <a href="/#contact" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
 
-    <main id="main-content">
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="Close menu">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="/#features">Features</a>
+    <a href="/#how-it-works">How It Works</a>
+    <a href="/#security">Security</a>
+    <a href="/docs/">Docs</a>
+    <div class="lang-row">
+      <a href="/blog/">EN</a>
+      <a href="/cn/blog/">CN</a>
+      <a href="/tw/blog/">TW</a>
+      <a href="/jp/blog/">JP</a>
+    </div>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected">
+      <span id="mobile-wallet-address"></span>
+      <button id="mobile-wallet-disconnect" aria-label="Disconnect">Disconnect</button>
+    </div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="Connect">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+      Connect
+    </button>
+  </div>
+
+  <main>
     <!-- Hero -->
-    <section class="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
-        <div class="glow w-[400px] h-[400px] bg-[#b8945f] -top-40 -right-20"></div>
-        <div class="max-w-5xl mx-auto px-6 relative z-10">
-            <div class="reveal">
-                <p class="micro mb-4">Blog</p>
-                <h1 class="display mb-6">Insights on programmable<br><span class="gold">on-chain compliance</span></h1>
-                <p class="lead max-w-xl">Deep dives into risk engines, DeFi regulation, and the architecture of deterministic compliance.</p>
-            </div>
+    <section class="blog-hero">
+      <div class="glow glow-1"></div>
+      <div class="container blog-hero-content">
+        <div class="reveal">
+          <p class="micro">Blog</p>
+          <h1 class="display">Insights on programmable<br><span>on-chain compliance</span></h1>
+          <p class="lead" style="max-width: 600px; margin-top: 20px;">Deep dives into risk engines, DeFi regulation, and the architecture of deterministic compliance.</p>
         </div>
+      </div>
     </section>
 
     <div class="hr-fade"></div>
 
     <!-- Articles -->
-    <section class="py-20 md:py-28">
-        <div class="max-w-5xl mx-auto px-6">
-            <div class="grid gap-6 reveal">
-                <a href="/blog/why-on-chain-compliance.html" class="blog-card flex items-center justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="text-[10px] text-[#d4af7a] font-mono px-2 py-0.5 rounded bg-[#b8945f]/10">CATEGORY DEFINITION</span>
-                            <span class="text-[10px] text-[#3a3a42]">June 2026</span>
-                        </div>
-                        <h2 class="h3 mb-2">Why On-Chain: The End of API-Based Compliance</h2>
-                        <p class="text-[13px] text-[#8b8b94]">Why screening transactions through off-chain APIs is structurally broken — and what "on-chain risk enforcement" means for digital asset infrastructure.</p>
-                    </div>
-                    <svg class="w-5 h-5 text-[#5a5a62] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
+    <section class="section" style="padding-top: 60px;">
+      <div class="container">
+        <div class="reveal">
+          <a href="why-on-chain-compliance.html" class="blog-card">
+            <div>
+              <div style="margin-bottom: 8px;">
+                <span class="tag">Category Definition</span>
+                <span class="date">June 2026</span>
+              </div>
+              <h2>Why On-Chain: The End of API-Based Compliance</h2>
+              <p>Why screening transactions through off-chain APIs is structurally broken — and what "on-chain risk enforcement" means for digital asset infrastructure.</p>
             </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </div>
+      </div>
     </section>
-    </main>
+  </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-white/[0.04] py-8">
-        <div class="max-w-5xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <a href="/" class="flex items-center">
-                    <img src="/brand/logo-dark-full.png" alt="FidesOrigin" class="h-6 w-auto opacity-60" loading="lazy">
-                </a>
-                <div class="flex items-center gap-6 text-[11px] text-[#3a3a42]">
-                    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="hover:text-[#8b8b94] transition-colors flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        GitHub
-                    </a>
-                    <span>Sepolia Testnet</span>
-                </div>
-            </div>
-            <div class="border-t border-white/[0.02] pt-5 mt-6 text-center">
-                <p class="text-[10px] text-[#3a3a42]">© 2026 FidesOrigin. On-chain risk engine for digital assets.</p>
-            </div>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>Programmable on-chain compliance for the future of finance.</p>
         </div>
-    </footer>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/#features">Features</a>
+          <a href="/#how-it-works">How It Works</a>
+          <a href="/#security">Security</a>
+          <a href="/admin/">Dashboard</a>
+        </div>
+        <div class="footer-col">
+          <h4>Developers</h4>
+          <a href="/docs/" target="_blank" rel="noopener">Documentation</a>
+          <a href="/docs/api.html" target="_blank" rel="noopener">API Reference</a>
+          <a href="/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="mailto:contact@fidesorigin.com">Contact</a>
+          <a href="/blog/">Blog</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>Built with &hearts; for the on-chain financial world.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../wallet-connect.js"></script>
+  <script>
+    // ===== Mobile Menu =====
+    function toggleMobileMenu() {
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var mobileBtn = document.querySelector('.nav-mobile-btn');
+      if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu);
+      document.querySelectorAll('#mobileMenu a').forEach(function(link) {
+        link.addEventListener('click', toggleMobileMenu);
+      });
+    });
+
+    // ===== Language Menu =====
+    function toggleLangMenu(e) {
+      e.stopPropagation();
+      var menu = document.getElementById('langMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.addEventListener('click', toggleLangMenu);
+    });
+    document.addEventListener('click', function() {
+      var menu = document.getElementById('langMenu');
+      if (menu) menu.style.display = 'none';
+    });
+
+    // ===== Intersection Observer for scroll animations =====
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+
+    // ===== Scroll-to-top =====
+    (function() {
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '&uarr;';
+      btn.setAttribute('aria-label', 'Scroll to top');
+      document.body.appendChild(btn);
+      window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      });
+      btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+  </script>
 </body>
 </html>
