@@ -21,6 +21,11 @@ contract DiamondComplianceEngine {
             facet != address(0),
             "DiamondComplianceEngine: Function does not exist"
         );
+        // P2 FIX: 验证 facet 地址仍包含代码（防止 SELFDESTRUCT 后落入空地址）
+        require(
+            facet.code.length > 0,
+            "DiamondComplianceEngine: Facet has no code"
+        );
         assembly {
             calldatacopy(0, 0, calldatasize())
             let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)

@@ -11,6 +11,8 @@ import "./interfaces/IAssetCompliance.sol";
  * @title TestUSD
  * @dev FidesOrigin MVP Demo Phase 3
  * @notice 链上执行级可编程合规协议 - 多标签风控 + 交易限额 + 时间锁 + 多签
+ * @dev ⚠️ EXAMPLE ONLY - NOT FOR PRODUCTION USE
+ * @dev 本合约包含测试专用功能（faucet等），仅供演示和测试参考
  */
 contract TestUSD is ERC20, AccessControl, Pausable {
     using EnumerableSet for EnumerableSet.AddressSet;

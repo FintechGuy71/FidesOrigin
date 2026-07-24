@@ -3,6 +3,11 @@ pragma solidity ^0.8.20;
 
 import "../interfaces/IFidesCompliance.sol";
 
+/**
+ * @title MockFidesCompliance
+ * @dev ⚠️ EXAMPLE ONLY - NOT FOR PRODUCTION USE
+ * @dev 本合约为测试 mock，仅供单元测试使用
+ */
 contract MockFidesCompliance is IFidesCompliance {
     mapping(address => bool) private _blacklisted;
     mapping(address => RiskProfile) private _profiles;

@@ -11,6 +11,8 @@ import "../interfaces/IAssetCompliance.sol";
  * @title CompliantStableCoin
  * @notice 集成FidesOrigin合规协议的示例稳定币合约
  * @dev 展示资产发行方如何集成ComplianceEngine
+ * @dev ⚠️ EXAMPLE ONLY - NOT FOR PRODUCTION USE
+ * @dev 本合约包含测试专用功能，仅供演示和测试参考
  * 
  * 集成方式：在转账函数中调用compliance.preTransferHook()
  * 实现效果：所有转账自动经过FidesOrigin风控检查

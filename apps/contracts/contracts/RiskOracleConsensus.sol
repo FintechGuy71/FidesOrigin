@@ -27,8 +27,10 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     /// @notice M-10 FIX: 最大授权预言机数量，防止 _resetConfirmations 等遍历操作的 gas 膨胀
     uint256 public constant MAX_ORACLES = 50;
 
-    /// @notice H-5 FIX: 最小预言机质押金额，防止闪电贷攻击
-    uint256 public constant MIN_STAKE_AMOUNT = 1 ether;
+    /// @notice P2 FIX: 链特定最小质押金额映射（替代固定常数）
+    mapping(uint256 => uint256) public minStakeByChain;
+    /// @notice P2 FIX: 默认质押金额（当链未配置时使用）
+    uint256 public constant DEFAULT_MIN_STAKE = 1 ether;
 
     /// @notice H-5 FIX: 预言机质押金额映射
     mapping(address => uint256) public oracleStakes;
@@ -36,6 +38,25 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     // ============ Events ============
     event OracleStaked(address indexed oracle, uint256 amount);
     event OracleUnstaked(address indexed oracle, uint256 amount);
+    event MinStakeUpdated(uint256 indexed chainId, uint256 minStake);
+
+    /**
+     * @notice P2 FIX: 设置特定链的最小质押金额
+     * @param chainId_ 目标链 ID
+     * @param minStake 最小质押金额（wei）
+     */
+    function _setMinStakeForChain(uint256 chainId_, uint256 minStake) internal {
+        minStakeByChain[chainId_] = minStake;
+        emit MinStakeUpdated(chainId_, minStake);
+    }
+
+    /**
+     * @dev P2 FIX: 获取当前链的最小质押金额
+     */
+    function _getMinStakeAmount() internal view returns (uint256) {
+        uint256 configured = minStakeByChain[block.chainid];
+        return configured > 0 ? configured : DEFAULT_MIN_STAKE;
+    }
 
     /**
      * @notice 添加授权预言机
@@ -143,10 +164,10 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
             revert DeadlineExpired(deadline, block.timestamp);
         }
 
-        // H-5 FIX: 基于质押的防闪电贷机制 — 替代 tx.origin 检查
-        // 要求预言机操作者质押最小金额，防止闪电贷攻击
-        if (oracleStakes[msg.sender] < MIN_STAKE_AMOUNT) {
-            revert InsufficientStake(msg.sender, oracleStakes[msg.sender], MIN_STAKE_AMOUNT);
+        // H-5 FIX: 基于质押的防闪电贷机制 — 使用链特定质押金额
+        uint256 minStake = _getMinStakeAmount();
+        if (oracleStakes[msg.sender] < minStake) {
+            revert InsufficientStake(msg.sender, oracleStakes[msg.sender], minStake);
         }
 
         // H-2: same-block 调用保护

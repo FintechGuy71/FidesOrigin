@@ -160,6 +160,30 @@ contract RiskRegistryV2 is
         _disableInitializers();
     }
 
+    // ============ Standard Initializer (Fresh Deploy) ============
+    /// @notice 标准初始化函数 — 用于从零部署 RiskRegistryV2
+    /// @dev 必须在新部署时首先调用，替代 V1 的 initialize
+    /// @param admin 初始管理员地址
+    function initialize(address admin) external initializer {
+        __AccessControl_init();
+        __Pausable_init();
+        // OZ v5 UUPSUpgradeable has no initializer
+
+        require(admin != address(0), "Invalid admin address");
+
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(ADMIN_ROLE, admin);
+        _grantRole(ORACLE_ROLE, admin);
+        _grantRole(COMPLIANCE_ENGINE_ROLE, admin);
+        _grantRole(OPERATOR_ROLE, admin);
+
+        chainId = block.chainid;
+        version = 2;
+        _reentrancyStatus = 1;
+
+        // totalProfiles / totalHighRisk / totalSanctioned 保持默认值 0
+    }
+
     // ============ V2 Upgrade Initializer ============
     /// @notice V2 升级初始化函数 - 仅可在从 V1 升级时调用一次
     function initializeV2() external reinitializer(2) onlyRole(ADMIN_ROLE) {
@@ -723,5 +747,6 @@ contract RiskRegistryV2 is
     }
 
     // ============ Storage Gap ============
-    uint256[33] private __gap;
+    /// @dev P2 FIX: 统一 __gap 大小为 50，与其他 UUPS 合约保持一致
+    uint256[50] private __gap;
 }

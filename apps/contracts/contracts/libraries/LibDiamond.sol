@@ -114,16 +114,10 @@ library LibDiamond {
                 oldFacetAddress == address(0),
                 "LibDiamond: Can't add function that already exists"
             );
-            // [HIGH-1 FIX] Verify the facet actually implements this selector via staticcall
-            // This prevents adding selectors that the facet does not implement
-            (bool success, ) = _facetAddress.staticcall(
-                abi.encodeWithSelector(selector)
-            );
-            // staticcall to an unimplemented selector reverts, but we only care
-            // that the facet doesn't self-destruct or is a non-contract.
-            // A more robust check would verify the function signature matches.
-            // Note: staticcall with no args to a view/pure function may revert
-            // if params are required; this is a best-effort sanity check.
+            // P1 FIX: Removed misleading staticcall — code.length check above is the real validation.
+            // staticcall with no args often reverts for functions requiring parameters,
+            // and the success variable was never checked. Use ERC-165 or explicit ABI
+            // registration for stronger facet capability verification.
             ds.facetAddressAndSelectorPosition[selector] = _facetAddress;
             ds.selectorList.push(selector);
         }

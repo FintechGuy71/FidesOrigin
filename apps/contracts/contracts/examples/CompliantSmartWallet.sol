@@ -10,6 +10,8 @@ import "./CompliantSmartWalletBase.sol";
  * @notice 带签名执行扩展的合规智能钱包
  * @dev 继承 CompliantSmartWalletBase，添加离线签名授权执行功能
  * @dev 支持 relayer 代付 gas 的元交易模式
+ * @dev ⚠️ EXAMPLE ONLY - NOT FOR PRODUCTION USE
+ * @dev 本合约包含测试专用功能，仅供演示和测试参考
  *
  * ## 功能定位
  * 在基础合规钱包能力之上，增加签名执行层，实现：

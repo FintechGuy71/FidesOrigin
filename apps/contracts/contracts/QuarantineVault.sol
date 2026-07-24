@@ -451,10 +451,10 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 
-        // H-06 FIX: 支持 ETH 释放，限制 gas 为 2300 防止重入攻击
+        // P0 FIX: 支持 ETH 释放，gas 限制提高到 10000 以兼容合约钱包 (Gnosis Safe / Argent)
         if (record.token == address(0)) {
             // ETH 释放路径 — 限制 gas 防止恶意接收方消耗无限 gas
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 2300}("");
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
             require(ok, "ETH release failed");
         } else {
             // ERC20 释放路径
@@ -511,9 +511,9 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
             tokenQuarantinedAmount[record.token] -= record.amount;
 
-            // H-06 FIX: 支持 ETH 批量释放，限制 gas 为 2300
+            // P0 FIX: 支持 ETH 批量释放，gas 限制提高到 10000
             if (record.token == address(0)) {
-                (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 2300}("");
+                (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
                 if (!ok) {
                     emit BatchReleaseFailed(recordId, "ETH transfer failed");
                     continue;
@@ -572,8 +572,8 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         tokenQuarantinedAmount[record.token] -= record.amount;
 
         if (record.token == address(0)) {
-            // H-06 FIX: 限制 gas 为 2300 防止重入攻击，与 releaseFunds 保持一致
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 2300}("");
+            // P0 FIX: 限制 gas 为 10000 防止重入攻击，同时兼容合约钱包
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
             require(ok, "ETH claim failed");
         } else {
             IERC20(record.token).safeTransfer(record.originalOwner, record.amount);

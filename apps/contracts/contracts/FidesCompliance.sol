@@ -85,6 +85,9 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     /// @notice 白名单集合（用于 IFidesCompliance.isWhitelisted）
     mapping(address => bool) private _whitelist;
 
+    /// @notice 升级提案映射（P0 FIX: 添加升级时间锁）
+    mapping(bytes32 => uint256) public upgradeProposals;
+
     /// @notice 风险资料更新时间
     mapping(address => uint256) private _riskProfileLastUpdated;
     
@@ -159,6 +162,8 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     event QuarantineVaultProposed(address indexed proposed, address indexed proposer, uint256 timestamp);
 
     event WhitelistUpdated(address indexed account, bool status, address indexed admin, uint256 timestamp);
+    event UpgradeProposed(bytes32 indexed proposalId, address indexed newImplementation, uint256 executeAfter);
+    event UpgradeExecuted(bytes32 indexed proposalId, address indexed newImplementation);
     
     // ============ Errors ============
     
@@ -230,9 +235,37 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
 
     /**
      * @notice UUPS 升级授权 — 仅 ADMIN_ROLE 可执行升级
+     * @dev P0 FIX: 添加升级时间锁校验（48小时延迟）
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
-        // 升级授权由 ADMIN_ROLE 控制
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        uint256 executeAfter = upgradeProposals[proposalId];
+        require(executeAfter != 0, "No upgrade proposal");
+        require(block.timestamp >= executeAfter, "Upgrade timelock active");
+        delete upgradeProposals[proposalId];
+        emit UpgradeExecuted(proposalId, newImplementation);
+    }
+
+    /**
+     * @notice 提议合约升级
+     * @dev P0 FIX: 升级前必须提议并等待 SETTER_DELAY（48小时）
+     * @param newImplementation 新实现合约地址
+     */
+    function proposeUpgrade(address newImplementation) external onlyRole(ADMIN_ROLE) {
+        require(newImplementation != address(0), "Zero address");
+        require(newImplementation.code.length > 0, "Not a contract");
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        upgradeProposals[proposalId] = block.timestamp + SETTER_DELAY;
+        emit UpgradeProposed(proposalId, newImplementation, upgradeProposals[proposalId]);
+    }
+
+    /**
+     * @notice 取消升级提案
+     * @param proposalId 升级提案ID
+     */
+    function cancelUpgrade(bytes32 proposalId) external onlyRole(ADMIN_ROLE) {
+        require(upgradeProposals[proposalId] != 0, "No such proposal");
+        delete upgradeProposals[proposalId];
     }
 
     // ============ IFidesCompliance Interface Implementation ============

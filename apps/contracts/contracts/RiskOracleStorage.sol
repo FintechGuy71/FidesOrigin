@@ -216,6 +216,7 @@ abstract contract RiskOracleStorage {
     event OwnershipRolesSynced(address indexed previousOwner, address indexed newOwner);
     event DeferredRequestProcessed(bytes32 indexed requestId);
     event QueueDropped(address indexed account, uint256 timestamp);
+    event BatchQueueItemSkipped(uint256 indexed index, address account, string reason);
 
     // ============ Errors ============
 
