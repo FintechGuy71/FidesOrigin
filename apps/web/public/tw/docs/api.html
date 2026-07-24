@@ -3,58 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <<title>API 參考 — FidesOrigin</title>
-  <meta name="description" content="FidesOrigin REST API 參考 reference. Endpoints for address risk checks, rules, and risk assessment.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self';">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>API 參考 — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin REST API 參考。地址風險檢查、規則管理和風險評估的端點。">
+  <link rel="canonical" href="https://fidesorigin.com/tw/docs/api.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/docs/api.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/docs/api.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/docs/api.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/docs/api.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/brand/logo-dark-icon.png">
 </head>
 <body>
-  <nav class="nav">
+
+  <nav class="nav" aria-label="主導航">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">
-        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+      <a href="/tw/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
         FidesOrigin
       </a>
       <div class="nav-left">
-        <a href="/tw/">首頁</a>
-        <a href="/tw/docs/">文檔</a>
-        <a href="/tw/docs/api.html">API</a>
+        <a href="/tw/#features">功能</a>
+        <a href="/tw/#how-it-works">工作原理</a>
+        <a href="/tw/#security">安全</a>
+        <a href="/tw/docs/">文件</a>
       </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="語言">
+            TW
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/docs/api.html">English</a>
+            <a href="/cn/docs/api.html">简体中文</a>
+            <a href="/tw/docs/api.html">繁體中文</a>
+            <a href="/jp/docs/api.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/tw/#contact" class="nav-cta">開始使用</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="切換菜單" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </div>
   </nav>
 
-  <main class="container" style="padding-top:120px;max-width:800px;">
-    <h1 style="font-size:2.5rem;font-weight:600;margin-bottom:1rem;">API Reference</h1>
-    <p style="color:var(--text-secondary);font-size:1.125rem;margin-bottom:3rem;">REST API for on-chain compliance and risk assessment.</p>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="關閉菜單">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="/tw/#features">功能</a>
+    <a href="/tw/#how-it-works">工作原理</a>
+    <a href="/tw/#security">安全</a>
+    <a href="/tw/docs/">文件</a>
+    <div class="lang-row">
+      <a href="/docs/api.html">EN</a>
+      <a href="/cn/docs/api.html">CN</a>
+      <a href="/tw/docs/api.html">TW</a>
+      <a href="/jp/docs/api.html">JP</a>
+    </div>
+  </div>
 
-    <section style="margin-bottom:3rem;">
-      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Base URL</h2>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
-        <code style="font-family:'JetBrains Mono',monospace;font-size:0.9375rem;color:var(--accent);">https://api.fidesorigin.com/api/v1</code>
+  <div class="docs-layout">
+    <aside class="docs-sidebar" id="docsSidebar">
+      <div class="docs-sidebar-title">文件</div>
+      <ul class="docs-nav-tree">
+        <li><a href="/tw/docs/">概覽</a></li>
+        <li><a href="/tw/docs/api.html" class="active">API 參考</a></li>
+        <li><a href="/tw/docs/sdk.html">SDK</a></li>
+      </ul>
+      <div class="docs-sidebar-title">資源</div>
+      <ul class="docs-nav-tree">
+        <li><a href="/blog/" target="_blank" rel="noopener">博客</a></li>
+        <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="/admin/">控制台</a></li>
+      </ul>
+    </aside>
+
+    <button class="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="切換側邊欄">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      文件菜單
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+
+    <main class="docs-content">
+      <h1>API 參考</h1>
+      <p class="docs-lead">鏈上合規與風險評估的 REST API。</p>
+
+      <h2>基礎 URL</h2>
+      <div class="docs-base-url">
+        <code>https://api.fidesorigin.com/api/v1</code>
       </div>
-    </section>
 
-    <section style="margin-bottom:3rem;">
-      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Authentication</h2>
-      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">All API requests require a Bearer token in the Authorization header.</p>
-      <div style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-secondary);margin-bottom:1.5rem;">
-        <code>Authorization: Bearer YOUR_API_KEY</code>
-      </div>
-    </section>
-
-    <section style="margin-bottom:3rem;">
-      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Endpoints</h2>
-
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <span style="background:var(--success);color:var(--bg);padding:4px 10px;border-radius:4px;font-size:0.75rem;font-weight:600;">GET</span>
-          <code style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:var(--text);">/addresses/{address}</code>
+      <h2>認證</h2>
+      <p>所有 API 請求需要在 Authorization 頭中攜帶 Bearer token。</p>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>Header</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
         </div>
-        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;margin-bottom:16px;">Get risk profile for a specific Ethereum address.</p>
-        <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--text);">Response</h4>
-        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>{
+        <pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+      </div>
+
+      <h2>接口</h2>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-header">
+          <span class="docs-method get">GET</span>
+          <code class="docs-endpoint-path">/addresses/{address}</code>
+        </div>
+        <p>獲取指定以太坊地址的風險檔案。</p>
+        <h4>響應</h4>
+        <div class="docs-code-block">
+          <div class="docs-code-header">
+            <span>JSON</span>
+            <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+          </div>
+          <pre><code>{
   "address": "0x...",
   "risk_score": 85,
   "risk_tier": "HIGH",
@@ -63,39 +134,57 @@
   "entity_name": "Unknown",
   "last_updated": "2026-07-24T09:00:00Z"
 }</code></pre>
+        </div>
       </div>
 
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <span style="background:var(--warning);color:var(--bg);padding:4px 10px;border-radius:4px;font-size:0.75rem;font-weight:600;">POST</span>
-          <code style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:var(--text);">/risk-assessment</code>
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-header">
+          <span class="docs-method post">POST</span>
+          <code class="docs-endpoint-path">/risk-assessment</code>
         </div>
-        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;margin-bottom:16px;">Submit a transaction for risk assessment before execution.</p>
-        <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--text);">Request Body</h4>
-        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0 0 16px 0;"><code>{
+        <p>在執行前提交交易進行風險評估。</p>
+        <h4>請求體</h4>
+        <div class="docs-code-block">
+          <div class="docs-code-header">
+            <span>JSON</span>
+            <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+          </div>
+          <pre><code>{
   "from": "0x...",
   "to": "0x...",
   "amount": "1000000000000000000",
   "asset": "0x..."
 }</code></pre>
-        <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--text);">Response</h4>
-        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>{
+        </div>
+        <h4>響應</h4>
+        <div class="docs-code-block">
+          <div class="docs-code-header">
+            <span>JSON</span>
+            <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+          </div>
+          <pre><code>{
   "allowed": true,
   "risk_score": 15,
   "risk_tier": "LOW",
   "quarantine_required": false,
   "reason": null
 }</code></pre>
+        </div>
       </div>
 
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <span style="background:var(--success);color:var(--bg);padding:4px 10px;border-radius:4px;font-size:0.75rem;font-weight:600;">GET</span>
-          <code style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:var(--text);">/rules</code>
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-header">
+          <span class="docs-method get">GET</span>
+          <code class="docs-endpoint-path">/rules</code>
         </div>
-        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;margin-bottom:16px;">List all active compliance rules.</p>
-        <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--text);">Response</h4>
-        <pre style="background:#0a0e1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-secondary);margin:0;"><code>{
+        <p>列出所有活躍的合規規則。</p>
+        <h4>響應</h4>
+        <div class="docs-code-block">
+          <div class="docs-code-header">
+            <span>JSON</span>
+            <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+          </div>
+          <pre><code>{
   "rules": [
     {
       "id": "rule-001",
@@ -106,58 +195,115 @@
     }
   ]
 }</code></pre>
+        </div>
       </div>
-    </section>
 
-    <section style="margin-bottom:4rem;">
-      <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">Error Codes</h2>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+      <h2>錯誤碼</h2>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
           <thead>
-            <tr style="border-bottom:1px solid var(--border);">
-              <th style="text-align:left;padding:12px;color:var(--text);font-weight:600;">Code</th>
-              <th style="text-align:left;padding:12px;color:var(--text);font-weight:600;">Status</th>
-              <th style="text-align:left;padding:12px;color:var(--text);font-weight:600;">Description</th>
-            </tr>
+            <tr><th>代碼</th><th>狀態</th><th>描述</th></tr>
           </thead>
           <tbody>
-            <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">400</td>
-              <td style="padding:12px;color:var(--text-secondary);">Bad Request</td>
-              <td style="padding:12px;color:var(--text-secondary);">Invalid request parameters</td>
-            </tr>
-            <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">401</td>
-              <td style="padding:12px;color:var(--text-secondary);">Unauthorized</td>
-              <td style="padding:12px;color:var(--text-secondary);">Missing or invalid API key</td>
-            </tr>
-            <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">404</td>
-              <td style="padding:12px;color:var(--text-secondary);">Not Found</td>
-              <td style="padding:12px;color:var(--text-secondary);">Address or resource not found</td>
-            </tr>
-            <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">429</td>
-              <td style="padding:12px;color:var(--text-secondary);">Rate Limited</td>
-              <td style="padding:12px;color:var(--text-secondary);">Too many requests</td>
-            </tr>
-            <tr>
-              <td style="padding:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">500</td>
-              <td style="padding:12px;color:var(--text-secondary);">Server Error</td>
-              <td style="padding:12px;color:var(--text-secondary);">Internal server error</td>
-            </tr>
+            <tr><td><code>400</code></td><td>Bad Request</td><td>請求參數無效</td></tr>
+            <tr><td><code>401</code></td><td>Unauthorized</td><td>缺少或無效的 API 密鑰</td></tr>
+            <tr><td><code>404</code></td><td>Not Found</td><td>地址或資源未找到</td></tr>
+            <tr><td><code>429</code></td><td>Rate Limited</td><td>請求過於頻繁</td></tr>
+            <tr><td><code>500</code></td><td>Server Error</td><td>內部伺服器錯誤</td></tr>
           </tbody>
         </table>
       </div>
-    </section>
-  </main>
+    </main>
+  </div>
 
-  <footer class="footer" style="border-top:1px solid var(--border);padding:40px 0;">
+  <footer class="footer">
     <div class="container">
-      <p style="text-align:center;color:var(--text-muted);font-size:0.8125rem;">
-        © 2026 FidesOrigin. <a href="/tw/privacy.html" style="color:var(--accent);">Privacy Policy</a> | <a href="/tw/terms.html" style="color:var(--accent);">Terms of Service</a>
-      </p>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/tw/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>面向未來金融的可編程鏈上合規。</p>
+        </div>
+        <div class="footer-col">
+          <h4>產品</h4>
+          <a href="/tw/#features">功能</a>
+          <a href="/tw/#how-it-works">工作原理</a>
+          <a href="/tw/#security">安全</a>
+          <a href="/admin/">控制台</a>
+        </div>
+        <div class="footer-col">
+          <h4>開發者</h4>
+          <a href="/tw/docs/">文件</a>
+          <a href="/tw/docs/api.html">API 參考</a>
+          <a href="/tw/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>公司</h4>
+          <a href="mailto:contact@fidesorigin.com">聯繫我們</a>
+          <a href="/blog/">博客</a>
+          <a href="/tw/privacy.html">隱私政策</a>
+          <a href="/tw/terms.html">服務條款</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. 保留所有權利。</p>
+        <p>為鏈上金融世界精心打造。</p>
+      </div>
     </div>
   </footer>
+
+  <script nonce="2726c7f26c">
+    (function() {
+      var menu = document.getElementById('mobileMenu');
+      var btn = document.querySelector('.nav-mobile-btn');
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      function toggle() {
+        var active = menu.classList.toggle('active');
+        document.body.style.overflow = active ? 'hidden' : '';
+        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+      }
+      if (btn) btn.addEventListener('click', toggle);
+      if (closeBtn) closeBtn.addEventListener('click', toggle);
+      menu.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', toggle); });
+    })();
+    (function() {
+      var btn = document.getElementById('langToggleBtn');
+      var menu = document.getElementById('langMenu');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
+    })();
+    (function() {
+      var sidebar = document.getElementById('docsSidebar');
+      var toggle = document.getElementById('sidebarToggle');
+      if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+          var active = sidebar.classList.toggle('active');
+          toggle.setAttribute('aria-expanded', active ? 'true' : 'false');
+        });
+      }
+    })();
+    (function() {
+      document.querySelectorAll('.docs-code-block').forEach(function(block) {
+        var btn = block.querySelector('.docs-code-copy');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+          var code = block.querySelector('pre');
+          if (code) {
+            navigator.clipboard.writeText(code.textContent).then(function() {
+              btn.textContent = '已複製';
+              btn.classList.add('copied');
+              setTimeout(function() { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
+            });
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
