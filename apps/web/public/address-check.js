@@ -1,4 +1,5 @@
 // FidesOrigin Address Risk Check - External Script (CSP Compliant)
+// [P1 Fix] Auto-detects language from <html lang=""> and localizes all UI strings
 let addressDB = null;
 let addressMap = new Map();
 
@@ -23,6 +24,84 @@ if (typeof window !== 'undefined' && window.localStorage && window.localStorage.
 const BACKEND_API = (typeof window !== 'undefined' && window.FIDESORIGIN_BACKEND_URL)
     || (typeof process !== 'undefined' && process.env.FIDESORIGIN_BACKEND_URL)
     || '';
+
+// [P1 Fix] i18n strings keyed by HTML lang attribute
+function getLang() {
+    const lang = (document.documentElement.lang || 'en').toLowerCase();
+    if (lang.startsWith('zh-cn')) return 'zh-CN';
+    if (lang.startsWith('zh-tw') || lang.startsWith('zh-hk')) return 'zh-TW';
+    if (lang.startsWith('ja')) return 'ja';
+    return 'en';
+}
+const I18N = {
+    'en': {
+        invalidAddress: 'Invalid Address',
+        checking: 'Checking...',
+        checkRiskLevel: 'Check Risk Level',
+        highRisk: 'High Risk',
+        mediumRisk: 'Medium Risk',
+        lowRisk: 'Low Risk',
+        sanctioned: 'Sanctioned',
+        notInDatabase: 'Not in Database',
+        backendUnavailable: 'Backend API unavailable. Showing cached data.',
+        backendSource: 'FidesOrigin Backend',
+        subgraphSource: 'FidesOrigin Subgraph (The Graph)',
+        localSource: 'Local Database',
+        apiKeyRequired: 'API key required or invalid',
+        unknown: 'UNKNOWN'
+    },
+    'zh-CN': {
+        invalidAddress: '无效地址',
+        checking: '查询中...',
+        checkRiskLevel: '查询风险等级',
+        highRisk: '高风险',
+        mediumRisk: '中风险',
+        lowRisk: '低风险',
+        sanctioned: '已制裁',
+        notInDatabase: '未在数据库中',
+        backendUnavailable: '后端 API 暂不可用，显示缓存数据',
+        backendSource: 'FidesOrigin 后端',
+        subgraphSource: 'FidesOrigin Subgraph (The Graph)',
+        localSource: '本地数据库',
+        apiKeyRequired: '需要 API 密钥或密钥无效',
+        unknown: 'UNKNOWN'
+    },
+    'zh-TW': {
+        invalidAddress: '無效地址',
+        checking: '查詢中...',
+        checkRiskLevel: '查詢風險等級',
+        highRisk: '高風險',
+        mediumRisk: '中風險',
+        lowRisk: '低風險',
+        sanctioned: '已制裁',
+        notInDatabase: '未在資料庫中',
+        backendUnavailable: '後端 API 暫不可用，顯示緩存數據',
+        backendSource: 'FidesOrigin 後端',
+        subgraphSource: 'FidesOrigin Subgraph (The Graph)',
+        localSource: '本地資料庫',
+        apiKeyRequired: '需要 API 密鑰或密鑰無效',
+        unknown: 'UNKNOWN'
+    },
+    'ja': {
+        invalidAddress: '無効な住所',
+        checking: '確認中...',
+        checkRiskLevel: 'リスクレベルを確認',
+        highRisk: '高リスク',
+        mediumRisk: '中リスク',
+        lowRisk: '低リスク',
+        sanctioned: '制裁済み',
+        notInDatabase: 'データベースにありません',
+        backendUnavailable: 'バックエンド API は利用できません。キャッシュデータを表示中。',
+        backendSource: 'FidesOrigin バックエンド',
+        subgraphSource: 'FidesOrigin Subgraph (The Graph)',
+        localSource: 'ローカルデータベース',
+        apiKeyRequired: 'API キーが必要、または無効です',
+        unknown: 'UNKNOWN'
+    }
+};
+function t(key) {
+    return (I18N[getLang()] || I18N['en'])[key] || I18N['en'][key];
+}
 
 // [H-7 Fix] CSRF Token management
 let csrfToken = '';
@@ -86,9 +165,9 @@ function setLoading(loading) {
         const spinner = document.createElement('div');
         spinner.className = 'spinner';
         text.appendChild(spinner);
-        text.appendChild(document.createTextNode(' Checking...'));
+        text.appendChild(document.createTextNode(' ' + t('checking')));
     } else {
-        text.textContent = 'Check Risk Level';
+        text.textContent = t('checkRiskLevel');
     }
 }
 
@@ -146,8 +225,12 @@ async function loadStatsFromSubgraph() {
 }
 
 async function loadDatabase() {
+    // [P1 Fix] Auto-detect correct relative path for subdirectories (cn/, tw/, jp/)
+    const dataPath = window.location.pathname.includes('/cn/') || window.location.pathname.includes('/tw/') || window.location.pathname.includes('/jp/')
+        ? '../data-sync/cache/address-labels-v11.json'
+        : './data-sync/cache/address-labels-v11.json';
     try {
-        const response = await fetch('./data-sync/cache/address-labels-v11.json');
+        const response = await fetch(dataPath);
         if (response.ok) {
             addressDB = await response.json();
             for (const entry of addressDB.addressLabels) {
@@ -227,7 +310,7 @@ async function checkAddress() {
 
     if (!input || !input.match(/^0x[a-f0-9]{40}$/)) {
         badge.className = 'risk-badge risk-grey';
-        badge.textContent = 'Invalid Address';
+        badge.textContent = t('invalidAddress');
         resultBox.classList.add('show');
         return;
     }
@@ -236,7 +319,7 @@ async function checkAddress() {
     resultBox.classList.add('show');
     document.getElementById('resultAddr').textContent = input;
     badge.className = 'risk-badge risk-grey';
-    badge.textContent = 'Checking...';
+    badge.textContent = t('checking');
 
     let apiData = await fetchBackendRisk(input);
     let subgraphData = null;
@@ -245,7 +328,7 @@ async function checkAddress() {
     if (!apiData) {
         subgraphData = await fetchSubgraphRisk(input);
         if (!subgraphData && !entry) {
-            showToast('Backend API unavailable. Showing cached data.', 'info');
+            showToast(t('backendUnavailable'), 'info');
         }
     }
 
@@ -257,19 +340,19 @@ async function checkAddress() {
 
         document.getElementById('resultScore').textContent = score;
         document.getElementById('resultTier').textContent = level;
-        document.getElementById('resultSource').textContent = 'FidesOrigin Backend';
+        document.getElementById('resultSource').textContent = t('backendSource');
         document.getElementById('resultTags').textContent = tags.join(', ') || '-';
         document.getElementById('resultEntity').textContent = factors.map(f => f.name || f.type).join(', ') || '-';
 
         if (level === 'HIGH' || level === 'CRITICAL' || score >= 80) {
             badge.className = 'risk-badge risk-black';
-            badge.textContent = '⚠️ High Risk';
+            badge.textContent = '⚠️ ' + t('highRisk');
         } else if (level === 'MEDIUM' || score >= 40) {
             badge.className = 'risk-badge risk-grey';
-            badge.textContent = '⚡ Medium Risk';
+            badge.textContent = '⚡ ' + t('mediumRisk');
         } else {
             badge.className = 'risk-badge risk-safe';
-            badge.textContent = '✅ Low Risk';
+            badge.textContent = '✅ ' + t('lowRisk');
         }
     } else if (subgraphData) {
         const tier = subgraphData.tier;
@@ -278,37 +361,37 @@ async function checkAddress() {
 
         document.getElementById('resultScore').textContent = score;
         document.getElementById('resultTier').textContent = tier;
-        document.getElementById('resultSource').textContent = 'FidesOrigin Subgraph (The Graph)';
+        document.getElementById('resultSource').textContent = t('subgraphSource');
         document.getElementById('resultTags').textContent = tags.join(', ') || '-';
-        document.getElementById('resultEntity').textContent = subgraphData.isSanctioned ? 'Sanctioned' : '-';
+        document.getElementById('resultEntity').textContent = subgraphData.isSanctioned ? t('sanctioned') : '-';
 
         if (tier === 'HIGH' || subgraphData.isSanctioned) {
             badge.className = 'risk-badge risk-black';
-            badge.textContent = '⚠️ High Risk - ' + (subgraphData.isSanctioned ? 'Sanctioned' : tier);
+            badge.textContent = '⚠️ ' + t('highRisk') + ' - ' + (subgraphData.isSanctioned ? t('sanctioned') : tier);
         } else if (tier === 'MEDIUM') {
             badge.className = 'risk-badge risk-grey';
-            badge.textContent = '⚡ Medium Risk';
+            badge.textContent = '⚡ ' + t('mediumRisk');
         } else {
             badge.className = 'risk-badge risk-safe';
-            badge.textContent = '✅ Low Risk';
+            badge.textContent = '✅ ' + t('lowRisk');
         }
     } else if (entry) {
         document.getElementById('resultScore').textContent = entry.riskScore || 'N/A';
         document.getElementById('resultTier').textContent = entry.riskTier || 'N/A';
-        document.getElementById('resultSource').textContent = entry.source || 'Local Database';
+        document.getElementById('resultSource').textContent = entry.source || t('localSource');
         document.getElementById('resultTags').textContent = (entry.tags || []).join(', ') || '-';
         document.getElementById('resultEntity').textContent = entry.entity || '-';
 
         if (entry.riskTier === 'BLACK') {
             badge.className = 'risk-badge risk-black';
-            badge.textContent = '⚠️ High Risk - Blacklist';
+            badge.textContent = '⚠️ ' + t('highRisk');
         } else {
             badge.className = 'risk-badge risk-grey';
-            badge.textContent = '⚡ Greylist - Caution';
+            badge.textContent = '⚡ ' + t('mediumRisk');
         }
     } else {
         badge.className = 'risk-badge risk-safe';
-        badge.textContent = '✅ Not in Database';
+        badge.textContent = '✅ ' + t('notInDatabase');
         document.getElementById('resultScore').textContent = '-';
         document.getElementById('resultTier').textContent = 'UNKNOWN';
         document.getElementById('resultSource').textContent = '-';

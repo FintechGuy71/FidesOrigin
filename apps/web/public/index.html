@@ -33,7 +33,7 @@
 <body>
 
   <!-- Navigation -->
-  <nav class="nav">
+  <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
@@ -74,7 +74,7 @@
         </div>
         <a href="#contact" class="nav-cta">Get Started</a>
       </div>
-      <button class="nav-mobile-btn" aria-label="Menu">
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false" aria-label="Menu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -445,7 +445,11 @@
   <script nonce="2726c7f26c">
     // ===== Mobile Menu =====
     function toggleMobileMenu() {
-      document.getElementById('mobileMenu').classList.toggle('active');
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
     }
     document.addEventListener('DOMContentLoaded', function() {
       var mobileBtn = document.querySelector('.nav-mobile-btn');
@@ -532,7 +536,7 @@
       if (!canvas) return;
       var ctx = canvas.getContext('2d');
       var particles = [];
-      var PARTICLE_COUNT = 60;
+      var PARTICLE_COUNT = (window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) ? 0 : 60;
 
       function resize() {
         canvas.width = canvas.offsetWidth;
@@ -590,8 +594,10 @@
       var btn = document.createElement('button');
       btn.className = 'code-copy-btn';
       btn.textContent = 'Copy';
-      btn.setAttribute('aria-label', 'Copy');
-      btn.addEventListener('click', function() {
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.setAttribute('tabindex', '0');
+      btn.setAttribute('type', 'button');
+      var doCopy = function() {
         var code = block.querySelector('code') || block.querySelector('pre');
         if (code) {
           navigator.clipboard.writeText(code.textContent).then(function() {
@@ -599,6 +605,13 @@
             btn.classList.add('copied');
             setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
           });
+        }
+      };
+      btn.addEventListener('click', doCopy);
+      btn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          doCopy();
         }
       });
       block.appendChild(btn);

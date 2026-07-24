@@ -33,7 +33,7 @@
 <body>
 
   <!-- Navigation -->
-  <nav class="nav">
+  <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="/zh-TW/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
@@ -74,7 +74,7 @@
         </div>
         <a href="#contact" class="nav-cta">開始使用</a>
       </div>
-      <button class="nav-mobile-btn" aria-label="Menu">
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false" aria-label="Menu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -174,9 +174,9 @@
   <section class="section" id="features">
     <div class="container">
       <div class="reveal section-intro">
-        <p class="micro">Features</p>
-        <h2 class="h2 section-title">Everything you need for on-chain compliance</h2>
-        <p class="lead section-lead">A full-stack compliance protocol built from the ground up for Web3.</p>
+        <p class="micro">功能</p>
+        <h2 class="h2 section-title">鏈上合規所需的一切</h2>
+        <p class="lead section-lead">為 Web3 從零構建的全棧合規協議。</p>
       </div>
       <div class="features-grid">
         <div class="feature-card reveal">
@@ -229,9 +229,9 @@
   <section class="section bg-secondary" id="how-it-works">
     <div class="container">
       <div class="reveal section-intro">
-        <p class="micro">How It Works</p>
-        <h2 class="h2 section-title">Three layers of protection</h2>
-        <p class="lead section-lead">Risk Registry &rarr; Policy Engine &rarr; Compliance Engine. Every transaction is screened before it reaches the chain.</p>
+        <p class="micro">工作原理</p>
+        <h2 class="h2 section-title">三層防護體系</h2>
+        <p class="lead section-lead">風險註冊表 &rarr; 策略引擎 &rarr; 合規引擎。每筆交易在上鏈前都經過篩查。</p>
       </div>
       <div class="steps">
         <div class="step reveal">
@@ -259,8 +259,8 @@
   <section class="section" id="use-cases">
     <div class="container">
       <div class="reveal section-intro">
-        <p class="micro">Use Cases</p>
-        <h2 class="h2 section-title">Real protection for real problems</h2>
+        <p class="micro">使用案例</p>
+        <h2 class="h2 section-title">針對真實問題的真實保護</h2>
         <p class="lead section-lead">Built for stablecoin issuers, RWA platforms, smart wallets, and AI agents.</p>
       </div>
       <div class="features-grid">
@@ -331,7 +331,7 @@
     <div class="container">
       <div class="dev-grid">
         <div class="reveal">
-          <p class="micro">Developer Experience</p>
+          <p class="micro">開發者體驗</p>
           <h2 class="h2 section-title">為 AI 智能體打造</h2>
           <p class="lead section-lead">自主智能體原生查詢風險——無需人工守門。在智能合約層面繼承風險引擎，每筆代幣轉賬自動根據鏈上風險畫像進行篩查。</p>
           <div class="dev-steps">
@@ -356,7 +356,7 @@
         <div class="reveal">
           <div class="code-block">
             <div class="code-header">
-              <span>Integration</span>
+              <span>整合</span>
               <span>Solidity</span>
             </div>
             <div class="code-body">
@@ -427,8 +427,8 @@ swap.execute(counterparty, amount);</pre>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
-        <p>Built with &hearts; for the on-chain financial world.</p>
+        <p>&copy; 2026 FidesOrigin. 保留所有權利。</p>
+        <p>為鏈上金融世界而構建</p>
       </div>
     </div>
   </footer>
@@ -437,7 +437,11 @@ swap.execute(counterparty, amount);</pre>
   <script nonce="2726c7f26c">
     // ===== Mobile Menu =====
     function toggleMobileMenu() {
-      document.getElementById('mobileMenu').classList.toggle('active');
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
     }
     document.addEventListener('DOMContentLoaded', function() {
       var mobileBtn = document.querySelector('.nav-mobile-btn');
@@ -524,7 +528,7 @@ swap.execute(counterparty, amount);</pre>
       if (!canvas) return;
       var ctx = canvas.getContext('2d');
       var particles = [];
-      var PARTICLE_COUNT = 60;
+      var PARTICLE_COUNT = (window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) ? 0 : 60;
 
       function resize() {
         canvas.width = canvas.offsetWidth;
@@ -583,7 +587,9 @@ swap.execute(counterparty, amount);</pre>
       btn.className = 'code-copy-btn';
       btn.textContent = '複製';
       btn.setAttribute('aria-label', '複製');
-      btn.addEventListener('click', function() {
+      btn.setAttribute('tabindex', '0');
+      btn.setAttribute('type', 'button');
+      var doCopy = function() {
         var code = block.querySelector('code') || block.querySelector('pre');
         if (code) {
           navigator.clipboard.writeText(code.textContent).then(function() {
@@ -593,7 +599,13 @@ swap.execute(counterparty, amount);</pre>
           });
         }
       });
-      block.appendChild(btn);
+      btn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          doCopy();
+        }
+      });
+            block.appendChild(btn);
     });
   </script>
 </body>

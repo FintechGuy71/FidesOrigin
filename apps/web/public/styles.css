@@ -14,9 +14,9 @@
   --text: #e8eaf0;
   --text-secondary: #8a8f9e;
   --text-muted: #5a6070;
-  --accent: #8b7ec8;
-  --accent-dim: rgba(139, 126, 200, 0.12);
-  --accent-glow: rgba(139, 126, 200, 0.06);
+  --accent: #c9a96e;
+  --accent-dim: rgba(201, 169, 110, 0.12);
+  --accent-glow: rgba(201, 169, 110, 0.06);
   --gold: #c9a96e;
   --gold-dim: rgba(201, 169, 110, 0.12);
   --success: #4ade80;
@@ -421,7 +421,7 @@ img { max-width: 100%; display: block; }
   border: none;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent) 0%, #7c6fb8 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #c9a96e 100%);
   color: white;
   box-shadow: 0 4px 20px rgba(139,126,200,0.25);
 }

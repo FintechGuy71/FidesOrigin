@@ -33,9 +33,9 @@
 <body>
 
   <!-- Navigation -->
-  <nav class="nav">
+  <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
-      <a href="/ja/" class="nav-logo">
+      <a href="/jp/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
         FidesOrigin
       </a>
@@ -74,7 +74,7 @@
         </div>
         <a href="#contact" class="nav-cta">アクセス申請</a>
       </div>
-      <button class="nav-mobile-btn" aria-label="Menu">
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false" aria-label="Menu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -174,9 +174,9 @@
   <section class="section" id="features">
     <div class="container">
       <div class="reveal section-intro">
-        <p class="micro">Features</p>
-        <h2 class="h2 section-title">Everything you need for on-chain compliance</h2>
-        <p class="lead section-lead">A full-stack compliance protocol built from the ground up for Web3.</p>
+        <p class="micro">機能</p>
+        <h2 class="h2 section-title">オンチェーン・コンプライアンスに必要な全て</h2>
+        <p class="lead section-lead">Web3 のためにゼロから構築されたフルスタック・コンプライアンス・プロトコル。</p>
       </div>
       <div class="features-grid">
         <div class="feature-card reveal">
@@ -229,9 +229,9 @@
   <section class="section bg-secondary" id="how-it-works">
     <div class="container">
       <div class="reveal section-intro">
-        <p class="micro">How It Works</p>
-        <h2 class="h2 section-title">Three layers of protection</h2>
-        <p class="lead section-lead">Risk Registry &rarr; Policy Engine &rarr; Compliance Engine. Every transaction is screened before it reaches the chain.</p>
+        <p class="micro">仕組み</p>
+        <h2 class="h2 section-title">3層の保護</h2>
+        <p class="lead section-lead">リスク・レジストリ &rarr; ポリシー・エンジン &rarr; コンプライアンス・エンジン。すべてのトランザクションはチェーンに到達する前にスクリーニングされます。</p>
       </div>
       <div class="steps">
         <div class="step reveal">
@@ -259,8 +259,8 @@
   <section class="section" id="use-cases">
     <div class="container">
       <div class="reveal section-intro">
-        <p class="micro">Use Cases</p>
-        <h2 class="h2 section-title">Real protection for real problems</h2>
+        <p class="micro">ユースケース</p>
+        <h2 class="h2 section-title">実際の問題に対する実際の保護</h2>
         <p class="lead section-lead">Built for stablecoin issuers, RWA platforms, smart wallets, and AI agents.</p>
       </div>
       <div class="features-grid">
@@ -331,7 +331,7 @@
     <div class="container">
       <div class="dev-grid">
         <div class="reveal">
-          <p class="micro">Developer Experience</p>
+          <p class="micro">開発者エクスペリエンス</p>
           <h2 class="h2 section-title">3行で統合</h2>
           <p class="lead section-lead">スマートコントラクトレベルでリスクエンジンを継承。すべてのトークン送金はオンチェーンリスクプロファイルに対して自動スクリーニングされます。</p>
           <div class="dev-steps">
@@ -406,7 +406,7 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="/ja/" class="nav-logo">
+          <a href="/jp/" class="nav-logo">
             <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
             FidesOrigin
           </a>
@@ -436,7 +436,7 @@
       </div>
       <div class="footer-bottom">
         <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
-        <p>Built with &hearts; for the on-chain financial world.</p>
+        <p>オンチェーン金融の世界のために</p>
       </div>
     </div>
   </footer>
@@ -445,7 +445,11 @@
   <script nonce="2726c7f26c">
     // ===== Mobile Menu =====
     function toggleMobileMenu() {
-      document.getElementById('mobileMenu').classList.toggle('active');
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
     }
     document.addEventListener('DOMContentLoaded', function() {
       var mobileBtn = document.querySelector('.nav-mobile-btn');
@@ -532,7 +536,7 @@
       if (!canvas) return;
       var ctx = canvas.getContext('2d');
       var particles = [];
-      var PARTICLE_COUNT = 60;
+      var PARTICLE_COUNT = (window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) ? 0 : 60;
 
       function resize() {
         canvas.width = canvas.offsetWidth;
@@ -591,7 +595,9 @@
       btn.className = 'code-copy-btn';
       btn.textContent = 'コピー';
       btn.setAttribute('aria-label', 'コピー');
-      btn.addEventListener('click', function() {
+      btn.setAttribute('tabindex', '0');
+      btn.setAttribute('type', 'button');
+      var doCopy = function() {
         var code = block.querySelector('code') || block.querySelector('pre');
         if (code) {
           navigator.clipboard.writeText(code.textContent).then(function() {
@@ -601,7 +607,13 @@
           });
         }
       });
-      block.appendChild(btn);
+      btn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          doCopy();
+        }
+      });
+            block.appendChild(btn);
     });
   </script>
 </body>
