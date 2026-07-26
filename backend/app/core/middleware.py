@@ -33,12 +33,6 @@ async def csrf_protection_middleware(request: Request, call_next: Callable):
     return await _csrf(request, call_next)
 
 
-async def session_timeout_middleware(request: Request, call_next: Callable):
-    """会话超时中间件（由 security.py 实现）"""
-    from app.core.security import session_timeout_middleware as _session
-    return await _session(request, call_next)
-
-
 async def request_signature_middleware(request: Request, call_next: Callable):
     """请求签名验证中间件（由 security.py 实现）"""
     from app.core.security import request_signature_middleware as _signature

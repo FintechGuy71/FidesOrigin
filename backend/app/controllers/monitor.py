@@ -32,6 +32,11 @@ from app.core.security import get_current_user
 # [HIGH Fix #9] 允许的 WebSocket Origin 列表
 _ALLOWED_WS_ORIGINS = set(settings.CORS_ORIGINS) | {"http://localhost:3000", "http://localhost:5173"}
 
+# [S-5 Fix] Pre-auth connection limit to prevent connection exhaustion DoS
+_MAX_PENDING_AUTH = 100
+_pending_auth_count = 0
+_pending_auth_lock = asyncio.Lock()
+
 
 async def _validate_origin(websocket: WebSocket) -> bool:
     """[HIGH Fix #9] 验证 WebSocket 请求的 Origin header"""
@@ -91,6 +96,14 @@ async def monitor_stream(
         except Exception:
             await websocket.close(code=4001, reason="Invalid address format")
             return
+
+    # [S-5 Fix] Enforce pre-auth connection limit before accepting
+    global _pending_auth_count
+    async with _pending_auth_lock:
+        if _pending_auth_count >= _MAX_PENDING_AUTH:
+            logger.warning("websocket_pending_auth_limit_exceeded", max_pending=_MAX_PENDING_AUTH)
+            return
+        _pending_auth_count += 1
 
     # [CRITICAL Fix #1] WebSocket 认证改为连接后通过消息发送
     # 不再从 query_params 读取 api_key(避免 URL 明文传输)
@@ -243,6 +256,9 @@ async def monitor_stream(
     except Exception as e:
         logger.error("websocket_error", client_id=client_id, error=str(e))
     finally:
+        # [S-5 Fix] Decrement pre-auth counter on exit
+        async with _pending_auth_lock:
+            _pending_auth_count = max(0, _pending_auth_count - 1)
         manager.disconnect(client_id)
 
 

@@ -22,7 +22,6 @@ from app.core.middleware import (
     request_tracing_middleware,
     security_headers_middleware,
     csrf_protection_middleware,
-    session_timeout_middleware,
     request_signature_middleware,
 )
 from app.core.security import get_current_user
@@ -158,12 +157,7 @@ async def rate_limit(request, call_next):
 async def csrf_protection(request, call_next):
     return await csrf_protection_middleware(request, call_next)
 
-# 7. 会话超时管理
-@app.middleware("http")
-async def session_timeout(request, call_next):
-    return await session_timeout_middleware(request, call_next)
-
-# 8. 请求签名验证（敏感端点）
+# 7. 请求签名验证（敏感端点）
 @app.middleware("http")
 async def request_signature(request, call_next):
     return await request_signature_middleware(request, call_next)
