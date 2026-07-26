@@ -11,6 +11,8 @@ library LibDiamond {
         mapping(bytes4 => address) facetAddressAndSelectorPosition;
         bytes4[] selectorList;
         address contractOwner;
+        // H-06 FIX: 缓存 facet -> selectors 映射，避免 O(n²) 遍历
+        mapping(address => bytes4[]) facetSelectors;
     }
 
     function diamondStorage()
@@ -50,6 +52,34 @@ library LibDiamond {
 
     function getSelectorList() internal view returns (bytes4[] memory) {
         return diamondStorage().selectorList;
+    }
+
+    function getFacetSelectors(address facet)
+        internal
+        view
+        returns (bytes4[] memory)
+    {
+        return diamondStorage().facetSelectors[facet];
+    }
+
+    function _addSelectorToFacetCache(address facet, bytes4 selector) internal {
+        bytes4[] storage selectors = diamondStorage().facetSelectors[facet];
+        selectors.push(selector);
+    }
+
+    function _removeSelectorFromFacetCache(address facet, bytes4 selector) internal {
+        bytes4[] storage selectors = diamondStorage().facetSelectors[facet];
+        for (uint256 i = 0; i < selectors.length; i++) {
+            if (selectors[i] == selector) {
+                selectors[i] = selectors[selectors.length - 1];
+                selectors.pop();
+                break;
+            }
+        }
+    }
+
+    function _removeFacetCache(address facet) internal {
+        delete diamondStorage().facetSelectors[facet];
     }
 
     function getSelectorListLength() internal view returns (uint256) {
@@ -120,6 +150,7 @@ library LibDiamond {
             // registration for stronger facet capability verification.
             ds.facetAddressAndSelectorPosition[selector] = _facetAddress;
             ds.selectorList.push(selector);
+            _addSelectorToFacetCache(_facetAddress, selector);
         }
     }
 
@@ -154,6 +185,8 @@ library LibDiamond {
                 "LibDiamond: Can't replace function that doesn't exist"
             );
             ds.facetAddressAndSelectorPosition[selector] = _facetAddress;
+            _removeSelectorFromFacetCache(oldFacetAddress, selector);
+            _addSelectorToFacetCache(_facetAddress, selector);
         }
     }
 
@@ -175,6 +208,7 @@ library LibDiamond {
                 "LibDiamond: Can't remove function that doesn't exist"
             );
             delete ds.facetAddressAndSelectorPosition[selector];
+            _removeSelectorFromFacetCache(oldFacetAddress, selector);
             for (uint256 j; j < ds.selectorList.length; j++) {
                 if (ds.selectorList[j] == selector) {
                     ds.selectorList[j] = ds.selectorList[

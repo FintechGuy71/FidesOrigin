@@ -1,18 +1,116 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "../libraries/LibComplianceStorage.sol";
+import "../libraries/LibDiamond.sol";
 
 /**
  * @title BaseFacet
- * @notice H-08 FIX: Diamond Facet 统一继承基类
- * @dev 所有 facet 必须继承此基类，确保 AccessControl、Pausable、ReentrancyGuard 的
- *      存储布局在所有 facet 中完全一致，防止存储碰撞风险。
- *      LibComplianceStorage 管理所有应用层状态，OZ 合约管理访问控制、暂停和重入保护。
+ * @notice C-01 FIX: Diamond Facet 统一继承基类 — 使用 Diamond Storage，避免 OZ 状态合约继承导致的存储碰撞
+ * @dev 所有 facet 必须继承此基类。
+ * @dev 完全不继承任何 OpenZeppelin 状态合约（AccessControl / Pausable / ReentrancyGuard），
+ *      所有状态通过独立的 Diamond Storage slot 管理，彻底消除存储布局依赖风险。
  */
-abstract contract BaseFacet is AccessControl, Pausable, ReentrancyGuard {
-    // H-08: 统一继承顺序，确保所有 facet 的 OZ 存储 slot 一致
+abstract contract BaseFacet {
+
+    // C-01 FIX: 独立的 Diamond Storage position，与 LibDiamond / LibComplianceStorage 不冲突
+    bytes32 constant BASE_FACET_STORAGE_POSITION =
+        keccak256("fidesorigin.base.facet.storage");
+
+    struct BaseFacetStorage {
+        // AccessControl 状态
+        mapping(bytes32 => mapping(address => bool)) roles;
+        mapping(bytes32 => bytes32) roleAdmin;
+        // Pausable 状态
+        bool paused;
+        // ReentrancyGuard 状态 (0 = 未进入, 1 = 已退出, 2 = 已进入)
+        uint256 reentrancyStatus;
+    }
+
+    function baseFacetStorage()
+        internal
+        pure
+        returns (BaseFacetStorage storage bs)
+    {
+        bytes32 position = BASE_FACET_STORAGE_POSITION;
+        assembly {
+            bs.slot := position
+        }
+    }
+
+    // ============ AccessControl Constants ============
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+
+    // ============ Modifiers ============
+
+    modifier onlyRole(bytes32 role) {
+        require(
+            hasRole(role, msg.sender),
+            "BaseFacet: Missing role"
+        );
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!baseFacetStorage().paused, "BaseFacet: Paused");
+        _;
+    }
+
+    modifier whenPaused() {
+        require(baseFacetStorage().paused, "BaseFacet: Not paused");
+        _;
+    }
+
+    modifier nonReentrant() {
+        require(
+            baseFacetStorage().reentrancyStatus != 2,
+            "BaseFacet: Reentrant call"
+        );
+        baseFacetStorage().reentrancyStatus = 2;
+        _;
+        baseFacetStorage().reentrancyStatus = 1;
+    }
+
+    // ============ AccessControl Functions ============
+
+    function hasRole(bytes32 role, address account)
+        public
+        view
+        returns (bool)
+    {
+        return baseFacetStorage().roles[role][account];
+    }
+
+    function getRoleAdmin(bytes32 role) public view returns (bytes32) {
+        return baseFacetStorage().roleAdmin[role];
+    }
+
+    function _grantRole(bytes32 role, address account) internal {
+        if (!hasRole(role, account)) {
+            baseFacetStorage().roles[role][account] = true;
+        }
+    }
+
+    function _revokeRole(bytes32 role, address account) internal {
+        if (hasRole(role, account)) {
+            baseFacetStorage().roles[role][account] = false;
+        }
+    }
+
+    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
+        baseFacetStorage().roleAdmin[role] = adminRole;
+    }
+
+    // ============ Pausable Functions ============
+
+    function _pause() internal whenNotPaused {
+        baseFacetStorage().paused = true;
+    }
+
+    function _unpause() internal whenPaused {
+        baseFacetStorage().paused = false;
+    }
+
+    function paused() public view returns (bool) {
+        return baseFacetStorage().paused;
+    }
 }

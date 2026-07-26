@@ -496,14 +496,39 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     // ============ Transfer Evaluation (C-01 / H-01 / H-03 / H-05 / M-02 / M-03 / L-01) ============
 
     /**
-     * @notice 评估转账 — 双向对称检查，统一返回 ActionType
+     * @notice H-08 FIX: 原子性评估并记录转账 — 合并 evaluateTransfer + recordTransfer
+     * @dev 消除每日限额检查的竞态条件：评估和记录在同一事务中完成
      */
-    function evaluateTransfer(
+    function evaluateAndRecordTransfer(
         address from,
         address to,
         uint256 amount,
         address issuer
-    ) public view returns (ActionType decision, string memory reason) {
+    ) external onlyRole(COMPLIANCE_ENGINE_ROLE) nonReentrant returns (ActionType decision, string memory reason) {
+        (decision, reason) = _evaluateTransfer(from, to, amount, issuer);
+
+        // 原子记录：仅在 ALLOW 时更新每日累计
+        if (decision == ActionType.ALLOW) {
+            if (lastResetDay[issuer][from] == 0 || block.timestamp >= lastResetDay[issuer][from] + 1 days) {
+                dailySpent[issuer][from] = 0;
+                lastResetDay[issuer][from] = block.timestamp;
+            }
+            dailySpent[issuer][from] += amount;
+            lastTransferAt[from][to] = block.timestamp;
+            emit TransferRecorded(from, to, amount);
+        }
+    }
+
+    /**
+     * @notice 评估转账 — 双向对称检查，统一返回 ActionType（内部 view 助手）
+     * @dev H-08 FIX: 改为 internal view，外部调用请使用 evaluateAndRecordTransfer
+     */
+    function _evaluateTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        address issuer
+    ) internal view returns (ActionType decision, string memory reason) {
         // M-02: 风险注册表未配置
         if (address(riskRegistry) == address(0)) {
             return (ActionType.FLAG_FOR_REVIEW, "RiskRegistry not configured");
@@ -557,7 +582,9 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     }
 
     /**
-     * @notice 转账通过后记录每日累计（H-03: 突破 view 限制的状态更新）
+     * @notice 转账通过后记录每日累计（H-08: 已废弃，请使用 evaluateAndRecordTransfer）
+     * @dev DEPRECATED: 单独调用 recordTransfer 存在竞态条件。
+     *      新代码应使用 evaluateAndRecordTransfer 进行原子性评估和记录。
      */
     function recordTransfer(
         address from,
@@ -603,7 +630,7 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
             }
         }
 
-        return evaluateTransfer(_msgSender(), op.target, op.value, issuer);
+        return _evaluateTransfer(_msgSender(), op.target, op.value, issuer);
     }
 
     function evaluateTransaction(
@@ -631,7 +658,7 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
 
         // M-05: 直接 cast — 两枚举底屋值一致
         tier = IAssetCompliance.RiskTier(uint8(rawTier));
-        (decision, reason) = evaluateTransfer(from, to, amount, issuer);
+        (decision, reason) = _evaluateTransfer(from, to, amount, issuer);
     }
 
     // ============ Policy Setters ============

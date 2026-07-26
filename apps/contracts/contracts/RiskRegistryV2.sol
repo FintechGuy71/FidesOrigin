@@ -235,6 +235,7 @@ contract RiskRegistryV2 is
         bool sanctionedStatus,
         uint256 lastUpdated
     ) internal pure returns (uint256) {
+        require(lastUpdated <= type(uint64).max, "Timestamp overflow");
         uint256 packed = uint256(riskScore)
             | (uint256(tier) << 8)
             | ((lastUpdated & 0xFFFFFFFFFFFFFFFF) << 17);
@@ -420,6 +421,8 @@ contract RiskRegistryV2 is
         // This is a design decision: sanctioned addresses must be flagged without delay.
         for (uint256 i = 0; i < accounts.length; i++) {
             if (accounts[i] == address(0)) continue;
+            // M-04 FIX: 跳过已制裁地址，防止重复计数和重复修改
+            if (sanctionedAddresses[accounts[i]]) continue;
 
             // capture wasNew BEFORE writing
             bool wasNew = _packedProfiles[accounts[i]] == 0;

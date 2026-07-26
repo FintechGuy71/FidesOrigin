@@ -8,6 +8,7 @@ contract DiamondLoupeFacet is IDiamondLoupe {
 
     /**
      * @notice P2 FIX: 分页查询 facets，避免 O(n²) 在大量 selector 时超时
+     * @dev H-06 FIX: 使用 LibDiamond 缓存的 facetSelectors 减少内层循环
      * @param offset 起始 selector 索引
      * @param limit 最大返回 facet 数量
      * @return facets_ 分页后的 facet 列表
@@ -41,32 +42,17 @@ contract DiamondLoupeFacet is IDiamondLoupe {
             }
         }
 
+        // H-06 FIX: 使用缓存的 facetSelectors 替代 O(n) 遍历
         facets_ = new Facet[](uniqueCount);
         for (uint256 i = 0; i < uniqueCount; i++) {
             facets_[i].facetAddress = uniqueFacets[i];
-            // Inline selector collection to avoid forward-reference issue
-            bytes4[] memory allSelectors = LibDiamond.getSelectorList();
-            uint256 sCount = 0;
-            for (uint256 j = 0; j < allSelectors.length; j++) {
-                if (LibDiamond.getFacetAddress(allSelectors[j]) == uniqueFacets[i]) {
-                    sCount++;
-                }
-            }
-            bytes4[] memory facetSelectors = new bytes4[](sCount);
-            uint256 sIdx = 0;
-            for (uint256 j = 0; j < allSelectors.length; j++) {
-                if (LibDiamond.getFacetAddress(allSelectors[j]) == uniqueFacets[i]) {
-                    facetSelectors[sIdx] = allSelectors[j];
-                    sIdx++;
-                }
-            }
-            facets_[i].functionSelectors = facetSelectors;
+            facets_[i].functionSelectors = LibDiamond.getFacetSelectors(uniqueFacets[i]);
         }
     }
 
     /**
      * @notice 返回所有 facets
-     * @dev WARNING: O(n²) 复杂度。selector 数量 >200 时建议使用 facetsPaginated
+     * @dev H-06 FIX: 使用 LibDiamond 缓存的 facetSelectors 替代 O(n²) 内层循环
      */
     function facets() external view override returns (Facet[] memory facets_) {
         bytes4[] memory selectors = LibDiamond.getSelectorList();
@@ -89,48 +75,24 @@ contract DiamondLoupeFacet is IDiamondLoupe {
             }
         }
 
+        // H-06 FIX: 使用缓存的 facetSelectors
         facets_ = new Facet[](uniqueCount);
         for (uint256 i = 0; i < uniqueCount; i++) {
             facets_[i].facetAddress = uniqueFacets[i];
-            uint256 count = 0;
-            for (uint256 j = 0; j < numSelectors; j++) {
-                if (LibDiamond.getFacetAddress(selectors[j]) == uniqueFacets[i]) {
-                    count++;
-                }
-            }
-            bytes4[] memory facetSelectors = new bytes4[](count);
-            uint256 idx = 0;
-            for (uint256 j = 0; j < numSelectors; j++) {
-                if (LibDiamond.getFacetAddress(selectors[j]) == uniqueFacets[i]) {
-                    facetSelectors[idx] = selectors[j];
-                    idx++;
-                }
-            }
-            facets_[i].functionSelectors = facetSelectors;
+            facets_[i].functionSelectors = LibDiamond.getFacetSelectors(uniqueFacets[i]);
         }
     }
 
+    /**
+     * @notice H-06 FIX: 使用缓存直接返回 facet 的 selectors，O(1)
+     */
     function facetFunctionSelectors(address _facet)
         external
         view
         override
         returns (bytes4[] memory facetFunctionSelectors_)
     {
-        bytes4[] memory selectors = LibDiamond.getSelectorList();
-        uint256 count = 0;
-        for (uint256 i = 0; i < selectors.length; i++) {
-            if (LibDiamond.getFacetAddress(selectors[i]) == _facet) {
-                count++;
-            }
-        }
-        facetFunctionSelectors_ = new bytes4[](count);
-        uint256 idx = 0;
-        for (uint256 i = 0; i < selectors.length; i++) {
-            if (LibDiamond.getFacetAddress(selectors[i]) == _facet) {
-                facetFunctionSelectors_[idx] = selectors[i];
-                idx++;
-            }
-        }
+        facetFunctionSelectors_ = LibDiamond.getFacetSelectors(_facet);
     }
 
     function facetAddresses()

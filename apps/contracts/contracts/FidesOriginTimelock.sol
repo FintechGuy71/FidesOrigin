@@ -100,8 +100,9 @@ contract FidesOriginTimelock is TimelockController {
      * @notice 执行紧急模式切换（在时间锁到期后）
      * @dev M-07 FIX: 任何人均可在时间锁到期后执行。切换前会批量取消所有 pending operations，
      *      防止已 schedule 的操作因紧急模式缩短延迟而被提前执行。
+     * @dev H-03 FIX: 添加 EXECUTOR_ROLE 访问控制，防止时间锁到期后被任意地址 frontrun。
      */
-    function executeEmergencyModeChange() external {
+    function executeEmergencyModeChange() external onlyRole(EXECUTOR_ROLE) {
         if (emergencyModeChangeTimestamp == 0) revert EmergencyModeAlreadySet(emergencyMode);
         if (block.timestamp < emergencyModeChangeTimestamp) revert EmergencyModeTimelockActive(emergencyModeChangeTimestamp);
 

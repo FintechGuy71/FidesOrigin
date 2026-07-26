@@ -186,7 +186,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     // ============ Core Compliance Checks ============
 
     function checkAddressCompliance(address addr)
-        public whenNotPaused
+        public whenNotPaused onlyRole(OPERATOR_ROLE)
         returns (bool isCompliant, uint256 riskScore, string memory reason)
     {
         if (addr == address(0)) revert InvalidAddress();
@@ -571,7 +571,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     function verifyMerkleRisk(
         address addr,
         uint256 riskScore,
-        string calldata riskTier,
+        uint8 riskTier,
         bytes32[] calldata proof,
         bytes32 merkleRoot
     ) external pure returns (bool isValid, bool isCompliant) {

@@ -56,6 +56,14 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     /// @notice 环形缓冲区写入索引（修复：使用独立索引替代 nonce % MAX_ROOT_HISTORY）
     uint256 public historyIndex;
 
+    /// @notice H-05 FIX: 多签 Relayer 共识要求
+    uint256 public constant REQUIRED_RELAYER_CONFIRMATIONS = 2;
+    /// @notice H-05 FIX: 每条跨链更新的 relayer 签名记录
+    mapping(bytes32 => mapping(address => bool)) public relayerApprovals;
+    mapping(bytes32 => uint256) public approvalCount;
+    /// @notice H-05 FIX: 已执行的跨链更新哈希
+    mapping(bytes32 => bool) public executedUpdates;
+
     // ============ Events ============
     event CrossChainSynced(
         uint256 indexed sourceChainId,
@@ -63,6 +71,7 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         uint256 timestamp,
         uint256 nonce
     );
+    event CrossChainUpdateApproved(bytes32 indexed updateHash, address indexed relayer, uint256 confirmations);
     event SenderAuthorized(uint256 chainId, address sender);
     event SenderDeauthorized(uint256 chainId, address sender);
     event MerkleRegistryUpdated(address newRegistry);
@@ -100,7 +109,7 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     // ============ Core: Receive Cross-Chain Message ============
 
     /**
-     * @notice 接收跨链 Merkle Root 更新（由 Bridge Relayer 调用）
+     * @notice H-05 FIX: 接收跨链 Merkle Root 更新（多签 Relayer 共识）
      * @param sourceChainId 源链 ID（Ethereum mainnet = 1）
      * @param sender 源链发送合约地址
      * @param newRoot 新的 Merkle Root
@@ -125,31 +134,51 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         }
 
         // 3. 验证时间戳
-        // L-14 FIX: 添加 ±5 分钟容差，适应跨链区块时间漂移
-        // 允许源链时间戳略落后于本地链 (最多 5 分钟)，避免因轻微时钟差异导致同步失败
         uint256 SYNC_TOLERANCE = 5 minutes;
         if (timestamp + SYNC_TOLERANCE < lastSyncTime) {
             revert StaleUpdate(timestamp, lastSyncTime);
         }
-        // D1-AUDIT1-017 fix: reject future timestamps beyond 1 hour drift
         if (timestamp > block.timestamp + 1 hours) {
             revert StaleUpdate(timestamp, block.timestamp);
         }
 
-        // 4. 验证同步间隔
-        if (block.timestamp - lastSyncTime < MIN_SYNC_INTERVAL) {
-            revert SyncTooFrequent(block.timestamp - lastSyncTime, MIN_SYNC_INTERVAL);
-        }
-
-        // 5. 验证 root 非零
+        // 4. 验证 root 非零
         if (newRoot == bytes32(0)) {
             revert InvalidMerkleRoot();
+        }
+
+        // H-05 FIX: 计算更新哈希
+        bytes32 updateHash = keccak256(abi.encodePacked(
+            sourceChainId, sender, newRoot, timestamp, nonce
+        ));
+
+        // H-05 FIX: 防止重复执行
+        if (executedUpdates[updateHash]) {
+            revert ReplayDetected(nonce, syncNonce + 1);
+        }
+
+        // H-05 FIX: 记录当前 relayer 的批准
+        if (!relayerApprovals[updateHash][msg.sender]) {
+            relayerApprovals[updateHash][msg.sender] = true;
+            approvalCount[updateHash]++;
+            emit CrossChainUpdateApproved(updateHash, msg.sender, approvalCount[updateHash]);
+        }
+
+        // H-05 FIX: 未达到多签阈值，仅记录批准，不执行
+        if (approvalCount[updateHash] < REQUIRED_RELAYER_CONFIRMATIONS) {
+            return;
+        }
+
+        // 5. 验证同步间隔（仅在执行时检查）
+        if (block.timestamp - lastSyncTime < MIN_SYNC_INTERVAL) {
+            revert SyncTooFrequent(block.timestamp - lastSyncTime, MIN_SYNC_INTERVAL);
         }
 
         // 6. 更新状态
         syncNonce = nonce;
         lastSyncTime = block.timestamp;
         lastSyncedRoot = newRoot;
+        executedUpdates[updateHash] = true;
 
         // 7. 记录历史
         if (rootHistory.length >= MAX_ROOT_HISTORY) {

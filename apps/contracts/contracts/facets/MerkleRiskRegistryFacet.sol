@@ -78,12 +78,13 @@ contract MerkleRiskRegistryFacet is BaseFacet {
     // ============ Merkle Tree Operations ============
 
     /**
-     * @notice 标准 Leaf 格式：keccak256(abi.encode(addr, riskScore, riskTier))
+     * @notice H-07 FIX: 标准 Leaf 格式：keccak256(abi.encode(addr, riskScore, riskTier))
+     * @dev 使用 uint8 表示 riskTier，避免字符串参数导致的不一致和额外 gas
      */
     function _leaf(
         address addr,
         uint256 riskScore,
-        string memory riskTier
+        uint8 riskTier
     ) internal pure returns (bytes32) {
         return keccak256(
             bytes.concat(keccak256(abi.encode(addr, riskScore, riskTier)))
@@ -118,11 +119,12 @@ contract MerkleRiskRegistryFacet is BaseFacet {
 
     /**
      * @notice 验证地址是否在 Merkle Tree 中（无签名版本）
+     * @dev H-07 FIX: riskTier 改为 uint8
      */
     function verifyAddress(
         address addr,
         uint256 riskScore,
-        string memory riskTier,
+        uint8 riskTier,
         bytes32[] calldata proof
     ) external view returns (bool) {
         MerkleStorage storage ms = merkleStorage();
@@ -132,11 +134,12 @@ contract MerkleRiskRegistryFacet is BaseFacet {
     /**
      * @notice 批量验证多个地址
      * @dev P1-1: batchVerify 功能到主流程
+     * @dev H-07 FIX: riskTiers 改为 uint8[]
      */
     function batchVerify(
         address[] calldata addresses,
         uint256[] calldata riskScores,
-        string[] calldata riskTiers,
+        uint8[] calldata riskTiers,
         bytes32[][] calldata proofs
     ) external view returns (bool[] memory results) {
         if (

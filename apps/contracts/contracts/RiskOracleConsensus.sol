@@ -34,6 +34,10 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
 
     /// @notice H-5 FIX: 预言机质押金额映射
     mapping(address => uint256) public oracleStakes;
+    /// @notice H-04 FIX: 预言机质押时间映射（防闪电贷）
+    mapping(address => uint256) public stakeTime;
+    /// @notice H-04 FIX: 最小质押时长（1天）
+    uint256 public constant MIN_STAKE_DURATION = 1 days;
 
     // ============ Events ============
     event OracleStaked(address indexed oracle, uint256 amount);
@@ -123,8 +127,12 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     /**
      * @notice H-5 FIX: 预言机质押 ETH
      * @dev 质押金额用于防闪电贷保护，操作者必须质押至少 MIN_ORACLE_STAKE
+     * @dev H-04 FIX: 记录质押时间，用于最小质押时长检查
      */
     function stake() external payable {
+        if (oracleStakes[msg.sender] == 0) {
+            stakeTime[msg.sender] = block.timestamp;
+        }
         oracleStakes[msg.sender] += msg.value;
         emit OracleStaked(msg.sender, msg.value);
     }
@@ -168,6 +176,11 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
         uint256 minStake = _getMinStakeAmount();
         if (oracleStakes[msg.sender] < minStake) {
             revert InsufficientStake(msg.sender, oracleStakes[msg.sender], minStake);
+        }
+
+        // H-04 FIX: 检查最小质押时长，防止闪电贷后立即投票
+        if (block.timestamp < stakeTime[msg.sender] + MIN_STAKE_DURATION) {
+            revert InsufficientStake(msg.sender, block.timestamp - stakeTime[msg.sender], MIN_STAKE_DURATION);
         }
 
         // H-2: same-block 调用保护

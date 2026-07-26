@@ -64,8 +64,8 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
     uint256 public constant MIN_PAUSE_DURATION = 1 hours;
     uint256 public constant MAX_BATCH_SIZE = 100;
 
-    /// @notice [HIGH-3 FIX] 用户自行提取的最小等待时间（默认 24 小时）
-    uint256 public claimDelay = 24 hours;
+    /// @notice [HIGH-3 FIX] 用户自行提取的最小等待时间（默认禁用 claimFunds）
+    uint256 public claimDelay = type(uint256).max;
     /// @notice [HIGH-3 FIX] 需要额外审批的记录（运营方可设置）
     mapping(bytes32 => bool) public claimRequiresApproval;
 

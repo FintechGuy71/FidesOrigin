@@ -87,6 +87,10 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
 
     /// @notice 升级提案映射（P0 FIX: 添加升级时间锁）
     mapping(bytes32 => uint256) public upgradeProposals;
+    /// @notice H-02 FIX: 实现地址到提案ID的映射
+    mapping(address => bytes32) public implementationToProposal;
+    /// @notice H-02 FIX: 提案ID到实现地址的映射（用于 cancel 时双向清理）
+    mapping(bytes32 => address) public proposalToImplementation;
 
     /// @notice 风险资料更新时间
     mapping(address => uint256) private _riskProfileLastUpdated;
@@ -238,11 +242,16 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
      * @dev P0 FIX: 添加升级时间锁校验（48小时延迟）
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {
-        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        // H-02 FIX: proposalId 需与 proposeUpgrade 中一致，包含 block.timestamp
+        // 由于 timestamp 已包含在哈希中，我们需要通过遍历或额外存储来匹配。
+        // 这里采用 implementationToProposal 映射来避免遍历。
+        bytes32 proposalId = implementationToProposal[newImplementation];
+        require(proposalId != bytes32(0), "No upgrade proposal");
         uint256 executeAfter = upgradeProposals[proposalId];
         require(executeAfter != 0, "No upgrade proposal");
         require(block.timestamp >= executeAfter, "Upgrade timelock active");
         delete upgradeProposals[proposalId];
+        delete implementationToProposal[newImplementation];
         emit UpgradeExecuted(proposalId, newImplementation);
     }
 
@@ -254,8 +263,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     function proposeUpgrade(address newImplementation) external onlyRole(ADMIN_ROLE) {
         require(newImplementation != address(0), "Zero address");
         require(newImplementation.code.length > 0, "Not a contract");
-        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, address(this)));
+        // H-02 FIX: 加入 block.timestamp 防止 proposalId 碰撞
+        bytes32 proposalId = keccak256(abi.encode(newImplementation, block.chainid, block.timestamp, address(this)));
         upgradeProposals[proposalId] = block.timestamp + SETTER_DELAY;
+        implementationToProposal[newImplementation] = proposalId;
+        proposalToImplementation[proposalId] = newImplementation;
         emit UpgradeProposed(proposalId, newImplementation, upgradeProposals[proposalId]);
     }
 
@@ -265,6 +277,12 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
      */
     function cancelUpgrade(bytes32 proposalId) external onlyRole(ADMIN_ROLE) {
         require(upgradeProposals[proposalId] != 0, "No such proposal");
+        // H-02 FIX: 双向清理映射
+        address impl = proposalToImplementation[proposalId];
+        if (impl != address(0)) {
+            delete implementationToProposal[impl];
+        }
+        delete proposalToImplementation[proposalId];
         delete upgradeProposals[proposalId];
     }
 
@@ -314,10 +332,65 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     }
 
     /**
-     * @notice 评估交易（会触发下游引擎状态更新，非纯 view 函数）
-     * @dev 如需纯预览，使用 quickCheckAddress
-     * @dev H-07 FIX: 添加 nonReentrant 修饰符，防止 complianceEngine.checkTransfer 重入攻击
-     * @dev HIGH-2 FIX: 添加访问控制，防止任意地址滥用评估功能操纵统计或探测风险
+     * @notice M-03 FIX: 预览交易合规性（纯 view，无副作用）
+     * @dev 与 evaluateTransaction 逻辑一致，但不调用任何 state-changing 函数
+     */
+    function previewTransaction(
+        address from,
+        address to,
+        uint256 amount,
+        address token,
+        uint256 deadline
+    ) external view returns (bool allowed, uint256 riskScore) {
+        if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
+            return (false, 0);
+        }
+        if (from == address(0) || to == address(0)) {
+            return (false, 0);
+        }
+        if (deadline > 0 && block.timestamp > deadline) {
+            return (false, 0);
+        }
+        if (emergencyMode) {
+            return (false, 0);
+        }
+        if (address(riskRegistry) == address(0)) {
+            return (false, 0);
+        }
+
+        uint256 fromRiskScore = _getRiskScore(from);
+        uint256 toRiskScore = _getRiskScore(to);
+        riskScore = fromRiskScore > toRiskScore ? fromRiskScore : toRiskScore;
+
+        bool fromSanctioned = riskRegistry.isSanctioned(from);
+        bool toSanctioned = riskRegistry.isSanctioned(to);
+
+        if (fromSanctioned || toSanctioned) {
+            return (false, riskScore);
+        }
+        if (riskScore >= maxRiskScoreForBlock) {
+            return (false, riskScore);
+        }
+
+        if (address(complianceEngine) != address(0)) {
+            (IAssetCompliance.Decision decision, ) = complianceEngine.validateTransfer(
+                from, to, amount, token
+            );
+            if (decision == IAssetCompliance.Decision.BLOCK) {
+                return (false, riskScore);
+            }
+            if (decision == IAssetCompliance.Decision.HOLD) {
+                return (false, riskScore);
+            }
+        }
+
+        allowed = riskScore < minRiskScoreForQuarantine;
+        return (allowed, riskScore);
+    }
+
+    /**
+     * @notice M-03 FIX: 评估交易（状态变更路径，非纯 view）
+     * @dev 如需纯预览，使用 previewTransaction
      */
     function evaluateTransaction(
         address from,
