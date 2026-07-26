@@ -124,7 +124,7 @@ async function querySubgraph(query) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(SUBGRAPH_URL, {
+    const response = await fetch('/api/subgraph', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
@@ -196,7 +196,6 @@ async function loadSubgraphRiskProfiles() {
           isSanctioned
           tags
           lastUpdated
-          createdAt
         }
       }
     `);
@@ -208,7 +207,7 @@ async function loadSubgraphRiskProfiles() {
         query {
           complianceChecks(first: 200, orderBy: timestamp, orderDirection: desc) {
             id
-            riskProfile { id }
+            from
             timestamp
           }
         }
@@ -216,7 +215,7 @@ async function loadSubgraphRiskProfiles() {
       const lastCheckMap = {};
       if (checkData && checkData.complianceChecks) {
         checkData.complianceChecks.forEach(c => {
-          const addr = c.riskProfile ? c.riskProfile.id : null;
+          const addr = c.from;
           if (addr && !lastCheckMap[addr]) {
             lastCheckMap[addr] = c.timestamp;
           }
@@ -226,7 +225,7 @@ async function loadSubgraphRiskProfiles() {
       const tierColors = { UNKNOWN: '#94a3b8', LOW: '#22c55e', MEDIUM: '#f59e0b', HIGH: '#ef4444' };
 
       data.riskProfiles.forEach(profile => {
-        const tagTime = _fmtTime(profile.createdAt);
+        const tagTime = _fmtTime(profile.lastUpdated);
         const lastTx = lastCheckMap[profile.id] ? _fmtTime(lastCheckMap[profile.id]) : '-';
         const tags = (profile.tags || []).join(', ') || '-';
 
@@ -780,14 +779,13 @@ async function loadQuarantineRecordsFromSubgraph() {
       query {
         holdRecords(first: 50, orderBy: timestamp, orderDirection: desc) {
           id
-          holder { id }
+          owner { id }
           token
           amount
           reason
           timestamp
-          isActive
+          released
           releasedAt
-          permanentlyFrozen
         }
       }
     `);
@@ -802,37 +800,30 @@ async function loadQuarantineRecordsFromSubgraph() {
         const amount = BigInt(record.amount);
         const amountFormatted = ethers.formatUnits(amount, 6);
         totalHeld += amount;
-        if (record.permanentlyFrozen) frozenCount++;
-        else if (record.isActive) pendingCount++;
+        if (!record.released) pendingCount++;
 
         const tr = _create('tr');
         tr.appendChild(_cell(_fmtAddr(record.id), 'address-cell'));
-        const holder = record.holder ? record.holder.id : record.id;
-        tr.appendChild(_cell(_fmtAddr(holder), 'address-cell'));
+        const owner = record.owner ? record.owner.id : record.id;
+        tr.appendChild(_cell(_fmtAddr(owner), 'address-cell'));
         tr.appendChild(_cell(record.token || 'TUSD', ''));
         tr.appendChild(_cell(amountFormatted, ''));
         tr.appendChild(_cell(_fmtTime(record.timestamp), ''));
         tr.appendChild(_cell(record.reason || '-', ''));
 
         let statusBadge;
-        if (record.permanentlyFrozen) {
-          statusBadge = _badge('永久冻结', 'tag-danger');
-        } else if (record.isActive) {
-          statusBadge = _badge('待处理', 'tag-warning');
-        } else {
+        if (record.released) {
           statusBadge = _badge('已释放', 'tag-success');
+        } else {
+          statusBadge = _badge('待处理', 'tag-warning');
         }
         tr.appendChild(_create('td').appendChild(statusBadge) || _create('td'));
 
         const tdActions = _create('td');
-        if (!record.permanentlyFrozen) {
+        if (!record.released) {
           const btnRelease = _create('button', { text: '释放', className: 'btn btn-sm btn-success' });
           btnRelease.onclick = function() { releaseFunds(record.id); };
           tdActions.appendChild(btnRelease);
-          tdActions.appendChild(document.createTextNode(' '));
-          const btnFreeze = _create('button', { text: '永久冻结', className: 'btn btn-sm btn-danger' });
-          btnFreeze.onclick = function() { freezePermanently(record.id); };
-          tdActions.appendChild(btnFreeze);
         } else {
           tdActions.appendChild(_cell('-', ''));
         }
@@ -847,7 +838,7 @@ async function loadQuarantineRecordsFromSubgraph() {
       const pr = _el('pendingRelease');
       if (pr) pr.textContent = pendingCount;
       const pf = _el('permanentlyFrozen');
-      if (pf) pf.textContent = frozenCount;
+      if (pf) pf.textContent = '0';
     } else {
       _empty('quarantineTable', '暂无隔离记录', 8);
     }
@@ -889,7 +880,7 @@ async function loadIncomingBlocksFromSubgraph() {
           where: { decision: "BLOCK" }
         ) {
           id
-          txHash
+          transactionHash
           from
           to
           amount
@@ -910,7 +901,7 @@ async function loadIncomingBlocksFromSubgraph() {
         tr.appendChild(_cell(_fmtAddr(check.to), 'address-cell'));
         tr.appendChild(_cell(ethers.formatUnits(check.amount, 6), ''));
         tr.appendChild(_badge('黑名单', 'tag-black'));
-        tr.appendChild(_cell(_fmtAddr(check.txHash), 'address-cell'));
+        tr.appendChild(_cell(_fmtAddr(check.transactionHash), 'address-cell'));
         tbody.appendChild(tr);
       });
     } else {
@@ -936,7 +927,7 @@ async function loadBlockedTransfers() {
           where: { decision_in: ["BLOCK", "FLAG"] }
         ) {
           id
-          txHash
+          transactionHash
           from
           to
           amount
@@ -983,7 +974,7 @@ async function refreshMonitor() {
           orderDirection: desc
         ) {
           id
-          txHash
+          transactionHash
           from
           to
           amount
@@ -1002,7 +993,7 @@ async function refreshMonitor() {
       data.complianceChecks.forEach(check => {
         const tr = _create('tr');
         tr.appendChild(_cell(_fmtAddr(check.id), ''));
-        tr.appendChild(_cell(_fmtAddr(check.txHash), 'address-cell'));
+        tr.appendChild(_cell(_fmtAddr(check.transactionHash), 'address-cell'));
         tr.appendChild(_cell(_fmtAddr(check.from), 'address-cell'));
         tr.appendChild(_cell(_fmtAddr(check.to), 'address-cell'));
         tr.appendChild(_cell(ethers.formatUnits(check.amount, 6), ''));
@@ -1348,13 +1339,13 @@ async function loadLogsFromSubgraph() {
       query {
         operationLogs(first: 50, orderBy: timestamp, orderDirection: desc) {
           id
-          logType
+          operationType
           operator
           target
           details
           timestamp
           blockNumber
-          txHash
+          transactionHash
         }
       }
     `);
@@ -1374,7 +1365,7 @@ async function loadLogsFromSubgraph() {
 
       data.operationLogs.forEach(log => {
         const date = _fmtTime(log.timestamp);
-        const typeLabel = typeLabels[log.logType] || log.logType;
+        const typeLabel = typeLabels[log.operationType] || log.operationType;
 
         const item = _create('div', { className: 'timeline-item' });
         const timeDiv = _create('div', { text: date, className: 'timeline-time' });
