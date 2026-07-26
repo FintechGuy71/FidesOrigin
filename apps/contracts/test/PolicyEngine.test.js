@@ -32,33 +32,33 @@ describe('PolicyEngine', function () {
   describe('Transfer Evaluation', function () {
     it('should BLOCK sanctioned addresses', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 90, 3, [], true); // HIGH + sanctioned
-      const [decision, reason] = await policyEngine.evaluateTransfer(user1.address, user2.address, 100, issuer.address);
+      const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(user1.address, user2.address, 100, issuer.address);
       expect(decision).to.equal(1); // BLOCK
       expect(reason).to.include('Sanctioned');
     });
 
     it('should BLOCK if amount exceeds maxTxAmount', async function () {
       const maxTx = (await policyEngine.defaultIssuerPolicy()).maxTxAmount;
-      const [decision, reason] = await policyEngine.evaluateTransfer(user1.address, user2.address, maxTx + 1n, issuer.address);
+      const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(user1.address, user2.address, maxTx + 1n, issuer.address);
       expect(decision).to.equal(1); // BLOCK
       expect(reason).to.include('max transaction');
     });
 
     it('should FLAG_FOR_REVIEW medium risk when allowMediumRisk is false', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 50, 2, [], false); // MEDIUM
-      const [decision] = await policyEngine.evaluateTransfer(user1.address, user2.address, 100, issuer.address);
+      const [tier, riskScore, decision] = await policyEngine.evaluateTransaction(user1.address, user2.address, 100, issuer.address);
       expect(decision).to.equal(5); // FLAG_FOR_REVIEW (ActionType.FLAG_FOR_REVIEW = 5)
     });
 
     it('should ALLOW low risk transfer within limits', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 20, 1, [], false); // LOW
-      const [decision] = await policyEngine.evaluateTransfer(user1.address, user2.address, 100, issuer.address);
+      const [tier, riskScore, decision] = await policyEngine.evaluateTransaction(user1.address, user2.address, 100, issuer.address);
       expect(decision).to.equal(0); // ALLOW
     });
 
     it('should BLOCK high risk address', async function () {
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 90, 3, [], false); // HIGH
-      const [decision] = await policyEngine.evaluateTransfer(user1.address, user2.address, 100, issuer.address);
+      const [tier, riskScore, decision] = await policyEngine.evaluateTransaction(user1.address, user2.address, 100, issuer.address);
       expect(decision).to.equal(1); // BLOCK
     });
 
@@ -66,7 +66,7 @@ describe('PolicyEngine', function () {
       const mixer = ethers.Wallet.createRandom().address;
       await policyEngine.connect(owner).addMixer(mixer);
 
-      const [decision] = await policyEngine.evaluateTransfer(user1.address, mixer, 100, issuer.address);
+      const [tier, riskScore, decision] = await policyEngine.evaluateTransaction(user1.address, mixer, 100, issuer.address);
       expect(decision).to.equal(1); // BLOCK
     });
 
@@ -85,7 +85,7 @@ describe('PolicyEngine', function () {
 
       // Medium risk should be ALLOWED with custom policy
       await riskRegistry.connect(owner).updateRiskProfile(user1.address, 50, 2, [], false);
-      const [decision] = await policyEngine.evaluateTransfer(user1.address, user2.address, 100, issuer.address);
+      const [tier, riskScore, decision] = await policyEngine.evaluateTransaction(user1.address, user2.address, 100, issuer.address);
       expect(decision).to.equal(0); // ALLOW
     });
   });

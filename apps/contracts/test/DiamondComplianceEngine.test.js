@@ -7,6 +7,14 @@ describe('DiamondComplianceEngine', function () {
   let owner, addr1, addr2, operator;
   let riskRegistry, policyEngine;
 
+  // Helper to execute diamondCut with timelock (propose -> wait 48h -> execute)
+  async function executeDiamondCut(cut) {
+    await diamond.proposeDiamondCut(cut, ethers.ZeroAddress, '0x');
+    await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+    await ethers.provider.send('evm_mine');
+    return await diamond.diamondCut(cut, ethers.ZeroAddress, '0x');
+  }
+
   // Helper to get function selectors from a contract factory, excluding already-used ones
   async function getSelectorsExcluding(contractFactory, usedSelectors) {
     const fragmentKeys = Object.keys(contractFactory.interface.fragments);
@@ -217,8 +225,7 @@ describe('DiamondComplianceEngine', function () {
         functionSelectors: [uniqueSelector]
       }];
 
-      await expect(diamond.diamondCut(cut, ethers.ZeroAddress, '0x'))
-        .to.not.be.reverted;
+      await executeDiamondCut(cut);
 
       // Verify it was added
       const facet = await diamond.facetAddress(uniqueSelector);
@@ -237,8 +244,7 @@ describe('DiamondComplianceEngine', function () {
         functionSelectors: [selector]
       }];
 
-      await expect(diamond.diamondCut(cut, ethers.ZeroAddress, '0x'))
-        .to.not.be.reverted;
+      await executeDiamondCut(cut);
 
       const facet = await diamond.facetAddress(selector);
       expect(facet).to.equal(await newLoupe.getAddress());
@@ -252,7 +258,7 @@ describe('DiamondComplianceEngine', function () {
         action: 0,
         functionSelectors: [uniqueSelector]
       }];
-      await diamond.diamondCut(addCut, ethers.ZeroAddress, '0x');
+      await executeDiamondCut(addCut);
 
       // Verify it exists
       expect(await diamond.facetAddress(uniqueSelector)).to.equal(await diamondLoupeFacet.getAddress());
@@ -263,7 +269,7 @@ describe('DiamondComplianceEngine', function () {
         action: 2, // Remove
         functionSelectors: [uniqueSelector]
       }];
-      await diamond.diamondCut(removeCut, ethers.ZeroAddress, '0x');
+      await executeDiamondCut(removeCut);
 
       const facet = await diamond.facetAddress(uniqueSelector);
       expect(facet).to.equal(ethers.ZeroAddress);
@@ -286,6 +292,10 @@ describe('DiamondComplianceEngine', function () {
         functionSelectors: [selector]
       }];
 
+      await diamond.proposeDiamondCut(cut, ethers.ZeroAddress, '0x');
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+
       await expect(
         diamond.diamondCut(cut, ethers.ZeroAddress, '0x')
       ).to.be.revertedWith("LibDiamond: Can't add function that already exists");
@@ -299,6 +309,10 @@ describe('DiamondComplianceEngine', function () {
         functionSelectors: [selector]
       }];
 
+      await diamond.proposeDiamondCut(cut, ethers.ZeroAddress, '0x');
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+
       await expect(
         diamond.diamondCut(cut, ethers.ZeroAddress, '0x')
       ).to.be.revertedWith("LibDiamond: Can't replace function with same function");
@@ -310,6 +324,10 @@ describe('DiamondComplianceEngine', function () {
         action: 2,
         functionSelectors: ['0xdeadbeef']
       }];
+
+      await diamond.proposeDiamondCut(cut, ethers.ZeroAddress, '0x');
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
 
       await expect(
         diamond.diamondCut(cut, ethers.ZeroAddress, '0x')
@@ -334,7 +352,7 @@ describe('DiamondComplianceEngine', function () {
         functionSelectors: selectors
       }];
 
-      await diamond.diamondCut(cut, ethers.ZeroAddress, '0x');
+      await executeDiamondCut(cut);
 
       // Data should still be there
       const delay = await diamond.upgradeTimelockDelay();
@@ -363,7 +381,7 @@ describe('DiamondComplianceEngine', function () {
         functionSelectors: selectors
       }];
 
-      await diamond.diamondCut(cut, ethers.ZeroAddress, '0x');
+      await executeDiamondCut(cut);
 
       // History should be preserved
       const historyAfter = await diamond.getCheckHistoryLength();

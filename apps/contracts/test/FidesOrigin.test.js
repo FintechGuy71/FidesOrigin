@@ -108,7 +108,7 @@ describe('FidesOrigin Contract Suite', function () {
 
     describe('PolicyEngine', function () {
         it('should evaluate transfer correctly', async function () {
-            const [decision, reason] = await policyEngine.evaluateTransfer(
+            const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(
                 user1.address,
                 user2.address,
                 ethers.parseEther('100'),
@@ -126,7 +126,7 @@ describe('FidesOrigin Contract Suite', function () {
             await riskRegistry.connect(owner).updateRiskProfile(user2.address, 100, 3, [], true);
             expect((await riskRegistry.getProfile(user2.address))[5]).to.be.true;
 
-            const [decision, reason] = await policyEngine.evaluateTransfer(
+            const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(
                 user1.address,
                 user2.address,
                 ethers.parseEther('100'),
@@ -150,7 +150,7 @@ describe('FidesOrigin Contract Suite', function () {
 
             await policyEngine.setIssuerPolicy(await testUSD.getAddress(), policy);
 
-            const [decision, reason] = await policyEngine.evaluateTransfer(
+            const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(
                 user1.address,
                 user2.address,
                 ethers.parseEther('1000'),
@@ -246,7 +246,7 @@ describe('FidesOrigin Contract Suite', function () {
             };
             await policyEngine.setIssuerPolicy(await testUSD.getAddress(), policy);
 
-            const [decision, reason] = await policyEngine.evaluateTransfer(
+            const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(
                 user1.address,
                 user2.address,
                 ethers.parseEther('1000'),

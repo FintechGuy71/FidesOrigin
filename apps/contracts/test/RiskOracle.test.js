@@ -109,6 +109,9 @@ describe('RiskOracle', function () {
       await riskOracle.setRequiredConfirmations(1);
       // H-5 FIX: Stake ETH for oracles to meet minimum stake requirement
       await riskOracle.connect(user1).stake({ value: ethers.parseEther('2') });
+      // H-04 FIX: Advance time to satisfy MIN_STAKE_DURATION (1 day)
+      await network.provider.send('evm_increaseTime', [86401]);
+      await network.provider.send('evm_mine');
     });
 
     it('should submit oracle response and update risk profile', async function () {
@@ -148,12 +151,12 @@ describe('RiskOracle', function () {
 
         // [High Fix #37] TODO: ComplianceEngine needs IWalletCompliance implementation. Re-enable after mock for multi-oracle confirmation.
     it('should require multiple confirmations when configured', async function () {
-      // SKIP REASON: Needs mock — requires block mining between submissions due to UPDATE_DELAY_BLOCKS = 1.
-      // First confirmation mines a block, second confirmation must be in a later block.
       await riskOracle.addAuthorizedOracle(operator.address);
       await riskOracle.setRequiredConfirmations(2);
-      // Stake for operator too
       await riskOracle.connect(operator).stake({ value: ethers.parseEther('2') });
+      // H-04 FIX: Advance time to satisfy MIN_STAKE_DURATION for operator
+      await network.provider.send('evm_increaseTime', [86401]);
+      await network.provider.send('evm_mine');
       const futureDeadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
 
       const responseHash = ethers.solidityPackedKeccak256(

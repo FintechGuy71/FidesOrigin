@@ -61,7 +61,7 @@ describe('PolicyEngine Daily Limits', function () {
   });
 
   describe('Daily Limit Exceeded', function () {
-    it('should block when daily limit exceeded via evaluateTransfer', async function () {
+    it('should block when daily limit exceeded via evaluateTransaction', async function () {
       const policy = makePolicy({ maxTxAmount: 1000n, dailyLimit: 1500n });
       await policyEngine.connect(owner).setIssuerPolicy(issuer.address, policy);
 
@@ -69,7 +69,7 @@ describe('PolicyEngine Daily Limits', function () {
       await policyEngine.connect(owner).recordTransfer(user1.address, user2.address, 1500n * 10n ** 18n, issuer.address);
 
       // Evaluate transfer of 1 should exceed daily limit
-      const [decision, reason] = await policyEngine.evaluateTransfer(user1.address, user2.address, 1n * 10n ** 18n, issuer.address);
+      const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(user1.address, user2.address, 1n * 10n ** 18n, issuer.address);
       expect(decision).to.equal(1); // BLOCK (ActionType.BLOCK = 1)
       expect(reason).to.include('Daily limit');
     });
