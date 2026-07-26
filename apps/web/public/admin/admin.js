@@ -257,7 +257,7 @@ async function loadSubgraphRiskProfiles() {
 
         if (profile.isSanctioned) {
           tdAction.appendChild(document.createTextNode(' '));
-          tdAction.appendChild(_badge('已制裁', 'badge-danger'));
+          tdAction.appendChild(_badge('已制裁', 'tag-black'));
         }
         tr.appendChild(tdAction);
 
@@ -480,6 +480,12 @@ async function checkNetwork() {
 document.addEventListener('DOMContentLoaded', () => {
   initCharts();
   loadSettings();
+
+  // Change event listeners for filter selects (CSP compliance)
+  const filterStatus = _el('filterStatus');
+  if (filterStatus) filterStatus.addEventListener('change', filterQuarantineRecords);
+  const filterDecision = _el('filterDecision');
+  if (filterDecision) filterDecision.addEventListener('change', filterComplianceLogs);
 
   document.body.addEventListener('click', function(e) {
     const el = e.target.closest('[data-action]');

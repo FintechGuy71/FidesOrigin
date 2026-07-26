@@ -6,6 +6,7 @@
 /* ─── Design Tokens ─────────────────────────────────────────────── */
 :root {
   --bg: #070810;
+  --bg-secondary: #0c0e16;
   --bg-elevated: #0c0e16;
   --bg-card: #12141d;
   --bg-card-hover: #181b26;

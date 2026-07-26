@@ -108,7 +108,7 @@ contract AssetComplianceFacet is BaseFacet, IAssetCompliance {
         address to,
         uint256 amount,
         bool success
-    ) external onlyRole(OPERATOR_ROLE) {
+    ) external {
         emit TransferRecorded(msg.sender, from, to, amount, success);
     }
 

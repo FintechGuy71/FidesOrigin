@@ -231,16 +231,20 @@ async function loadDatabase() {
         : './data-sync/cache/address-labels-v11.json';
     try {
         const response = await fetch(dataPath);
-        if (response.ok) {
-            addressDB = await response.json();
+        if (!response.ok) {
+            console.warn('[AddressCheck] Database file not found (' + response.status + '). Falling back to subgraph-only mode.');
+            return;
+        }
+        addressDB = await response.json();
+        if (addressDB && addressDB.addressLabels) {
             for (const entry of addressDB.addressLabels) {
                 addressMap.set(entry.address.toLowerCase(), entry);
             }
             console.log('Database loaded:', addressMap.size, 'addresses');
-            loadStatsFromSubgraph();
         }
+        loadStatsFromSubgraph();
     } catch (e) {
-        console.log('Database not loaded, using fallback');
+        console.warn('[AddressCheck] Database not loaded (' + e.message + '), using subgraph-only mode.');
     }
 }
 

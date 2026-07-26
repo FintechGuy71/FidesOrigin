@@ -14,8 +14,17 @@ contract DiamondCutFacet is IDiamondCut {
     /// @notice M-01 FIX: DiamondCut 时间锁延迟（48小时）
     uint256 public constant DIAMONDCUT_DELAY = 48 hours;
 
-    /// @notice M-01 FIX: 已提案的 diamondCut 哈希 => 可执行时间戳
-    mapping(bytes32 => uint256) public diamondCutProposals;
+    /// @notice C-03 FIX: 提案状态枚举
+    enum ProposalStatus { Pending, Cancelled }
+
+    /// @notice C-03 FIX: 提案信息
+    struct Proposal {
+        uint256 executeAfter;
+        ProposalStatus status;
+    }
+
+    /// @notice M-01 FIX: 已提案的 diamondCut 哈希 => 提案信息
+    mapping(bytes32 => Proposal) public diamondCutProposals;
 
     // ============ Events ============
     event DiamondCutProposed(bytes32 indexed proposalHash, uint256 executeAfter);
@@ -38,8 +47,9 @@ contract DiamondCutFacet is IDiamondCut {
     ) external {
         LibDiamond.enforceIsContractOwner();
         bytes32 proposalHash = keccak256(abi.encode(_diamondCut, _init, _calldata));
-        diamondCutProposals[proposalHash] = block.timestamp + DIAMONDCUT_DELAY;
-        emit DiamondCutProposed(proposalHash, diamondCutProposals[proposalHash]);
+        uint256 executeAfter = block.timestamp + DIAMONDCUT_DELAY;
+        diamondCutProposals[proposalHash] = Proposal(executeAfter, ProposalStatus.Pending);
+        emit DiamondCutProposed(proposalHash, executeAfter);
     }
 
     /**
@@ -56,17 +66,33 @@ contract DiamondCutFacet is IDiamondCut {
         LibDiamond.enforceIsContractOwner();
 
         bytes32 proposalHash = keccak256(abi.encode(_diamondCut, _init, _calldata));
-        uint256 executeAfter = diamondCutProposals[proposalHash];
-        if (executeAfter == 0) {
+        Proposal memory proposal = diamondCutProposals[proposalHash];
+        if (proposal.executeAfter == 0) {
             revert NoProposalFound(proposalHash);
         }
-        if (block.timestamp < executeAfter) {
-            revert TimelockNotExpired(proposalHash, executeAfter);
+        if (proposal.status == ProposalStatus.Cancelled) {
+            revert NoProposalFound(proposalHash);
+        }
+        if (block.timestamp < proposal.executeAfter) {
+            revert TimelockNotExpired(proposalHash, proposal.executeAfter);
         }
 
         delete diamondCutProposals[proposalHash];
         emit DiamondCutExecuted(proposalHash);
 
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
+    }
+
+    /**
+     * @notice C-03 FIX: 取消已提案的 DiamondCut
+     * @param proposalHash 提案哈希
+     */
+    function cancelDiamondCutProposal(bytes32 proposalHash) external {
+        LibDiamond.enforceIsContractOwner();
+        Proposal storage proposal = diamondCutProposals[proposalHash];
+        if (proposal.executeAfter == 0) {
+            revert NoProposalFound(proposalHash);
+        }
+        proposal.status = ProposalStatus.Cancelled;
     }
 }

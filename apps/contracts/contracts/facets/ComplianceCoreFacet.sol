@@ -107,6 +107,7 @@ contract ComplianceCoreFacet is BaseFacet {
     )
         public
         whenNotPaused
+        onlyRole(OPERATOR_ROLE)
         returns (bool isCompliant, uint256 riskScore, string memory reason)
     {
         if (addr == address(0)) revert InvalidAddress();

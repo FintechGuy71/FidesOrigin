@@ -555,6 +555,10 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         }
 
         // [HIGH-3 FIX] 检查等待期是否已过（默认禁用，需运营方显式启用）
+        // [C-02 FIX] 当 claimDelay 为 type(uint256).max 时，timestamp + claimDelay 会溢出 panic
+        if (claimDelay == type(uint256).max) {
+            revert ClaimDelayNotMet(type(uint256).max);
+        }
         uint256 claimableAfter = record.timestamp + claimDelay;
         if (block.timestamp < claimableAfter) {
             revert ClaimDelayNotMet(claimableAfter);

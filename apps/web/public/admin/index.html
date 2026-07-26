@@ -746,6 +746,9 @@
                 <a class="nav-item" data-action="showPage" data-page="complianceLogs">
                     <span>📋</span> 合规日志
                 </a>
+                <a class="nav-item" data-action="showPage" data-page="logs">
+                    <span>📜</span> 操作日志
+                </a>
                 <a class="nav-item" data-action="showPage" data-page="settings">
                     <span>🔧</span> 系统设置
                 </a>
@@ -870,6 +873,30 @@
                             </thead>
                             <tbody id="blockedTable">
                                 <tr><td colspan="5" class="table-loading"><div class="spinner"></div><div>连接钱包后查看数据</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">最近交易记录</div>
+                        <button type="button" class="btn btn-secondary" data-action="loadSubgraphComplianceChecks">刷新</button>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额</th>
+                                    <th scope="col">决策</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable">
+                                <tr><td colspan="6" class="table-loading"><div class="spinner"></div><div>连接钱包后查看数据</div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1250,7 +1277,7 @@
                     <div class="card-header">
                         <div class="card-title">隔离记录列表</div>
                         <div style="display: flex; gap: 8px;">
-                            <select class="form-select" id="filterStatus" style="width: 120px;" onchange="filterQuarantineRecords()">
+                            <select class="form-select" id="filterStatus" style="width: 120px;">
                                 <option value="">全部</option>
                                 <option value="active">待处理</option>
                                 <option value="released">已释放</option>
@@ -1404,8 +1431,6 @@
                 </div>
             </div>
 
-            </div>
-
             <!-- Policies Page -->
             <div id="policies" class="page-section">
                 <div class="header">
@@ -1495,7 +1520,7 @@
                     <div class="card-header">
                         <div class="card-title">最近合规检查</div>
                         <div style="display: flex; gap: 8px;">
-                            <select class="form-select" id="filterDecision" style="width: 120px;" onchange="filterComplianceLogs()">
+                            <select class="form-select" id="filterDecision" style="width: 120px;">
                                 <option value="">全部</option>
                                 <option value="ALLOW">允许</option>
                                 <option value="BLOCK">拦截</option>

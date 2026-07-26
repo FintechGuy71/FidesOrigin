@@ -20,8 +20,6 @@ const path = require('path');
 // 现有 Sepolia 部署地址 — 从环境变量或配置文件读取
 // SECURITY FIX (CRIT-2): 不再硬编码地址，支持从环境变量或配置文件加载
 // ═══════════════════════════════════════════════════════════════════
-const fs = require('fs');
-const path = require('path');
 
 // 加载配置优先级: 1) 环境变量 2) sepolia-deployment.config.json 3) 报错
 function loadExistingAddresses() {
