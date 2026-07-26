@@ -17,12 +17,29 @@ TX_HASH_RE = re.compile(r"^0x[a-fA-F0-9]{64}$")
 SUPPORTED_CHAINS = {"ethereum", "bsc", "polygon", "arbitrum", "optimism", "base"}
 
 
-def validate_address(address: str) -> str:
+# 链类型白名单
+SUPPORTED_CHAINS = {"ethereum", "bsc", "polygon", "arbitrum", "optimism", "base"}
+
+# [LOW Fix #3] 各链地址格式正则
+CHAIN_ADDRESS_PATTERNS = {
+    "ethereum": re.compile(r"^0x[a-fA-F0-9]{40}$"),
+    "bsc": re.compile(r"^0x[a-fA-F0-9]{40}$"),
+    "polygon": re.compile(r"^0x[a-fA-F0-9]{40}$"),
+    "arbitrum": re.compile(r"^0x[a-fA-F0-9]{40}$"),
+    "optimism": re.compile(r"^0x[a-fA-F0-9]{40}$"),
+    "base": re.compile(r"^0x[a-fA-F0-9]{40}$"),
+}
+
+
+def validate_address(address: str, chain: str = "ethereum") -> str:
     """
-    验证以太坊地址格式
+    验证区块链地址格式（链特定）
+    
+    [LOW Fix #3] 根据链类型使用不同的地址格式校验。
     
     Args:
         address: 待验证的地址
+        chain: 链类型（默认 ethereum）
     
     Returns:
         str: 标准化后的地址（小写）
@@ -34,10 +51,18 @@ def validate_address(address: str) -> str:
         raise ValidationException("Address is required", field="address")
     
     address = address.strip()
+    chain = (chain or "ethereum").strip().lower()
     
-    if not ETH_ADDRESS_RE.match(address):
+    if chain not in SUPPORTED_CHAINS:
         raise ValidationException(
-            f"Invalid Ethereum address format: {address[:20]}...",
+            f"Unsupported chain: {chain}. Supported: {', '.join(SUPPORTED_CHAINS)}",
+            field="chain"
+        )
+    
+    pattern = CHAIN_ADDRESS_PATTERNS.get(chain)
+    if not pattern or not pattern.match(address):
+        raise ValidationException(
+            f"Invalid {chain} address format: {address[:20]}...",
             field="address"
         )
     

@@ -13,7 +13,7 @@ from app.core.logging import get_logger
 from app.schemas import MonitorStreamMessage, MonitorSubscription
 
 logger = get_logger(__name__)
-settings = get_settings()
+# settings = get_settings()  # 不再在模块级别缓存
 
 
 class WebSocketManager:
@@ -29,14 +29,21 @@ class WebSocketManager:
     - 心跳检测（自动清理死连接）
     - 按地址索引（高效广播）
     - 风险评分过滤（只推送符合条件的）
+    - [HIGH Fix #3] 每客户端消息速率限制（30条/分钟）
     """
+    
+    # [HIGH Fix #3] 每客户端最大消息速率：30条/分钟
+    MAX_MESSAGES_PER_MINUTE = 30
     
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
         self.address_subscriptions: Dict[str, Set[str]] = {}
         self.connection_configs: Dict[str, MonitorSubscription] = {}
         self.connection_times: Dict[str, datetime] = {}
-        self.max_connections = settings.MONITOR_MAX_CONNECTIONS
+        # [HIGH Fix #3] 客户端消息速率限制跟踪
+        self._client_message_counts: Dict[str, List[datetime]] = {}
+        _settings = get_settings()
+        self.max_connections = _settings.MONITOR_MAX_CONNECTIONS
     
     async def connect(
         self,
@@ -46,6 +53,9 @@ class WebSocketManager:
     ) -> bool:
         """
         接受新连接
+        
+        [LOW Fix #1] 注意：WebSocket accept 应由调用方（如 monitor.py）完成，
+        本方法不再重复调用 accept()，避免 RuntimeError。
         
         Returns:
             bool: 是否成功连接
@@ -60,15 +70,12 @@ class WebSocketManager:
             await websocket.close(code=4003, reason="Server capacity exceeded")
             return False
         
-        # [CRITICAL Fix #1] 如果连接尚未 accept（由外部认证流程提前 accept 的情况）
-        # 尝试 accept，如果已经 accepted 则忽略 RuntimeError
-        try:
-            await websocket.accept()
-        except RuntimeError:
-            pass  # Already accepted
+        # [LOW Fix #1] 不再调用 websocket.accept() — 调用方已处理
         self.active_connections[client_id] = websocket
         self.connection_configs[client_id] = subscription
         self.connection_times[client_id] = datetime.now(timezone.utc)
+        # [HIGH Fix #3] 初始化消息计数
+        self._client_message_counts[client_id] = []
         
         # 建立地址索引
         for address in subscription.addresses:
@@ -103,6 +110,10 @@ class WebSocketManager:
         if client_id in self.connection_times:
             del self.connection_times[client_id]
         
+        # [HIGH Fix #3] 清理消息计数
+        if client_id in self._client_message_counts:
+            del self._client_message_counts[client_id]
+        
         logger.info(
             "websocket_client_disconnected",
             client_id=client_id,
@@ -110,8 +121,17 @@ class WebSocketManager:
         )
     
     async def send_message(self, client_id: str, message: MonitorStreamMessage) -> bool:
-        """发送消息给特定客户端"""
+        """发送消息给特定客户端（带速率限制）"""
         if client_id not in self.active_connections:
+            return False
+        
+        # [HIGH Fix #3] 检查客户端消息速率
+        if not self._check_message_rate(client_id):
+            logger.warning(
+                "websocket_rate_limit_exceeded",
+                client_id=client_id,
+                max_per_minute=self.MAX_MESSAGES_PER_MINUTE
+            )
             return False
         
         try:
@@ -126,6 +146,26 @@ class WebSocketManager:
             )
             self.disconnect(client_id)
             return False
+    
+    def _check_message_rate(self, client_id: str) -> bool:
+        """
+        [HIGH Fix #3] 检查客户端消息速率是否超过限制。
+        使用滑动窗口：统计最近 60 秒内的消息数。
+        """
+        now = datetime.now(timezone.utc)
+        minute_ago = now - timedelta(seconds=60)
+        
+        counts = self._client_message_counts.get(client_id, [])
+        # 清理过期记录
+        counts = [t for t in counts if t > minute_ago]
+        
+        if len(counts) >= self.MAX_MESSAGES_PER_MINUTE:
+            self._client_message_counts[client_id] = counts
+            return False
+        
+        counts.append(now)
+        self._client_message_counts[client_id] = counts
+        return True
     
     async def broadcast_to_address(
         self,

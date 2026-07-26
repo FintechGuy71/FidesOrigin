@@ -281,8 +281,8 @@ class ContentSizeLimitMiddleware(BaseHTTPMiddleware):
     """
     请求大小限制中间件 — 在 body 读取前阻止超大请求
     
-    通过覆盖 receive() 方法，在流式读取 body 的过程中实时检查大小，
-    防止恶意客户端发送超大 body 导致内存耗尽。
+    [MEDIUM Fix #2] 通过包装 receive() 方法，在流式读取 body 时实时检查大小，
+    不再缓冲整个 body，避免 Content-Length 伪造导致内存耗尽。
     """
     def __init__(self, app, max_body_size: int = 10 * 1024 * 1024):
         super().__init__(app)
@@ -311,31 +311,25 @@ class ContentSizeLimitMiddleware(BaseHTTPMiddleware):
             except ValueError:
                 pass
         
-        # 流式读取 body 并实时检查大小
-        body_parts = []
+        # [MEDIUM Fix #2] 包装 receive 以实时检查大小，不缓冲整个 body
         total_size = 0
+        original_receive = request.receive
         
-        async for chunk in request.stream():
-            total_size += len(chunk)
-            if total_size > self.max_body_size:
-                logger.warning("request_too_large_streaming", 
-                             path=request.url.path, 
-                             size=total_size, 
-                             max_size=self.max_body_size)
-                return JSONResponse(
-                    status_code=413,
-                    content={
-                        "error": {
-                            "code": "REQUEST_TOO_LARGE",
-                            "message": f"Request body too large. Max size: {self.max_body_size} bytes"
-                        }
-                    }
-                )
-            body_parts.append(chunk)
+        async def _sized_receive():
+            nonlocal total_size
+            message = await original_receive()
+            if message.get("type") == "http.request":
+                chunk = message.get("body", b"")
+                total_size += len(chunk)
+                if total_size > self.max_body_size:
+                    logger.warning("request_too_large_streaming", 
+                                 path=request.url.path, 
+                                 size=total_size, 
+                                 max_size=self.max_body_size)
+                    raise RuntimeError("Request body too large")
+            return message
         
-        # 重新构建请求 body（FastAPI 依赖 request.body()）
-        if body_parts:
-            request._body = b"".join(body_parts)
+        request._receive = _sized_receive
         
         return await call_next(request)
 

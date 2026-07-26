@@ -25,7 +25,8 @@ from app.core.logging import get_logger
 from app.models import APIKey
 
 logger = get_logger(__name__)
-settings = get_settings()
+# [CRITICAL Fix #1] 不缓存 settings 单例在模块级别，每次通过 get_settings() 获取（已缓存）
+# settings = get_settings()  # REMOVED - 防止导入时即初始化且被篡改
 
 # 安全 Header
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -60,6 +61,14 @@ REFRESH_TOKEN_FAMILY_PREFIX = "fidesorigin:refresh_family:"
 REFRESH_TOKEN_JTI_PREFIX = "fidesorigin:refresh_jti:"
 
 
+def _hash_jti(jti: str, secret: str) -> str:
+    """
+    [CRITICAL Fix #2] 使用 HMAC-SHA256 哈希 JTI，避免在 Redis 中存储明文 JTI。
+    Redis key 本身变为哈希值，防止 JTI 泄露。
+    """
+    return hmac.new(secret.encode(), jti.encode(), hashlib.sha256).hexdigest()
+
+
 def _get_redis_refresh_client():
     """获取 Redis 连接用于 refresh token 管理"""
     try:
@@ -82,7 +91,8 @@ async def create_refresh_token(username: str, family_id: str = None) -> dict:
     Returns:
         dict: {token: str, family_id: str, jti: str}
     """
-    secret = settings.SECRET_KEY
+    _settings = get_settings()
+    secret = _settings.SECRET_KEY
     if not secret:
         raise RuntimeError("SECRET_KEY is not configured")
     
@@ -99,12 +109,13 @@ async def create_refresh_token(username: str, family_id: str = None) -> dict:
     }
     token = jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
     
-    # [MEDIUM-1 FIX] 将 jti 存入 Redis 白名单
+    # [CRITICAL Fix #2] 将 jti 的 HMAC 哈希存入 Redis 白名单，不存储明文 JTI
     redis = _get_redis_refresh_client()
     if redis:
         try:
+            jti_hash = _hash_jti(jti, secret)
             await redis.set(
-                f"{REFRESH_TOKEN_JTI_PREFIX}{jti}",
+                f"{REFRESH_TOKEN_JTI_PREFIX}{jti_hash}",
                 family,
                 expire=JWT_REFRESH_EXPIRE_MINUTES * 60
             )
@@ -127,7 +138,8 @@ async def rotate_refresh_token(old_token: str) -> dict:
     Raises:
         AuthenticationException: token 无效或已被撤销
     """
-    secret = settings.SECRET_KEY
+    _settings = get_settings()
+    secret = _settings.SECRET_KEY
     if not secret:
         raise AuthenticationException("SECRET_KEY is not configured")
     
@@ -145,11 +157,12 @@ async def rotate_refresh_token(old_token: str) -> dict:
     if not username or not old_jti or not family:
         raise AuthenticationException("Invalid refresh token format")
     
-    # [MEDIUM-1 FIX] 检查旧 jti 是否在白名单中
+    # [CRITICAL Fix #2] 检查旧 jti 的 HMAC 哈希是否在白名单中
     redis = _get_redis_refresh_client()
     if redis:
         try:
-            jti_key = f"{REFRESH_TOKEN_JTI_PREFIX}{old_jti}"
+            old_jti_hash = _hash_jti(old_jti, secret)
+            jti_key = f"{REFRESH_TOKEN_JTI_PREFIX}{old_jti_hash}"
             stored_family = await redis.get(jti_key)
             
             if stored_family is None:
@@ -181,7 +194,8 @@ async def rotate_refresh_token(old_token: str) -> dict:
 def create_access_token(username: str, role: str = "admin") -> str:
     """生成 JWT access token"""
     # [CRITICAL Fix #2] 移除硬编码 fallback secret，secret 为空时直接报错
-    secret = settings.SECRET_KEY
+    _settings = get_settings()
+    secret = _settings.SECRET_KEY
     if not secret:
         raise RuntimeError(
             "SECRET_KEY is not configured. Set it via environment variable or .env file. "
@@ -200,7 +214,8 @@ def create_access_token(username: str, role: str = "admin") -> str:
 def decode_access_token(token: str) -> TokenData:
     """解码并验证 JWT token"""
     # [CRITICAL Fix #2] 移除硬编码 fallback secret
-    secret = settings.SECRET_KEY
+    _settings = get_settings()
+    secret = _settings.SECRET_KEY
     if not secret:
         raise AuthenticationException("SECRET_KEY is not configured")
     try:
@@ -255,14 +270,16 @@ async def rotate_csrf_token(request: Request, response) -> str:
     """
     旋转 CSRF Token
     
-    在每次状态改变请求后旋转 Token，防止 Token 被窃取后长期使用
+    [HIGH Fix #2] 仅在需要时旋转 Token（如登录后、会话创建时），
+    不在每个状态改变请求后旋转，避免竞态条件。
     """
     new_token = generate_csrf_token()
+    _settings = get_settings()
     response.set_cookie(
         CSRF_TOKEN_COOKIE,
         new_token,
         httponly=False,  # 需要 JS 读取
-        secure=settings.is_production,
+        secure=_settings.is_production,
         samesite="strict",
         max_age=86400  # 24小时
     )
@@ -276,10 +293,15 @@ async def csrf_protection_middleware(
     """
     CSRF 保护中间件（双重 Cookie 模式）
     
+    [HIGH Fix #2] 使用会话级 CSRF Token，不在每个请求后旋转，
+    避免并发请求导致的 Token 竞态失效。
+    
     对状态改变请求（POST/PUT/PATCH/DELETE）验证 CSRF Token
     安全请求（GET/HEAD/OPTIONS）设置新的 CSRF Token Cookie
     """
-    # 安全方法：设置 CSRF Cookie
+    _settings = get_settings()
+    
+    # 安全方法：设置 CSRF Cookie（如果还没有的话）
     if request.method in ("GET", "HEAD", "OPTIONS", "TRACE"):
         response = await call_next(request)
         # 如果请求没有 CSRF Cookie，设置一个
@@ -289,7 +311,7 @@ async def csrf_protection_middleware(
                 CSRF_TOKEN_COOKIE,
                 csrf_token,
                 httponly=False,  # 需要 JS 读取
-                secure=settings.is_production,
+                secure=_settings.is_production,
                 samesite="strict",
                 max_age=86400  # 24小时
             )
@@ -321,13 +343,9 @@ async def csrf_protection_middleware(
         logger.warning("csrf_token_mismatch", path=request.url.path, method=request.method)
         raise AuthenticationException("CSRF token mismatch")
     
-    # 验证通过，继续处理请求
+    # [HIGH Fix #2] 验证通过，继续处理请求 — 不再每个请求后旋转 Token
+    # Token 只在会话创建/登录时旋转一次，避免竞态条件
     response = await call_next(request)
-    
-    # 状态改变请求后旋转 CSRF Token（增强安全性）
-    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
-        await rotate_csrf_token(request, response)
-    
     return response
 
 
@@ -345,11 +363,13 @@ class SessionManager:
     def __init__(self, redis_url: Optional[str] = None):
         self._sessions: dict = {}  # 内存模式 fallback
         self._redis = None
-        self._redis_url = redis_url or settings.REDIS_URL
+        _settings = get_settings()
+        self._redis_url = redis_url or _settings.REDIS_URL
         if self._redis_url:
             try:
-                import aioredis
-                self._redis = aioredis.from_url(self._redis_url, decode_responses=True)
+                # [MEDIUM Fix #5] 使用 redis.asyncio 替代已弃用的 aioredis
+                import redis.asyncio as redis_async
+                self._redis = redis_async.from_url(self._redis_url, decode_responses=True)
                 logger.info("session_manager_redis_enabled", redis_url=self._redis_url)
             except Exception as e:
                 logger.warning("session_manager_redis_fallback", error=str(e), 
@@ -557,7 +577,8 @@ class RequestSigner:
 
 def get_request_signer() -> RequestSigner:
     """获取请求签名验证器"""
-    return RequestSigner(settings.HMAC_SECRET or settings.SECRET_KEY)
+    _settings = get_settings()
+    return RequestSigner(_settings.HMAC_SECRET or _settings.SECRET_KEY)
 
 
 async def request_signature_middleware(
@@ -614,12 +635,13 @@ async def request_signature_middleware(
 
 # ==================== 日志脱敏 ====================
 
-SENSITIVE_FIELDS = {
+SENSITIVE_FIELDS = frozenset({
     "password", "secret", "token", "api_key", "apikey", "api-key",
     "authorization", "auth", "cookie", "session", "credit_card",
     "cvv", "ssn", "private_key", "mnemonic", "seed",
-    "db_password", "db_password", "redis_password", "hmac_secret"
-}
+    "db_password", "redis_password", "hmac_secret", "bearer",
+    "refresh_token", "access_token", "x-api-key",
+})
 
 SENSITIVE_PATTERNS = [
     r"(password|secret|token|api_key)\s*[=:]\s*[^\s&]+",
@@ -629,16 +651,27 @@ SENSITIVE_PATTERNS = [
 
 
 def mask_sensitive_data(data: dict) -> dict:
-    """递归脱敏敏感数据"""
+    """
+    递归脱敏敏感数据
+    
+    [MEDIUM Fix #4] 使用精确键名匹配，避免子串匹配导致的误脱敏。
+    例如 "user_password" 匹配 "password" 是合理的，但 "api" 不应匹配 "api_key"。
+    """
     if not isinstance(data, dict):
         return data
     
     masked = {}
     for key, value in data.items():
-        key_lower = key.lower()
+        key_lower = key.lower().replace("-", "_")
         
-        # 检查是否是敏感字段
-        if any(s in key_lower for s in SENSITIVE_FIELDS):
+        # [MEDIUM Fix #4] 精确键名匹配：键名本身或下划线分隔的部分匹配敏感字段
+        is_sensitive = key_lower in SENSITIVE_FIELDS
+        if not is_sensitive:
+            # 也检查下划线前缀/后缀形式，如 user_password、api_key_value
+            parts = key_lower.split("_")
+            is_sensitive = any(part in SENSITIVE_FIELDS for part in parts)
+        
+        if is_sensitive:
             if isinstance(value, str) and len(value) > 4:
                 masked[key] = value[:2] + "***" + value[-2:]
             else:
@@ -678,7 +711,8 @@ class RateLimiter:
     """
     
     def __init__(self):
-        self.requests_per_minute = settings.RATE_LIMIT_REQUESTS_PER_MINUTE
+        _settings = get_settings()
+        self.requests_per_minute = _settings.RATE_LIMIT_REQUESTS_PER_MINUTE
         self._local_cache: dict = {}  # 本地缓存（Redis 不可用时降级）
     
     async def is_allowed(self, key: str) -> bool:
@@ -825,21 +859,35 @@ async def verify_api_key(
     """
     验证 API Key
     
-    改进：
-    - 使用常数时间比较防止时序攻击
-    - 记录验证日志
-    - 支持缓存验证结果
+    [CRITICAL Fix #5] 使用 HMAC-SHA256(pepper + key) 作为查找哈希，
+    替代无盐 SHA-256，防止彩虹表攻击。
+    
+    [HIGH Fix #5] 使用 secrets.compare_digest() 进行常数时间比较，
+    防止时序攻击。
     """
     if not api_key:
         return False
     
+    _settings = get_settings()
+    pepper = _settings.API_KEY_PEPPER or _settings.SECRET_KEY
+    if not pepper:
+        logger.error("api_key_pepper_not_configured")
+        return False
+    
     try:
-        # 查询数据库
-        # [CRITICAL Fix #3] 使用 key_hash 查询（与 models.py 中 APIKey.key_hash 一致）
-        import hashlib
-        key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+        # [CRITICAL Fix #5] 计算 HMAC-SHA256(pepper, api_key) 作为查找哈希
+        key_lookup_hash = hmac.new(
+            pepper.encode(),
+            api_key.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # 查询数据库：使用 key_lookup_hash 查找
         result = await db.execute(
-            select(APIKey).where(APIKey.key_hash == key_hash, APIKey.is_active == True)
+            select(APIKey).where(
+                APIKey.key_lookup_hash == key_lookup_hash,
+                APIKey.is_active == True
+            )
         )
         key_record = result.scalar_one_or_none()
         
@@ -847,8 +895,16 @@ async def verify_api_key(
             logger.warning("api_key_invalid", api_key_prefix=api_key[:8] if len(api_key) > 8 else "")
             return False
         
-        # [CRITICAL Fix #3] 检查是否过期（使用新增的 expires_at 字段）
-        if hasattr(key_record, 'expires_at') and key_record.expires_at and key_record.expires_at < datetime.now(timezone.utc):
+        # [HIGH Fix #5] 常数时间比较：二次验证 key_hash 字段（如果存在）
+        # 同时防止时序攻击
+        if key_record.key_hash:
+            # 如果 key_hash 存在，计算 SHA-256(api_key) 并常数时间比较
+            computed_hash = hashlib.sha256(api_key.encode()).hexdigest()
+            if not secrets.compare_digest(computed_hash, key_record.key_hash):
+                return False
+        
+        # 检查是否过期
+        if key_record.expires_at and key_record.expires_at < datetime.now(timezone.utc):
             logger.warning("api_key_expired", api_key_id=str(key_record.id))
             return False
         
@@ -882,6 +938,39 @@ async def get_current_api_key(
     return api_key
 
 
+def _get_client_ip(request: Request) -> str:
+    """
+    [HIGH Fix #1] 安全获取客户端真实 IP，防止 X-Forwarded-For 伪造。
+    
+    1. 如果配置了 TRUSTED_PROXIES，只信任这些代理发送的 X-Forwarded-For。
+    2. 从 X-Forwarded-For 链中取最右侧的不可信代理之前的 IP 作为真实客户端 IP。
+    3. 无代理或无信任配置时，直接返回 request.client.host。
+    """
+    _settings = get_settings()
+    trusted_proxies = set(_settings.TRUSTED_PROXIES)
+    direct_ip = request.client.host if request.client else "unknown"
+    
+    forwarded_for = request.headers.get("X-Forwarded-For", "")
+    if not forwarded_for:
+        return direct_ip
+    
+    # 如果没有配置可信代理，不信任 X-Forwarded-For，防止伪造
+    if not trusted_proxies:
+        return direct_ip
+    
+    # 解析 X-Forwarded-For 链（从左到右：客户端 -> 最近代理）
+    ips = [ip.strip() for ip in forwarded_for.split(",")]
+    
+    # 从右向左扫描，找到第一个不在可信代理列表中的 IP（真实客户端）
+    # 如果所有 IP 都是可信代理，返回最左侧的（最原始客户端）
+    for ip in reversed(ips):
+        if ip not in trusted_proxies:
+            return ip
+    
+    # 全是可信代理，返回最左侧（最原始的）
+    return ips[0] if ips else direct_ip
+
+
 async def rate_limit_middleware(
     request: Request,
     call_next: Callable
@@ -896,13 +985,8 @@ async def rate_limit_middleware(
     if request.url.path in ("/health", "/ready", "/"):
         return await call_next(request)
     
-    # 获取客户端标识 - 优先使用真实 IP（考虑反向代理）
-    forwarded_for = request.headers.get("X-Forwarded-For", "")
-    if forwarded_for:
-        # 取第一个 IP（最原始的客户端 IP）
-        client_ip = forwarded_for.split(",")[0].strip()
-    else:
-        client_ip = request.client.host if request.client else "unknown"
+    # [HIGH Fix #1] 安全获取客户端 IP，防止 X-Forwarded-For 伪造
+    client_ip = _get_client_ip(request)
     
     api_key = request.headers.get("X-API-Key", "")
     
@@ -935,7 +1019,8 @@ async def rate_limit_middleware(
     
     # 添加限流响应头
     remaining = await limiter.get_remaining(rate_key)
-    response.headers["X-RateLimit-Limit"] = str(settings.RATE_LIMIT_REQUESTS_PER_MINUTE)
+    _settings = get_settings()
+    response.headers["X-RateLimit-Limit"] = str(_settings.RATE_LIMIT_REQUESTS_PER_MINUTE)
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     
     return response

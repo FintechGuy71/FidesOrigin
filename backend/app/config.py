@@ -129,7 +129,22 @@ class Settings(BaseSettings):
                 raise ValueError("CORS_ORIGINS cannot contain '*' in production")
         return origins
     
+    # ==================== 登录安全配置 ====================
+    LOGIN_MAX_ATTEMPTS: int = Field(default=5, description="登录失败最大尝试次数")
+    LOGIN_LOCKOUT_MINUTES: int = Field(default=15, description="登录锁定时间（分钟）")
+    
+    # ==================== 速率限制 / 代理配置 ====================
+    TRUSTED_PROXIES: List[str] = Field(
+        default_factory=list,
+        description="可信代理 IP 列表（CIDR 或精确 IP），用于解析 X-Forwarded-For"
+    )
+    
     # ==================== API Key / HMAC 配置 ====================
+    API_KEY_PEPPER: str = Field(
+        default="",
+        description="API Key 服务端 pepper（用于 HMAC 哈希，必须设置）"
+    )
+
     # 生产环境必须设置强密钥，不允许使用默认值
     SECRET_KEY: str = Field(
         default="",
@@ -168,6 +183,9 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        # [CRITICAL Fix #1] Settings 通过工厂模式获取，启动时显式验证，
+        # 运行时不应被修改（依靠约定和显式验证，而非 pydantic frozen 模式，
+        # 以便测试可以 monkeypatch）
     )
     
     # ==================== 安全验证 ====================
@@ -204,14 +222,20 @@ class Settings(BaseSettings):
         生产环境安全验证
         启动时调用，检查关键配置是否已设置
         """
+        # [CRITICAL Fix #1] 验证 SECRET_KEY 长度和强度
+        if not self.SECRET_KEY:
+            raise ValueError("SECRET_KEY is required and must be set via environment variable")
+        if len(self.SECRET_KEY) < 32:
+            raise ValueError(f"SECRET_KEY must be at least 32 characters, got {len(self.SECRET_KEY)}")
+        
         if self.APP_ENV == "production":
             missing = []
-            if not self.SECRET_KEY or len(self.SECRET_KEY) < 32:
-                missing.append("SECRET_KEY (must be >= 32 chars)")
             if not self.DB_PASSWORD or self.DB_PASSWORD == "default_password":
                 missing.append("DB_PASSWORD")
             if not self.API_KEY or self.API_KEY == "dev-api-key-change-in-production":
                 missing.append("API_KEY")
+            if not self.API_KEY_PEPPER or len(self.API_KEY_PEPPER) < 32:
+                missing.append("API_KEY_PEPPER (must be >= 32 chars)")
             if self.CORS_ORIGINS == ["*"]:
                 missing.append("CORS_ORIGINS (cannot be '*')")
             
@@ -234,9 +258,7 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """获取配置单例（缓存）"""
-    settings = Settings()
-    settings.validate_security()
-    return settings
+    return Settings()
 
 
 def reset_settings():

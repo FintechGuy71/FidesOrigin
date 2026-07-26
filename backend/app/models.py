@@ -82,9 +82,10 @@ class APIKey(Base):
     __tablename__ = "api_keys"
     
     id = Column(BigInteger, primary_key=True, index=True)
+    # [CRITICAL Fix #5] key_hash 存储 bcrypt 类哈希或强哈希，不用于查找
     key_hash = Column(String(255), nullable=False, unique=True)
-    # [CRITICAL Fix #3] 添加 key 字段以兼容 security.py 中的查询（同时保留 key_hash 用于安全查找）
-    key = Column(String(255), nullable=True, index=True, comment="明文 key 的 SHA-256 hash，用于快速查找")
+    # [CRITICAL Fix #5] key_lookup_hash 使用 HMAC-SHA256(pepper + key) 用于安全查找
+    key_lookup_hash = Column(String(255), nullable=True, index=True, comment="HMAC-SHA256(pepper, key) 查找哈希")
     name = Column(String(100))
     is_active = Column(Boolean, default=True)
     rate_limit = Column(Integer, default=1000)

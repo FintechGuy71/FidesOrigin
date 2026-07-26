@@ -15,7 +15,7 @@ from app.config import get_settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
-settings = get_settings()
+# settings = get_settings()  # 不再在模块级别缓存
 
 T = TypeVar("T")
 
@@ -39,19 +39,26 @@ class CacheService:
     async def connect(self) -> None:
         """建立 Redis 连接"""
         if self._redis is None:
+            _settings = get_settings()
+            # [LOW Fix #2] 启用 SSL 证书验证（如果配置了 SSL）
+            ssl_kwargs = {}
+            if _settings.REDIS_SSL:
+                ssl_kwargs["ssl_cert_reqs"] = "required"
+            
             # Redis 8.0+ 直接使用 Redis 类创建连接
             self._redis = redis.Redis(
-                host=settings.REDIS_HOST,
-                port=settings.REDIS_PORT,
-                password=settings.REDIS_PASSWORD,
-                db=settings.REDIS_DB,
-                max_connections=settings.REDIS_POOL_SIZE,
-                socket_connect_timeout=settings.REDIS_POOL_TIMEOUT,
+                host=_settings.REDIS_HOST,
+                port=_settings.REDIS_PORT,
+                password=_settings.REDIS_PASSWORD,
+                db=_settings.REDIS_DB,
+                max_connections=_settings.REDIS_POOL_SIZE,
+                socket_connect_timeout=_settings.REDIS_POOL_TIMEOUT,
                 socket_keepalive=True,
                 health_check_interval=30,
                 decode_responses=True,
+                **ssl_kwargs
             )
-            logger.info("cache_service_connected", host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+            logger.info("cache_service_connected", host=_settings.REDIS_HOST, port=_settings.REDIS_PORT)
 
     async def close(self) -> None:
         """关闭 Redis 连接"""

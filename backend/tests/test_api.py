@@ -108,10 +108,18 @@ async def create_test_api_key(
     expires_at: Optional[datetime] = None
 ) -> APIKey:
     """创建测试 API Key"""
+    import hmac
+    from app.config import get_settings
+    _settings = get_settings()
+    pepper = _settings.API_KEY_PEPPER or _settings.SECRET_KEY
+    
     key_hash = hashlib.sha256(key.encode()).hexdigest()
+    # [CRITICAL Fix #5] key_lookup_hash = HMAC-SHA256(pepper, key)
+    key_lookup_hash = hmac.new(pepper.encode(), key.encode(), hashlib.sha256).hexdigest()
+    
     api_key = APIKey(
         key_hash=key_hash,
-        key=key,
+        key_lookup_hash=key_lookup_hash,
         name="Test API Key",
         is_active=is_active,
         rate_limit=1000,

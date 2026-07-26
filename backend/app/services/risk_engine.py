@@ -160,6 +160,9 @@ class RiskEngine:
         },
     ]
     
+    # [HIGH Fix #4] 最大规则评估数量，防止无界规则导致的 DoS
+    MAX_RULES_EVALUATION = 50
+    
     def __init__(self, db_session: AsyncSession):
         self.db = db_session
         self._blockscout = None
@@ -176,7 +179,7 @@ class RiskEngine:
         return self._blockscout
     
     async def _get_active_rules(self) -> List[RiskRule]:
-        """获取活跃的风险规则（带缓存）"""
+        """获取活跃的风险规则（带缓存），限制数量防止 DoS"""
         now = datetime.now(timezone.utc)
         
         if (self._rules_cache is None or 
@@ -187,10 +190,11 @@ class RiskEngine:
                 select(RiskRule)
                 .where(RiskRule.is_active == True)
                 .order_by(RiskRule.priority)
+                .limit(self.MAX_RULES_EVALUATION)  # [HIGH Fix #4] 限制规则数量
             )
             self._rules_cache = result.scalars().all()
             self._cache_timestamp = now
-            logger.debug(f"Loaded {len(self._rules_cache)} active risk rules")
+            logger.debug(f"Loaded {len(self._rules_cache)} active risk rules (max {self.MAX_RULES_EVALUATION})")
         
         return self._rules_cache
     
