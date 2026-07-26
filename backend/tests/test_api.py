@@ -112,13 +112,12 @@ async def create_test_api_key(
     from app.config import get_settings
     _settings = get_settings()
     pepper = _settings.API_KEY_PEPPER or _settings.SECRET_KEY
-    
-    key_hash = hashlib.sha256(key.encode()).hexdigest()
-    # [CRITICAL Fix #5] key_lookup_hash = HMAC-SHA256(pepper, key)
+
+    # [MEDIUM-1 FIX] key_hash 已废弃，不再生成 unsalted SHA-256
+    # 仅保留 HMAC-SHA256(pepper, key) 作为查找哈希
     key_lookup_hash = hmac.new(pepper.encode(), key.encode(), hashlib.sha256).hexdigest()
-    
+
     api_key = APIKey(
-        key_hash=key_hash,
         key_lookup_hash=key_lookup_hash,
         name="Test API Key",
         is_active=is_active,

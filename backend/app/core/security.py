@@ -714,50 +714,64 @@ class RateLimiter:
         _settings = get_settings()
         self.requests_per_minute = _settings.RATE_LIMIT_REQUESTS_PER_MINUTE
         self._local_cache: dict = {}  # 本地缓存（Redis 不可用时降级）
+        # [MEDIUM-2 FIX] 记录上次全局清理时间，防止攻击者用大量唯一 key 撑爆内存
+        self._last_local_cleanup: int = 0
+        self._local_cleanup_interval: int = 60  # 每 60 秒触发一次全局清理
     
     async def is_allowed(self, key: str) -> bool:
         """
         检查是否允许请求
-        
+
+        [HIGH-1 FIX] 使用原子化 INCR 替代 GET+INCR 两步操作，消除竞态条件。
+        并发场景下，旧代码可能让 ~2x 配置速率的请求通过。
+
         Args:
             key: 限流键（IP + API Key 或用户 ID）
-        
+
         Returns:
             bool: 是否允许
         """
-        now = int(time.time())
-        window_start = now - 60  # 60 秒窗口
-        
         try:
             from app.core.di import get_container
             cache = get_container().cache
-            
-            # 使用 Redis 实现滑动窗口
-            # [MEDIUM-3 FIX] 添加服务前缀防止多服务共享 Redis 时的 key 碰撞
+
+            # [HIGH-1 FIX] 添加服务前缀防止多服务共享 Redis 时的 key 碰撞
             cache_key = f"fidesorigin:rate_limit:{key}"
-            
-            # 获取当前窗口内的请求次数
-            count = await cache.get(cache_key)
-            if count is None:
-                await cache.set(cache_key, 1, expire=60)
-                return True
-            
-            count = int(count)
-            if count >= self.requests_per_minute:
+
+            # [HIGH-1 FIX] 原子化 INCR：先递增，再根据返回值判断
+            count = await cache.incr(cache_key)
+            if count == 1:
+                # 首次请求，设置窗口过期时间
+                await cache.expire(cache_key, 60)
+
+            if count > self.requests_per_minute:
                 return False
-            
-            # 增加计数并刷新 TTL，避免计数器永不过期
-            await cache.incr(cache_key)
-            await cache.expire(cache_key, 60)
             return True
-            
+
         except Exception as e:
             # Redis 不可用时降级到本地内存
             logger.warning("rate_limit_redis_fallback", error=str(e))
+            now = int(time.time())
+            window_start = now - 60
             return self._local_check(key, now, window_start)
+    
+    def _cleanup_local_cache(self, now: int, window_start: int):
+        """[MEDIUM-2 FIX] 全局清理本地缓存中所有过期条目"""
+        expired_keys = []
+        for k, timestamps in self._local_cache.items():
+            self._local_cache[k] = [ts for ts in timestamps if ts > window_start]
+            if not self._local_cache[k]:
+                expired_keys.append(k)
+        for k in expired_keys:
+            del self._local_cache[k]
+        self._last_local_cleanup = now
     
     def _local_check(self, key: str, now: int, window_start: int) -> bool:
         """本地内存限流（降级方案）"""
+        # [MEDIUM-2 FIX] 周期性全局清理，防止攻击者用大量唯一 key 撑爆内存
+        if now - self._last_local_cleanup > self._local_cleanup_interval:
+            self._cleanup_local_cache(now, window_start)
+        
         if key not in self._local_cache:
             self._local_cache[key] = []
         
@@ -895,14 +909,10 @@ async def verify_api_key(
             logger.warning("api_key_invalid", api_key_prefix=api_key[:8] if len(api_key) > 8 else "")
             return False
         
-        # [HIGH Fix #5] 常数时间比较：二次验证 key_hash 字段（如果存在）
-        # 同时防止时序攻击
-        if key_record.key_hash:
-            # 如果 key_hash 存在，计算 SHA-256(api_key) 并常数时间比较
-            computed_hash = hashlib.sha256(api_key.encode()).hexdigest()
-            if not secrets.compare_digest(computed_hash, key_record.key_hash):
-                return False
-        
+        # [MEDIUM-1 FIX] key_hash 已废弃（原 unsalted SHA-256 存在安全风险），
+        # 仅保留 key_lookup_hash（HMAC-SHA256）进行安全查找。
+        # 不再对 key_hash 做二次验证。
+
         # 检查是否过期
         if key_record.expires_at and key_record.expires_at < datetime.now(timezone.utc):
             logger.warning("api_key_expired", api_key_id=str(key_record.id))

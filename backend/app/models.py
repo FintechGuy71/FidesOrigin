@@ -82,8 +82,9 @@ class APIKey(Base):
     __tablename__ = "api_keys"
     
     id = Column(BigInteger, primary_key=True, index=True)
-    # [CRITICAL Fix #5] key_hash 存储 bcrypt 类哈希或强哈希，不用于查找
-    key_hash = Column(String(255), nullable=False, unique=True)
+    # [MEDIUM-1 FIX] key_hash 已废弃：原 unsalted SHA-256 不安全且冗余。
+    # 保留字段仅用于兼容旧数据，nullable=True，unique 约束已移除。
+    key_hash = Column(String(255), nullable=True, unique=False)
     # [CRITICAL Fix #5] key_lookup_hash 使用 HMAC-SHA256(pepper + key) 用于安全查找
     key_lookup_hash = Column(String(255), nullable=True, index=True, comment="HMAC-SHA256(pepper, key) 查找哈希")
     name = Column(String(100))

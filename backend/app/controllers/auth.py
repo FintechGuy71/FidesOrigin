@@ -3,6 +3,7 @@ FidesOrigin 认证 Controller
 提供 Admin Dashboard 登录端点
 """
 import hashlib
+import json
 import os
 import secrets as _secrets
 import time
@@ -35,33 +36,184 @@ _admin_password_hash: Optional[bytes] = None
 _admin_password_cache_time: float = 0.0
 _ADMIN_PASSWORD_CACHE_TTL_SECONDS = 300  # 5 分钟 TTL
 
-# [CRITICAL Fix #4] 登录失败计数器（内存级，生产环境应使用 Redis）
-# 格式: {username: (failed_count, first_failure_time, locked_until)}
-_login_attempts: Dict[str, Tuple[int, float, Optional[float]]] = {}
+# [HIGH-2 FIX] 登录失败计数器已迁移至 Redis。
+# 保留内存级 fallback 仅用于开发/单实例场景。
+_login_attempts_fallback: Dict[str, Tuple[int, float, Optional[float]]] = {}
+
+LOGIN_LOCKOUT_PREFIX = "fidesorigin:login_lockout"
+
+
+def _get_lockout_key(username: str) -> str:
+    """生成 Redis 登录锁定键"""
+    return f"{LOGIN_LOCKOUT_PREFIX}:{username}"
+
+
+async def _get_redis_client():
+    """获取 Redis 客户端（如可用）"""
+    try:
+        from app.core.di import get_container
+        return get_container().cache
+    except Exception:
+        return None
+
+
+async def _check_account_lockout(username: str) -> Optional[str]:
+    """
+    [HIGH-2 FIX] 检查账户是否被锁定。
+    使用 Redis 实现分布式锁定，多 worker 场景下共享状态。
+
+    返回 None 表示未锁定，否则返回锁定原因消息。
+    """
+    _settings = get_settings()
+    max_attempts = _settings.LOGIN_MAX_ATTEMPTS
+    lockout_minutes = _settings.LOGIN_LOCKOUT_MINUTES
+    lockout_seconds = lockout_minutes * 60
+    now = time.time()
+
+    redis = await _get_redis_client()
+    if redis:
+        try:
+            key = _get_lockout_key(username)
+            raw = await redis.get(key)
+            if raw is None:
+                return None
+
+            data = json.loads(raw) if isinstance(raw, str) else json.loads(raw.decode())
+            failed_count = data.get("failed_count", 0)
+            locked_until = data.get("locked_until")
+
+            # 检查是否仍在锁定期内
+            if locked_until and now < locked_until:
+                remaining = int(locked_until - now)
+                return f"Account locked due to too many failed attempts. Try again in {remaining} seconds."
+
+            # 锁定已过期但仍在窗口内：若失败次数未达上限，允许继续尝试
+            if failed_count < max_attempts:
+                return None
+
+            # 失败次数已达上限但锁定已过期，重置
+            await redis.delete(key)
+            return None
+        except Exception as e:
+            logger.warning("login_lockout_redis_error", error=str(e), username=username[:16])
+            # 降级到内存 fallback
+
+    # 内存 fallback（开发/单实例）
+    record = _login_attempts_fallback.get(username)
+    if not record:
+        return None
+
+    failed_count, first_failure_time, locked_until = record
+
+    if locked_until and now < locked_until:
+        remaining = int(locked_until - now)
+        return f"Account locked due to too many failed attempts. Try again in {remaining} seconds."
+
+    if locked_until and now >= locked_until:
+        _login_attempts_fallback.pop(username, None)
+        return None
+
+    return None
+
+
+async def _record_login_failure(username: str):
+    """
+    [HIGH-2 FIX] 记录登录失败。
+    使用 Redis 实现分布式计数，多 worker 场景下共享状态。
+    """
+    _settings = get_settings()
+    max_attempts = _settings.LOGIN_MAX_ATTEMPTS
+    lockout_minutes = _settings.LOGIN_LOCKOUT_MINUTES
+    lockout_seconds = lockout_minutes * 60
+    now = time.time()
+
+    redis = await _get_redis_client()
+    if redis:
+        try:
+            key = _get_lockout_key(username)
+            raw = await redis.get(key)
+
+            if raw is None:
+                data = {"failed_count": 1, "first_failure_time": now, "locked_until": None}
+                await redis.set(key, json.dumps(data), expire=lockout_seconds * 2)
+                return
+
+            data = json.loads(raw) if isinstance(raw, str) else json.loads(raw.decode())
+            data["failed_count"] = data.get("failed_count", 0) + 1
+
+            if data["failed_count"] >= max_attempts:
+                data["locked_until"] = now + lockout_seconds
+                logger.warning(
+                    "account_locked",
+                    username=username[:16],
+                    failed_attempts=data["failed_count"],
+                    lockout_minutes=lockout_minutes
+                )
+
+            await redis.set(key, json.dumps(data), expire=lockout_seconds * 2)
+            return
+        except Exception as e:
+            logger.warning("login_failure_redis_error", error=str(e), username=username[:16])
+            # 降级到内存 fallback
+
+    # 内存 fallback
+    record = _login_attempts_fallback.get(username)
+    if not record:
+        _login_attempts_fallback[username] = (1, now, None)
+        return
+
+    failed_count, first_failure_time, locked_until = record
+    failed_count += 1
+
+    if failed_count >= max_attempts:
+        locked_until = now + lockout_seconds
+        logger.warning(
+            "account_locked",
+            username=username[:16],
+            failed_attempts=failed_count,
+            lockout_minutes=lockout_minutes
+        )
+
+    _login_attempts_fallback[username] = (failed_count, first_failure_time, locked_until)
+
+
+async def _record_login_success(username: str):
+    """
+    [HIGH-2 FIX] 登录成功后清除失败记录。
+    """
+    redis = await _get_redis_client()
+    if redis:
+        try:
+            await redis.delete(_get_lockout_key(username))
+            return
+        except Exception as e:
+            logger.warning("login_success_redis_error", error=str(e), username=username[:16])
+
+    _login_attempts_fallback.pop(username, None)
 
 
 def _get_admin_password_hash() -> bytes:
     """
     [CRITICAL Fix #3] 获取 Admin 密码的 bcrypt 哈希，带 TTL 缓存。
-    
+
     如果环境变量 ADMIN_PASSWORD 是明文，则自动哈希并缓存。
     如果已经是 bcrypt 哈希（以 $2 开头），直接使用。
     每 5 分钟重新读取环境变量，支持热更新。
     返回空 bytes 表示未配置。
     """
     global _admin_password_hash, _admin_password_cache_time
-    
+
     now = time.time()
-    if (_admin_password_hash is not None and 
+    if (_admin_password_hash is not None and
         (now - _admin_password_cache_time) < _ADMIN_PASSWORD_CACHE_TTL_SECONDS):
         return _admin_password_hash
-    
+
     pwd = os.environ.get("ADMIN_PASSWORD", "")
     if not pwd:
         _admin_password_hash = b""
         _admin_password_cache_time = now
         return b""
-    
+
     # 检测是否已是 bcrypt 哈希
     if pwd.startswith(("$2a$", "$2b$", "$2x$", "$2y$")):
         _admin_password_hash = pwd.encode()
@@ -73,78 +225,9 @@ def _get_admin_password_hash() -> bytes:
             message="ADMIN_PASSWORD is stored in plaintext. "
                     "Please set a bcrypt-hashed password (e.g. generated via 'python -c \"import bcrypt; print(bcrypt.hashpw(b\\\"yourpassword\\\", bcrypt.gensalt()).decode())\"')"
         )
-    
+
     _admin_password_cache_time = now
     return _admin_password_hash
-
-
-def _check_account_lockout(username: str) -> Optional[str]:
-    """
-    [CRITICAL Fix #4] 检查账户是否被锁定。
-    
-    返回 None 表示未锁定，否则返回锁定原因消息。
-    """
-    _settings = get_settings()
-    max_attempts = _settings.LOGIN_MAX_ATTEMPTS
-    lockout_minutes = _settings.LOGIN_LOCKOUT_MINUTES
-    
-    record = _login_attempts.get(username)
-    if not record:
-        return None
-    
-    failed_count, first_failure_time, locked_until = record
-    now = time.time()
-    
-    # 检查是否仍在锁定期内
-    if locked_until and now < locked_until:
-        remaining = int(locked_until - now)
-        return f"Account locked due to too many failed attempts. Try again in {remaining} seconds."
-    
-    # 锁定已过期，重置
-    if locked_until and now >= locked_until:
-        _login_attempts.pop(username, None)
-        return None
-    
-    return None
-
-
-def _record_login_failure(username: str):
-    """
-    [CRITICAL Fix #4] 记录登录失败。
-    """
-    _settings = get_settings()
-    max_attempts = _settings.LOGIN_MAX_ATTEMPTS
-    lockout_minutes = _settings.LOGIN_LOCKOUT_MINUTES
-    
-    now = time.time()
-    record = _login_attempts.get(username)
-    
-    if not record:
-        _login_attempts[username] = (1, now, None)
-        return
-    
-    failed_count, first_failure_time, locked_until = record
-    failed_count += 1
-    
-    # 超过最大尝试次数，锁定账户
-    if failed_count >= max_attempts:
-        lockout_seconds = lockout_minutes * 60
-        locked_until = now + lockout_seconds
-        logger.warning(
-            "account_locked",
-            username=username[:16],
-            failed_attempts=failed_count,
-            lockout_minutes=lockout_minutes
-        )
-    
-    _login_attempts[username] = (failed_count, first_failure_time, locked_until)
-
-
-def _record_login_success(username: str):
-    """
-    [CRITICAL Fix #4] 登录成功后清除失败记录。
-    """
-    _login_attempts.pop(username, None)
 
 
 def _prehash_password_for_bcrypt(password: str) -> bytes:
@@ -192,8 +275,8 @@ async def login(body: LoginRequest):
     使用环境变量 ADMIN_USERNAME / ADMIN_PASSWORD 验证。
     ADMIN_PASSWORD 支持 bcrypt 哈希格式（推荐）或明文（会发出警告）。
     返回 JWT token，后续请求通过 `Authorization: Bearer <token>` 携带。
-    
-    [CRITICAL Fix #4] 支持账户锁定：连续 N 次失败后将锁定 M 分钟。
+
+    [HIGH-2 FIX] 支持分布式账户锁定：连续 N 次失败后将锁定 M 分钟。
     """
     admin_username = os.environ.get("ADMIN_USERNAME", "admin")
     admin_password_hash = _get_admin_password_hash()
@@ -205,8 +288,8 @@ async def login(body: LoginRequest):
             detail="Server authentication not configured",
         )
 
-    # [CRITICAL Fix #4] 检查账户是否被锁定
-    lockout_msg = _check_account_lockout(body.username)
+    # [HIGH-2 FIX] 检查账户是否被锁定（分布式 Redis）
+    lockout_msg = await _check_account_lockout(body.username)
     if lockout_msg:
         logger.warning("login_rejected_locked", username=body.username[:16])
         raise HTTPException(
@@ -217,18 +300,34 @@ async def login(body: LoginRequest):
 
     # 常数时间比较用户名（防止时序攻击）
     username_ok = _secrets.compare_digest(body.username, admin_username)
-    
+
     # [MEDIUM Fix #3] 对长密码预哈希后再传给 bcrypt
     password_bytes = _prehash_password_for_bcrypt(body.password)
     password_ok = bcrypt.checkpw(password_bytes, admin_password_hash)
 
     if not (username_ok and password_ok):
-        # [CRITICAL Fix #4] 记录失败
-        _record_login_failure(body.username)
-        failed_count, _, _ = _login_attempts.get(body.username, (0, 0, None))
+        # [HIGH-2 FIX] 记录失败（分布式）
+        await _record_login_failure(body.username)
+
+        # 获取当前失败次数用于提示
+        failed_count = 0
+        redis = await _get_redis_client()
+        if redis:
+            try:
+                raw = await redis.get(_get_lockout_key(body.username))
+                if raw:
+                    data = json.loads(raw) if isinstance(raw, str) else json.loads(raw.decode())
+                    failed_count = data.get("failed_count", 0)
+            except Exception:
+                pass
+        else:
+            record = _login_attempts_fallback.get(body.username)
+            if record:
+                failed_count = record[0]
+
         _settings = get_settings()
         remaining = max(0, _settings.LOGIN_MAX_ATTEMPTS - failed_count)
-        
+
         logger.warning("login_failed", username=body.username[:16], remaining_attempts=remaining)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -236,9 +335,9 @@ async def login(body: LoginRequest):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # [CRITICAL Fix #4] 登录成功，清除失败记录
-    _record_login_success(body.username)
-    
+    # [HIGH-2 FIX] 登录成功，清除失败记录（分布式）
+    await _record_login_success(body.username)
+
     access_token = create_access_token(username=body.username, role="admin")
 
     logger.info("login_success", username=body.username)
