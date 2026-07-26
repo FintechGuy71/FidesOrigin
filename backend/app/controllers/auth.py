@@ -22,6 +22,7 @@ from app.core.security import (
     JWT_EXPIRE_MINUTES,
     Token,
     create_access_token,
+    create_refresh_token,
     decode_access_token,
 )
 
@@ -339,11 +340,13 @@ async def login(body: LoginRequest):
     await _record_login_success(body.username)
 
     access_token = create_access_token(username=body.username, role="admin")
+    refresh_token_data = await create_refresh_token(username=body.username)
 
     logger.info("login_success", username=body.username)
 
     return Token(
         access_token=access_token,
+        refresh_token=refresh_token_data["token"],
         token_type="bearer",
         expires_in=JWT_EXPIRE_MINUTES * 60,
     )

@@ -6,7 +6,11 @@ import logging
 import re
 import sys
 import uuid
+from contextvars import ContextVar
 from typing import Any, Dict, Optional
+
+# [S-1 Fix] Module-level ContextVar — creating a new instance per call breaks set()/get()
+_request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
 
 import structlog
 from fastapi import Request
@@ -120,11 +124,8 @@ def add_request_id(
     event_dict: EventDict
 ) -> EventDict:
     """添加请求 ID 到日志"""
-    # 从 contextvars 获取 request_id
-    from contextvars import ContextVar
-    
-    request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-    request_id = request_id_var.get()
+    # [S-1 Fix] 使用模块级 ContextVar，避免每次创建新实例导致 set()/get() 不匹配
+    request_id = _request_id_var.get()
     if request_id:
         event_dict["request_id"] = request_id
     return event_dict
@@ -207,18 +208,14 @@ class RequestContext:
             # 生成新的 request_id
             self.request_id = str(uuid.uuid4())[:8]
         
-        # 设置到 contextvar
-        from contextvars import ContextVar
-        request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-        request_id_var.set(self.request_id)
+        # [S-1 Fix] 使用模块级 ContextVar
+        _request_id_var.set(self.request_id)
         
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        # 清除 contextvar
-        from contextvars import ContextVar
-        request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-        request_id_var.set(None)
+        # [S-1 Fix] 清除模块级 ContextVar
+        _request_id_var.set(None)
     
     def get_request_id(self) -> str:
         return self.request_id

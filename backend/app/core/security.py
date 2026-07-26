@@ -279,7 +279,7 @@ async def rotate_csrf_token(request: Request, response) -> str:
         CSRF_TOKEN_COOKIE,
         new_token,
         httponly=False,  # 需要 JS 读取
-        secure=_settings.is_production,
+        secure=True,  # [S-10 Fix] CSRF cookie must always be secure, even in dev/staging
         samesite="strict",
         max_age=86400  # 24小时
     )
@@ -311,7 +311,7 @@ async def csrf_protection_middleware(
                 CSRF_TOKEN_COOKIE,
                 csrf_token,
                 httponly=False,  # 需要 JS 读取
-                secure=_settings.is_production,
+                secure=True,  # [S-10 Fix] CSRF cookie must always be secure, even in dev/staging
                 samesite="strict",
                 max_age=86400  # 24小时
             )
@@ -768,6 +768,13 @@ class RateLimiter:
     
     def _local_check(self, key: str, now: int, window_start: int) -> bool:
         """本地内存限流（降级方案）"""
+        # [S-8 Fix] 本地内存降级：每个实例独立计数，多实例部署时必须使用 Redis
+        logger.warning(
+            "rate_limit_local_fallback_active",
+            message="Rate limiting fell back to per-instance local memory. "
+                    "In multi-instance deployments, all instances share the same rate limit budget. "
+                    "Configure Redis for distributed rate limiting."
+        )
         # [MEDIUM-2 FIX] 周期性全局清理，防止攻击者用大量唯一 key 撑爆内存
         if now - self._last_local_cleanup > self._local_cleanup_interval:
             self._cleanup_local_cache(now, window_start)
@@ -918,11 +925,23 @@ async def verify_api_key(
             logger.warning("api_key_expired", api_key_id=str(key_record.id))
             return False
         
-        # 更新最后使用时间
-        key_record.last_used_at = datetime.now(timezone.utc)
-        await db.commit()
+        # [S-12 Fix] 强制 API Key 配额限制
+        key_record.request_count += 1
+        if key_record.rate_limit > 0 and key_record.request_count > key_record.rate_limit:
+            logger.warning(
+                "api_key_rate_limit_exceeded",
+                api_key_id=str(key_record.id),
+                rate_limit=key_record.rate_limit,
+                request_count=key_record.request_count
+            )
+            return False
         
-        logger.info("api_key_verified", api_key_id=str(key_record.id))
+        # [S-4 Fix] 更新最后使用时间 — 不调用 db.commit()，
+        # 让请求级事务统一处理，避免破坏原子性
+        key_record.last_used_at = datetime.now(timezone.utc)
+        # await db.commit()  # REMOVED — 请求级事务负责提交
+        
+        logger.info("api_key_verified", api_key_id=str(key_record.id), request_count=key_record.request_count)
         return True
         
     except Exception as e:
@@ -964,8 +983,15 @@ def _get_client_ip(request: Request) -> str:
     if not forwarded_for:
         return direct_ip
     
-    # 如果没有配置可信代理，不信任 X-Forwarded-For，防止伪造
+    # [S-9 Fix] 如果没有配置可信代理但收到 X-Forwarded-For，记录警告
+    # 因为此时所有反向代理后的请求会共享同一个 rate limit bucket
     if not trusted_proxies:
+        logger.warning(
+            "client_ip_trusted_proxies_empty",
+            message="TRUSTED_PROXIES is empty but X-Forwarded-For header is present. "
+                    "All requests behind a reverse proxy will share the same rate limit bucket. "
+                    "Configure TRUSTED_PROXIES for accurate client IP resolution."
+        )
         return direct_ip
     
     # 解析 X-Forwarded-For 链（从左到右：客户端 -> 最近代理）
@@ -1189,4 +1215,5 @@ class HMACValidator:
 
 def get_hmac_validator() -> HMACValidator:
     """获取 HMAC 验证器"""
-    return HMACValidator(settings.SECRET_KEY)
+    _settings = get_settings()
+    return HMACValidator(_settings.HMAC_SECRET or _settings.SECRET_KEY)
