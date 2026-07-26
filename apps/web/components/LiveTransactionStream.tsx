@@ -228,8 +228,8 @@ export default function LiveTransactionStream({
   // WebSocket 接收消息
   const handleWebSocketMessage = useCallback((data: WebSocketMessage) => {
     if (data.type === "transaction" && data.transaction) {
+      const newTx = data.transaction;
       setTransactions((prev) => {
-        const newTx = data.transaction;
         const exists = prev.some((tx) => tx.id === newTx.id);
         if (exists) return prev;
         return [newTx, ...prev].slice(0, maxItems);
