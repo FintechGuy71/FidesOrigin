@@ -8,7 +8,7 @@ import {
 import {
   IssuerPolicySet,
   WalletPolicySet,
-  TransferEvaluated,
+  PolicyEvaluated,
   RuleCreated,
   RuleUpdated,
   RuleActivated,
@@ -23,8 +23,17 @@ function getDecision(decisionValue: i32): string {
   return 'HOLD';
 }
 
+function addressArrayToStrings(addrs: Array<Address>): Array<string> {
+  let result: Array<string> = [];
+  for (let i = 0; i < addrs.length; i++) {
+    result.push(addrs[i].toHexString());
+  }
+  return result;
+}
+
 export function handleIssuerPolicySet(event: IssuerPolicySet): void {
   let issuer = event.params.issuer.toHexString();
+  let policyData = event.params.policy;
 
   let policy = Policy.load(issuer);
   let previousVersion = 0;
@@ -45,10 +54,13 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
 
   let newVersion = previousVersion + 1;
   policy.version = newVersion;
-  policy.maxTxAmount = event.params.maxTxAmount;
-  policy.dailyLimit = event.params.dailyLimit;
-  // Note: IssuerPolicySet event does not include allowMediumRisk/allowHighRisk/blockMixer/requireDestinationKYC/cooldownPeriod
-  // These fields retain their previous values or defaults
+  policy.maxTxAmount = policyData.maxTxAmount;
+  policy.dailyLimit = policyData.dailyLimit;
+  policy.allowMediumRisk = policyData.allowMediumRisk;
+  policy.allowHighRisk = policyData.allowHighRisk;
+  policy.blockMixer = policyData.blockMixer;
+  policy.requireDestinationKYC = policyData.requireDestinationKYC;
+  policy.cooldownPeriod = policyData.cooldownPeriod;
   policy.updatedAt = event.block.timestamp;
   policy.save();
 
@@ -56,13 +68,13 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
   let version = new PolicyVersion(versionId);
   version.policy = issuer;
   version.version = newVersion;
-  version.maxTxAmount = event.params.maxTxAmount;
-  version.dailyLimit = event.params.dailyLimit;
-  version.allowMediumRisk = policy.allowMediumRisk;
-  version.allowHighRisk = policy.allowHighRisk;
-  version.blockMixer = policy.blockMixer;
-  version.requireDestinationKYC = policy.requireDestinationKYC;
-  version.cooldownPeriod = policy.cooldownPeriod;
+  version.maxTxAmount = policyData.maxTxAmount;
+  version.dailyLimit = policyData.dailyLimit;
+  version.allowMediumRisk = policyData.allowMediumRisk;
+  version.allowHighRisk = policyData.allowHighRisk;
+  version.blockMixer = policyData.blockMixer;
+  version.requireDestinationKYC = policyData.requireDestinationKYC;
+  version.cooldownPeriod = policyData.cooldownPeriod;
   version.updatedAt = event.block.timestamp;
   version.blockNumber = event.block.number;
   version.transactionHash = event.transaction.hash.toHexString();
@@ -74,6 +86,7 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
 
 export function handleWalletPolicySet(event: WalletPolicySet): void {
   let wallet = event.params.wallet.toHexString();
+  let policyData = event.params.policy;
 
   let walletPolicy = WalletPolicy.load(wallet);
   if (!walletPolicy) {
@@ -84,6 +97,15 @@ export function handleWalletPolicySet(event: WalletPolicySet): void {
 
   let previousVersion = walletPolicy.version || 0;
   walletPolicy.version = previousVersion + 1;
+  walletPolicy.maxTxValue = policyData.maxTxValue;
+  walletPolicy.maxTokenTxAmount = policyData.maxTokenTxAmount;
+  walletPolicy.dailyEthLimit = policyData.dailyEthLimit;
+  walletPolicy.dailyTokenLimit = policyData.dailyTokenLimit;
+  walletPolicy.blockContractCalls = policyData.blockContractCalls;
+  walletPolicy.blockUnknownTokens = policyData.blockUnknownTokens;
+  walletPolicy.requireWhitelist = policyData.requireWhitelist;
+  walletPolicy.allowedDex = addressArrayToStrings(policyData.allowedDex);
+  walletPolicy.blockedContracts = addressArrayToStrings(policyData.blockedContracts);
   walletPolicy.updatedAt = event.block.timestamp;
   walletPolicy.blockNumber = event.block.number;
   walletPolicy.transactionHash = event.transaction.hash.toHexString();
@@ -92,15 +114,15 @@ export function handleWalletPolicySet(event: WalletPolicySet): void {
   log.info('WalletPolicySet: {}', [wallet]);
 }
 
-export function handleTransferEvaluated(event: TransferEvaluated): void {
+export function handleTransferEvaluated(event: PolicyEvaluated): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let evaluation = new PolicyEvaluation(id);
-  evaluation.operator = event.transaction.from.toHexString();
+  evaluation.operator = event.params.operator.toHexString();
   evaluation.from = event.params.from.toHexString();
   evaluation.to = event.params.to.toHexString();
   evaluation.amount = event.params.amount;
   evaluation.decision = getDecision(event.params.decision as i32);
-  evaluation.reason = 'Transfer evaluated';
+  evaluation.reason = event.params.reason;
   evaluation.timestamp = event.block.timestamp;
   evaluation.blockNumber = event.block.number;
   evaluation.transactionHash = event.transaction.hash.toHexString();

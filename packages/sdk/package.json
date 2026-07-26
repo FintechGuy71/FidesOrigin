@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@fidesorigin/shared": "workspace:*",
+    "ethers": "^6.0.0",
     "isomorphic-ws": "^5.0.0"
   },
   "peerDependencies": {

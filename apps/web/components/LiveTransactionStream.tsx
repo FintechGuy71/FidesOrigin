@@ -8,7 +8,6 @@ import {
   MOCK_TOKENS,
   MOCK_CHAINS,
   MOCK_RISK_TAGS,
-  MOCK_TRANSACTION_TYPES,
 } from "@/lib/demo-config";
 
 /** Formats a blockchain address for display (e.g., 0x1234...5678) */
@@ -45,8 +44,14 @@ interface LiveTransactionStreamProps {
   className?: string;
 }
 
+/** WebSocket message payload */
+interface WebSocketMessage {
+  type: string;
+  transaction?: Transaction;
+}
+
 // WebSocket 连接钩子
-function useWebSocket(url: string | undefined, onMessage: (data: any) => void) {
+function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessage) => void) {
   const ws = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +226,7 @@ export default function LiveTransactionStream({
   const shouldScroll = useRef(true);
 
   // WebSocket 接收消息
-  const handleWebSocketMessage = useCallback((data: any) => {
+  const handleWebSocketMessage = useCallback((data: WebSocketMessage) => {
     if (data.type === "transaction" && data.transaction) {
       setTransactions((prev) => {
         const newTx = data.transaction;

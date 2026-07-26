@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.73.0",
+    "@graphprotocol/graph-cli": "^0.88.0",
     "@graphprotocol/graph-ts": "^0.35.1"
   },
   "devDependencies": {

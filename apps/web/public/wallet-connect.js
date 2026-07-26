@@ -2,7 +2,7 @@
  * FidesOrigin Wallet Connect Module
  * Connects MetaMask, queries on-chain compliance status via FidesCompliance contract
  * Supports: Sepolia Testnet, Ethereum Mainnet, Base
- * Uses ethers.js v6 from CDN
+ * Uses ethers.js v6 (self-hosted)
  */
 (function () {
   'use strict';
@@ -22,7 +22,7 @@
       chainIdHex: '0x1',
       name: 'Ethereum',
       rpc: 'https://ethereum-rpc.publicnode.com',
-      contract: null, // not deployed yet
+      contract: null,
       explorer: 'https://etherscan.io',
     },
     base: {
@@ -30,7 +30,7 @@
       chainIdHex: '0x2105',
       name: 'Base',
       rpc: 'https://mainnet.base.org',
-      contract: null, // not deployed yet
+      contract: null,
       explorer: 'https://basescan.org',
     },
   };
@@ -90,9 +90,38 @@
     if (e) e.textContent = text;
   }
 
-  function setHtml(id, html) {
+  /** [SEC-004 Fix] Replaced setHtml with DOM-safe clear + append approach */
+  function clearElement(id) {
     const e = el(id);
-    if (e) e.innerHTML = html;
+    if (e) {
+      while (e.firstChild) {
+        e.removeChild(e.firstChild);
+      }
+    }
+    return e;
+  }
+
+  function createBadge(text, className) {
+    const span = document.createElement('span');
+    span.className = 'status-badge ' + className;
+    span.textContent = text;
+    return span;
+  }
+
+  function createComplianceRow(label, valueText, valueClass) {
+    const row = document.createElement('div');
+    row.className = 'compliance-row';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = label;
+    row.appendChild(labelSpan);
+
+    const valueSpan = document.createElement('span');
+    if (valueClass) valueSpan.className = valueClass;
+    valueSpan.textContent = valueText;
+    row.appendChild(valueSpan);
+
+    return row;
   }
 
   function showBlock(id, visible) {
@@ -114,7 +143,8 @@
     }
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js';
+      // [SEC-009 Fix] Self-hosted ethers.js instead of CDN
+      script.src = '/ethers.umd.min.js';
       script.async = true;
       script.onload = () => {
         ethersLib = window.ethers;
@@ -141,7 +171,6 @@
       await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: cfg.chainIdHex }] });
       return true;
     } catch (switchErr) {
-      // 4902 = chain not added
       if (switchErr.code === 4902) {
         try {
           await eth.request({
@@ -176,7 +205,6 @@
         return;
       }
 
-      // Request accounts
       const accounts = await eth.request({ method: 'eth_requestAccounts' });
       if (!accounts || accounts.length === 0) {
         alert('Please connect a wallet account.');
@@ -187,11 +215,9 @@
       provider = new ethersLib.BrowserProvider(eth);
       signer = await provider.getSigner();
 
-      // Detect network
       const network = await provider.getNetwork();
       const chainId = Number(network.chainId);
 
-      // Check if on supported network
       let networkKey = null;
       for (const [key, cfg] of Object.entries(CONFIG)) {
         if (cfg.chainId === chainId) {
@@ -201,13 +227,11 @@
       }
 
       if (!networkKey) {
-        // Not on a supported network, try to switch to Sepolia
         const switched = await switchToSepolia(eth);
         if (!switched) {
           alert('Please switch to Sepolia Testnet in your wallet.');
           return;
         }
-        // Re-create provider after switch
         provider = new ethersLib.BrowserProvider(eth);
         signer = await provider.getSigner();
         networkKey = 'sepolia';
@@ -216,7 +240,6 @@
       currentNetwork = networkKey;
       const cfg = CONFIG[currentNetwork];
 
-      // Only create contract if deployed on this network
       if (cfg.contract) {
         contract = new ethersLib.Contract(cfg.contract, FIDES_ABI, provider);
       } else {
@@ -226,7 +249,6 @@
       updateUIConnected();
       await queryCompliance();
 
-      // Listen for account changes
       eth.removeListener('accountsChanged', handleAccountsChanged);
       eth.removeListener('chainChanged', handleChainChanged);
       eth.on('accountsChanged', handleAccountsChanged);
@@ -235,7 +257,6 @@
     } catch (err) {
       console.error('Wallet connect error:', err);
       if (err.code === 4001) {
-        // User rejected
         setText('wallet-status', 'Connection rejected');
       } else {
         setText('wallet-status', 'Connection failed');
@@ -281,7 +302,10 @@
 
     setText('compliance-status', 'Checking…');
     show('compliance-result', true);
-    el('compliance-result').classList.remove('compliant', 'non-compliant', 'error');
+    const resultEl = el('compliance-result');
+    if (resultEl) {
+      resultEl.classList.remove('compliant', 'non-compliant', 'error');
+    }
 
     try {
       const [isCompliant, riskScore] = await contract.quickCheckAddress(currentAddress);
@@ -290,43 +314,62 @@
       const score = Number(riskScore);
       const profileScore = Number(riskProfileScore);
 
-      // Build status display
-      let statusHtml = '';
+      // [SEC-004 Fix] Build status display using DOM APIs instead of innerHTML
+      const statusEl = clearElement('compliance-status');
+      const detailsEl = clearElement('compliance-details');
+
       let resultClass = '';
+      let badgeText = '';
+      let badgeClass = '';
 
       if (isSanctioned) {
         resultClass = 'non-compliant';
-        statusHtml = `<span class="status-badge status-danger">SANCTIONED</span>`;
+        badgeText = 'SANCTIONED';
+        badgeClass = 'status-danger';
       } else if (!isCompliant || score >= 80) {
         resultClass = 'non-compliant';
-        statusHtml = `<span class="status-badge status-danger">HIGH RISK</span>`;
+        badgeText = 'HIGH RISK';
+        badgeClass = 'status-danger';
       } else if (score >= 40) {
         resultClass = 'warning';
-        statusHtml = `<span class="status-badge status-warning">MEDIUM RISK</span>`;
+        badgeText = 'MEDIUM RISK';
+        badgeClass = 'status-warning';
       } else {
         resultClass = 'compliant';
-        statusHtml = `<span class="status-badge status-safe">COMPLIANT</span>`;
+        badgeText = 'COMPLIANT';
+        badgeClass = 'status-safe';
       }
+
+      if (statusEl) statusEl.appendChild(createBadge(badgeText, badgeClass));
+      if (resultEl) resultEl.classList.add(resultClass);
 
       const updatedDate = lastUpdated > 0
         ? new Date(Number(lastUpdated) * 1000).toLocaleDateString()
         : 'N/A';
 
-      setHtml('compliance-status', statusHtml);
-      el('compliance-result').classList.add(resultClass);
+      const riskClass = score >= 80 ? 'risk-score-high' : score >= 40 ? 'risk-score-medium' : 'risk-score-low';
 
-      setHtml('compliance-details', `
-        <div class="compliance-row"><span>Risk Score</span><span class="risk-score-${score >= 80 ? 'high' : score >= 40 ? 'medium' : 'low'}">${score}</span></div>
-        <div class="compliance-row"><span>Profile Score</span><span>${profileScore}</span></div>
-        <div class="compliance-row"><span>Sanctioned</span><span>${isSanctioned ? 'Yes' : 'No'}</span></div>
-        <div class="compliance-row"><span>Last Updated</span><span>${updatedDate}</span></div>
-      `);
+      if (detailsEl) {
+        detailsEl.appendChild(createComplianceRow('Risk Score', String(score), riskClass));
+        detailsEl.appendChild(createComplianceRow('Profile Score', String(profileScore), ''));
+        detailsEl.appendChild(createComplianceRow('Sanctioned', isSanctioned ? 'Yes' : 'No', ''));
+        detailsEl.appendChild(createComplianceRow('Last Updated', updatedDate, ''));
+      }
 
     } catch (err) {
       console.error('Compliance query error:', err);
-      el('compliance-result').classList.add('error');
-      setHtml('compliance-status', '<span class="status-badge status-error">Query Failed</span>');
-      setHtml('compliance-details', `<div class="compliance-error">${err.message || 'Unable to query contract'}</div>`);
+      if (resultEl) resultEl.classList.add('error');
+
+      const statusEl = clearElement('compliance-status');
+      if (statusEl) statusEl.appendChild(createBadge('Query Failed', 'status-error'));
+
+      const detailsEl = clearElement('compliance-details');
+      if (detailsEl) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'compliance-error';
+        errDiv.textContent = err.message || 'Unable to query contract';
+        detailsEl.appendChild(errDiv);
+      }
     }
   }
 
@@ -336,12 +379,10 @@
     show('wallet-connected', true);
     setText('wallet-address', shorten(currentAddress));
 
-    // Mobile
     showBlock('mobile-wallet-btn', false);
     show('mobile-wallet-connected', true);
     setText('mobile-wallet-address', shorten(currentAddress));
 
-    // Update network badge
     const cfg = CONFIG[currentNetwork];
     const badge = el('wallet-network');
     if (badge && cfg) {
@@ -349,10 +390,8 @@
       badge.className = 'wallet-network-badge';
     }
 
-    // Show compliance panel
     show('compliance-panel', true);
 
-    // Update disconnect buttons
     bindClick('wallet-disconnect', disconnectWallet);
     bindClick('mobile-wallet-disconnect', disconnectWallet);
   }
@@ -364,7 +403,6 @@
     show('compliance-result', false);
     setText('wallet-address', '');
 
-    // Mobile
     showBlock('mobile-wallet-btn', true);
     show('mobile-wallet-connected', false);
     setText('mobile-wallet-address', '');
@@ -373,7 +411,6 @@
   // ── Init ────────────────────────────────────────────────────────────
   function init() {
     if (!hasWallet()) {
-      // No wallet: show button but it will prompt to install
       var noWalletHandler = function() {
         alert('Please install MetaMask or another Web3 wallet to connect.\n\nDownload: https://metamask.io');
       };
@@ -385,7 +422,6 @@
     bindClick('wallet-btn', connectWallet);
     bindClick('mobile-wallet-btn', connectWallet);
 
-    // Try auto-connect if previously connected
     const eth = getEthereum();
     if (eth && eth.request) {
       eth.request({ method: 'eth_accounts' }).then(accounts => {
@@ -396,7 +432,6 @@
     }
   }
 
-  // Run when DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

@@ -15,6 +15,7 @@ const navLinks = [
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileMenuId = "mobile-menu";
 
   return (
     <header
@@ -71,7 +72,7 @@ export default function Header() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md px-3 py-1.5 text-sm transition-colors"
+                className="rounded-md px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
                 style={{ color: "var(--fio-text-2)" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--fio-text)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--fio-text-2)")}
@@ -82,7 +83,7 @@ export default function Header() {
               <a
                 key={link.label}
                 href={link.href}
-                className="rounded-md px-3 py-1.5 text-sm transition-colors"
+                className="rounded-md px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
                 style={{ color: "var(--fio-text-2)" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--fio-text)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--fio-text-2)")}
@@ -93,7 +94,7 @@ export default function Header() {
           )}
           <a
             href="/admin/dashboard"
-            className="ml-3 rounded-md px-4 py-1.5 text-sm font-medium transition-all"
+            className="ml-3 rounded-md px-4 py-1.5 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             style={{
               background: "rgba(201,169,110,0.06)",
               color: "var(--fio-gold)",
@@ -112,10 +113,12 @@ export default function Header() {
 
         {/* Mobile toggle */}
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-md md:hidden"
+          className="flex h-8 w-8 items-center justify-center rounded-md md:hidden focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           style={{ color: "var(--fio-text-2)", minHeight: "44px", minWidth: "44px" }}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
+          aria-controls={mobileMenuId}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             {mobileOpen ? (
@@ -130,6 +133,8 @@ export default function Header() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div
+          id={mobileMenuId}
+          role="navigation"
           className="border-t px-4 py-4 md:hidden"
           style={{
             background: "rgba(7,8,16,0.95)",
@@ -142,7 +147,7 @@ export default function Header() {
               href={link.href}
               target={link.external ? "_blank" : undefined}
               rel={link.external ? "noopener noreferrer" : undefined}
-              className="block rounded-md px-3 py-2.5 text-sm"
+              className="block rounded-md px-3 py-2.5 text-sm focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
               style={{ color: "var(--fio-text-2)" }}
               onClick={() => setMobileOpen(false)}
             >
@@ -151,7 +156,7 @@ export default function Header() {
           ))}
           <a
             href="/admin/dashboard"
-            className="mt-2 block rounded-md px-3 py-2.5 text-sm font-medium"
+            className="mt-2 block rounded-md px-3 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             style={{ color: "var(--fio-gold)" }}
             onClick={() => setMobileOpen(false)}
           >

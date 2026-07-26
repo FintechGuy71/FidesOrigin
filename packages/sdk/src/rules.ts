@@ -7,26 +7,25 @@ import {
   UpdateRuleRequest,
   RuleCondition,
   RuleAction,
-  ComplianceRule,
 } from './types';
 
 /**
  * Rules Management Helper Functions
- * 
+ *
  * Provides convenient methods for managing compliance rules
  */
 
 /**
  * Create a new rule with fluent builder
- * 
+ *
  * @example
  * ```typescript
  * import { createRuleBuilder } from '@fidesorigin/sdk';
- * 
+ *
  * const rule = await createRuleBuilder(client)
  *   .name('High Risk Sanctioned Address')
  *   .description('Flag addresses on sanctions list')
- *   .threshold(80)
+ *   .priority(80)
  *   .action('block')
  *   .build();
  * ```
@@ -37,15 +36,15 @@ export function createRuleBuilder(client: FidesOriginClient): RuleBuilder {
 
 /**
  * Rule Builder Class
- * 
- * Fluent API for creating and updating rules (new ComplianceRule format)
+ *
+ * Fluent API for creating rules using the API's Rule format
  */
 export class RuleBuilder {
   private client: FidesOriginClient;
-  private request: Partial<ComplianceRule> = {
-    enabled: true,
-    threshold: 50,
-    action: 'flag',
+  private request: Partial<CreateRuleRequest> = {
+    conditions: [],
+    actions: [],
+    priority: 50,
   };
 
   constructor(client: FidesOriginClient) {
@@ -69,121 +68,137 @@ export class RuleBuilder {
   }
 
   /**
-   * Set risk threshold (0-100)
+   * Set rule priority (0-100, higher = more important)
    */
-  threshold(threshold: number): this {
-    this.request.threshold = threshold;
+  priority(priority: number): this {
+    this.request.priority = priority;
+    return this;
+  }
+
+  /**
+   * Set a simple condition
+   */
+  condition(field: string, operator: RuleCondition['operator'], value: unknown): this {
+    if (!this.request.conditions) {
+      this.request.conditions = [];
+    }
+    this.request.conditions.push({ field, operator, value });
     return this;
   }
 
   /**
    * Set rule action
    */
-  action(action: ComplianceRule['action']): this {
-    this.request.action = action;
-    return this;
-  }
-
-  /**
-   * Enable/disable rule
-   */
-  enabled(enabled: boolean): this {
-    this.request.enabled = enabled;
+  action(actionType: RuleAction['type']): this {
+    if (!this.request.actions) {
+      this.request.actions = [];
+    }
+    this.request.actions.push({ type: actionType });
     return this;
   }
 
   /**
    * Build and create the rule
    */
-  async build(): Promise<ComplianceRule> {
+  async build(): Promise<Rule> {
     if (!this.request.name) {
       throw new Error('Rule name is required');
     }
-    if (this.request.threshold === undefined) {
-      throw new Error('Rule threshold is required');
+    if (!this.request.conditions || this.request.conditions.length === 0) {
+      throw new Error('At least one rule condition is required');
     }
-    if (!this.request.action) {
-      throw new Error('Rule action is required');
+    if (!this.request.actions || this.request.actions.length === 0) {
+      throw new Error('At least one rule action is required');
     }
 
-    return this.client.createRule(this.request as Omit<ComplianceRule, 'id'>);
+    return this.client.createRule(this.request as CreateRuleRequest);
   }
 }
 
 /**
- * Predefined rule templates (new ComplianceRule format)
+ * Predefined rule templates
  */
 export const RuleTemplates = {
   /**
    * Create a rule to block high-risk addresses
    */
-  blockHighRisk(priority: number = 100): Omit<ComplianceRule, 'id'> {
+  blockHighRisk(priority: number = 100): CreateRuleRequest {
     return {
       name: 'Block High Risk Addresses',
       description: 'Automatically block transactions from high and critical risk addresses',
-      enabled: true,
-      threshold: 80,
-      action: 'block',
+      priority,
+      conditions: [
+        { field: 'riskScore', operator: 'greater_than', value: 80 },
+      ],
+      actions: [{ type: 'block' }],
     };
   },
 
   /**
    * Create a rule to flag sanctioned addresses
    */
-  flagSanctioned(priority: number = 90): Omit<ComplianceRule, 'id'> {
+  flagSanctioned(priority: number = 90): CreateRuleRequest {
     return {
       name: 'Flag Sanctioned Addresses',
       description: 'Flag addresses on sanctions lists for manual review',
-      enabled: true,
-      threshold: 90,
-      action: 'flag',
+      priority,
+      conditions: [
+        { field: 'sanctioned', operator: 'equals', value: true },
+      ],
+      actions: [{ type: 'flag' }],
     };
   },
 
   /**
    * Create a rule for mixer detection
    */
-  reviewMixerUsage(priority: number = 50): Omit<ComplianceRule, 'id'> {
+  reviewMixerUsage(priority: number = 50): CreateRuleRequest {
     return {
       name: 'Review Mixer Usage',
       description: 'Flag transactions involving cryptocurrency mixers',
-      enabled: true,
-      threshold: 60,
-      action: 'review',
+      priority,
+      conditions: [
+        { field: 'mixerInvolved', operator: 'equals', value: true },
+      ],
+      actions: [{ type: 'review' }],
     };
   },
 
   /**
    * Create a rule for large volume transactions
    */
-  reviewLargeVolume(threshold: number = 100000, priority: number = 30): Omit<ComplianceRule, 'id'> {
+  reviewLargeVolume(threshold: number = 100000, priority: number = 30): CreateRuleRequest {
     return {
       name: `Review Large Volume (>$${threshold.toLocaleString()})`,
       description: `Flag addresses with transaction volume exceeding $${threshold.toLocaleString()}`,
-      enabled: true,
-      threshold: 70,
-      action: 'review',
+      priority,
+      conditions: [
+        { field: 'volume', operator: 'greater_than', value: threshold },
+      ],
+      actions: [{ type: 'review' }],
     };
   },
 
   /**
    * Create a custom rule for specific risk score threshold
    */
-  riskScoreThreshold(minScore: number, action: ComplianceRule['action'] = 'review', priority: number = 50): Omit<ComplianceRule, 'id'> {
+  riskScoreThreshold(minScore: number, action: RuleAction['type'] = 'review', priority: number = 50): CreateRuleRequest {
     return {
       name: `Risk Score Threshold (${minScore}+)`,
       description: `Trigger action for addresses with risk score ${minScore} or higher`,
-      enabled: true,
-      threshold: minScore,
-      action,
+      priority,
+      conditions: [
+        { field: 'riskScore', operator: 'greater_than', value: minScore },
+      ],
+      actions: [{ type: action }],
     };
   }
 };
 
 /**
  * Rules Manager Class
- * 
- * High-level interface for rule management (updated for ComplianceRule)
+ *
+ * High-level interface for rule management
  */
 export class RulesManager {
   private client: FidesOriginClient;
@@ -195,22 +210,22 @@ export class RulesManager {
   /**
    * List all rules
    */
-  async list(): Promise<ComplianceRule[]> {
+  async list(): Promise<Rule[]> {
     return this.client.getRules();
   }
 
   /**
    * Get active rules only
    */
-  async getActive(): Promise<ComplianceRule[]> {
+  async getActive(): Promise<Rule[]> {
     const rules = await this.client.getRules();
-    return rules.filter(r => r.enabled);
+    return rules.filter(r => r.status === 'active');
   }
 
   /**
    * Get a rule by ID
    */
-  async get(ruleId: string): Promise<ComplianceRule> {
+  async get(ruleId: string): Promise<Rule> {
     const rules = await this.client.getRules();
     const rule = rules.find(r => r.id === ruleId);
     if (!rule) {
@@ -232,7 +247,7 @@ export class RulesManager {
   async createFromTemplate(
     template: keyof typeof RuleTemplates,
     ...args: any[]
-  ): Promise<ComplianceRule> {
+  ): Promise<Rule> {
     const templateFn = RuleTemplates[template];
     const request = (templateFn as any)(...args);
     return this.client.createRule(request);
@@ -241,22 +256,22 @@ export class RulesManager {
   /**
    * Update a rule
    */
-  async update(ruleId: string, updates: Partial<Omit<ComplianceRule, 'id'>>): Promise<ComplianceRule> {
+  async update(ruleId: string, updates: Partial<UpdateRuleRequest>): Promise<Rule> {
     return this.client.updateRule(ruleId, updates);
   }
 
   /**
    * Activate a rule
    */
-  async activate(ruleId: string): Promise<ComplianceRule> {
-    return this.client.updateRule(ruleId, { enabled: true });
+  async activate(ruleId: string): Promise<Rule> {
+    return this.client.updateRule(ruleId, { status: 'active' });
   }
 
   /**
    * Deactivate a rule
    */
-  async deactivate(ruleId: string): Promise<ComplianceRule> {
-    return this.client.updateRule(ruleId, { enabled: false });
+  async deactivate(ruleId: string): Promise<Rule> {
+    return this.client.updateRule(ruleId, { status: 'inactive' });
   }
 
   /**
@@ -267,28 +282,28 @@ export class RulesManager {
   }
 
   /**
-   * Get rules by threshold
+   * Get rules by minimum priority
    */
-  async getByThreshold(minThreshold: number): Promise<ComplianceRule[]> {
+  async getByPriority(minPriority: number): Promise<Rule[]> {
     const rules = await this.client.getRules();
-    return rules.filter(rule => rule.threshold >= minThreshold);
+    return rules.filter(rule => rule.priority >= minPriority);
   }
 
   /**
    * Enable default compliance rules
    */
-  async enableDefaults(): Promise<ComplianceRule[]> {
-    const rules: ComplianceRule[] = [];
-    
+  async enableDefaults(): Promise<Rule[]> {
+    const rules: Rule[] = [];
+
     // Block high risk
     rules.push(await this.createFromTemplate('blockHighRisk', 100));
-    
+
     // Flag sanctioned
     rules.push(await this.createFromTemplate('flagSanctioned', 90));
-    
+
     // Review mixer usage
     rules.push(await this.createFromTemplate('reviewMixerUsage', 50));
-    
+
     return rules;
   }
 }

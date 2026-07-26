@@ -1,9 +1,9 @@
 # FidesOrigin Protocol Subgraph Schema
 # The Graph auto-generates Query fields for each @entity
 
-type RiskProfile @entity {
+type RiskProfile @entity(immutable: false) {
   id: ID!                              # 地址
-  riskScore: Int!
+  riskScore: BigInt!
   tier: RiskTier!
   tags: [String!]!
   lastUpdated: BigInt!
@@ -13,10 +13,10 @@ type RiskProfile @entity {
   updates: [RiskProfileUpdate!]! @derivedFrom(field: "account")
 }
 
-type RiskProfileUpdate @entity {
+type RiskProfileUpdate @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
   account: RiskProfile!
-  riskScore: Int!
+  riskScore: BigInt!
   tier: RiskTier!
   tags: [String!]!
   timestamp: BigInt!
@@ -25,25 +25,25 @@ type RiskProfileUpdate @entity {
   oracle: String!
 }
 
-type ComplianceCheck @entity {
+type ComplianceCheck @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  operator: String!
-  from: String!
-  to: String!
+  operator: String! @index
+  from: String! @index
+  to: String! @index
   amount: BigInt!
   decision: Decision!
   reason: String!
-  riskScore: Int
+  riskScore: BigInt
   checkType: String
   assetContract: String
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type Policy @entity {
+type Policy @entity(immutable: false) {
   id: ID!                              # issuer地址
-  issuer: String!
+  issuer: String! @index
   maxTxAmount: BigInt!
   dailyLimit: BigInt!
   allowMediumRisk: Boolean!
@@ -52,11 +52,11 @@ type Policy @entity {
   requireDestinationKYC: Boolean!
   cooldownPeriod: BigInt!
   version: Int!
-  updatedAt: BigInt!
+  updatedAt: BigInt! @index
   versions: [PolicyVersion!]! @derivedFrom(field: "policy")
 }
 
-type PolicyVersion @entity {
+type PolicyVersion @entity(immutable: false) {
   id: ID!                              # policyId-version
   policy: Policy!
   version: Int!
@@ -73,24 +73,25 @@ type PolicyVersion @entity {
   active: Boolean!
 }
 
-# NEW: PolicyEvaluation entity for PolicyEvaluated event
-type PolicyEvaluation @entity {
+# PolicyEvaluation entity for TransferEvaluated event
+type PolicyEvaluation @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  operator: String!
-  from: String!
-  to: String!
+  policy: Policy
+  operator: String! @index
+  from: String! @index
+  to: String! @index
   amount: BigInt!
   decision: Decision!
   reason: String!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-# NEW: WalletPolicy entity for WalletPolicySet event
-type WalletPolicy @entity {
+# WalletPolicy entity for WalletPolicySet event
+type WalletPolicy @entity(immutable: false) {
   id: ID!                              # wallet address
-  wallet: String!
+  wallet: String! @index
   version: Int!
   maxTxValue: BigInt!
   maxTokenTxAmount: BigInt!
@@ -101,37 +102,37 @@ type WalletPolicy @entity {
   requireWhitelist: Boolean!
   allowedDex: [String!]!
   blockedContracts: [String!]!
-  updatedAt: BigInt!
+  updatedAt: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type SanctionedAddress @entity {
+type SanctionedAddress @entity(immutable: false) {
   id: ID!                              # 地址
-  account: String!
-  addedAt: BigInt!
+  account: String! @index
+  addedAt: BigInt! @index
   removedAt: BigInt
-  isActive: Boolean!
+  isActive: Boolean! @index
   reason: String
   addedBy: String!
 }
 
-type HoldRecord @entity {
+type HoldRecord @entity(immutable: false) {
   id: ID!                              # holdId
-  owner: String!
-  asset: String!
+  owner: String! @index
+  asset: String! @index
   amount: BigInt!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   reason: String!
   released: Boolean!
   releasedAt: BigInt
   releasedBy: String
 }
 
-type OperationLog @entity {
+type OperationLog @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  timestamp: BigInt!
-  operator: String!
+  timestamp: BigInt! @index
+  operator: String! @index
   operationType: String!
   result: String!
   details: String!
@@ -139,7 +140,7 @@ type OperationLog @entity {
   transactionHash: String!
 }
 
-type ProtocolStats @entity {
+type ProtocolStats @entity(immutable: false) {
   id: ID!                              # "stats"
   totalComplianceChecks: BigInt!
   totalAllowed: BigInt!                # 允许的交易数
@@ -153,7 +154,7 @@ type ProtocolStats @entity {
 
 # ========== Time Series Aggregation ==========
 
-type DailyStats @entity {
+type DailyStats @entity(immutable: false) {
   id: ID!                              # YYYY-MM-DD
   date: String!                        # 2026-05-09
   totalChecks: BigInt!
@@ -161,19 +162,18 @@ type DailyStats @entity {
   totalFlagged: BigInt!
   totalHeld: BigInt!
   uniqueAddresses: Int!                # derived from DailyStatsAddress count
-  avgRiskScore: Int!  # 放大100倍存整数，如123=1.23
   topDecision: String!                 # "ALLOW" | "BLOCK" | "FLAG" | "HOLD"
 }
 
 # NEW: Composite entity for unique address counting per day
-type DailyStatsAddress @entity {
+type DailyStatsAddress @entity(immutable: false) {
   id: ID!                              # date-address
-  date: String!
-  address: String!
+  date: String! @index
+  address: String! @index
   firstSeen: BigInt!
 }
 
-type HourlyStats @entity {
+type HourlyStats @entity(immutable: false) {
   id: ID!                              # YYYY-MM-DD-HH
   hour: String!                        # 2026-05-09-14
   totalChecks: BigInt!
@@ -200,37 +200,37 @@ enum Decision {
 
 # ========== CompliantStableCoin ==========
 
-type TokenTransfer @entity {
+type TokenTransfer @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  from: String!
-  to: String!
+  from: String! @index
+  to: String! @index
   amount: BigInt!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type TokenTransferBlocked @entity {
+type TokenTransferBlocked @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  from: String!
-  to: String!
+  from: String! @index
+  to: String! @index
   amount: BigInt!
   reason: String!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type KYCStatus @entity {
+type KYCStatus @entity(immutable: false) {
   id: ID!                              # address
-  account: String!
-  verified: Boolean!
-  updatedAt: BigInt!
+  account: String! @index
+  verified: Boolean! @index
+  updatedAt: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type TokenPolicy @entity {
+type TokenPolicy @entity(immutable: false) {
   id: ID!                              # "policy"
   maxTxAmount: BigInt!
   dailyLimit: BigInt!
@@ -246,65 +246,56 @@ type TokenPolicy @entity {
 
 # ========== FidesCompliance ==========
 
-type FidesComplianceCheck @entity {
-  id: ID!                              # txHash
-  from: String!
-  to: String!
+type FidesComplianceCheck @entity(immutable: false) {
+  id: ID!                              # txHash-logIndex
+  from: String! @index
+  to: String! @index
   amount: BigInt!
   result: Boolean!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type FidesTransactionBlocked @entity {
+type FidesTransactionBlocked @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  from: String!
-  to: String!
+  from: String! @index
+  to: String! @index
   amount: BigInt!
   reason: String!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type FidesTransactionQuarantined @entity {
+type FidesTransactionQuarantined @entity(immutable: false) {
   id: ID!                              # txHash-logIndex
-  from: String!
-  to: String!
+  from: String! @index
+  to: String! @index
   amount: BigInt!
   reason: String!
-  timestamp: BigInt!
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type FidesAuditLog @entity {
+type FidesAuditLog @entity(immutable: false) {
   id: ID!                              # logId
-  eventType: String!
-  actor: String!
-  subject: String!
-  timestamp: BigInt!
+  eventType: String! @index
+  actor: String! @index
+  subject: String! @index
+  timestamp: BigInt! @index
   blockNumber: BigInt!
   transactionHash: String!
 }
 
-type FidesRule @entity {
+type FidesRule @entity(immutable: false) {
   id: ID!                              # ruleId
   name: String!
   ruleType: String!
-  status: String!
+  status: String! @index
   priority: BigInt!
   creator: String!
-  createdAt: BigInt!
+  createdAt: BigInt! @index
   updatedAt: BigInt!
-}
-
-enum RiskLevel {
-  NONE
-  LOW
-  MEDIUM
-  HIGH
-  BLACKLIST
-  WHITELIST
 }

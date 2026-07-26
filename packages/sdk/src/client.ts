@@ -486,6 +486,11 @@ export class FidesOriginClient {
 
   // ─── Compliance Rules ────────────────────────────────────────────────────
 
+  async getRules(): Promise<Rule[]> {
+    const response = await this.listRules();
+    return response.rules;
+  }
+
   async listRules(options: RuleListOptions = {}): Promise<RuleListResponse> {
     const params: Record<string, string> = {};
     if (options.limit !== undefined) params.limit = String(options.limit);

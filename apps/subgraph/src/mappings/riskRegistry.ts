@@ -42,7 +42,7 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
     profile.tags = [];
   }
 
-  profile.riskScore = riskScore;
+  profile.riskScore = BigInt.fromI32(riskScore);
   profile.tier = tier;
   profile.lastUpdated = event.block.timestamp;
   profile.isSanctioned = isSanctioned;
@@ -87,7 +87,7 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
   let updateId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let update = new RiskProfileUpdate(updateId);
   update.account = account;
-  update.riskScore = riskScore;
+  update.riskScore = BigInt.fromI32(riskScore);
   update.tier = tier;
   update.tags = profile.tags;
   update.timestamp = event.block.timestamp;
@@ -113,7 +113,7 @@ export function handleAddressTagged(event: AddressTagged): void {
   if (!profile) {
     profile = new RiskProfile(account);
     profile.tags = [];
-    profile.riskScore = 0;
+    profile.riskScore = BigInt.zero();
     profile.tier = 'UNKNOWN';
     profile.lastUpdated = event.block.timestamp;
     profile.isSanctioned = false;
@@ -129,18 +129,18 @@ export function handleAddressTagged(event: AddressTagged): void {
 
   // [High Fix #24] Create a RiskProfileUpdate record for audit trail.
   let updateId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
-  let update = RiskProfileUpdate.load(updateId);
-  if (!update) {
-    let update = new RiskProfileUpdate(updateId);
-    update.account = account;
-    update.riskScore = profile.riskScore;
-    update.tier = profile.tier;
-    update.tags = tags;
-    update.timestamp = event.block.timestamp;
-    update.blockNumber = event.block.number;
-    update.transactionHash = event.transaction.hash.toHexString();
-    update.oracle = event.transaction.from.toHexString();
-    update.save();
+  let existingUpdate = RiskProfileUpdate.load(updateId);
+  if (!existingUpdate) {
+    let newUpdate = new RiskProfileUpdate(updateId);
+    newUpdate.account = account;
+    newUpdate.riskScore = profile.riskScore;
+    newUpdate.tier = profile.tier;
+    newUpdate.tags = tags;
+    newUpdate.timestamp = event.block.timestamp;
+    newUpdate.blockNumber = event.block.number;
+    newUpdate.transactionHash = event.transaction.hash.toHexString();
+    newUpdate.oracle = event.transaction.from.toHexString();
+    newUpdate.save();
   }
 
   log.info('[handleAddressTagged] account={} tag={}', [account, tag]);
@@ -215,7 +215,7 @@ export function handleContractRegistered(event: ContractRegistered): void {
   if (!profile) {
     profile = new RiskProfile(contractAddr);
     profile.tags = [];
-    profile.riskScore = 0;
+    profile.riskScore = BigInt.zero();
     profile.tier = 'UNKNOWN';
     profile.isSanctioned = false;
   }

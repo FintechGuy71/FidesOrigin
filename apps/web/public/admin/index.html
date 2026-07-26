@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- [M-3 Fix] Nonce-based CSP: removed unsafe-inline for scripts. External CDN scripts use SRI integrity. -->
-    <!-- [M-10 Fix] strict-dynamic allows scripts loaded by nonce-annotated scripts; specific hashes for inline event handlers moved to external file. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-admin2026' 'strict-dynamic' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.studio.thegraph.com https://rpc.*; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <!-- [SEC-001/SEC-002 Fix] CSP for static admin page: no nonces, script-src 'self' only, external scripts self-hosted -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.studio.thegraph.com https://rpc.*; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -22,8 +21,8 @@
     <meta name="twitter:site" content="@fidesorigin">
     <link rel="canonical" href="https://fidesorigin.com/admin/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.0/dist/ethers.umd.min.js" crossorigin="anonymous"></script>
+    <script src="../chart.min.js"></script>
+    <script src="../ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -674,7 +673,7 @@
     <div class="layout">
         <!-- Mobile Header -->
         <div class="mobile-header">
-            <button type="button" type="button" class="hamburger" data-action="toggleMobileSidebar">☰</button>
+            <button type="button" class="hamburger" data-action="toggleMobileSidebar">☰</button>
             <span>FidesOrigin Admin</span>
             <div style="width:36px;"></div>
         </div>
@@ -767,10 +766,10 @@
                             <span class="status-dot disconnected"></span>
                             <span id="walletAddress">未连接钱包</span>
                         </div>
-                        <button type="button" type="button" id="connectBtn" class="btn btn-primary" data-action="connectWallet">
+                        <button type="button" id="connectBtn" class="btn btn-primary" data-action="connectWallet">
                             🔗 连接 MetaMask
                         </button>
-                        <button type="button" type="button" class="btn btn-secondary">📅 今日</button>
+                        <button type="button" class="btn btn-secondary">📅 今日</button>
                     </div>
                 </div>
 
@@ -856,17 +855,17 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">最近拦截记录</div>
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadBlockedTransfers">刷新</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadBlockedTransfers">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>时间</th>
-                                    <th>地址</th>
-                                    <th>标签</th>
-                                    <th>原因</th>
-                                    <th>金额</th>
+                                    <th scope="col">时间</th>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">标签</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">金额</th>
                                 </tr>
                             </thead>
                             <tbody id="blockedTable">
@@ -900,19 +899,19 @@
                         <div class="card-title">实时风控拦截</div>
                         <div>
                             <span class="tag tag-success" style="margin-right: 8px;">自动拦截已启用</span>
-                            <button type="button" type="button" class="btn btn-sm btn-secondary" data-action="refreshMonitor">刷新</button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-action="refreshMonitor">刷新</button>
                         </div>
                     </div>
                     <div class="card-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>交易哈希</th>
-                                    <th>发送方</th>
-                                    <th>接收方</th>
-                                    <th>金额</th>
-                                    <th>状态</th>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">交易哈希</th>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额</th>
+                                    <th scope="col">状态</th>
                                 </tr>
                             </thead>
                             <tbody id="monitorTable">
@@ -931,7 +930,7 @@
                         <p>管理用户地址与风控标签</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-primary" data-action="openAddCustomerModal">+ 新增客户</button>
+                        <button type="button" class="btn btn-primary" data-action="openAddCustomerModal">+ 新增客户</button>
                     </div>
                 </div>
 
@@ -944,12 +943,12 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>地址</th>
-                                    <th>风险等级</th>
-                                    <th>日限额</th>
-                                    <th>已用额度</th>
-                                    <th>余额</th>
-                                    <th>操作</th>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">风险等级</th>
+                                    <th scope="col">日限额</th>
+                                    <th scope="col">已用额度</th>
+                                    <th scope="col">余额</th>
+                                    <th scope="col">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="customersTable">
@@ -968,7 +967,7 @@
                         <p>管理地址风险标签和风控策略</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-primary" data-action="openTagModal">+ 新增标签</button>
+                        <button type="button" class="btn btn-primary" data-action="openTagModal">+ 新增标签</button>
                     </div>
                 </div>
 
@@ -980,11 +979,11 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>地址</th>
-                                    <th>标签</th>
-                                    <th>原因</th>
-                                    <th>操作人</th>
-                                    <th>操作</th>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">标签</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">操作人</th>
+                                    <th scope="col">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="tagsTable">
@@ -1007,16 +1006,16 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">当前限额配置</div>
-                        <button type="button" type="button" class="btn btn-primary" data-action="saveLimits">保存修改</button>
+                        <button type="button" class="btn btn-primary" data-action="saveLimits">保存修改</button>
                     </div>
                     <div class="card-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>标签</th>
-                                    <th>单日限额 (TUSD)</th>
-                                    <th>单笔限额 (TUSD)</th>
-                                    <th>状态</th>
+                                    <th scope="col">标签</th>
+                                    <th scope="col">单日限额 (TUSD)</th>
+                                    <th scope="col">单笔限额 (TUSD)</th>
+                                    <th scope="col">状态</th>
                                 </tr>
                             </thead>
                             <tbody id="limitsTable">
@@ -1058,7 +1057,7 @@
                         <p>管理交易延迟执行与待处理操作</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-primary" data-action="openTimelockConfigModal">⚙️ 配置延迟时间</button>
+                        <button type="button" class="btn btn-primary" data-action="openTimelockConfigModal">⚙️ 配置延迟时间</button>
                     </div>
                 </div>
 
@@ -1111,18 +1110,18 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">待执行操作队列</div>
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadPendingOperations">刷新</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadPendingOperations">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>操作ID</th>
-                                    <th>类型</th>
-                                    <th>目标</th>
-                                    <th>执行时间</th>
-                                    <th>签名数</th>
-                                    <th>操作</th>
+                                    <th scope="col">操作ID</th>
+                                    <th scope="col">类型</th>
+                                    <th scope="col">目标</th>
+                                    <th scope="col">执行时间</th>
+                                    <th scope="col">签名数</th>
+                                    <th scope="col">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="pendingOpsTable">
@@ -1141,7 +1140,7 @@
                         <p>管理签名者与多签阈值</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-primary" data-action="openAddSignerModal">+ 添加签名者</button>
+                        <button type="button" class="btn btn-primary" data-action="openAddSignerModal">+ 添加签名者</button>
                     </div>
                 </div>
 
@@ -1159,7 +1158,7 @@
                                 <label class="form-label">所需签名数</label>
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <input type="number" class="form-input" id="requiredSigs" value="2" style="width: 100px;">
-                                    <button type="button" type="button" class="btn btn-secondary" data-action="updateRequiredSigs">更新</button>
+                                    <button type="button" class="btn btn-secondary" data-action="updateRequiredSigs">更新</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1191,16 +1190,16 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">签名者列表</div>
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadSigners">刷新</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadSigners">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>地址</th>
-                                    <th>角色</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
+                                    <th scope="col">地址</th>
+                                    <th scope="col">角色</th>
+                                    <th scope="col">状态</th>
+                                    <th scope="col">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="signersTable">
@@ -1219,7 +1218,7 @@
                         <p>查看和管理被自动隔离的污染资金</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadQuarantineRecords">刷新</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadQuarantineRecords">刷新</button>
                         <span class="tag tag-operator">Operator</span>
                     </div>
                 </div>
@@ -1263,14 +1262,14 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>记录ID</th>
-                                    <th>原主人</th>
-                                    <th>代币</th>
-                                    <th>数量</th>
-                                    <th>隔离时间</th>
-                                    <th>原因</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
+                                    <th scope="col">记录ID</th>
+                                    <th scope="col">原主人</th>
+                                    <th scope="col">代币</th>
+                                    <th scope="col">数量</th>
+                                    <th scope="col">隔离时间</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">状态</th>
+                                    <th scope="col">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="quarantineTable">
@@ -1299,18 +1298,18 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">拦截记录</div>
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadIncomingBlocks">刷新</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadIncomingBlocks">刷新</button>
                     </div>
                     <div class="card-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>时间</th>
-                                    <th>发送方</th>
-                                    <th>接收方</th>
-                                    <th>金额 (ETH)</th>
-                                    <th>拦截原因</th>
-                                    <th>交易哈希</th>
+                                    <th scope="col">时间</th>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额 (ETH)</th>
+                                    <th scope="col">拦截原因</th>
+                                    <th scope="col">交易哈希</th>
                                 </tr>
                             </thead>
                             <tbody id="incomingBlocksTable">
@@ -1357,7 +1356,7 @@
                         </div>
                         <div class="card-body">
                             <div style="text-align: center; padding: 20px;">
-                                <button type="button" type="button" class="btn btn-danger" style="padding: 16px 32px; font-size: 1.1rem;" data-action="emergencyPause">
+                                <button type="button" class="btn btn-danger" style="padding: 16px 32px; font-size: 1.1rem;" data-action="emergencyPause">
                                     🛑 紧急暂停合约
                                 </button>
                                 <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
@@ -1365,7 +1364,7 @@
                                 </div>
                             </div>
                             <div style="text-align: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px;">
-                                <button type="button" type="button" class="btn btn-success" style="padding: 16px 32px; font-size: 1.1rem;" data-action="emergencyUnpause">
+                                <button type="button" class="btn btn-success" style="padding: 16px 32px; font-size: 1.1rem;" data-action="emergencyUnpause">
                                     ✅ 解除暂停
                                 </button>
                                 <div style="color: var(--text-secondary); margin-top: 16px; font-size: 0.85rem;">
@@ -1385,8 +1384,8 @@
                         <p>查看所有管理操作记录</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadLogs">刷新</button>
-                        <button type="button" type="button" class="btn btn-primary" data-action="exportLogs">导出</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadLogs">刷新</button>
+                        <button type="button" class="btn btn-primary" data-action="exportLogs">导出</button>
                     </div>
                 </div>
 
@@ -1415,8 +1414,8 @@
                         <p>管理发行方合规策略与版本历史</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadPolicies">刷新</button>
-                        <button type="button" type="button" class="btn btn-primary" data-action="openPolicyModal">+ 新建策略</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadPolicies">刷新</button>
+                        <button type="button" class="btn btn-primary" data-action="openPolicyModal">+ 新建策略</button>
                     </div>
                 </div>
 
@@ -1462,13 +1461,13 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>版本</th>
-                                    <th>单笔限额</th>
-                                    <th>日限额</th>
-                                    <th>允许中风险</th>
-                                    <th>允许高风险</th>
-                                    <th>更新时间</th>
-                                    <th>操作</th>
+                                    <th scope="col">版本</th>
+                                    <th scope="col">单笔限额</th>
+                                    <th scope="col">日限额</th>
+                                    <th scope="col">允许中风险</th>
+                                    <th scope="col">允许高风险</th>
+                                    <th scope="col">更新时间</th>
+                                    <th scope="col">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="policyHistoryTable">
@@ -1487,7 +1486,7 @@
                         <p>The Graph 实时索引的链上合规检查记录</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" type="button" class="btn btn-secondary" data-action="loadSubgraphComplianceChecks">刷新</button>
+                        <button type="button" class="btn btn-secondary" data-action="loadSubgraphComplianceChecks">刷新</button>
                         <span class="badge" style="background: var(--success); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem;">The Graph 实时</span>
                     </div>
                 </div>
@@ -1509,12 +1508,12 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>发送方</th>
-                                    <th>接收方</th>
-                                    <th>金额</th>
-                                    <th>决策</th>
-                                    <th>原因</th>
-                                    <th>时间</th>
+                                    <th scope="col">发送方</th>
+                                    <th scope="col">接收方</th>
+                                    <th scope="col">金额</th>
+                                    <th scope="col">决策</th>
+                                    <th scope="col">原因</th>
+                                    <th scope="col">时间</th>
                                 </tr>
                             </thead>
                             <tbody id="complianceLogsTable">
@@ -1555,7 +1554,7 @@
                             <label class="form-label">RPC URL</label>
                             <input type="text" class="form-input" id="rpcUrl" value="https://ethereum-sepolia-rpc.publicnode.com">
                         </div>
-                        <button type="button" type="button" class="btn btn-primary" data-action="saveSettings">保存设置</button>
+                        <button type="button" class="btn btn-primary" data-action="saveSettings">保存设置</button>
                     </div>
                 </div>
             </div>
@@ -1570,8 +1569,8 @@
                 请连接 MetaMask 钱包以管理 FidesOrigin 合约
             </p>
             <div class="modal-footer">
-                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="connectModal">取消</button>
-                <button type="button" type="button" class="btn btn-primary" data-action="connectMetaMask">连接 MetaMask</button>
+                <button type="button" class="btn btn-secondary" data-action="closeModal" data-modal="connectModal">取消</button>
+                <button type="button" class="btn btn-primary" data-action="connectMetaMask">连接 MetaMask</button>
             </div>
         </div>
     </div>
@@ -1598,8 +1597,8 @@
                 <input type="text" class="form-input" id="tagReason" placeholder="标注原因...">
             </div>
             <div class="modal-footer">
-                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="tagModal">取消</button>
-                <button type="button" type="button" class="btn btn-primary" data-action="submitTag">确认</button>
+                <button type="button" class="btn btn-secondary" data-action="closeModal" data-modal="tagModal">取消</button>
+                <button type="button" class="btn btn-primary" data-action="submitTag">确认</button>
             </div>
         </div>
     </div>
@@ -1616,8 +1615,8 @@
                 添加签名者需要多签确认并通过时间锁执行
             </div>
             <div class="modal-footer">
-                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="signerModal">取消</button>
-                <button type="button" type="button" class="btn btn-primary" data-action="submitAddSigner">提交</button>
+                <button type="button" class="btn btn-secondary" data-action="closeModal" data-modal="signerModal">取消</button>
+                <button type="button" class="btn btn-primary" data-action="submitAddSigner">提交</button>
             </div>
         </div>
     </div>
@@ -1634,8 +1633,8 @@
                 修改时间锁延迟将通过时间锁执行，需要多签确认
             </div>
             <div class="modal-footer">
-                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="timelockConfigModal">取消</button>
-                <button type="button" type="button" class="btn btn-primary" data-action="submitTimelockConfig">提交</button>
+                <button type="button" class="btn btn-secondary" data-action="closeModal" data-modal="timelockConfigModal">取消</button>
+                <button type="button" class="btn btn-primary" data-action="submitTimelockConfig">提交</button>
             </div>
         </div>
     </div>
@@ -1669,13 +1668,13 @@
                 <input type="checkbox" id="policyRequireKYCInput" style="width: 20px; height: 20px;">
             </div>
             <div class="modal-footer">
-                <button type="button" type="button" class="btn btn-secondary" data-action="closeModal" data-modal="policyModal">取消</button>
-                <button type="button" type="button" class="btn btn-primary" data-action="submitPolicy">保存策略</button>
+                <button type="button" class="btn btn-secondary" data-action="closeModal" data-modal="policyModal">取消</button>
+                <button type="button" class="btn btn-primary" data-action="submitPolicy">保存策略</button>
             </div>
         </div>
     </div>
 
-    <script nonce="admin2026" src="admin-config.js"></script>
-    <script nonce="admin2026" src="admin.js"></script>
+    <script src="admin-config.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>

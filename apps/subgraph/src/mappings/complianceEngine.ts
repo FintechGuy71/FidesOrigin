@@ -71,14 +71,14 @@ function getOrCreateStats(): ProtocolStats {
   let stats = ProtocolStats.load('stats');
   if (!stats) {
     stats = new ProtocolStats('stats');
-    stats.totalComplianceChecks = BigInt.fromI32(0);
-    stats.totalBlocked = BigInt.fromI32(0);
-    stats.totalFlagged = BigInt.fromI32(0);
-    stats.totalHeld = BigInt.fromI32(0);
-    stats.totalAllowed = BigInt.fromI32(0);
+    stats.totalComplianceChecks = BigInt.zero();
+    stats.totalBlocked = BigInt.zero();
+    stats.totalFlagged = BigInt.zero();
+    stats.totalHeld = BigInt.zero();
+    stats.totalAllowed = BigInt.zero();
     stats.totalSanctioned = 0;
-    stats.totalFundsHeld = BigInt.fromI32(0);
-    stats.lastUpdated = BigInt.fromI32(0);
+    stats.totalFundsHeld = BigInt.zero();
+    stats.lastUpdated = BigInt.zero();
   }
   return stats;
 }
@@ -89,12 +89,11 @@ function getOrCreateDailyStats(timestamp: BigInt): DailyStats {
   if (!stats) {
     stats = new DailyStats(dateStr);
     stats.date = dateStr;
-    stats.totalChecks = BigInt.fromI32(0);
-    stats.totalBlocked = BigInt.fromI32(0);
-    stats.totalFlagged = BigInt.fromI32(0);
-    stats.totalHeld = BigInt.fromI32(0);
+    stats.totalChecks = BigInt.zero();
+    stats.totalBlocked = BigInt.zero();
+    stats.totalFlagged = BigInt.zero();
+    stats.totalHeld = BigInt.zero();
     stats.uniqueAddresses = 0;
-    stats.avgRiskScore = 0;
     stats.topDecision = 'ALLOW';
   }
   return stats;
@@ -106,11 +105,11 @@ function getOrCreateHourlyStats(timestamp: BigInt): HourlyStats {
   if (!stats) {
     stats = new HourlyStats(hourStr);
     stats.hour = hourStr;
-    stats.totalChecks = BigInt.fromI32(0);
-    stats.totalBlocked = BigInt.fromI32(0);
-    stats.totalFlagged = BigInt.fromI32(0);
-    stats.totalHeld = BigInt.fromI32(0);
-    stats.txCount = BigInt.fromI32(0);
+    stats.totalChecks = BigInt.zero();
+    stats.totalBlocked = BigInt.zero();
+    stats.totalFlagged = BigInt.zero();
+    stats.totalHeld = BigInt.zero();
+    stats.txCount = BigInt.zero();
   }
   return stats;
 }
@@ -176,13 +175,13 @@ export function handleComplianceCheckPerformed(event: ComplianceCheckPerformed):
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let decision = getDecision(event.params.isCompliant);
   let check = new ComplianceCheck(id);
-  check.operator = event.params.addr.toHexString();
+  check.operator = event.transaction.from.toHexString();
   check.from = event.params.addr.toHexString();
   check.to = '';
   check.amount = BigInt.fromI32(0);
   check.decision = decision;
   check.reason = bytes32ToString(event.params.checkType);
-  check.riskScore = event.params.riskScore.toI32();
+  check.riskScore = event.params.riskScore;
   check.checkType = bytes32ToString(event.params.checkType);
   check.timestamp = event.block.timestamp;
   check.blockNumber = event.block.number;
@@ -260,7 +259,6 @@ export function handleTransactionQuarantined(event: TransactionQuarantined): voi
 
   let stats = getOrCreateStats();
   stats.totalFundsHeld = stats.totalFundsHeld.plus(event.params.amount);
-  stats.totalHeld = stats.totalHeld.plus(BigInt.fromI32(1));
   stats.lastUpdated = event.block.timestamp;
   stats.save();
 

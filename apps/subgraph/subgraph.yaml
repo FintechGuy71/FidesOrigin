@@ -90,11 +90,11 @@ dataSources:
         - name: PolicyEngine
           file: ./abis/PolicyEngine.json
       eventHandlers:
-        - event: IssuerPolicySet(indexed address,uint256,uint256,bool,bool,uint256)
+        - event: IssuerPolicySet(indexed address,(uint256,uint256,bool,bool,bool,bool,uint256))
           handler: handleIssuerPolicySet
-        - event: WalletPolicySet(indexed address)
+        - event: WalletPolicySet(indexed address,(uint256,uint256,uint256,uint256,bool,bool,bool,address[],address[]))
           handler: handleWalletPolicySet
-        - event: TransferEvaluated(indexed address,indexed address,uint256,uint8)
+        - event: PolicyEvaluated(indexed address,indexed address,indexed address,uint256,uint8,string)
           handler: handleTransferEvaluated
         - event: RuleCreated(indexed bytes32,string,uint8)
           handler: handleRuleCreated
@@ -117,7 +117,7 @@ dataSources:
       apiVersion: 0.0.9
       language: wasm/assemblyscript
       entities:
-        - FidesRiskProfile
+        - RiskProfile
         - FidesComplianceCheck
         - FidesTransactionBlocked
         - FidesTransactionQuarantined

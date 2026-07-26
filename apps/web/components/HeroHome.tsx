@@ -79,6 +79,8 @@ export default function HeroHome() {
         ref={canvasRef}
         className="pointer-events-none absolute inset-0 z-0"
         style={{ width: "100%", height: "100%" }}
+        aria-label="Background grid and scan line animation"
+        role="img"
       />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">

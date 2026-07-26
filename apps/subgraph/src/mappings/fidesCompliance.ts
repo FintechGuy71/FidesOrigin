@@ -16,6 +16,14 @@ import {
 } from '../../generated/schema';
 import { BigInt, log } from '@graphprotocol/graph-ts';
 
+// Centralized audit log event type constants (High Fix #6)
+const AUDIT_EMERGENCY_ACTIVATED = 'EMERGENCY_ACTIVATED';
+const AUDIT_EMERGENCY_DEACTIVATED = 'EMERGENCY_DEACTIVATED';
+const AUDIT_ROLE_GRANTED = 'ROLE_GRANTED';
+const AUDIT_ROLE_REVOKED = 'ROLE_REVOKED';
+const AUDIT_WHITELIST_ADDED = 'WHITELIST_ADDED';
+const AUDIT_WHITELIST_REMOVED = 'WHITELIST_REMOVED';
+
 export function handleTransactionChecked(event: TransactionChecked): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let check = new FidesComplianceCheck(id);
@@ -77,9 +85,9 @@ export function handleTransactionQuarantined(event: TransactionQuarantined): voi
 }
 
 export function handleEmergencyModeActivated(event: EmergencyModeActivated): void {
-  let id = 'emergency-' + event.transaction.hash.toHexString();
+  let id = 'emergency-' + event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new FidesAuditLog(id);
-  logEntry.eventType = 'EMERGENCY_ACTIVATED';
+  logEntry.eventType = AUDIT_EMERGENCY_ACTIVATED;
   logEntry.actor = event.transaction.from.toHexString();
   logEntry.subject = '';
   logEntry.timestamp = event.block.timestamp;
@@ -89,9 +97,9 @@ export function handleEmergencyModeActivated(event: EmergencyModeActivated): voi
 }
 
 export function handleEmergencyModeDeactivated(event: EmergencyModeDeactivated): void {
-  let id = 'emergency-off-' + event.transaction.hash.toHexString();
+  let id = 'emergency-off-' + event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new FidesAuditLog(id);
-  logEntry.eventType = 'EMERGENCY_DEACTIVATED';
+  logEntry.eventType = AUDIT_EMERGENCY_DEACTIVATED;
   logEntry.actor = event.transaction.from.toHexString();
   logEntry.subject = '';
   logEntry.timestamp = event.block.timestamp;
@@ -103,7 +111,7 @@ export function handleEmergencyModeDeactivated(event: EmergencyModeDeactivated):
 export function handleRoleGrantedDetailed(event: RoleGrantedDetailed): void {
   let id = 'role-granted-' + event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new FidesAuditLog(id);
-  logEntry.eventType = 'ROLE_GRANTED';
+  logEntry.eventType = AUDIT_ROLE_GRANTED;
   logEntry.actor = event.params.sender.toHexString();
   logEntry.subject = event.params.account.toHexString();
   logEntry.timestamp = event.block.timestamp;
@@ -115,7 +123,7 @@ export function handleRoleGrantedDetailed(event: RoleGrantedDetailed): void {
 export function handleRoleRevokedDetailed(event: RoleRevokedDetailed): void {
   let id = 'role-revoked-' + event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new FidesAuditLog(id);
-  logEntry.eventType = 'ROLE_REVOKED';
+  logEntry.eventType = AUDIT_ROLE_REVOKED;
   logEntry.actor = event.params.sender.toHexString();
   logEntry.subject = event.params.account.toHexString();
   logEntry.timestamp = event.block.timestamp;
@@ -127,7 +135,7 @@ export function handleRoleRevokedDetailed(event: RoleRevokedDetailed): void {
 export function handleWhitelistUpdated(event: WhitelistUpdated): void {
   let id = 'whitelist-' + event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let logEntry = new FidesAuditLog(id);
-  logEntry.eventType = event.params.status ? 'WHITELIST_ADDED' : 'WHITELIST_REMOVED';
+  logEntry.eventType = event.params.status ? AUDIT_WHITELIST_ADDED : AUDIT_WHITELIST_REMOVED;
   logEntry.actor = event.params.admin.toHexString();
   logEntry.subject = event.params.account.toHexString();
   logEntry.timestamp = event.block.timestamp;

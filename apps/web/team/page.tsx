@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Spotlight from "@/components/Spotlight";
 
+export const metadata = {
+  title: "Team | FidesOrigin",
+  description: "Meet the FidesOrigin team — founders and advisors building the future of on-chain compliance.",
+};
+
 export default function Team() {
   return (
     <section>

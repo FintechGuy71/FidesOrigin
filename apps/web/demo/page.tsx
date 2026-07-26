@@ -125,16 +125,13 @@ const ErrorMessage = ({ message, onRetry }: { message: string; onRetry?: () => v
   </div>
 );
 
-// 调用风险分析 API（增强版：优先连接真实数据源，明确降级提示）
+// 调用风险分析 API（通过服务端代理，不在客户端暴露 API Key）
 async function fetchRiskAnalysis(address: string): Promise<RiskReport> {
-  // 尝试连接真实后端 API
+  // 尝试连接服务端代理 API
   try {
-    const response = await fetch(`${RISK_API_URL}/analyze`, {
+    const response = await fetch("/api/risk/analyze", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "X-API-Key": process.env.NEXT_PUBLIC_API_KEY || "" 
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address }),
     });
 
@@ -154,7 +151,7 @@ async function fetchRiskAnalysis(address: string): Promise<RiskReport> {
     console.warn("API 调用失败:", error);
   }
 
-  // 尝试连接 Subgraph 查询真实链上数据
+  // 尝试通过服务端代理查询 Subgraph
   try {
     const subgraphData = await fetchSubgraphRiskData(address);
     if (subgraphData) {
@@ -173,36 +170,31 @@ async function fetchRiskAnalysis(address: string): Promise<RiskReport> {
   return performLocalAnalysis(address);
 }
 
-// 通过 Subgraph 查询真实链上风险数据
+// 通过服务端代理查询 Subgraph 链上风险数据（不暴露 Subgraph URL 到客户端）
 async function fetchSubgraphRiskData(address: string): Promise<Partial<RiskReport> | null> {
-  const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
-  if (!SUBGRAPH_URL) {
-    console.warn("Subgraph URL 未配置，跳过 Subgraph 查询");
-    return null;
-  }
-  
-  const query = `
-    query GetRiskProfile($address: String!) {
-      riskProfile(id: $address) {
-        riskScore
-        riskTier
-        sanctioned
-        tags
-        lastUpdated
-      }
-      riskProfileUpdates(where: { subject: $address }, orderBy: timestamp, orderDirection: desc, first: 5) {
-        timestamp
-        newScore
-        newTier
-      }
-    }
-  `;
-
   try {
-    const response = await fetch(SUBGRAPH_URL, {
+    const response = await fetch("/api/subgraph", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables: { address: address.toLowerCase() } }),
+      body: JSON.stringify({
+        query: `
+          query GetRiskProfile($address: String!) {
+            riskProfile(id: $address) {
+              riskScore
+              riskTier
+              sanctioned
+              tags
+              lastUpdated
+            }
+            riskProfileUpdates(where: { subject: $address }, orderBy: timestamp, orderDirection: desc, first: 5) {
+              timestamp
+              newScore
+              newTier
+            }
+          }
+        `,
+        variables: { address: address.toLowerCase() },
+      }),
     });
 
     const json = await response.json();
@@ -304,21 +296,18 @@ function getRiskLevelFromScore(score: number): RiskLevel {
   return "low";
 }
 
-// 保存规则配置（明确说明是本地草稿，非链上配置）
+// 保存规则配置（通过服务端代理，不暴露 API Key）
 async function saveRules(rules: Rule[]): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${RULES_API_URL}/save`, {
+    const response = await fetch("/api/rules/save", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "X-API-Key": process.env.NEXT_PUBLIC_API_KEY || "" 
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rules }),
     });
 
     if (response.ok) {
       const data = await response.json();
-      return { success: true, message: "规则配置已保存到服务器" };
+      return { success: true, message: data.message || "规则配置已保存到服务器" };
     }
   } catch (error) {
     console.warn("服务器保存失败，回退到本地存储:", error);

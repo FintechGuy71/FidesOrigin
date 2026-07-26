@@ -1,256 +1,423 @@
-# FidesOrigin 数据管道安全审计报告
+# FidesOrigin DevOps & Infrastructure Security Audit Report
 
-## 审计概述
-- **审计范围**: data-publisher (TypeScript) + data-sync (JavaScript) 全量源码
-- **审计维度**: 数据源完整性、错误处理、并发安全、密钥管理、链上同步、数据一致性、定时调度、监控告警、性能问题、外部依赖
-- **审计方法**: 逐行静态代码分析
-
----
-
-## 发现的问题
-
-### [Severity: Critical] 明文私钥硬编码于环境变量读取链
-- **文件**: `data-sync/scripts/update-merkle-root.js`
-- **行号**: 第 8 行
-- **问题描述**: 脚本直接从 `process.env.SYNC_PRIVATE_KEY` 读取私钥并实例化 `ethers.Wallet`，私钥以明文形式存在于环境变量中，且脚本内无任何加密/解密逻辑。同一问题存在于 `data-sync/scripts/daily-sync.js` (CONFIG 对象第 23 行)。
-- **影响**: 任何能够读取环境变量或 `.env` 文件的攻击者均可完全控制合约 Owner 钱包，可篡改 Merkle Root、紧急制裁任意地址，造成资金与声誉的毁灭性损失。
-- **修复建议**: 
-  1. 使用 AWS KMS / Azure Key Vault / HashiCorp Vault 托管私钥，通过 API 签名而非本地私钥。
-  2. 若必须使用本地私钥，采用 AES-256-GCM 加密存储，启动时通过 KMS 解密到内存，并设置 `mlock` 防止换出。
-  3. 对 `update-merkle-root.js` 增加多签或阈值签名要求（如 Gnosis Safe / MPC）。
-
-### [Severity: Critical] benchmark.ts 硬编码测试私钥
-- **文件**: `data-publisher/scripts/benchmark.ts`
-- **行号**: 第 14–15 行
-- **问题描述**: `const TEST_PRIVATE_KEY = '0x...'` 硬编码了一个测试私钥，且该脚本可直接用于向主网或测试网发送交易。虽然注释标注为测试用途，但代码中无环境检查阻止其在生产环境执行。
-- **影响**: 若该私钥对应的钱包在生产网有余额，或被误用于生产环境，攻击者可通过暴露的源码直接窃取资金或控制合约。
-- **修复建议**: 
-  1. 立即从源码中移除硬编码私钥，改为从加密 Vault 或环境变量读取。
-  2. 增加 `if (process.env.NODE_ENV === 'production') throw new Error('Benchmark script cannot run in production')` 保护。
-  3. 将该地址对应的资金立即转移。
-
-### [Severity: Critical] Etherscan API Key 硬编码于调试脚本
-- **文件**: `data-sync/scripts/debug/test_etherscan_detailed.js`
-- **行号**: 第 9–10 行
-- **问题描述**: `API_KEYS = ['ABQJNS57VYBYH7K3MSCQB4TWKVSB54QPXC', 'IW7DG5MV445CEWHBP5FQCYZTXHQJN6RGV9']` 两个完整的 Etherscan API Key 以明文硬编码在源码中。
-- **影响**: API Key 泄露后可被滥用，导致配额耗尽、账户被封禁，甚至若该 Key 关联付费计划，产生直接经济损失。
-- **修复建议**: 
-  1. 立即撤销并轮换这两个 API Key。
-  2. 所有调试脚本统一从环境变量读取敏感凭证，并在 CI/CD 中增加 secret-scanning（如 `git-secrets`、`truffleHog`）阻止提交。
-
-### [Severity: Critical] 链上批量更新无交易回滚与状态校验
-- **文件**: `data-sync/scripts/daily-sync.js`
-- **行号**: 第 207–252 行 (`syncToChain` 方法)
-- **问题描述**: `batchUpdateRiskProfiles` 分批上链时，若某一批失败（catch 块仅记录 `error: e.message`），后续批次继续执行，且失败批次的地址既不会重试，也不会从已成功的状态中回滚。更关键的是，交易 `receipt.status` 未校验（仅打印），且未调用 `getRiskProfile` 验证链上状态确实更新。
-- **影响**: 出现部分成功/部分失败时，数据库与链上状态不一致，可能导致"假阴性"（链上未制裁但实际应制裁），严重违反合规要求。
-- **修复建议**: 
-  1. 引入 Saga / 两阶段提交模式：先上链，成功后更新 DB `syncedToChain=true`；失败则写入 DLQ 并触发告警。
-  2. 每笔交易后读取链上状态验证，若不匹配则标记为 `SYNC_VERIFICATION_FAILED`。
-  3. 使用 `BlockchainSyncService.syncToChain()`（已实现 nonce 管理、重试、验证）替代 `DailySyncService.syncToChain()`。
-
-### [Severity: High] Nonce 竞态条件 — 双检锁在并发场景下仍可能失效
-- **文件**: `data-sync/src/utils/nonceManager.js`
-- **行号**: 第 40–65 行 (`getNonce`)
-- **问题描述**: `allocateNonces` 方法使用 Redis 分布式锁（`lock:nonce`）保护，但 `getNonce` 的"双检锁"逻辑在 Node.js 单线程事件循环中虽安全，若系统扩展为多进程/多实例，锁的 TTL 为 5 秒，若在 `await this.redis.incr(NONCE_KEY)` 期间锁因 TTL 过期被其他实例获取，则可能出现 nonce 重复分配。
-- **影响**: 同一 nonce 被两个实例使用导致交易替换（replacement）或其中一笔永久 pending，进而阻塞整个同步管道。
-- **修复建议**: 
-  1. 使用 Redlock 算法替代简单 SET NX EX 锁，增加多 Redis 实例容错。
-  2. `allocateNonces` 的锁 TTL 应基于预估执行时间动态计算，而非固定 5 秒。
-  3. 增加 `watchdog` 机制：在持有锁期间定期续约（`extendLock`）。
-
-### [Severity: High] 交易发送后无 stuck-transaction 监控
-- **文件**: `data-sync/src/services/blockchainService.js`
-- **行号**: 第 175–210 行 (`executeTransaction`)
-- **问题描述**: 交易发送后等待 `receipt = await tx.wait(confirmations)`，但若交易因 gas price 过低长期 pending（尤其网络拥堵时），`wait` 可能无限阻塞。代码中无超时逻辑，也无对 stuck tx 的检测与加速（speed up）机制。
-- **影响**: 单条交易卡住会导致整个同步批次阻塞，依赖该 nonce 的后续交易全部无法执行，形成级联故障。
-- **修复建议**: 
-  1. 为 `tx.wait()` 增加超时（如 120 秒），超时后检查 mempool 状态。
-  2. 实现 stuck tx 检测：若 tx 超过 N 个区块未确认，使用更高 gas price 重新发送（相同 nonce）。
-  3. 使用 EIP-1559 动态 fee 估算，并设置 `maxFeePerGas` 上限（已有）但应根据网络波动动态调整。
-
-### [Severity: High] OFAC 数据源完整性严重依赖硬编码回退列表
-- **文件**: `data-publisher/src/ofac-fetcher.ts`
-- **行号**: 第 88–124 行 (`parseAndExtractCryptoAddresses`)
-- **问题描述**: XML 解析失败或正则未匹配到地址时，系统静默返回空数组，上层 `fetchOFACData` 在失败时调用 `this.getKnownAddresses()` 返回硬编码的 Tornado Cash / Lazarus Group 地址。该回退列表是静态的、手工维护的，无法反映 OFAC 最新制裁动态。类似问题存在于 `data-sync/src/adapters/ofacSimpleAdapter.js` (第 25 行 catch 后直接返回 `getKnownAddresses()`)。
-- **影响**: 若 OFAC 新增制裁地址而系统因网络/API 故障进入回退模式，新地址将漏报，造成严重的合规与法律风险。
-- **修复建议**: 
-  1. 硬编码回退列表应每日自动与 OFAC CDN 校验并更新，若校验失败则触发 Critical 告警，而非静默使用旧数据。
-  2. 对 XML/CSV 解析增加 schema 校验（XSD），确保数据结构完整性。
-  3. 维护本地 OFAC 数据缓存的签名/哈希，下载后校验完整性。
-
-### [Severity: High] 链上 Gas Limit 估算无上限保护
-- **文件**: `data-sync/scripts/daily-sync.js`
-- **行号**: 第 232 行
-- **问题描述**: `gasLimit: gasEstimate * 12n / 10n` (+20% buffer) 没有设置绝对上限。若合约被攻击或出现意外状态导致 `estimateGas` 返回异常高值（如数百万 gas），交易将携带过高的 gas limit，浪费资金且可能触发节点拒绝。
-- **影响**: 资金浪费，极端情况下耗尽 Operator 钱包余额，导致后续同步中断。
-- **修复建议**: 
-  1. 增加绝对上限：`gasLimit = min(gasEstimate * 1.2, ABSOLUTE_GAS_LIMIT)`，其中 `ABSOLUTE_GAS_LIMIT` 根据批次大小计算（如 `batchSize * 50000`）。
-  2. 若 `gasEstimate` 超过阈值，拆分为更小的批次。
-
-### [Severity: High] 调度任务缺乏幂等性与重叠执行保护
-- **文件**: `data-publisher/src/scheduler.ts`
-- **行号**: 第 55–70 行 (`startScheduledTasks`)
-- **问题描述**: Cron 任务触发时未检查前一次任务是否仍在执行，若某次同步因网络延迟耗时超过 cron 间隔（如 30 分钟），将产生重叠执行。`BatchScheduler` 与 `FATFScheduler` 均存在此问题。`data-sync/src/scheduler.js` 同样使用 `node-cron` 但无重叠保护。
-- **影响**: 重叠执行导致重复上链、nonce 冲突、数据库竞争、不必要的 gas 支出。
-- **修复建议**: 
-  1. 引入分布式锁（基于 Redis Redlock），任务开始时获取 `lock:scheduled-task:${taskName}`，执行完释放。
-  2. 或使用 `single-threaded` 队列（Bull/BullMQ），将 cron 触发改为向队列投递 job，利用队列的天然串行性。
-
-### [Severity: High] 数据库与链上状态缺乏两阶段提交
-- **文件**: `data-sync/src/services/blockchainService.js`
-- **行号**: 第 175–245 行 (`executeTransaction` 与 `updateChainStatus`)
-- **问题描述**: `executeTransaction` 成功后才调用 `updateChainStatus` 更新 DB，但两者之间若进程崩溃或网络中断，DB 将永久处于 `syncedToChain=false`（可重试，相对安全）。然而，更危险的是 `updateMerkleRoot` 在 `merkleBuilder.js` 中先构建树、再写文件、再上链，三步之间无任何原子性保证。
-- **影响**: Merkle Root 更新与本地缓存文件可能不一致；若上链成功但本地文件未更新，后续增量同步将基于错误状态。
-- **修复建议**: 
-  1. 为 Merkle Root 更新引入数据库事务：将新 root、proof 数据、上链 tx hash 写入同一事务。
-  2. 上链前预写 "pending" 状态，上链成功后更新为 "confirmed"。
-  3. 启动时校验：对比 DB 中的 pending root 与链上实际 root，不一致则告警。
-
-### [Severity: Medium] DLQ 重试次数硬编码且无抖动
-- **文件**: `data-sync/src/services/dlq.js`
-- **行号**: 第 9 行
-- **问题描述**: `MAX_RETRIES = 3` 和 `RETRY_BACKOFF_MINUTES = [1, 5, 15]` 是编译期常量，无法根据运行时环境调整。且退避时间是固定值，缺乏 jitter，在大量失败同时触发时可能导致 "thundering herd" 问题。
-- **影响**: 外部 API 短暂故障时，固定退避可能无法有效分散负载；重试次数不足可能导致本可恢复的任务被永久丢弃。
-- **修复建议**: 
-  1. 将重试配置外化为环境变量。
-  2. 退避时间增加 jitter：`delay = baseDelay * (1 + Math.random() * 0.5)`。
-  3. 实现指数退避（exponential backoff）：`delay = min(2^attempt * base, maxDelay)`。
-
-### [Severity: Medium] 健康检查未覆盖链上余额不足场景
-- **文件**: `data-sync/src/utils/healthCheck.js`
-- **行号**: 第 30–45 行 (`checkBlockchainHealth`)
-- **问题描述**: 健康检查验证了 RPC 连接和区块高度，但未检查 Operator 钱包余额是否足以支付下一次同步的预估 gas 费用。
-- **影响**: 余额不足时系统仍标记为 "healthy"，直到实际发送交易时才失败，延误故障发现时间。
-- **修复建议**: 
-  1. 在 `checkBlockchainHealth` 中增加余额检查：`if (balance < MIN_BALANCE_THRESHOLD) reportUnhealthy(...)`。
-  2. 预估下一次同步成本（基于待同步地址数 × 平均 gas per address × 当前 base fee）。
-
-### [Severity: Medium] 大数组循环无分页/流式处理
-- **文件**: `data-sync/src/syncService.js`
-- **行号**: 第 180–220 行 (`syncAll`)
-- **问题描述**: `this.db.getAddressesToSync()` 可能返回数千甚至数万条记录，全部加载到内存后逐个处理。`data-sync/scripts/importComprehensive.js` 的 `saveToDatabase` 同样逐条执行 Prisma create/update，无批量操作。
-- **影响**: 内存占用随数据量线性增长，极端情况下导致 OOM；逐条 DB 操作效率极低。
-- **修复建议**: 
-  1. 使用 Prisma `findMany` 的 `cursor` 分页或 `stream` 模式。
-  2. 使用 `prisma.riskAddress.createMany()` / `updateMany()` 进行批量写入。
-  3. 链上同步也采用流式处理，边读边发批次。
-
-### [Severity: Medium] 外部 API 调用缺乏 Circuit Breaker
-- **文件**: `data-sync/src/adapters/chainalysisAdapter.js`, `etherscanAdapter.js`, `openSourceAdapter.js`
-- **行号**: 多处
-- **问题描述**: 所有外部 API 适配器在调用失败时仅打印错误日志或返回空结果，没有 Circuit Breaker 机制。当上游 API 长时间不可用时，系统会持续不断地发起请求，浪费资源并可能触发上游限流/封禁。
-- **影响**: 雪崩效应 — 上游故障时本系统持续重试加剧问题；不必要的资源消耗。
-- **修复建议**: 
-  1. 引入 `opossum` 或自研 Circuit Breaker：连续 N 次失败后进入 OPEN 状态，暂停请求 M 分钟。
-  2. 各 Adapter 增加 `lastFailureTime` 和 `consecutiveFailures` 计数。
-
-### [Severity: Medium] 日志中潜在的敏感信息泄露
-- **文件**: `data-sync/scripts/debug/testEtherscanSimple.js`
-- **行号**: 第 10 行
-- **问题描述**: `console.log(`API Key: ${API_KEY.slice(0, 10)}...${API_KEY.slice(-4)}`)` 虽做了部分脱敏，但泄露了 API Key 的前缀和后缀，增加了暴力破解或 Rainbow Table 攻击的可行性。
-- **影响**: 降低攻击者破解 API Key 的难度。
-- **修复建议**: 
-  1. 日志中完全不输出 API Key，或仅输出 `***`。
-  2. 所有调试脚本增加 `if (process.env.NODE_ENV !== 'development')` 限制。
-
-### [Severity: Medium] 地址校验不完整 — 缺少 EIP-55 校验和验证
-- **文件**: `data-sync/src/adapters/ofacSimpleAdapter.js`
-- **行号**: 第 90 行 (`isValidEthereumAddress`)
-- **问题描述**: 正则 `/^0x[a-fA-F0-9]{40}$/` 仅校验格式，不验证 EIP-55 checksum。若数据源提供错误大小写的地址，系统会原样存入并上链，可能导致用户无法通过 checksum 验证识别错误。
-- **影响**: 数据质量下降；大小写错误的地址可能在某些严格校验的场景下被拒绝。
-- **修复建议**: 
-  1. 使用 `ethers.utils.isAddress(address)` 或 `viem` 的 `isAddress(address, { strict: true })` 进行校验。
-  2. 入库前统一转换为 checksummed 格式。
-
-### [Severity: Medium] SSRF 防护可绕过
-- **文件**: `data-publisher/src/ofac-fetcher.ts`
-- **行号**: 第 22 行 (`isAllowedUrl`)
-- **问题描述**: URL 白名单检查使用 `ALLOWED_DOMAINS.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain))`。虽然已限制协议为 https，但若存在子域名接管或 DNS 重绑定攻击，仍可能绕过。例如 `evil.com.treasury.gov` 不匹配，但 `treasury.gov.evil.com` 也不匹配，当前逻辑相对安全。然而，`endsWith('.' + domain)` 在 `hostname='sub.treasury.gov'` 时正确匹配，但若域名列表新增通配符配置可能引入风险。
-- **影响**: 较低，但防御深度不足。
-- **修复建议**: 
-  1. 使用严格相等 `ALLOWED_DOMAINS.includes(urlObj.hostname)`，显式列出所有允许子域名。
-  2. 增加 URL 请求前的 DNS 解析二次校验，确保解析 IP 不在内网段（`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`, `169.254.0.0/16`）。
-
-### [Severity: Low] 定时任务 cron 表达式无校验
-- **文件**: `data-publisher/src/scheduler.ts`
-- **行号**: 第 13 行
-- **问题描述**: `BATCH_SCHEDULE_CRON` 从环境变量读取后直接进入 `cron.schedule()`，未对 cron 表达式合法性进行校验。
-- **影响**: 非法 cron 表达式导致程序启动时崩溃或行为不可预期。
-- **修复建议**: 
-  1. 使用 `cron-validator` 或 `node-cron` 自带的校验功能在启动时验证表达式。
-  2. 提供清晰的错误信息： `"Invalid CRON expression: ${cronExpr}"`。
-
-### [Severity: Low] 缺少输入数据去重前的哈希一致性校验
-- **文件**: `data-publisher/src/processor.ts`
-- **行号**: 第 25–55 行 (`processBatch`)
-- **问题描述**: 数据去重基于 `address` 字符串，但未对同一地址在不同数据源中的风险评分差异进行冲突解决策略定义。`mergeData` 在 `daily-sync.js` 中简单地取 `max(riskScore)`，这可能导致本应是 GRAYLIST 的地址因某数据源误报而变为 BLACKLIST。
-- **影响**: 误杀 — 合法地址被错误地标记为高风险。
-- **修复建议**: 
-  1. 定义冲突解决策略并文档化，如：OFAC 数据源优先 > Chainalysis > 开源社区。
-  2. 增加人工审核流程：当不同数据源对同一地址给出冲突评级时，标记为 `PENDING_REVIEW`。
-
-### [Severity: Low] 监控指标未暴露关键业务指标
-- **文件**: `data-sync/src/utils/healthCheck.js`
-- **行号**: 第 58–75 行 (`getMetrics`)
-- **问题描述**: 当前指标仅包含系统级信息（内存、uptime、版本），缺少业务级指标如：待同步地址数、上次成功同步时间、各数据源成功率、链上交易 pending 数量、DLQ 深度。
-- **影响**: 运维人员无法通过监控快速定位业务层面的问题（如"OFAC 数据源已连续 3 天未更新"）。
-- **修复建议**: 
-  1. 增加业务指标：`pending_sync_count`、`last_sync_timestamp`、`source_success_rate{source="ofac"}`、`dlq_depth`、`operator_balance_eth`。
-  2. 使用 Prometheus 格式输出，便于 Grafana 可视化。
-
-### [Severity: Info] 代码重复 — 多适配器维护相同硬编码地址
-- **文件**: `data-sync/src/adapters/openSourceEnhancedAdapter.js`, `ofacSimpleAdapter.js`, `chainalysisAdapter.js`, `etherscanAdapter.js`
-- **行号**: 多处
-- **问题描述**: Tornado Cash、Lazarus Group 等地址在 4 个以上的文件中重复硬编码，维护成本高且容易遗漏更新。
-- **影响**: 维护困难，更新时可能遗漏某些文件。
-- **修复建议**: 
-  1. 提取公共的 `STATIC_SANCTIONED_ADDRESSES` 到 `packages/shared` 或独立模块。
-  2. 该模块应包含地址的来源、制裁日期、验证链接等元数据。
+**Audit Date:** 2026-07-26  
+**Auditor:** Subagent (DevOps/Infrastructure Security)  
+**Scope:** `/root/.openclaw/workspace/fidesorigin-demo/`  
+**Areas Covered:** CI/CD, Docker, Kubernetes, Infrastructure as Code, Secrets Management, Deployment Pipeline Reliability
 
 ---
 
-## 审计总结
+## Executive Summary
 
-### 数据管道总评等级
-**B-**
+The FidesOrigin project has undergone significant security hardening, with many fixes already implemented (documented via inline comments like `[K3-Audit Fix]`, `[High Fix #54]`, etc.). However, **several Critical and High severity issues remain**, primarily around:
 
-### 问题统计
-| 级别 | 数量 |
-|------|------|
-| Critical | 4 |
-| High | 5 |
-| Medium | 6 |
-| Low | 3 |
-| Info | 1 |
-| **总计** | **19** |
-
-### 架构评价
-
-#### 整体设计
-数据管道采用了经典的多层架构：适配器层 → 服务层 → 链上同步层，职责划分清晰。TypeScript 模块（data-publisher）与 JavaScript 模块（data-sync）并存，但两者之间缺乏统一的协调机制，存在功能重叠（如都实现了 OFAC 抓取、都向链上写数据）。
-
-#### 优点
-1. **DLQ 设计合理**: 死信队列配合指数退避和错误详情记录，为失败恢复提供了良好基础。
-2. **健康检查完备**: `/health`, `/ready`, `/metrics` 三端点覆盖了系统可用性检查。
-3. **告警通道多样**: PagerDuty + 日志 + 控制台输出，形成多层告警。
-4. **锁机制存在**: Redis 分布式锁和加密安全 Token 为并发控制提供了基本保障。
-5. **输入校验**: `validators.js` 对风险地址的字段进行了枚举值校验，防止脏数据入库。
-
-#### 单点故障 (SPOF) 分析
-1. **Operator 钱包单点**: 所有链上操作依赖单一私钥（`SYNC_PRIVATE_KEY`），该私钥泄露或丢失 = 系统完全失控。无多签、无阈值签名、无角色分离。
-2. **Redis 单点**: 分布式锁和 nonce 管理均依赖 Redis，若 Redis 故障，同步服务将因无法获取 nonce 而全面停摆。未配置 Redis Sentinel/Cluster。
-3. **RPC 节点单点**: `https://ethereum-sepolia-rpc.publicnode.com` 等公共 RPC 无故障转移。若节点限流或宕机，整个管道停止。
-4. **调度器单点**: `node-cron` 在单进程内运行，无分布式调度（如 Kubernetes CronJob / AWS EventBridge），实例重启时可能丢失调度状态。
-5. **OFAC 数据源单点**: 虽然存在 fallback ZIP，但本质上仍来自同一域名 `treasury.gov`，若该域名被屏蔽或证书过期，所有 OFAC 相关适配器同时失效。
-
-#### 建议的架构改进
-1. **统一数据管道**: 将 data-publisher 与 data-sync 合并为单一管道，消除重复代码和数据不一致风险。
-2. **引入事件驱动架构**: 使用消息队列（RabbitMQ / Kafka）替代 cron 轮询，天然支持背压、重试、幂等。
-3. **私钥管理升级**: 采用 AWS KMS 或 Fireblocks 等 MPC 方案，彻底消除明文私钥。
-4. **多 RPC 故障转移**: 配置 RPC 列表（`[publicnode, alchemy, infura, quicknode]`），带健康检查和自动切换。
-5. **合约层多签**: 将 RiskRegistry 的 `updateMerkleRoot` 和 `batchUpdateRiskProfiles` 改为多签控制，降低单点私钥风险。
+1. **Operational intelligence exposure** in tracked deployment artifacts
+2. **Incomplete K8s secret management** (template/actual manifest mismatch)
+3. **Overly permissive network egress** in fallback NetworkPolicy
+4. **Weak defaults and placeholder configurations** that could lead to production misconfigurations
+5. **CI/CD pipeline gaps** where security scans silently pass despite finding issues
 
 ---
 
-*报告生成时间: 2026-06-30*
-*审计范围: FidesOrigin data-publisher + data-sync 全量源码*
+## Critical Issues
+
+### C1. Deployment Artifacts Expose Operational Intelligence (Tracked in Git)
+
+- **File**: `apps/contracts/deployments/sepolia-latest.json`
+- **Issue**: This file is **tracked in Git** and contains:
+  - Actual deployer EOA address: `0x5F6Ae278e7a62E64F9F467a91B693f372b84a374`
+  - Live contract addresses (FidesCompliance, QuarantineVault, CompliantStableCoin)
+  - Full transaction hashes for deployments and upgrades
+  - Failed upgrade attempts with detailed revert data
+  - Role assignments (ORACLE_ROLE, OPERATOR_ROLE holder addresses)
+  - Timelock bypass notes ("Upgrade blocked by Timelock")
+- **Severity**: **Critical**
+- **Fix**: 
+  - Add `apps/contracts/deployments/*.json` to `.gitignore` (keep `.gitkeep` only)
+  - Move deployment artifacts to a private registry or encrypted storage (e.g., AWS S3 with IAM, HashiCorp Vault KV)
+  - For CI/CD, write deployment outputs to GitHub Artifacts with short retention (1-7 days) instead of committing to repo
+  - Rotate any roles/keys associated with the exposed deployer address
+
+### C2. OpenZeppelin Upgrade Manifest Exposes Full Storage Layout
+
+- **File**: `apps/contracts/.openzeppelin/sepolia.json`
+- **Issue**: Tracked in Git. Contains:
+  - All proxy and implementation contract addresses
+  - Complete storage layout (slot positions, variable names, types) for FidesCompliance, RiskRegistry, PolicyEngine, ComplianceEngine
+  - Transaction hashes for every upgrade
+  - Exact Solidity version and compiler settings
+- **Severity**: **Critical**
+- **Fix**: 
+  - Add `apps/contracts/.openzeppelin/*.json` to `.gitignore`
+  - Store upgrade manifests in a secure location accessible only to deployers
+  - The storage layout is a goldmine for exploit development — it reveals exact memory layout for upgradeable contracts
+
+### C3. Hardcoded Production Contract Address in Application Config
+
+- **File**: `data-publisher/src/config.ts`
+- **Issue**: Lines containing `getEnv('RISK_REGISTRY_ADDRESS', '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc')` and `getEnv('FATF_RISK_REGISTRY_ADDRESS', '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc')` use a **real Sepolia contract address as fallback**. If the environment variable is unset or misspelled, the application will silently connect to a production contract.
+- **Severity**: **Critical**
+- **Fix**: 
+  - Remove all fallback values for contract addresses. Use `getEnv('RISK_REGISTRY_ADDRESS')` with no default — force the application to fail fast if the env var is missing.
+  - For development, use a separate `config.dev.ts` or explicit `NODE_ENV=development` check with testnet-only addresses.
+
+---
+
+## High Issues
+
+### H1. K8s Deployment References Non-Existent Secrets
+
+- **File**: `k8s/deployment.yaml`
+- **Issue**: The Deployment references three secrets:
+  - `fidesorigin-publisher-keys` (for `PUBLISHER_PRIVATE_KEY`, `FATF_ORACLE_PRIVATE_KEY`)
+  - `fidesorigin-cloud-keys` (for AWS credentials)
+  - `fidesorigin-vault-keys` (for Vault token)
+  
+  However, `k8s/sealed-secret-template.yaml` only creates a single secret `fidesorigin-keys`. The split-secret architecture described in the Deployment manifest does not match the sealed secret template. If applied as-is, pods will fail to start with `CreateContainerConfigError`.
+- **Severity**: **High**
+- **Fix**: 
+  - Update `sealed-secret-template.yaml` to create the three separate secrets matching `deployment.yaml` expectations
+  - Or, consolidate `deployment.yaml` to use a single `fidesorigin-keys` secret (less preferred — increases blast radius)
+
+### H2. CronJob Uses Placeholder Image Digest
+
+- **File**: `k8s/cronjob.yaml`
+- **Issue**: Line: `image: fidesorigin/data-publisher@sha256:PLACEHOLDER_DIGEST`. If this manifest is applied without CI/CD substitution, the pod will fail with `ImagePullBackOff` or potentially pull an unexpected image if the placeholder is somehow resolved.
+- **Severity**: **High**
+- **Fix**: 
+  - Add a CI/CD gate that fails the pipeline if `PLACEHOLDER_DIGEST` is still present in the manifest at deploy time
+  - Use a pre-commit hook or lint step to catch unsubstituted placeholders
+
+### H3. NetworkPolicy Allows Egress to ANY on Port 443
+
+- **File**: `k8s/networkpolicy.yaml`
+- **Issue**: The standard Kubernetes NetworkPolicy fallback allows egress on TCP/443 to ANY destination (`to: []`). While documented as a fallback until Cilium/Calico is available, this is overly permissive for a compliance system that should restrict outbound to known APIs (OFAC, Chainalysis, OpenSanctions, etc.). A compromised pod can exfiltrate data to any HTTPS endpoint.
+- **Severity**: **High**
+- **Fix**: 
+  - Prioritize deploying Cilium or Calico to enable FQDN-based egress filtering (see `networkpolicy-cilium.yaml`)
+  - Until then, restrict egress to known CIDR blocks or use an egress proxy/gateway
+  - Add a TODO with a deadline for Cilium deployment
+
+### H4. CI/CD Security Scan Silently Ignores Failures
+
+- **File**: `.github/workflows/ci.yml`
+- **Issue**: 
+  - `pnpm audit --audit-level moderate || true`
+  - `pnpm audit --audit-level high || true`
+  
+  The `|| true` pattern means the security scan job **always passes**, even when vulnerabilities are found. This creates a false sense of security.
+- **Severity**: **High**
+- **Fix**: 
+  - Remove `|| true` from audit commands
+  - Set `continue-on-error: true` at the step level if you want the job to report findings without failing the entire pipeline
+  - Better yet, use `actions/dependency-review-action` for PR-level dependency checks
+
+### H5. Deploy-K8s Job Is Incomplete and Uses Mutable Tag
+
+- **File**: `.github/workflows/deploy.yml`
+- **Issue**: 
+  1. The `deploy-k8s` job pulls `fidesorigin/data-publisher:latest` — a mutable tag subject to supply chain attacks
+  2. The job only pins the digest and prints it; it does **NOT** actually deploy to Kubernetes (no `kubectl apply`, `helm upgrade`, or ArgoCD sync)
+  3. The `sed` command modifies the local file but never commits or applies the change
+- **Severity**: **High**
+- **Fix**: 
+  - Build and push image with a unique tag (e.g., `git-sha-${GITHUB_SHA}`), then use that exact tag or digest in the manifest
+  - Complete the deploy step: `kubectl apply -f k8s/` or use Helm/ArgoCD
+  - Consider using `ko` or `kaniko` for reproducible builds without Docker-in-Docker
+
+### H6. data-sync Docker Compose Exposes PostgreSQL to All Interfaces
+
+- **File**: `data-sync/docker-compose.yml`
+- **Issue**: `ports: - "5432:5432"` binds PostgreSQL to all host interfaces, not just localhost (`127.0.0.1`). Combined with the weak default password `changeme` (see M1), this creates a significant attack surface.
+- **Severity**: **High**
+- **Fix**: 
+  - Change to `ports: - "127.0.0.1:5432:5432"`
+  - Remove the default password fallback entirely (see M1)
+
+### H7. Vercel Web Config Has Dangerous CSP Fallback
+
+- **File**: `apps/web/vercel.json`
+- **Issue**: The CSP header includes `'unsafe-inline'` for style-src and a template placeholder `'nonce-<%=nonce%>'` for script-src. If the build process fails to substitute the nonce template, browsers may fallback to allowing all inline scripts (depending on how the template is rendered). The root `vercel.json` also uses `'unsafe-inline'` for script-src.
+- **Severity**: **High**
+- **Fix**: 
+  - Verify the nonce substitution is working correctly at build time
+  - Remove `'unsafe-inline'` from script-src entirely; use nonces or hashes
+  - For style-src, move inline styles to CSS files or use `style-src-elem` with hashes
+
+---
+
+## Medium Issues
+
+### M1. Weak Default Password in data-sync Compose
+
+- **File**: `data-sync/docker-compose.yml`
+- **Issue**: `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}` provides a trivial default password if the env var is unset.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Use `${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}` to force a failure if unset
+  - Same pattern for all required secrets
+
+### M2. Prometheus Scraping Has No Authentication
+
+- **File**: `monitoring/prometheus.yml`
+- **Issue**: The TODO comment acknowledges this, but no authentication is configured for Prometheus scraping endpoints. Anyone with network access to the metrics port can scrape metrics.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Implement bearer token or mTLS for Prometheus scraping as documented in the TODO
+  - Add network policy to restrict metrics port (9090) to monitoring namespace only
+
+### M3. Backup Hardhat Config File Tracked in Git
+
+- **File**: `apps/contracts/hardhat.config.bak.js`
+- **Issue**: This backup file contains the full Hardhat configuration including all network RPC URLs, account derivation logic, and Etherscan API key structure. Backup files (`.bak`) are not in `.gitignore`.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Add `*.bak` and `*.bak.js` to `.gitignore`
+  - Delete this file from the repo: `git rm apps/contracts/hardhat.config.bak.js`
+
+### M4. data-sync Dockerfile Uses Deprecated Flag and Weak Healthcheck
+
+- **File**: `data-sync/Dockerfile`
+- **Issue**: 
+  1. `npm ci --only=production` is deprecated; should use `--omit=dev`
+  2. `npm install -g prisma` installs a global tool without version pinning
+  3. Healthcheck is trivial: `node -e "console.log('healthy')"` — it does not verify the actual service is responding
+- **Severity**: **Medium**
+- **Fix**: 
+  - Use `npm ci --omit=dev`
+  - Pin Prisma version: `npm install -g prisma@5.x.x`
+  - Implement a real healthcheck that hits an HTTP endpoint or validates DB connectivity
+
+### M5. data-publisher Compose Mounts Host Logs Directory
+
+- **File**: `data-publisher/docker-compose.yml`
+- **Issue**: `volumes: - ./logs:/app/logs` mounts a host directory into the container. If the container is compromised, an attacker can write to the host filesystem. Conversely, host users can tamper with container logs.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Use a named Docker volume instead: `volumes: - publisher-logs:/app/logs`
+  - Or stream logs to stdout/stderr and collect with a log aggregator (Fluent Bit, Promtail)
+
+### M6. K8s Role Can Read ALL Secrets in Namespace
+
+- **File**: `k8s/role.yaml`
+- **Issue**: The Role grants `get`, `list`, `watch` on ALL `secrets` in the namespace (no `resourceNames` restriction for read verbs). A compromised `fidesorigin-publisher` pod can read every secret in the `fidesorigin` namespace, not just its own.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Restrict read access to specific secret names:
+    ```yaml
+    - apiGroups: [""]
+      resources: ["secrets"]
+      resourceNames: ["fidesorigin-keys", "fidesorigin-publisher-keys"]
+      verbs: ["get"]
+    ```
+
+### M7. Keeper State File Written to Scripts Directory
+
+- **File**: `scripts/quarantine-keeper.js`
+- **Issue**: The keeper state is written to `path.join(__dirname, '.keeper-state.json')`. The `scripts/` directory may be writable by the process, and the chmod to 0o600 has a try-catch that silently ignores errors on Windows. If the state file is readable by other users, it leaks which addresses have been processed and which wallets are known.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Use `fs.promises.writeFile` with explicit mode `0o600`
+  - Store state in a proper database (Redis, PostgreSQL) or encrypted file
+  - Fail hard if permissions cannot be set
+
+### M8. deploy-contracts.yml Verification Runs Even When Deploy Skipped
+
+- **File**: `.github/workflows/deploy-contracts.yml`
+- **Issue**: The "Verify on Etherscan" step has `if: success()` and runs even when the "Deploy" step was skipped due to `confirm != 'DEPLOY'`. This means verification could attempt to verify non-existent or previous deployments.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Change to `if: success() && github.event.inputs.confirm == 'DEPLOY'`
+
+### M9. deploy-web.yml Installs Unpinned Vercel CLI
+
+- **File**: `.github/workflows/deploy-web.yml`
+- **Issue**: `npm install -g vercel@latest` installs the latest Vercel CLI at runtime without pinning. A compromised Vercel CLI release could inject malicious code into the deployment.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Pin Vercel CLI version: `npm install -g vercel@39.x.x`
+  - Or use `npx vercel@39.x.x` without global install
+
+### M10. Root Vercel Config Mismatch with Next.js App
+
+- **File**: `vercel.json` (root) and `apps/web/vercel.json`
+- **Issue**: The root `vercel.json` configures `@vercel/static` builds and routes to `apps/web/public/`, while `apps/web/vercel.json` configures `framework: "nextjs"`. These two configurations could conflict or cause unexpected behavior when deploying from the root vs. the app directory.
+- **Severity**: **Medium**
+- **Fix**: 
+  - Consolidate to a single Vercel configuration
+  - Ensure the root `vercel.json` is not used if deploying from `apps/web/`
+
+---
+
+## Low Issues
+
+### L1. Grafana Admin Password Env Var Name Inconsistency
+
+- **File**: `docker-compose.yml` (root)
+- **Issue**: Uses `GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?...}` but `data-publisher/docker-compose.yml` uses `GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?...}`. Inconsistent env var naming causes confusion.
+- **Severity**: **Low**
+- **Fix**: Standardize on `GRAFANA_ADMIN_PASSWORD` across all compose files.
+
+### L2. API CORS Allows localhost in Production
+
+- **File**: `apps/api/api/risk-sync.js`
+- **Issue**: `ALLOWED_ORIGINS` includes `http://localhost:3000` and `http://localhost:5173`. In production mode, the code checks `process.env.NODE_ENV === 'production'` before enforcing CORS, but the whitelist still contains development origins.
+- **Severity**: **Low**
+- **Fix**: 
+  - Load allowed origins from environment variable with production-only defaults
+  - Separate dev and production CORS configs
+
+### L3. Example env Files Contain Pattern Passwords
+
+- **File**: `.env.db.example`
+- **Issue**: Contains `POSTGRES_PASSWORD=fidesorigin_secret_2026`, `PGADMIN_PASSWORD=admin_secret_2026`, etc. While these are examples, predictable patterns (`_secret_2026`) might be copy-pasted into production.
+- **Severity**: **Low**
+- **Fix**: 
+  - Use obviously fake placeholders: `POSTGRES_PASSWORD=REPLACE_WITH_RANDOM_32CHAR_STRING`
+  - Add a comment warning against copy-pasting
+
+### L4. turbo.json Includes Sensitive Env Vars in Cache Key
+
+- **File**: `turbo.json`
+- **Issue**: `PRIVATE_KEY`, `ETHERSCAN_API_KEY` are in `globalEnv`. Turbo uses these to compute cache keys. This means builds with different private keys won't share cache (correct behavior), but it also means the cache system is aware of these sensitive values.
+- **Severity**: **Low**
+- **Fix**: 
+  - Remove `PRIVATE_KEY` from `globalEnv` — it should not affect build outputs
+  - Keep `ETHERSCAN_API_KEY` only if it affects build outputs (e.g., contract verification during build)
+
+### L5. Missing Security Headers on API Vercel Config
+
+- **File**: `apps/api/vercel.json`
+- **Issue**: The API config has basic security headers but lacks:
+  - `X-RateLimit-Limit` / rate limiting headers
+  - `Permissions-Policy`
+  - No CORS configuration for API routes
+- **Severity**: **Low**
+- **Fix**: Add `Permissions-Policy: interest-cohort=()` and other modern security headers.
+
+### L6. No Resource Limits on Nginx in Production Compose
+
+- **File**: `backend/docker-compose.prod.yml`
+- **Issue**: The `nginx` service has no `deploy.resources.limits` configuration, unlike all other services.
+- **Severity**: **Low**
+- **Fix**: Add CPU and memory limits to the nginx service.
+
+### L7. Slither Analysis Not Enforced in CI
+
+- **File**: `.github/workflows/ci.yml`
+- **Issue**: Slither is installed with `pip install slither-analyzer || true` and the analysis step is wrapped in a conditional that skips if Slither is unavailable. Solidity static analysis is not enforced.
+- **Severity**: **Low**
+- **Fix**: 
+  - Make Slither a required check
+  - Use a pre-built Docker image with Slither instead of installing at runtime
+  - Fail the build if Slither finds high-severity issues
+
+---
+
+## Info / Observations
+
+1. **Good Security Practices Observed**:
+   - `.env` is properly gitignored and not tracked
+   - Sealed Secrets and External Secrets Operator templates are provided
+   - KMS key management (AWS KMS, Vault) is implemented with proper AbstractSigner
+   - K8s security contexts (non-root, read-only root fs, drop ALL capabilities)
+   - Resource limits on most K8s workloads
+   - Pod Disruption Budget for HA
+   - Topology spread constraints and pod anti-affinity
+   - Docker multi-stage builds with non-root users
+   - CI/CD workflows have explicit least-privilege permissions (`contents: read`)
+   - TruffleHog secret scanning is pinned to a specific version
+   - TruffleHog scans with `--only-verified` to reduce false positives
+   - Health checks configured on containers
+   - Input validation for Ethereum addresses
+   - Rate limiting middleware exists (though edge rate limiting not configured)
+
+2. **Architecture Note**: The project uses a mix of deployment targets (Vercel for web/API, Docker Compose for backend/data services, Kubernetes for data-publisher). This multi-platform approach increases operational complexity and the attack surface. Consider standardizing on a single container orchestration platform for production.
+
+3. **Secret Rotation**: There is no documented secret rotation procedure. For a compliance system handling sanctions data, consider implementing automated rotation for:
+   - AWS KMS keys (annual rotation)
+   - Vault tokens (short TTL with renewal)
+   - Database credentials (automated via Vault dynamic secrets or AWS RDS IAM auth)
+   - API keys (Chainalysis, Etherscan, etc.)
+
+4. **Compliance Considerations**: As a system handling sanctions and risk data, consider:
+   - SOC 2 Type II or ISO 27001 alignment
+   - Audit logging for all admin operations
+   - Data retention policies for OFAC/sanctions data
+   - GDPR/CCPA implications for address risk profiling
+
+---
+
+## Appendix: Files Audited
+
+### CI/CD
+- `.github/workflows/ci.yml`
+- `.github/workflows/deploy-contracts.yml`
+- `.github/workflows/deploy-subgraph.yml`
+- `.github/workflows/deploy-web.yml`
+- `.github/workflows/deploy.yml`
+- `.github/workflows/publish-sdk.yml`
+- `.github/workflows/secret-scan.yml`
+
+### Docker
+- `Dockerfile`
+- `docker-compose.yml`
+- `backend/Dockerfile`
+- `backend/docker-compose.yml`
+- `backend/docker-compose.prod.yml`
+- `data-publisher/Dockerfile`
+- `data-publisher/docker-compose.yml`
+- `data-sync/Dockerfile`
+- `data-sync/docker-compose.yml`
+
+### Kubernetes
+- `k8s/configmap.yaml`
+- `k8s/cronjob.yaml`
+- `k8s/deployment.yaml`
+- `k8s/external-secrets.yaml`
+- `k8s/kms-sealed-secret.yaml.template`
+- `k8s/namespace.yaml`
+- `k8s/networkpolicy-cilium.yaml`
+- `k8s/networkpolicy.yaml`
+- `k8s/pod-disruption-budget.yaml`
+- `k8s/rolebinding.yaml`
+- `k8s/role.yaml`
+- `k8s/sealed-secret-template.yaml`
+- `k8s/secret.yaml`
+- `k8s/service.yaml`
+
+### Vercel / Edge
+- `vercel.json`
+- `apps/web/vercel.json`
+- `apps/api/vercel.json`
+
+### Environment & Secrets
+- `.env`
+- `.env.example`
+- `.env.local.example`
+- `.env.db.example`
+- `backend/.env.example`
+- `data-publisher/.env`
+- `data-publisher/.env.example`
+- `data-sync/.env.example`
+
+### Application Code (Key Files)
+- `data-publisher/src/config.ts`
+- `data-publisher/src/key-manager.ts`
+- `data-publisher/src/kms-key-manager.ts`
+- `scripts/quarantine-keeper.js`
+- `apps/api/api/risk-sync.js`
+- `apps/web/lib/env.ts`
+- `apps/contracts/hardhat.config.bak.js`
+- `apps/contracts/.openzeppelin/sepolia.json`
+- `apps/contracts/deployments/sepolia-latest.json`
+
+### Package & Build
+- `package.json`
+- `turbo.json`
+- `pnpm-workspace.yaml`
+- `.gitignore`
+
+---
+
+*End of Audit Report*
