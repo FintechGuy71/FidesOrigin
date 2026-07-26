@@ -26,8 +26,8 @@ metadata:
     job-type: batch-sync
 spec:
   # Daily at 03:30 UTC (adjust timezone as needed)
-  schedule: "30 3 * * *"
-  timeZone: "UTC"
+  schedule: '30 3 * * *'
+  timeZone: 'UTC'
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 5
@@ -66,66 +66,66 @@ spec:
                 - configMapRef:
                     name: fidesorigin-config
               env:
-              # [P2-fix] PUBLISHER_PRIVATE_KEY removed from production K8s — plaintext keys
-              # should NEVER be used in production. Use KMS or Vault instead.
-              # For dev environments, inject via ConfigMap or env manually.
-              - name: KMS_PROVIDER
-                valueFrom:
-                  configMapKeyRef:
-                    name: fidesorigin-config
-                    key: kms-provider
-                    optional: true
-              - name: KMS_KEY_ID
-                valueFrom:
-                  configMapKeyRef:
-                    name: fidesorigin-config
-                    key: kms-key-id
-                    optional: true
-              - name: AWS_ACCESS_KEY_ID
-                valueFrom:
-                  secretKeyRef:
-                    name: fidesorigin-keys
-                    key: aws-access-key-id
-                    optional: true
-              - name: AWS_SECRET_ACCESS_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: fidesorigin-keys
-                    key: aws-secret-access-key
-                    optional: true
-              - name: VAULT_ADDR
-                valueFrom:
-                  configMapKeyRef:
-                    name: fidesorigin-config
-                    key: vault-addr
-                    optional: true
-              - name: VAULT_TOKEN
-                valueFrom:
-                  secretKeyRef:
-                    name: fidesorigin-keys
-                    key: vault-token
-                    optional: true
-              - name: VAULT_SECRET_PATH
-                valueFrom:
-                  configMapKeyRef:
-                    name: fidesorigin-config
-                    key: vault-secret-path
-                    optional: true
-              - name: VAULT_KEY_NAME
-                valueFrom:
-                  configMapKeyRef:
-                    name: fidesorigin-config
-                    key: vault-key-name
-                    optional: true
+                # [P2-fix] PUBLISHER_PRIVATE_KEY removed from production K8s — plaintext keys
+                # should NEVER be used in production. Use KMS or Vault instead.
+                # For dev environments, inject via ConfigMap or env manually.
+                - name: KMS_PROVIDER
+                  valueFrom:
+                    configMapKeyRef:
+                      name: fidesorigin-config
+                      key: kms-provider
+                      optional: true
+                - name: KMS_KEY_ID
+                  valueFrom:
+                    configMapKeyRef:
+                      name: fidesorigin-config
+                      key: kms-key-id
+                      optional: true
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: fidesorigin-cloud-keys
+                      key: aws-access-key-id
+                      optional: true
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: fidesorigin-cloud-keys
+                      key: aws-secret-access-key
+                      optional: true
+                - name: VAULT_ADDR
+                  valueFrom:
+                    configMapKeyRef:
+                      name: fidesorigin-config
+                      key: vault-addr
+                      optional: true
+                - name: VAULT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: fidesorigin-vault-keys
+                      key: vault-token
+                      optional: true
+                - name: VAULT_SECRET_PATH
+                  valueFrom:
+                    configMapKeyRef:
+                      name: fidesorigin-config
+                      key: vault-secret-path
+                      optional: true
+                - name: VAULT_KEY_NAME
+                  valueFrom:
+                    configMapKeyRef:
+                      name: fidesorigin-config
+                      key: vault-key-name
+                      optional: true
               resources:
                 # [L-20 Fix] CronJob memory limit raised to match Deployment (1Gi)
                 # Batch sync may load large OFAC datasets; 512Mi is insufficient.
                 requests:
-                  memory: "512Mi"
-                  cpu: "250m"
+                  memory: '512Mi'
+                  cpu: '250m'
                 limits:
-                  memory: "1Gi"
-                  cpu: "500m"
+                  memory: '1Gi'
+                  cpu: '500m'
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true

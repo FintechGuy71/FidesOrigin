@@ -554,7 +554,7 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             revert ClaimRequiresApprovalError(recordId);
         }
 
-        // [HIGH-3 FIX] 检查等待期是否已过（默认 24 小时）
+        // [HIGH-3 FIX] 检查等待期是否已过（默认禁用，需运营方显式启用）
         uint256 claimableAfter = record.timestamp + claimDelay;
         if (block.timestamp < claimableAfter) {
             revert ClaimDelayNotMet(claimableAfter);
