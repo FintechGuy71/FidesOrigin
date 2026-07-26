@@ -61,7 +61,7 @@ jobs:
       - run: pnpm build
       # [LOW-25 FIX] Dependency vulnerability scan
       - name: Audit dependencies
-        run: pnpm audit --audit-level moderate || true
+        run: pnpm audit --audit-level moderate
       - uses: actions/upload-artifact@v4
         with:
           name: build-output
@@ -84,7 +84,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # npm audit for known vulnerabilities
       - name: Run npm audit
-        run: pnpm audit --audit-level high || true
+        run: pnpm audit --audit-level high
       # Solidity static analysis (if Slither is available)
       - name: Install Slither
         run: |
@@ -94,9 +94,10 @@ jobs:
         working-directory: apps/contracts
         run: |
           if command -v slither &> /dev/null; then
-            slither . --config-file slither.config.json --sarif slither.sarif || true
+            slither . --config-file slither.config.json --sarif slither.sarif
           else
             echo "Slither not available, skipping Solidity analysis"
+            exit 0
           fi
       - uses: actions/upload-artifact@v4
         if: always()

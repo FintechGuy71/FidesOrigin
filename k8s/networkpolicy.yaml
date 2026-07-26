@@ -1,12 +1,18 @@
 # [K3-Audit Fix] NetworkPolicy: restrict outbound connections to only required endpoints
 # Apply this to the fidesorigin-data-publisher namespace.
 #
-# NOTE: Standard Kubernetes NetworkPolicy does NOT support FQDN-based filtering.
-# To enforce egress rules to specific external domains (listed below), you MUST use
-# one of the following approaches:
-#   1. Calico NetworkPolicy (networking.projectcalico.org/v1) — supports domains.
-#   2. Cilium NetworkPolicy (cilium.io/v2) — supports DNS-aware FQDN filtering.
-#   3. Istio Egress Gateway — route all external traffic through a controlled gateway.
+# ⚠️  SECURITY WARNING: Standard Kubernetes NetworkPolicy does NOT support FQDN-based
+#    filtering. The standard policy below CANNOT restrict egress to specific external
+#    domains. For production, you MUST use one of:
+#      1. CiliumNetworkPolicy  → see k8s/networkpolicy-cilium.yaml (RECOMMENDED)
+#      2. Calico NetworkPolicy → supports domain-based rules
+#      3. Istio Egress Gateway → route all external traffic through a controlled gateway
+#
+#    The standard policy below is a MINIMAL fallback that:
+#      - Allows internal cluster communication (DNS, Redis, monitoring)
+#      - DENIES all external HTTPS egress by default
+#    If you deploy WITHOUT Cilium/Calico/Istio, you MUST add explicit ipBlock rules
+#    for each known endpoint IP, or external API calls will fail.
 #
 # Required external domains (FQDN) for this workload:
 #   - treasury.gov          (OFAC SDN list)
@@ -14,50 +20,20 @@
 #   - api.opensanctions.org (OpenSanctions data)
 #   - api.etherscan.io      (Etherscan API)
 #   - thegraph.com          (Subgraph gateway)
-#   - alchemy.com           (Alchemy RPC)
+#   - *.alchemy.com         (Alchemy RPC)
 #   - raw.githubusercontent.com (Metamask phishing list)
-#   - any trust anchor oracles required by FATF pipeline
 #
-# This manifest keeps the standard K8s fallback (allow 443 to any) so that
-# workloads continue to function in clusters without Calico/Cilium.
-# Once Calico/Cilium is installed, replace the "allow 443/80 to any" rules
-# with FQDN-based rules. See k8s/networkpolicy-calico.yaml for an example.
-#
-# ── CiliumNetworkPolicy 示例 (供参考，需 Cilium CNI) ──
-# apiVersion: cilium.io/v2
-# kind: CiliumNetworkPolicy
-# metadata:
-#   name: fidesorigin-publisher-egress-fqdn
-#   namespace: fidesorigin
-# spec:
-#   endpointSelector:
-#     matchLabels:
-#       app: fidesorigin-data-publisher
-#   egress:
-#     - toFQDNs:
-#         - matchName: "treasury.gov"
-#         - matchName: "api.chainalysis.com"
-#         - matchName: "api.opensanctions.org"
-#         - matchName: "api.etherscan.io"
-#         - matchName: "thegraph.com"
-#         - matchName: "alchemy.com"
-#         - matchName: "raw.githubusercontent.com"
-#       toPorts:
-#         - ports:
-#             - port: "443"
-#               protocol: TCP
-#     - toEndpoints:
-#         - matchLabels:
-#             k8s:io.kubernetes.pod.namespace: kube-system
-#             k8s:k8s-app: kube-dns
-#       toPorts:
-#         - ports:
-#             - port: "53"
-#               protocol: UDP
-#           rules:
-#             dns:
-#               - matchPattern: "*."
-# ────────────────────────────────────────────────────
+# ── Fallback: explicit ipBlock example (uncomment and fill in known IPs) ──
+#   - to:
+#       - ipBlock:
+#           cidr: 104.18.XXX.0/24   # treasury.gov CDN
+#       - ipBlock:
+#           cidr: 52.84.XXX.0/24    # api.chainalysis.com
+#     ports:
+#       - protocol: TCP
+#         port: 443
+# ───────────────────────────────────────────────────────────────────────────
+
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -65,6 +41,9 @@ metadata:
   namespace: fidesorigin
   labels:
     app: fidesorigin-data-publisher
+  annotations:
+    fidesorigin.io/policy-type: "standard-fallback"
+    fidesorigin.io/warning: "Standard NetworkPolicy cannot filter external HTTPS by FQDN. Use networkpolicy-cilium.yaml for production."
 spec:
   podSelector:
     matchLabels:
@@ -91,15 +70,14 @@ spec:
       ports:
         - protocol: UDP
           port: 53
-    # [K3-Audit Fix] Allow HTTPS to external APIs.
-    # In clusters with Calico/Cilium, REPLACE this with FQDN-based rules.
-    # Until then, 443 to any target is the least-privilege option available
-    # in standard K8s NetworkPolicy. Port 80 is REMOVED — all upstreams must use TLS.
-    - to: []
-      ports:
-        - protocol: TCP
-          port: 443
-    # Allow Redis cluster communication (if cluster mode enabled)
+    # [K3-Audit Fix] External HTTPS is DENIED by default in standard K8s.
+    # Use CiliumNetworkPolicy (networkpolicy-cilium.yaml) for FQDN-based egress.
+    # If you must use standard NetworkPolicy, uncomment the ipBlock section above
+    # and list every known endpoint CIDR.
+    #
+    # REMOVED: blanket "to: []" allow on port 443 — this permitted egress to ANY host.
+    #
+    # Allow internal Redis communication (if cluster mode enabled)
     - to:
         - podSelector:
             matchLabels:

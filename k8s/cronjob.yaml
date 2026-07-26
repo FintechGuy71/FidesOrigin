@@ -53,10 +53,11 @@ spec:
               type: RuntimeDefault
           containers:
             - name: batch-sync
-              # [P2-Fix] Image digest pinned for supply-chain security.
-              # Replace <DIGEST> with the actual sha256 digest from your registry.
-              # Example: fidesorigin/data-publisher@sha256:abc123...
-              image: fidesorigin/data-publisher@sha256:PLACEHOLDER_DIGEST
+              # [K3-Audit Fix] Image digest MUST be pinned at deploy time.
+              # CI/CD replaces ${IMAGE_DIGEST} with the actual sha256 digest.
+              # DO NOT commit a real digest here — it will go stale.
+              # If this placeholder is not replaced, the CronJob will fail to pull.
+              image: fidesorigin/data-publisher@sha256:${IMAGE_DIGEST}
               imagePullPolicy: IfNotPresent
               command:
                 - node

@@ -69,7 +69,12 @@ packages/*/node_modules/
 forta-agents/*/dist/
 forta-agents/*/node_modules/
 
-# Deployment artifacts
+# Deployment artifacts (contain live contract addresses, tx hashes, roles, storage layouts)
+apps/contracts/deployments/*
+!apps/contracts/deployments/.gitkeep
+apps/contracts/.openzeppelin/*
+!apps/contracts/.openzeppelin/.gitkeep
+# Also catch root-level deployments/ fallback
 deployments/
 
 # Hardhat build artifacts (contain full ABI — information exposure risk)

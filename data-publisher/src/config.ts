@@ -142,7 +142,7 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
   publisher: {
     rpcUrl: getEnv('RPC_URL', 'https://ethereum-sepolia-rpc.publicnode.com'),
     chainId: getEnvInt('CHAIN_ID', 11155111),
-    riskRegistryAddress: getEnv('RISK_REGISTRY_ADDRESS', '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc'),
+    riskRegistryAddress: getEnv('RISK_REGISTRY_ADDRESS'),
     // Support both data-publisher (PUBLISHER_PRIVATE_KEY) and data-sync (PRIVATE_KEY / SYNC_PRIVATE_KEY) naming
     privateKey: process.env.PUBLISHER_PRIVATE_KEY || process.env.PRIVATE_KEY || process.env.SYNC_PRIVATE_KEY,
     // Support both data-publisher (KMS_PROVIDER + KMS_KEY_ID) and data-sync (AWS_KMS_KEY_ID) naming
@@ -205,7 +205,7 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
     greylistUrl: getEnv('FATF_GREYLIST_URL', 'https://www.fatf-gafi.org/content/fatf-gafi/en/publications/High-risk-and-other-monitored-jurisdictions/increased-monitoring-february-2026.html'),
     useFallback: getEnvBool('FATF_USE_FALLBACK', true),
     ofacTimeout: getEnvInt('OFAC_FETCH_TIMEOUT', 120000),
-    riskRegistryAddress: getEnv('FATF_RISK_REGISTRY_ADDRESS', '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc'),
+    riskRegistryAddress: getEnv('FATF_RISK_REGISTRY_ADDRESS'),
     oraclePrivateKey: process.env.FATF_ORACLE_PRIVATE_KEY,
     gasLimit: getEnvInt('FATF_GAS_LIMIT', 300000),
     // D1-AUDIT1-095 fix: default to false (production-safe)
