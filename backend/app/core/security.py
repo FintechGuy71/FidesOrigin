@@ -437,11 +437,12 @@ async def request_signature_middleware(
         request.url.path.startswith("/api/v1/") and
         request.method in ("POST", "PUT", "PATCH", "DELETE")
     )
-    # 保留原有的敏感端点列表（读操作也需要保护）
+    # 保留原有的敏感端点列表（所有方法都需要保护）
     sensitive_paths = ["/api/v1/address/report", "/api/v1/rules"]
     is_sensitive_path = any(request.url.path.startswith(p) for p in sensitive_paths)
     
-    if (is_api_write or is_sensitive_path) and request.method in ("POST", "PUT", "PATCH", "DELETE"):
+    # [H-2 Fix] 敏感端点所有方法都需要签名验证，不仅仅是写操作
+    if is_api_write or is_sensitive_path:
         timestamp = request.headers.get("X-Request-Timestamp")
         signature = request.headers.get("X-Request-Signature")
         
@@ -764,9 +765,12 @@ async def verify_api_key(
         logger.info("api_key_verified", api_key_id=str(key_record.id), request_count=key_record.request_count)
         return True
         
-    except Exception as e:
-        logger.error("api_key_verification_error", error=str(e))
-        return False
+    except Exception:
+        # [M-EH-1 Fix] 不再捕获所有异常并返回 False（会掩盖系统错误如数据库连接失败）。
+        # 所有"密钥无效"的业务场景（未找到、过期、超限）均已在上文显式处理。
+        # 到达此处的异常均为系统级错误，应向上传播由全局异常处理器处理。
+        logger.error("api_key_verification_system_error", error_type=type(Exception).__name__)
+        raise
 
 
 async def get_current_api_key(

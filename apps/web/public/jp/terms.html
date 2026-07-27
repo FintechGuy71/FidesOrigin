@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-2726c7f26c'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -11,6 +11,7 @@
   <meta name="theme-color" content="#0a0a0a">
   <title>利用規約 — FidesOrigin</title>
   <meta name="description" content="FidesOrigin 利用規約。プラットフォームの使用ルールと条件。">
+  <meta name="author" content="FidesOrigin">
   <meta property="og:title" content="利用規約 — FidesOrigin">
   <meta property="og:description" content="FidesOrigin 利用規約。">
   <meta property="og:type" content="website">
@@ -26,7 +27,7 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/brand/logo-dark-icon.png">
   <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
-  <style nonce="2726c7f26c">
+  <style>
     .legal-page { padding: 120px 0 80px; }
     .legal-page .container { max-width: 800px; }
     .legal-page h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
@@ -81,8 +82,8 @@
   </nav>
 
   <!-- Mobile Menu -->
-  <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-menu-close" aria-label="メニューを閉じる">
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+    <button type="button" class="mobile-menu-close" aria-label="メニューを閉じる">
       <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
     </button>
     <a href="/jp/#features">機能</a>
@@ -205,7 +206,7 @@
     </div>
   </footer>
 
-  <script nonce="2726c7f26c">
+  <script>
     // Mobile Menu
     function toggleMobileMenu() {
       var menu = document.getElementById('mobileMenu');

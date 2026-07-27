@@ -66,52 +66,42 @@ async def get_address_risk(
     """
     address = validate_address(address)
     
-    try:
-        # 计算风险评分
-        risk_score, risk_level, risk_factors = await engine.calculate_address_risk(
-            address, chain, force_refresh=force_refresh
-        )
-        
-        # 获取风险记录（刚创建/更新的）
-        repo = get_container().get_address_repository(db)
-        address_risk = await repo.get_by_address(address, chain)
-        
-        if not address_risk:
-            raise NotFoundException("AddressRisk", f"{address}:{chain}")
-        
-        # 获取交易数量
-        tx_count = await get_container().get_transaction_repository(db).count_by_address(address, chain)
-        
-        # 获取最近风险事件
-        recent_events = await repo.get_recent_events(address, limit=5)
-        
-        return AddressRiskDetailResponse(
-            id=address_risk.id,
-            address=address_risk.address,
-            chain=address_risk.chain,
-            risk_score=risk_score,
-            risk_level=risk_level.value,
-            risk_factors=risk_factors,
-            status=address_risk.status.value if hasattr(address_risk.status, 'value') else address_risk.status,
-            tags=address_risk.tags or [],
-            report_count=address_risk.report_count,
-            first_seen_at=address_risk.first_seen_at,
-            last_updated_at=address_risk.last_updated_at,
-            created_at=address_risk.created_at,
-            transactions_count=tx_count,
-            recent_events=[
-                RiskEventResponse.model_validate(e) for e in recent_events
-            ]
-        )
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("get_address_risk_failed", address=address, error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取地址风险信息失败"
-        )
+    # 计算风险评分
+    risk_score, risk_level, risk_factors = await engine.calculate_address_risk(
+        address, chain, force_refresh=force_refresh
+    )
+    
+    # 获取风险记录（刚创建/更新的）
+    repo = get_container().get_address_repository(db)
+    address_risk = await repo.get_by_address(address, chain)
+    
+    if not address_risk:
+        raise NotFoundException("AddressRisk", f"{address}:{chain}")
+    
+    # 获取交易数量
+    tx_count = await get_container().get_transaction_repository(db).count_by_address(address, chain)
+    
+    # 获取最近风险事件
+    recent_events = await repo.get_recent_events(address, limit=5)
+    
+    return AddressRiskDetailResponse(
+        id=address_risk.id,
+        address=address_risk.address,
+        chain=address_risk.chain,
+        risk_score=risk_score,
+        risk_level=risk_level.value,
+        risk_factors=risk_factors,
+        status=address_risk.status.value if hasattr(address_risk.status, 'value') else address_risk.status,
+        tags=address_risk.tags or [],
+        report_count=address_risk.report_count,
+        first_seen_at=address_risk.first_seen_at,
+        last_updated_at=address_risk.last_updated_at,
+        created_at=address_risk.created_at,
+        transactions_count=tx_count,
+        recent_events=[
+            RiskEventResponse.model_validate(e) for e in recent_events
+        ]
+    )
 
 
 @router.post(
@@ -145,54 +135,44 @@ async def report_address(
     """
     address = validate_address(address)
     
-    try:
-        repo = get_container().get_address_repository(db)
-        
-        # 检查是否已存在相同的上报
-        existing = await repo.get_pending_report_by_wallet(
-            address, report.reporter_wallet
-        )
-        
-        if existing:
-            raise ConflictException("该地址已有待处理的举报记录")
-        
-        # 创建举报记录
-        address_report = await repo.create_report(
-            address=address,
-            chain=report.chain,
-            report_type=report.report_type,
-            description=report.description,
-            evidence=report.evidence,
-            reporter_email=report.reporter_email,
-            reporter_wallet=report.reporter_wallet
-        )
-        
-        # 更新地址举报计数
-        await repo.increment_report_count(address, report.chain)
-        
-        logger.info(
-            "address_reported",
-            address=address,
-            type=report.report_type,
-            report_id=str(address_report.id)
-        )
-        
-        return AddressRiskReportResponse(
-            id=address_report.id,
-            address=address,
-            status=address_report.status,
-            message="举报已提交，我们将尽快审核",
-            created_at=address_report.created_at
-        )
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("report_address_failed", address=address, error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="上报地址失败"
-        )
+    repo = get_container().get_address_repository(db)
+    
+    # 检查是否已存在相同的上报
+    existing = await repo.get_pending_report_by_wallet(
+        address, report.reporter_wallet
+    )
+    
+    if existing:
+        raise ConflictException("该地址已有待处理的举报记录")
+    
+    # 创建举报记录
+    address_report = await repo.create_report(
+        address=address,
+        chain=report.chain,
+        report_type=report.report_type,
+        description=report.description,
+        evidence=report.evidence,
+        reporter_email=report.reporter_email,
+        reporter_wallet=report.reporter_wallet
+    )
+    
+    # 更新地址举报计数
+    await repo.increment_report_count(address, report.chain)
+    
+    logger.info(
+        "address_reported",
+        address=address,
+        type=report.report_type,
+        report_id=str(address_report.id)
+    )
+    
+    return AddressRiskReportResponse(
+        id=address_report.id,
+        address=address,
+        status=address_report.status,
+        message="举报已提交，我们将尽快审核",
+        created_at=address_report.created_at
+    )
 
 
 @router.get(
@@ -221,20 +201,10 @@ async def get_address_events(
     """
     address = validate_address(address)
     
-    try:
-        repo = get_container().get_address_repository(db)
-        events = await repo.get_events(address, limit=limit, severity=severity)
-        
-        return [RiskEventResponse.model_validate(e) for e in events]
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("get_address_events_failed", address=address, error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取风险事件失败"
-        )
+    repo = get_container().get_address_repository(db)
+    events = await repo.get_events(address, limit=limit, severity=severity)
+    
+    return [RiskEventResponse.model_validate(e) for e in events]
 
 
 @router.get(
@@ -264,33 +234,23 @@ async def search_addresses(
     - **risk_level**: 风险等级过滤
     - **min_score/max_score**: 风险评分范围
     """
-    try:
-        repo = get_container().get_address_repository(db)
-        
-        total, items = await repo.search(
-            query=query,
-            risk_level=risk_level,
-            min_score=min_score,
-            max_score=max_score,
-            page=page,
-            page_size=page_size
-        )
-        
-        pages = (total + page_size - 1) // page_size
-        
-        return PaginatedResponse(
-            total=total,
-            page=page,
-            page_size=page_size,
-            pages=pages,
-            items=[AddressRiskResponse.model_validate(item) for item in items]
-        )
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("search_addresses_failed", error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="搜索地址失败"
-        )
+    repo = get_container().get_address_repository(db)
+    
+    total, items = await repo.search(
+        query=query,
+        risk_level=risk_level,
+        min_score=min_score,
+        max_score=max_score,
+        page=page,
+        page_size=page_size
+    )
+    
+    pages = (total + page_size - 1) // page_size
+    
+    return PaginatedResponse(
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+        items=[AddressRiskResponse.model_validate(item) for item in items]
+    )

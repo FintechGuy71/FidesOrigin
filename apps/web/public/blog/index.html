@@ -12,6 +12,7 @@
   <meta name="theme-color" content="#0a0a0a">
   <title>FidesOrigin Blog — Insights on On-Chain Compliance</title>
   <meta name="description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
+  <meta name="author" content="FidesOrigin">
   <meta property="og:title" content="FidesOrigin Blog — Insights on On-Chain Compliance">
   <meta property="og:description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
   <meta property="og:type" content="website">
@@ -136,6 +137,13 @@
       .blog-card { flex-direction: column; align-items: flex-start; }
       .blog-hero { padding: 120px 0 40px; }
     }
+  
+    .blog-card:focus, .blog-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 12px;
+    }
+    
   </style>
 </head>
 <body>
@@ -144,7 +152,7 @@
   <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
-        <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
+        <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
         FidesOrigin
       </a>
       <div class="nav-left">
@@ -189,8 +197,8 @@
   </nav>
 
   <!-- Mobile Menu -->
-  <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-menu-close" aria-label="Close menu">
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+    <button type="button" class="mobile-menu-close" aria-label="Close menu">
       <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
     </button>
     <a href="/#features">Features</a>

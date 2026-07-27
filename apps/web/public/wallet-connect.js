@@ -7,6 +7,26 @@
 (function () {
   'use strict';
 
+  // Non-blocking notification helper
+  function showNotification(message, type) {
+    var existing = document.querySelector('.wallet-notification');
+    if (existing) existing.remove();
+    var el = document.createElement('div');
+    el.className = 'wallet-notification wallet-notification--' + (type || 'info');
+    el.textContent = message;
+    el.setAttribute('role', 'alert');
+    var bg = 'rgba(6,182,212,0.15)', color = '#67e8f9', border = '1px solid rgba(6,182,212,0.3)';
+    if (type === 'error') { bg = 'rgba(239,68,68,0.15)'; color = '#fca5a5'; border = '1px solid rgba(239,68,68,0.3)'; }
+    else if (type === 'warning') { bg = 'rgba(245,158,11,0.15)'; color = '#fcd34d'; border = '1px solid rgba(245,158,11,0.3)'; }
+    el.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:0.9rem;z-index:10000;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,0.3);background:' + bg + ';color:' + color + ';border:' + border + ';opacity:0;transition:opacity 0.3s;';
+    document.body.appendChild(el);
+    requestAnimationFrame(function() { el.style.opacity = '1'; });
+    setTimeout(function() {
+      el.style.opacity = '0';
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }, 5000);
+  }
+
   // ── Config ──────────────────────────────────────────────────────────
   const CONFIG = {
     sepolia: {
@@ -201,13 +221,13 @@
       await loadEthers();
       const eth = getEthereum();
       if (!eth) {
-        alert('No wallet detected. Please install MetaMask or another Web3 wallet.');
+        showNotification('No wallet detected. Please install MetaMask or another Web3 wallet.', 'error');
         return;
       }
 
       const accounts = await eth.request({ method: 'eth_requestAccounts' });
       if (!accounts || accounts.length === 0) {
-        alert('Please connect a wallet account.');
+        showNotification('Please connect a wallet account.', 'warning');
         return;
       }
 
@@ -229,7 +249,7 @@
       if (!networkKey) {
         const switched = await switchToSepolia(eth);
         if (!switched) {
-          alert('Please switch to Sepolia Testnet in your wallet.');
+          showNotification('Please switch to Sepolia Testnet in your wallet.', 'warning');
           return;
         }
         provider = new ethersLib.BrowserProvider(eth);
@@ -412,7 +432,7 @@
   function init() {
     if (!hasWallet()) {
       var noWalletHandler = function() {
-        alert('Please install MetaMask or another Web3 wallet to connect.\n\nDownload: https://metamask.io');
+        showNotification('Please install MetaMask or another Web3 wallet to connect. Download: https://metamask.io', 'error');
       };
       bindClick('wallet-btn', noWalletHandler);
       bindClick('mobile-wallet-btn', noWalletHandler);

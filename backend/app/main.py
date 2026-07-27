@@ -3,6 +3,7 @@ FidesOrigin 主入口（重构版）
 使用 lifespan 管理应用生命周期
 """
 import asyncio
+import json
 import os
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -266,66 +267,75 @@ async def api_version(
 
 
 # ==================== 请求大小限制（在 body 读取前） ====================
-# [MEDIUM-5 FIX] 使用 StreamingMiddleware 在流式读取 body 时实时检查大小，
-# 防止 Content-Length 头被伪造导致超大 body 被读入内存。
+# [H-6 Fix] 使用纯 ASGI 中间件，不在 request 对象上 monkey-patch 私有属性 _receive
 
-from starlette.middleware.base import BaseHTTPMiddleware
-
-class ContentSizeLimitMiddleware(BaseHTTPMiddleware):
+class ContentSizeLimitMiddleware:
     """
-    请求大小限制中间件 — 在 body 读取前阻止超大请求
+    请求大小限制中间件 — 纯 ASGI 实现
     
-    [MEDIUM Fix #2] 通过包装 receive() 方法，在流式读取 body 时实时检查大小，
-    不再缓冲整个 body，避免 Content-Length 伪造导致内存耗尽。
+    在 scope 层面包装 receive() 可调用对象，实时检查流式 body 大小。
+    避免 monkey-patching Request._receive 私有属性。
     """
     def __init__(self, app, max_body_size: int = 10 * 1024 * 1024):
-        super().__init__(app)
+        self.app = app
         self.max_body_size = max_body_size
 
-    async def dispatch(self, request, call_next):
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
         # 先检查 Content-Length 头
-        content_length = request.headers.get("content-length")
-        if content_length:
-            try:
-                size = int(content_length)
-                if size > self.max_body_size:
-                    logger.warning("request_too_large", 
-                                 path=request.url.path, 
-                                 size=size, 
-                                 max_size=self.max_body_size)
-                    return JSONResponse(
-                        status_code=413,
-                        content={
-                            "error": {
-                                "code": "REQUEST_TOO_LARGE",
-                                "message": f"Request body too large. Max size: {self.max_body_size} bytes"
-                            }
-                        }
-                    )
-            except ValueError:
-                pass
+        content_length = None
+        for name, value in scope.get("headers", []):
+            if name.lower() == b"content-length":
+                try:
+                    content_length = int(value.decode())
+                except (ValueError, UnicodeDecodeError):
+                    pass
+                break
         
-        # [MEDIUM Fix #2] 包装 receive 以实时检查大小，不缓冲整个 body
+        if content_length is not None and content_length > self.max_body_size:
+            logger.warning("request_too_large",
+                         path=scope.get("path", ""),
+                         size=content_length,
+                         max_size=self.max_body_size)
+            await send({
+                "type": "http.response.start",
+                "status": 413,
+                "headers": [(b"content-type", b"application/json")]
+            })
+            body = json.dumps({
+                "error": {
+                    "code": "REQUEST_TOO_LARGE",
+                    "message": f"Request body too large. Max size: {self.max_body_size} bytes"
+                }
+            }).encode()
+            await send({
+                "type": "http.response.body",
+                "body": body
+            })
+            return
+
+        # 包装 receive 以实时检查流式大小
         total_size = 0
-        original_receive = request.receive
         
         async def _sized_receive():
             nonlocal total_size
-            message = await original_receive()
+            message = await receive()
             if message.get("type") == "http.request":
                 chunk = message.get("body", b"")
                 total_size += len(chunk)
                 if total_size > self.max_body_size:
-                    logger.warning("request_too_large_streaming", 
-                                 path=request.url.path, 
-                                 size=total_size, 
+                    logger.warning("request_too_large_streaming",
+                                 path=scope.get("path", ""),
+                                 size=total_size,
                                  max_size=self.max_body_size)
                     raise RuntimeError("Request body too large")
             return message
         
-        request._receive = _sized_receive
-        
-        return await call_next(request)
+        await self.app(scope, _sized_receive, send)
+
 
 app.add_middleware(ContentSizeLimitMiddleware, max_body_size=settings.MAX_BODY_SIZE_BYTES)
 

@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import DatabaseException, NotFoundException
+from app.core.exceptions import DatabaseException, NotFoundException, ValidationException
 from app.core.logging import get_logger
 from app.models import Address, AddressReport, AddressRisk, RiskEvent, RiskLevel, RiskStatus
 from app.schemas import RiskFactor
@@ -182,7 +182,11 @@ class AddressRepository:
                 level = RiskLevel(risk_level.lower())
                 base_query = base_query.where(AddressRisk.risk_level == level)
             except ValueError:
-                pass
+                # [H-3 Fix] 无效的风险等级不再静默忽略，而是抛出验证异常
+                raise ValidationException(
+                    message=f"Invalid risk_level: '{risk_level}'. "
+                            f"Allowed values: {', '.join(l.value for l in RiskLevel)}"
+                )
         
         # 获取总数
         count_query = select(func.count()).select_from(base_query.subquery())
@@ -262,7 +266,11 @@ class AddressRepository:
                 level = RiskLevel(severity.lower())
                 query = query.where(RiskEvent.severity == level)
             except ValueError:
-                pass
+                # [H-3 Fix] 无效的严重程度不再静默忽略，而是抛出验证异常
+                raise ValidationException(
+                    message=f"Invalid severity: '{severity}'. "
+                            f"Allowed values: {', '.join(l.value for l in RiskLevel)}"
+                )
         
         result = await self.db.execute(query)
         return list(result.scalars().all())

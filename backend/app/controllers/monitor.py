@@ -29,8 +29,12 @@ import secrets
 from app.core.security import get_current_user
 
 
-# [HIGH Fix #9] 允许的 WebSocket Origin 列表
-_ALLOWED_WS_ORIGINS = set(settings.CORS_ORIGINS) | {"http://localhost:3000", "http://localhost:5173"}
+# [HIGH Fix #9] 允许的 WebSocket Origin 列表 — [H-1 Fix] 生产环境不添加 localhost
+def _get_allowed_ws_origins():
+    origins = set(settings.CORS_ORIGINS)
+    if not settings.is_production:
+        origins |= {"http://localhost:3000", "http://localhost:5173"}
+    return origins
 
 # [S-5 Fix] Pre-auth connection limit to prevent connection exhaustion DoS
 _MAX_PENDING_AUTH = 100
@@ -45,7 +49,7 @@ async def _validate_origin(websocket: WebSocket) -> bool:
         # 非浏览器客户端(如 curl)可能不携带 Origin,允许无 Origin 连接但记录日志
         logger.debug("websocket_no_origin_header")
         return True
-    return origin in _ALLOWED_WS_ORIGINS
+    return origin in _get_allowed_ws_origins()
 
 
 @router.websocket("/stream")

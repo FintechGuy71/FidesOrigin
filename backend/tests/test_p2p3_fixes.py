@@ -167,39 +167,39 @@ class TestBlockscoutSSRFProtection:
         assert _validate_blockscout_url("http://localhost:4000") is True
         assert _validate_blockscout_url("http://127.0.0.1:4000") is True
 
-    def test_blockscout_service_rejects_bad_base_url(self):
+    def test_blockscout_service_rejects_bad_base_url(self, monkeypatch):
         """测试初始化时拒绝不在白名单中的 base_url"""
         from app.services.blockscout_service import BlockscoutService, BlockscoutAPIException
         import app.services.blockscout_service as bss_module
         
-        # 临时修改 settings
-        original_url = bss_module.settings.BLOCKSCOUT_BASE_URL
-        try:
-            bss_module.settings.BLOCKSCOUT_BASE_URL = "https://evil.com"
-            with pytest.raises(BlockscoutAPIException) as exc_info:
-                BlockscoutService()
-            assert "not in the allowed whitelist" in str(exc_info.value)
-        finally:
-            bss_module.settings.BLOCKSCOUT_BASE_URL = original_url
+        # [H-4 Fix] 使用 monkeypatch 而非直接修改模块级 settings
+        monkeypatch.setattr(
+            bss_module.settings,
+            "BLOCKSCOUT_BASE_URL",
+            "https://evil.com"
+        )
+        with pytest.raises(BlockscoutAPIException) as exc_info:
+            BlockscoutService()
+        assert "not in the allowed whitelist" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_blockscout_request_rejects_ssrf_url(self):
+    async def test_blockscout_request_rejects_ssrf_url(self, monkeypatch):
         """测试 _request 方法拒绝拼接后的恶意 URL"""
         from app.services.blockscout_service import BlockscoutService, BlockscoutAPIException
         import app.services.blockscout_service as bss_module
         
-        original_url = bss_module.settings.BLOCKSCOUT_BASE_URL
-        try:
-            # 使用合法 base_url 但尝试通过 endpoint 注入
-            bss_module.settings.BLOCKSCOUT_BASE_URL = "https://eth.blockscout.com"
-            service = BlockscoutService()
-            
-            # 构造一个 SSRF payload
-            with pytest.raises(BlockscoutAPIException) as exc_info:
-                await service._request("GET", "http://evil.com/api")
-            assert "not in the allowed" in str(exc_info.value)
-        finally:
-            bss_module.settings.BLOCKSCOUT_BASE_URL = original_url
+        # [H-4 Fix] 使用 monkeypatch 而非直接修改模块级 settings
+        monkeypatch.setattr(
+            bss_module.settings,
+            "BLOCKSCOUT_BASE_URL",
+            "https://eth.blockscout.com"
+        )
+        service = BlockscoutService()
+        
+        # 构造一个 SSRF payload
+        with pytest.raises(BlockscoutAPIException) as exc_info:
+            await service._request("GET", "http://evil.com/api")
+        assert "not in the allowed" in str(exc_info.value)
 
 
 # ==================== P3: 代码质量测试 ====================
@@ -251,17 +251,16 @@ class TestP0FixesVerified:
     这些测试确保关键安全修复没有被回退。
     """
 
-    def test_auth_uses_bcrypt(self):
+    def test_auth_uses_bcrypt(self, monkeypatch):
         """验证 auth.py 使用 bcrypt 而非明文比较"""
         from app.controllers.auth import _get_admin_password_hash
         import bcrypt
-        
-        # 设置一个测试密码
-        os.environ["ADMIN_PASSWORD"] = bcrypt.hashpw(b"testpass", bcrypt.gensalt()).decode()
-        
-        # 清除缓存
         import app.controllers.auth as auth_module
-        auth_module._admin_password_hash = None
+        
+        # [H-4 Fix] 使用 monkeypatch 管理环境变量和模块状态
+        test_hash = bcrypt.hashpw(b"testpass", bcrypt.gensalt()).decode()
+        monkeypatch.setenv("ADMIN_PASSWORD", test_hash)
+        monkeypatch.setattr(auth_module, "_admin_password_hash", None)
         
         hash_bytes = _get_admin_password_hash()
         assert hash_bytes != b""

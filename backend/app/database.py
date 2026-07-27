@@ -65,10 +65,21 @@ def get_async_session_maker():
     return _AsyncSessionLocal
 
 
-# 模块级别兼容
-AsyncSessionLocal = get_async_session_maker()
+class _LazyAsyncSessionLocal:
+    """Lazy async session factory — defers engine creation until first use."""
+    _factory = None
 
-# 别名，用于依赖注入
+    def _ensure_factory(self):
+        if self._factory is None:
+            self._factory = get_async_session_maker()
+        return self._factory
+
+    def __call__(self, *args, **kwargs):
+        return self._ensure_factory()(*args, **kwargs)
+
+
+# 模块级别兼容 — 惰性初始化，导入时不创建引擎
+AsyncSessionLocal = _LazyAsyncSessionLocal()
 async_session_maker = AsyncSessionLocal
 
 # 测试会话工厂

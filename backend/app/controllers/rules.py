@@ -63,33 +63,23 @@ async def get_rules(
     - **page**: 页码，默认 1
     - **page_size**: 每页数量，默认 20
     """
-    try:
-        total, items = await repo.list(
-            active_only=active_only,
-            category=category,
-            rule_type=rule_type,
-            page=page,
-            page_size=page_size
-        )
-        
-        pages = (total + page_size - 1) // page_size
-        
-        return PaginatedResponse(
-            total=total,
-            page=page,
-            page_size=page_size,
-            pages=pages,
-            items=[RiskRuleResponse.model_validate(rule) for rule in items]
-        )
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("get_rules_failed", error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取规则列表失败"
-        )
+    total, items = await repo.list(
+        active_only=active_only,
+        category=category,
+        rule_type=rule_type,
+        page=page,
+        page_size=page_size
+    )
+    
+    pages = (total + page_size - 1) // page_size
+    
+    return PaginatedResponse(
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+        items=[RiskRuleResponse.model_validate(rule) for rule in items]
+    )
 
 
 @router.get(
@@ -107,15 +97,7 @@ async def get_rule_categories(
     current_user: str = Depends(get_current_user)
 ):
     """获取规则类别列表"""
-    try:
-        return await repo.get_categories()
-        
-    except Exception as e:
-        logger.error("get_categories_failed", error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取规则类别失败"
-        )
+    return await repo.get_categories()
 
 
 @router.get(
@@ -141,22 +123,12 @@ async def get_rule(
     
     - **rule_id**: 规则 ID
     """
-    try:
-        rule = await repo.get_by_id(rule_id)
-        
-        if not rule:
-            raise NotFoundException("RiskRule", str(rule_id))
-        
-        return RiskRuleResponse.model_validate(rule)
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("get_rule_failed", rule_id=str(rule_id), error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取规则详情失败"
-        )
+    rule = await repo.get_by_id(rule_id)
+    
+    if not rule:
+        raise NotFoundException("RiskRule", str(rule_id))
+    
+    return RiskRuleResponse.model_validate(rule)
 
 
 @router.post(
@@ -191,30 +163,20 @@ async def create_rule(
     - **risk_score_impact**: 风险评分影响 (-100 到 100)
     - **priority**: 优先级 (1-1000，越小越优先)
     """
-    try:
-        new_rule = await repo.create(
-            name=rule.name,
-            description=rule.description,
-            rule_type=rule.rule_type,
-            category=rule.category,
-            condition=rule.condition,
-            risk_weight=rule.risk_weight,
-            risk_score_impact=rule.risk_score_impact,
-            priority=rule.priority,
-            tags=[],
-            created_by=current_user
-        )
-        
-        return RiskRuleResponse.model_validate(new_rule)
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("create_rule_failed", name=rule.name, error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="创建规则失败"
-        )
+    new_rule = await repo.create(
+        name=rule.name,
+        description=rule.description,
+        rule_type=rule.rule_type,
+        category=rule.category,
+        condition=rule.condition,
+        risk_weight=rule.risk_weight,
+        risk_score_impact=rule.risk_score_impact,
+        priority=rule.priority,
+        tags=[],
+        created_by=current_user
+    )
+    
+    return RiskRuleResponse.model_validate(new_rule)
 
 
 @router.patch(
@@ -251,30 +213,20 @@ async def update_rule(
     - **priority**: 优先级（可选）
     - **tags**: 标签列表（可选）
     """
-    try:
-        updated = await repo.update(
-            rule_id=rule_id,
-            name=rule_update.name,
-            description=rule_update.description,
-            condition=rule_update.condition,
-            risk_weight=rule_update.risk_weight,
-            risk_score_impact=rule_update.risk_score_impact,
-            is_active=rule_update.is_active,
-            priority=rule_update.priority,
-            tags=rule_update.tags,
-            updated_by=current_user
-        )
-        
-        return RiskRuleResponse.model_validate(updated)
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("update_rule_failed", rule_id=str(rule_id), error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="更新规则失败"
-        )
+    updated = await repo.update(
+        rule_id=rule_id,
+        name=rule_update.name,
+        description=rule_update.description,
+        condition=rule_update.condition,
+        risk_weight=rule_update.risk_weight,
+        risk_score_impact=rule_update.risk_score_impact,
+        is_active=rule_update.is_active,
+        priority=rule_update.priority,
+        tags=rule_update.tags,
+        updated_by=current_user
+    )
+    
+    return RiskRuleResponse.model_validate(updated)
 
 
 @router.delete(
@@ -300,18 +252,7 @@ async def delete_rule(
     
     - **rule_id**: 规则 ID
     """
-    try:
-        await repo.delete(rule_id)
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("delete_rule_failed", rule_id=str(rule_id), error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="删除规则失败"
-        )
-
+    await repo.delete(rule_id)
 
 
 @router.post(
@@ -334,15 +275,5 @@ async def toggle_rule(
     
     - **rule_id**: 规则 ID
     """
-    try:
-        rule = await repo.toggle(rule_id, updated_by=current_user)
-        return RiskRuleResponse.model_validate(rule)
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("toggle_rule_failed", rule_id=str(rule_id), error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="切换规则状态失败"
-        )
+    rule = await repo.toggle(rule_id, updated_by=current_user)
+    return RiskRuleResponse.model_validate(rule)

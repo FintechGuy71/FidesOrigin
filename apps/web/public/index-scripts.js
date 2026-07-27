@@ -144,13 +144,16 @@
 
   // ===== Scroll-to-top =====
   (function() {
+    var existing = document.querySelector('.scroll-top');
+    if (existing) return;
     var btn = document.createElement('button');
     btn.className = 'scroll-top';
+    btn.setAttribute('type', 'button');
     btn.innerHTML = '&uarr;';
     btn.setAttribute('aria-label', i18n.scrollTop);
     document.body.appendChild(btn);
     window.addEventListener('scroll', function() {
-      btn.classList.toggle('visible', window.scrollY > 400);
+      if (btn) btn.classList.toggle('visible', window.scrollY > 400);
     });
     btn.addEventListener('click', function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });

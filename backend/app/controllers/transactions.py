@@ -57,55 +57,45 @@ async def get_transaction_risk(
     """
     tx_hash = validate_tx_hash(tx_hash)
     
-    try:
-        # 分析交易
-        analysis = await engine.analyze_transaction(tx_hash, chain)
-        
-        # 获取相关地址风险信息
-        related_addresses = []
-        for indicator in analysis.get("indicators", []):
-            if indicator.get("type") in ["high_risk_sender", "high_risk_receiver"]:
-                addr = indicator.get("address")
-                if addr:
-                    addr_repo = get_container().get_address_repository(db)
-                    addr_risk = await addr_repo.get_by_address(addr, chain)
-                    if addr_risk:
-                        from app.schemas import AddressRiskResponse
-                        related_addresses.append(AddressRiskResponse.model_validate(addr_risk))
-        
-        # 生成分析摘要
-        indicators = analysis.get("indicators", [])
-        summary_parts = []
-        for ind in indicators[:3]:
-            if ind.get("type") == "high_risk_sender":
-                summary_parts.append(f"发送方风险等级: {ind.get('level', 'unknown')}")
-            elif ind.get("type") == "high_risk_receiver":
-                summary_parts.append(f"接收方风险等级: {ind.get('level', 'unknown')}")
-            elif ind.get("type") == "large_amount":
-                summary_parts.append(f"大额转账: {ind.get('value_eth', 0):.2f} ETH")
-            elif ind.get("type") == "contract_call":
-                summary_parts.append("涉及合约调用")
-        
-        analysis_summary = "; ".join(summary_parts) if summary_parts else "暂无特殊风险指标"
-        
-        return TransactionRiskResponse(
-            tx_hash=tx_hash,
-            chain=chain,
-            risk_score=analysis.get("risk_score", 0),
-            risk_level=analysis.get("risk_level", "low"),
-            indicators=indicators,
-            related_addresses=related_addresses,
-            analysis_summary=analysis_summary
-        )
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("get_transaction_risk_failed", tx_hash=tx_hash, error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="分析交易风险失败"
-        )
+    # 分析交易
+    analysis = await engine.analyze_transaction(tx_hash, chain)
+    
+    # 获取相关地址风险信息
+    related_addresses = []
+    for indicator in analysis.get("indicators", []):
+        if indicator.get("type") in ["high_risk_sender", "high_risk_receiver"]:
+            addr = indicator.get("address")
+            if addr:
+                addr_repo = get_container().get_address_repository(db)
+                addr_risk = await addr_repo.get_by_address(addr, chain)
+                if addr_risk:
+                    from app.schemas import AddressRiskResponse
+                    related_addresses.append(AddressRiskResponse.model_validate(addr_risk))
+    
+    # 生成分析摘要
+    indicators = analysis.get("indicators", [])
+    summary_parts = []
+    for ind in indicators[:3]:
+        if ind.get("type") == "high_risk_sender":
+            summary_parts.append(f"发送方风险等级: {ind.get('level', 'unknown')}")
+        elif ind.get("type") == "high_risk_receiver":
+            summary_parts.append(f"接收方风险等级: {ind.get('level', 'unknown')}")
+        elif ind.get("type") == "large_amount":
+            summary_parts.append(f"大额转账: {ind.get('value_eth', 0):.2f} ETH")
+        elif ind.get("type") == "contract_call":
+            summary_parts.append("涉及合约调用")
+    
+    analysis_summary = "; ".join(summary_parts) if summary_parts else "暂无特殊风险指标"
+    
+    return TransactionRiskResponse(
+        tx_hash=tx_hash,
+        chain=chain,
+        risk_score=analysis.get("risk_score", 0),
+        risk_level=analysis.get("risk_level", "low"),
+        indicators=indicators,
+        related_addresses=related_addresses,
+        analysis_summary=analysis_summary
+    )
 
 
 @router.get(
@@ -132,78 +122,68 @@ async def get_transaction(
     """
     tx_hash = validate_tx_hash(tx_hash)
     
-    try:
-        tx_repo = get_container().get_transaction_repository(db)
-        tx = await tx_repo.get_by_tx_hash(tx_hash, chain)
-        
-        if not tx:
-            # 尝试从 Blockscout 获取
-            blockscout = get_container().blockscout
-            try:
-                tx_data = await blockscout.get_transaction(tx_hash)
-                
-                value_wei = int(tx_data.get("value", "0"))
-                value_eth = value_wei / 10**18
-                
-                return TransactionResponse(
-                    id=None,
-                    tx_hash=tx_hash,
-                    chain=chain,
-                    address=tx_data.get("from", {}).get("hash", ""),
-                    from_address=tx_data.get("from", {}).get("hash", ""),
-                    to_address=tx_data.get("to", {}).get("hash", "") if tx_data.get("to") else "",
-                    value=str(value_wei),
-                    value_eth=value_eth,
-                    gas_price=tx_data.get("gas_price"),
-                    gas_used=tx_data.get("gas_used"),
-                    block_number=tx_data.get("block_number", 0),
-                    block_timestamp=datetime.fromisoformat(
-                        tx_data.get("timestamp", datetime.now(timezone.utc).isoformat())
-                    ),
-                    risk_score=0,
-                    risk_level="low",
-                    risk_indicators=[],
-                    status=tx_data.get("status", "pending"),
-                    analyzed_at=None,
-                    created_at=datetime.now(timezone.utc)
-                )
-            except Exception:
-                raise NotFoundException("Transaction", tx_hash)
-        
-        # 计算 ETH 值
-        value_eth = int(tx.value) / 10**18 if tx.value else 0
-        
-        response_data = {
-            "id": tx.id,
-            "tx_hash": tx.tx_hash,
-            "chain": tx.chain,
-            "address": tx.address,
-            "from_address": tx.from_address,
-            "to_address": tx.to_address,
-            "value": tx.value,
-            "value_eth": value_eth,
-            "gas_price": tx.gas_price,
-            "gas_used": tx.gas_used,
-            "block_number": tx.block_number,
-            "block_timestamp": tx.block_timestamp,
-            "risk_score": tx.risk_score,
-            "risk_level": tx.risk_level.value,
-            "risk_indicators": tx.risk_indicators or [],
-            "status": tx.status,
-            "analyzed_at": tx.analyzed_at,
-            "created_at": tx.created_at
-        }
-        
-        return TransactionResponse.model_validate(response_data)
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("get_transaction_failed", tx_hash=tx_hash, error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取交易详情失败"
-        )
+    tx_repo = get_container().get_transaction_repository(db)
+    tx = await tx_repo.get_by_tx_hash(tx_hash, chain)
+    
+    if not tx:
+        # 尝试从 Blockscout 获取
+        blockscout = get_container().blockscout
+        try:
+            tx_data = await blockscout.get_transaction(tx_hash)
+            
+            value_wei = int(tx_data.get("value", "0"))
+            value_eth = value_wei / 10**18
+            
+            return TransactionResponse(
+                id=None,
+                tx_hash=tx_hash,
+                chain=chain,
+                address=tx_data.get("from", {}).get("hash", ""),
+                from_address=tx_data.get("from", {}).get("hash", ""),
+                to_address=tx_data.get("to", {}).get("hash", "") if tx_data.get("to") else "",
+                value=str(value_wei),
+                value_eth=value_eth,
+                gas_price=tx_data.get("gas_price"),
+                gas_used=tx_data.get("gas_used"),
+                block_number=tx_data.get("block_number", 0),
+                block_timestamp=datetime.fromisoformat(
+                    tx_data.get("timestamp", datetime.now(timezone.utc).isoformat())
+                ),
+                risk_score=0,
+                risk_level="low",
+                risk_indicators=[],
+                status=tx_data.get("status", "pending"),
+                analyzed_at=None,
+                created_at=datetime.now(timezone.utc)
+            )
+        except Exception:
+            raise NotFoundException("Transaction", tx_hash)
+    
+    # 计算 ETH 值
+    value_eth = int(tx.value) / 10**18 if tx.value else 0
+    
+    response_data = {
+        "id": tx.id,
+        "tx_hash": tx.tx_hash,
+        "chain": tx.chain,
+        "address": tx.address,
+        "from_address": tx.from_address,
+        "to_address": tx.to_address,
+        "value": tx.value,
+        "value_eth": value_eth,
+        "gas_price": tx.gas_price,
+        "gas_used": tx.gas_used,
+        "block_number": tx.block_number,
+        "block_timestamp": tx.block_timestamp,
+        "risk_score": tx.risk_score,
+        "risk_level": tx.risk_level.value,
+        "risk_indicators": tx.risk_indicators or [],
+        "status": tx.status,
+        "analyzed_at": tx.analyzed_at,
+        "created_at": tx.created_at
+    }
+    
+    return TransactionResponse.model_validate(response_data)
 
 
 @router.get(
@@ -232,58 +212,48 @@ async def list_transactions(
     - **address**: 过滤特定地址的交易
     - **min_risk_score/max_risk_score**: 风险评分范围过滤
     """
-    try:
-        tx_repo = get_container().get_transaction_repository(db)
-        
-        total, transactions = await tx_repo.list(
-            chain=chain,
-            address=address,
-            min_risk_score=min_risk_score,
-            max_risk_score=max_risk_score,
-            page=page,
-            page_size=page_size
-        )
-        
-        pages = (total + page_size - 1) // page_size
-        
-        # 构建响应
-        items = []
-        for tx in transactions:
-            value_eth = int(tx.value) / 10**18 if tx.value else 0
-            items.append({
-                "id": tx.id,
-                "tx_hash": tx.tx_hash,
-                "chain": tx.chain,
-                "address": tx.from_address,  # 使用 from_address 作为 address
-                "from_address": tx.from_address,
-                "to_address": tx.to_address,
-                "value": str(tx.value),
-                "value_eth": value_eth,
-                "gas_price": str(tx.gas_price) if tx.gas_price else None,
-                "gas_used": tx.gas_used,
-                "block_number": tx.block_number,
-                "block_timestamp": tx.block_timestamp,
-                "risk_score": float(tx.risk_score) if tx.risk_score else 0,
-                "risk_level": tx.risk_level.value if hasattr(tx.risk_level, 'value') else tx.risk_level,
-                "risk_indicators": tx.risk_indicators or [],
-                "status": tx.status,
-                "analyzed_at": tx.block_timestamp,
-                "created_at": tx.created_at
-            })
-        
-        return PaginatedResponse(
-            total=total,
-            page=page,
-            page_size=page_size,
-            pages=pages,
-            items=[TransactionResponse.model_validate(item) for item in items]
-        )
-        
-    except FidesException:
-        raise
-    except Exception as e:
-        logger.error("list_transactions_failed", error_type=type(e).__name__)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取交易列表失败"
-        )
+    tx_repo = get_container().get_transaction_repository(db)
+    
+    total, transactions = await tx_repo.list(
+        chain=chain,
+        address=address,
+        min_risk_score=min_risk_score,
+        max_risk_score=max_risk_score,
+        page=page,
+        page_size=page_size
+    )
+    
+    pages = (total + page_size - 1) // page_size
+    
+    # 构建响应
+    items = []
+    for tx in transactions:
+        value_eth = int(tx.value) / 10**18 if tx.value else 0
+        items.append({
+            "id": tx.id,
+            "tx_hash": tx.tx_hash,
+            "chain": tx.chain,
+            "address": tx.from_address,  # 使用 from_address 作为 address
+            "from_address": tx.from_address,
+            "to_address": tx.to_address,
+            "value": str(tx.value),
+            "value_eth": value_eth,
+            "gas_price": str(tx.gas_price) if tx.gas_price else None,
+            "gas_used": tx.gas_used,
+            "block_number": tx.block_number,
+            "block_timestamp": tx.block_timestamp,
+            "risk_score": float(tx.risk_score) if tx.risk_score else 0,
+            "risk_level": tx.risk_level.value if hasattr(tx.risk_level, 'value') else tx.risk_level,
+            "risk_indicators": tx.risk_indicators or [],
+            "status": tx.status,
+            "analyzed_at": tx.block_timestamp,
+            "created_at": tx.created_at
+        })
+    
+    return PaginatedResponse(
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+        items=[TransactionResponse.model_validate(item) for item in items]
+    )

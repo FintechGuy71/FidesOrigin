@@ -63,3 +63,4 @@ jobs:
         with:
           name: deployment-${{ github.event.inputs.network }}
           path: apps/contracts/deployments/
+          retention-days: 7

@@ -449,7 +449,7 @@ class RiskEngine:
             total_score = 0.0
             
             # 从 Blockscout 获取交易详情
-            client = await self.blockscout
+            client = await self.get_blockscout()
             tx_data = await client.get_transaction(tx_hash)
             
             # 分析发送方和接收方
