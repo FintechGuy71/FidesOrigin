@@ -32,6 +32,12 @@
   <url><loc>https://fidesorigin.com/tw/changelog.html</loc><priority>0.5</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://fidesorigin.com/jp/changelog.html</loc><priority>0.5</priority><changefreq>weekly</changefreq></url>
 
+  <!-- Contact -->
+  <url><loc>https://fidesorigin.com/contact.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+
+  <!-- Case Studies -->
+  <url><loc>https://fidesorigin.com/case-studies.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+
   <!-- Use Cases -->
   <url><loc>https://fidesorigin.com/use-cases/stablecoin-compliance.html</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://fidesorigin.com/cn/use-cases/stablecoin-compliance.html</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
