@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="preload" href="/styles.css" as="style">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
@@ -16,6 +17,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fidesorigin.com/address-check.html">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="canonical" href="https://fidesorigin.com/address-check.html">
@@ -61,8 +63,10 @@
     .toast-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
     .toast-info { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
   </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
   <!-- Navigation -->
   <nav class="nav" aria-label="Main navigation">
@@ -141,7 +145,7 @@
   <div class="toast toast-error" id="errorToast"></div>
 
   <!-- Main Content -->
-  <main>
+  <main id="main-content">
     <section class="ac-hero">
       <div class="container">
         <p class="micro">Compliance Tool</p>

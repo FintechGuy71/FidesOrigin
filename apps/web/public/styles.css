@@ -1547,3 +1547,125 @@ img { max-width: 100%; display: block; }
   background: none;
   padding: 0;
 }
+
+/* ─── Skip Link (Accessibility) ───────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  z-index: 9999;
+  border-radius: 0 0 var(--radius-sm) 0;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
+
+/* ─── Trusted By Bar ────────────────────────────────────────────── */
+.trusted-bar {
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.trusted-label {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.trusted-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.trusted-logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+.trusted-logo:hover { opacity: 0.8; }
+
+/* ─── Contact Form ──────────────────────────────────────────────── */
+.contact-form { max-width: 500px; margin: 0 auto; }
+.form-group { margin-bottom: 20px; }
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+.form-input:focus { outline: none; border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-muted); }
+textarea.form-input { min-height: 120px; resize: vertical; }
+.form-select {
+  width: 100%; padding: 12px 16px; background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 0.95rem; cursor: pointer;
+}
+.form-select:focus { outline: none; border-color: var(--accent); }
+
+/* ─── Case Study Card ───────────────────────────────────────────── */
+.case-study-card {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+  align-items: center; padding: 48px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-bottom: 32px;
+}
+.case-study-card.reverse { direction: rtl; }
+.case-study-card.reverse > * { direction: ltr; }
+.case-study-tag {
+  display: inline-block; font-size: 0.7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--accent); padding: 4px 12px; border-radius: 4px;
+  background: var(--accent-dim); margin-bottom: 16px;
+}
+.case-study-card h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
+.case-study-card p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+.case-study-stats { display: flex; gap: 32px; margin-top: 24px; }
+.case-study-stat .num { font-size: 1.75rem; font-weight: 800; color: var(--accent); }
+.case-study-stat .label { font-size: 0.8rem; color: var(--text-muted); }
+@media (max-width: 900px) {
+  .case-study-card { grid-template-columns: 1fr; gap: 32px; padding: 32px; }
+  .case-study-card.reverse { direction: ltr; }
+}
+
+/* ─── Testimonial ───────────────────────────────────────────────── */
+.testimonial {
+  padding: 32px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.testimonial-text {
+  font-size: 1.05rem; line-height: 1.7;
+  color: var(--text-secondary); font-style: italic; margin-bottom: 20px;
+}
+.testimonial-author { display: flex; align-items: center; gap: 12px; }
+.testimonial-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent-dim); display: flex;
+  align-items: center; justify-content: center;
+  color: var(--accent); font-weight: 700; font-size: 1rem;
+}
+.testimonial-info h4 { font-size: 0.95rem; font-weight: 600; }
+.testimonial-info p { font-size: 0.8rem; color: var(--text-muted); }

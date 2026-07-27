@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="preload" href="/styles.css" as="style">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
@@ -17,6 +18,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fidesorigin.com/">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="canonical" href="https://fidesorigin.com/">
@@ -51,8 +53,10 @@
   {"@type":"ListItem","position":1,"name":"Home","item":"https://fidesorigin.com/"}
 ]}
 </script>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
   <!-- Navigation -->
   <nav class="nav" aria-label="Main navigation">
@@ -127,7 +131,7 @@
     </button>
   </div>
 
-  <main>
+  <main id="main-content">
 
   <!-- Hero Section -->
   <section class="hero">
@@ -189,6 +193,23 @@
         <div class="trust-stat">
           <div class="number" data-count="20" data-prefix="" data-suffix="K+">0</div>
           <div class="label">Risk Records</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trusted By -->
+  <section class="trusted-bar">
+    <div class="container">
+      <div class="reveal">
+        <p class="trusted-label">Trusted by teams building the future of finance</p>
+        <div class="trusted-logos">
+          <span class="trusted-logo">GlobalPay</span>
+          <span class="trusted-logo">RealT</span>
+          <span class="trusted-logo">SafeFlow</span>
+          <span class="trusted-logo">DeFiBridge</span>
+          <span class="trusted-logo">TokenVault</span>
+          <span class="trusted-logo">ChainGuard</span>
         </div>
       </div>
     </div>

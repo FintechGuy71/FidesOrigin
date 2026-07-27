@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="preload" href="/styles.css" as="style">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; base-uri 'self'; form-action 'self';">
@@ -15,6 +16,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fidesorigin.com/about.html">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://fidesorigin.com/about.html">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/about.html">
@@ -75,8 +77,10 @@
       .stats-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
   <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
@@ -99,7 +103,7 @@
     </div>
   </nav>
 
-  <main>
+  <main id="main-content">
     <section class="about-hero">
       <div class="container">
         <div class="reveal">
