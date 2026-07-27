@@ -9,9 +9,8 @@
   <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/use-cases/smart-wallet.html">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
@@ -156,12 +155,12 @@
                 <span>Solidity 0.8.26</span>
               </div>
               <pre><span class="comment">// Smart wallet with embedded risk screening</span>
-<span class="kw">contract</span> <span class="type">CompliantSmartWallet</span> <span class="kw">is</span> <span class="type">BaseAccount</span> {{
+<span class="kw">contract</span> <span class="type">CompliantSmartWallet</span> <span class="kw">is</span> <span class="type">BaseAccount</span> {
 
     <span class="kw">function</span> <span class="func">_validateUserOp</span>(
         <span class="type">UserOperation</span> <span class="kw">calldata</span> userOp,
         <span class="kw">bytes32</span> userOpHash
-    ) <span class="kw">internal override</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {{
+    ) <span class="kw">internal override</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {
         <span class="comment">// Screen destination address</span>
         (<span class="kw">bool</span> allowed, <span class="kw">uint256</span> risk) =
             fides.<span class="func">evaluateTransaction</span>(
@@ -174,8 +173,8 @@
             <span class="kw">revert</span> <span class="func">ComplianceViolation</span>(risk);
 
         <span class="kw">return</span> <span class="kw">super</span>.<span class="func">_validateUserOp</span>(userOp, userOpHash);
-    }}
-}}</pre>
+    }
+}</pre>
             </div>
           </div>
         </div>

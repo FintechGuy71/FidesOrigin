@@ -370,12 +370,12 @@
             </div>
             <div class="code-body">
 <pre><span class="comment">// ステーブルコインはオンチェーンリスクスクリーニングを継承</span>
-<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {{
+<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {
 
     <span class="kw">function</span> <span class="func">_update</span>(
         <span class="kw">address</span> from, <span class="kw">address</span> to,
         <span class="kw">uint256</span> amount
-    ) <span class="kw">internal override</span> {{
+    ) <span class="kw">internal override</span> {
         <span class="comment">// 送金実行前に評価</span>
         (<span class="kw">bool</span> allowed, <span class="kw">uint256</span> risk) =
             fides.<span class="func">evaluateTransaction</span>(
@@ -386,8 +386,8 @@
             <span class="kw">revert</span> <span class="func">ComplianceViolation</span>(from, to, risk);
 
         <span class="kw">super</span>.<span class="func">_update</span>(from, to, amount);
-    }}
-}}</pre>
+    }
+}</pre>
             </div>
           </div>
         </div>

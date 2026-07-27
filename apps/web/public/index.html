@@ -38,12 +38,12 @@
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-  {"@type":"Question","name":"What is on-chain compliance?","acceptedAnswer":{"@type":"Answer","text":"On-chain compliance refers to the enforcement of regulatory and risk policies directly within smart contracts and blockchain transactions. Instead of relying on off-chain APIs or manual checks, rules such as sanctions screening, KYC verification, and transaction limits are executed deterministically on the blockchain — ensuring every transfer is evaluated before it is finalized."}},
-  {"@type":"Question","name":"How does FidesOrigin work?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin provides a programmable compliance engine that integrates into your smart contracts. It aggregates risk data from sources like OFAC, Chainalysis, and OpenSanctions into an on-chain Risk Registry. The Policy Engine allows you to configure rules (transaction limits, address screening, jurisdiction checks), and the Compliance Engine enforces these rules deterministically during every token transfer — with zero off-chain dependency."}},
-  {"@type":"Question","name":"Is FidesOrigin decentralized?","acceptedAnswer":{"@type":"Answer","text":"Yes. FidesOrigin is designed to minimize off-chain dependencies. Risk data is stored and enforced on-chain, policy rules are governed by smart contracts, and compliance checks execute inside the transaction itself. This ensures deterministic, censorship-resistant enforcement without relying on centralized APIs."}},
-  {"@type":"Question","name":"Which blockchains are supported?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin is currently live on Ethereum Sepolia (testnet) and supports Ethereum mainnet and Base. The architecture is designed for cross-chain compatibility, with unified risk profiles and governance across supported networks."}},
-  {"@type":"Question","name":"How much does it cost?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin offers flexible pricing tailored to your protocol's transaction volume and compliance requirements. Contact us at contact@fidesorigin.com for a custom quote based on your specific needs."}},
-  {"@type":"Question","name":"Is there a free tier?","acceptedAnswer":{"@type":"Answer","text":"Yes. FidesOrigin provides a free tier for developers and early-stage projects to explore the protocol, test integrations, and evaluate the SDK. Visit the documentation or contact us to get started with the free tier."}}
+  {"@type":"Question","name":"What is on-chain compliance?","acceptedAnswer":{"@type":"Answer","text":"On-chain compliance refers to the enforcement of regulatory and risk policies directly within smart contracts and blockchain transactions. Instead of relying on off-chain APIs or manual checks, rules such as sanctions screening, KYC verification, and transaction limits are executed deterministically on the blockchain — ensuring every transfer is evaluated before it is finalized."},
+  {"@type":"Question","name":"How does FidesOrigin work?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin provides a programmable compliance engine that integrates into your smart contracts. It aggregates risk data from sources like OFAC, Chainalysis, and OpenSanctions into an on-chain Risk Registry. The Policy Engine allows you to configure rules (transaction limits, address screening, jurisdiction checks), and the Compliance Engine enforces these rules deterministically during every token transfer — with zero off-chain dependency."},
+  {"@type":"Question","name":"Is FidesOrigin decentralized?","acceptedAnswer":{"@type":"Answer","text":"Yes. FidesOrigin is designed to minimize off-chain dependencies. Risk data is stored and enforced on-chain, policy rules are governed by smart contracts, and compliance checks execute inside the transaction itself. This ensures deterministic, censorship-resistant enforcement without relying on centralized APIs."},
+  {"@type":"Question","name":"Which blockchains are supported?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin is currently live on Ethereum Sepolia (testnet) and supports Ethereum mainnet and Base. The architecture is designed for cross-chain compatibility, with unified risk profiles and governance across supported networks."},
+  {"@type":"Question","name":"How much does it cost?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin offers flexible pricing tailored to your protocol's transaction volume and compliance requirements. Contact us at contact@fidesorigin.com for a custom quote based on your specific needs."},
+  {"@type":"Question","name":"Is there a free tier?","acceptedAnswer":{"@type":"Answer","text":"Yes. FidesOrigin provides a free tier for developers and early-stage projects to explore the protocol, test integrations, and evaluate the SDK. Visit the documentation or contact us to get started with the free tier."}
 ]}
 </script>
 <script type="application/ld+json">
@@ -385,12 +385,12 @@
             </div>
             <div class="code-body">
 <pre><span class="comment">// Your stablecoin inherits on-chain risk screening</span>
-<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {{
+<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {
 
     <span class="kw">function</span> <span class="func">_update</span>(
         <span class="kw">address</span> from, <span class="kw">address</span> to,
         <span class="kw">uint256</span> amount
-    ) <span class="kw">internal override</span> {{
+    ) <span class="kw">internal override</span> {
         <span class="comment">// Evaluate before transfer executes</span>
         (<span class="kw">bool</span> allowed, <span class="kw">uint256</span> risk) =
             fides.<span class="func">evaluateTransaction</span>(
@@ -401,8 +401,8 @@
             <span class="kw">revert</span> <span class="func">ComplianceViolation</span>(from, to, risk);
 
         <span class="kw">super</span>.<span class="func">_update</span>(from, to, amount);
-    }}
-}}</pre>
+    }
+}</pre>
             </div>
           </div>
         </div>

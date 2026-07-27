@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
@@ -172,7 +171,7 @@
                 <span>Solidity 0.8.26</span>
               </div>
               <pre><span class="comment">// Inherit CompliantStableCoin for automatic screening</span>
-<span class="kw">contract</span> <span class="type">MyStableCoin</span> <span class="kw">is</span> <span class="type">CompliantStableCoin</span> {{
+<span class="kw">contract</span> <span class="type">MyStableCoin</span> <span class="kw">is</span> <span class="type">CompliantStableCoin</span> {
 
     <span class="kw">constructor</span>()
         <span class="type">CompliantStableCoin</span>(
@@ -181,15 +180,15 @@
             <span class="num">6</span>,               <span class="comment">// decimals</span>
             <span class="num">100_000_000</span> * <span class="num">1e6</span> <span class="comment">// max supply</span>
         )
-    {{
+    {
         <span class="comment">// Configure policies</span>
         _setMaxTransferAmount(<span class="num">100_000</span> * <span class="num">1e6</span>);
         _requireKYC(<span class="kw">true</span>);
-    }}
+    }
 
     <span class="comment">// Every transfer is automatically screened</span>
     <span class="comment">// against on-chain risk profiles</span>
-}}</pre>
+}</pre>
             </div>
           </div>
         </div>
