@@ -170,8 +170,7 @@ class RiskEngine:
         self._cache_timestamp: Optional[datetime] = None
         self._cache_ttl = timedelta(minutes=5)
     
-    @property
-    async def blockscout(self):
+    async def get_blockscout(self):
         """懒加载 Blockscout 客户端"""
         if self._blockscout is None:
             self._blockscout = BlockscoutService()
@@ -264,7 +263,7 @@ class RiskEngine:
     ) -> Tuple[float, str]:
         """检查地址年龄"""
         try:
-            client = await self.blockscout
+            client = await self.get_blockscout()
             stats = await client.get_address_stats(address)
             
             first_tx = stats.get("first_transaction")
