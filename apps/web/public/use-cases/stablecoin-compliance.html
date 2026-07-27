@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Stablecoin Compliance Solution — FidesOrigin</title>
+  <meta name="description" content="Build compliant stablecoins with on-chain risk screening. Meet MiCA, Hong Kong, and global regulations with deterministic compliance enforcement.">
+  <meta property="og:title" content="Stablecoin Compliance Solution — FidesOrigin">
+  <meta property="og:description" content="Build compliant stablecoins with on-chain risk screening. Meet MiCA, Hong Kong, and global regulations.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/use-cases/stablecoin-compliance.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://fidesorigin.com/use-cases/stablecoin-compliance.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/use-cases/stablecoin-compliance.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/use-cases/stablecoin-compliance.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/use-cases/stablecoin-compliance.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/use-cases/stablecoin-compliance.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <style>
+    .uc-hero { padding: 140px 0 60px; }
+    .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
+    .uc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-top: 48px;
+    }
+    .uc-code {
+      background: #0a0c14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .uc-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .uc-code pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .uc-code .comment { color: #5c6370; font-style: italic; }
+    .uc-code .kw { color: #c678dd; }
+    .uc-code .type { color: #e5c07b; }
+    .uc-code .func { color: #61afef; }
+    .uc-features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    .uc-feature {
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+    .uc-feature h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .uc-feature p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+    .uc-checklist { list-style: none; padding: 0; }
+    .uc-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .uc-checklist svg { width: 20px; height: 20px; color: var(--success); flex-shrink: 0; margin-top: 2px; }
+    @media (max-width: 900px) {
+      .uc-grid { grid-template-columns: 1fr; }
+      .uc-features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/">Home</a>
+        <a href="/#features">Features</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/docs/">Docs</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="Language">
+            EN
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/use-cases/stablecoin-compliance.html">English</a>
+            <a href="/cn/use-cases/stablecoin-compliance.html">简体中文</a>
+            <a href="/tw/use-cases/stablecoin-compliance.html">繁體中文</a>
+            <a href="/jp/use-cases/stablecoin-compliance.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/#contact" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="uc-hero">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">Use Case</p>
+          <h1 class="display">Stablecoin <span>Compliance</span></h1>
+          <p class="lead" style="max-width: 700px; margin-top: 20px;">Build compliant stablecoins with deterministic on-chain risk screening. Meet MiCA, Hong Kong, and global regulatory requirements without compromising decentralization.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem/Solution -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="uc-grid">
+          <div class="reveal">
+            <h2 class="h2">The Challenge</h2>
+            <p class="body-sm" style="margin-top: 16px;">Stablecoin issuers face a critical dilemma: how to comply with OFAC sanctions, FATF travel rules, and emerging regulations like MiCA — without introducing centralization or off-chain dependencies that undermine the very purpose of blockchain.</p>
+            <p class="body-sm" style="margin-top: 16px;">Traditional solutions rely on API-based screening that introduces latency, single points of failure, and trust assumptions. Regulators are increasingly demanding proof that compliance is <strong>deterministic and auditable</strong>.</p>
+            
+            <h2 class="h2" style="margin-top: 48px;">The Solution</h2>
+            <ul class="uc-checklist" style="margin-top: 16px;">
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> On-chain OFAC/UN sanctions screening for every transfer</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Deterministic policy enforcement at the smart contract level</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Quarantine vault for suspicious transactions</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Real-time risk profile updates via Chainlink Functions</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Full audit trail for regulators</li>
+            </ul>
+          </div>
+          <div class="reveal">
+            <div class="uc-code">
+              <div class="uc-code-header">
+                <span>CompliantStableCoin.sol</span>
+                <span>Solidity 0.8.26</span>
+              </div>
+              <pre><span class="comment">// Inherit CompliantStableCoin for automatic screening</span>
+<span class="kw">contract</span> <span class="type">MyStableCoin</span> <span class="kw">is</span> <span class="type">CompliantStableCoin</span> {{
+
+    <span class="kw">constructor</span>()
+        <span class="type">CompliantStableCoin</span>(
+            <span class="str">"MyStable"</span>,      <span class="comment">// name</span>
+            <span class="str">"MST"</span>,           <span class="comment">// symbol</span>
+            <span class="num">6</span>,               <span class="comment">// decimals</span>
+            <span class="num">100_000_000</span> * <span class="num">1e6</span> <span class="comment">// max supply</span>
+        )
+    {{
+        <span class="comment">// Configure policies</span>
+        _setMaxTransferAmount(<span class="num">100_000</span> * <span class="num">1e6</span>);
+        _requireKYC(<span class="kw">true</span>);
+    }}
+
+    <span class="comment">// Every transfer is automatically screened</span>
+    <span class="comment">// against on-chain risk profiles</span>
+}}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="section bg-secondary">
+      <div class="container">
+        <div class="reveal section-intro">
+          <p class="micro">Capabilities</p>
+          <h2 class="h2 section-title">Built for regulated stablecoins</h2>
+        </div>
+        <div class="uc-features">
+          <div class="uc-feature reveal">
+            <h3>MiCA Ready</h3>
+            <p>Meet EU Markets in Crypto-Assets regulation with on-chain reserve attestations and transaction screening.</p>
+          </div>
+          <div class="uc-feature reveal">
+            <h3>Hong Kong License</h3>
+            <p>Comply with HKMA stablecoin issuer requirements including real-time sanctions screening and audit trails.</p>
+          </div>
+          <div class="uc-feature reveal">
+            <h3>OFAC Screening</h3>
+            <p>SDN list checks on every transfer. Updated autonomously via decentralized oracle networks.</p>
+          </div>
+          <div class="uc-feature reveal">
+            <h3>FATF Travel Rule</h3>
+            <p>Built-in VASP verification and originator/beneficiary data handling for cross-border transfers.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+      <div class="container">
+        <div class="cta-section reveal">
+          <h2 class="h1">Ready to build a compliant stablecoin?</h2>
+          <p>Get access to our SDK, testnet deployment, and compliance documentation.</p>
+          <div class="cta-buttons">
+            <a href="/docs/" class="btn btn-primary">Read Documentation</a>
+            <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>Programmable on-chain compliance for the future of finance.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/#features">Features</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="/use-cases/stablecoin-compliance.html">Stablecoins</a>
+          <a href="/admin/">Dashboard</a>
+        </div>
+        <div class="footer-col">
+          <h4>Developers</h4>
+          <a href="/docs/">Documentation</a>
+          <a href="/docs/api.html">API Reference</a>
+          <a href="/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="mailto:contact@fidesorigin.com">Contact</a>
+          <a href="/blog/">Blog</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script>
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+    // Language menu
+    (function() {
+      var btn = document.getElementById('langToggleBtn');
+      var menu = document.getElementById('langMenu');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
+    })();
+  </script>
+</body>
+</html>

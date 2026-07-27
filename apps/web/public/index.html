@@ -36,6 +36,21 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"FidesOrigin","url":"https://fidesorigin.com/"}
 </script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"What is on-chain compliance?","acceptedAnswer":{"@type":"Answer","text":"On-chain compliance refers to the enforcement of regulatory and risk policies directly within smart contracts and blockchain transactions. Instead of relying on off-chain APIs or manual checks, rules such as sanctions screening, KYC verification, and transaction limits are executed deterministically on the blockchain — ensuring every transfer is evaluated before it is finalized."}},
+  {"@type":"Question","name":"How does FidesOrigin work?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin provides a programmable compliance engine that integrates into your smart contracts. It aggregates risk data from sources like OFAC, Chainalysis, and OpenSanctions into an on-chain Risk Registry. The Policy Engine allows you to configure rules (transaction limits, address screening, jurisdiction checks), and the Compliance Engine enforces these rules deterministically during every token transfer — with zero off-chain dependency."}},
+  {"@type":"Question","name":"Is FidesOrigin decentralized?","acceptedAnswer":{"@type":"Answer","text":"Yes. FidesOrigin is designed to minimize off-chain dependencies. Risk data is stored and enforced on-chain, policy rules are governed by smart contracts, and compliance checks execute inside the transaction itself. This ensures deterministic, censorship-resistant enforcement without relying on centralized APIs."}},
+  {"@type":"Question","name":"Which blockchains are supported?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin is currently live on Ethereum Sepolia (testnet) and supports Ethereum mainnet and Base. The architecture is designed for cross-chain compatibility, with unified risk profiles and governance across supported networks."}},
+  {"@type":"Question","name":"How much does it cost?","acceptedAnswer":{"@type":"Answer","text":"FidesOrigin offers flexible pricing tailored to your protocol's transaction volume and compliance requirements. Contact us at contact@fidesorigin.com for a custom quote based on your specific needs."}},
+  {"@type":"Question","name":"Is there a free tier?","acceptedAnswer":{"@type":"Answer","text":"Yes. FidesOrigin provides a free tier for developers and early-stage projects to explore the protocol, test integrations, and evaluate the SDK. Visit the documentation or contact us to get started with the free tier."}}
+]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+  {"@type":"ListItem","position":1,"name":"Home","item":"https://fidesorigin.com/"}
+]}
+</script>
 </head>
 <body>
 
@@ -48,9 +63,9 @@
       </a>
       <div class="nav-left">
         <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#security">Security</a>
-        <a href="#developers">Docs</a>
+        <a href="/use-cases/stablecoin-compliance.html">Use Cases</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/docs/">Docs</a>
       </div>
       <div class="nav-actions">
         <div class="lang-dropdown">
@@ -93,9 +108,9 @@
       <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
     </button>
     <a href="#features">Features</a>
-    <a href="#how-it-works">How It Works</a>
-    <a href="#security">Security</a>
-    <a href="#developers">Docs</a>
+    <a href="/use-cases/stablecoin-compliance.html">Use Cases</a>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/docs/">Docs</a>
     <div class="lang-row">
       <a href="/">EN</a>
       <a href="/cn/">CN</a>
@@ -426,9 +441,9 @@
         <div class="footer-col">
           <h4>Product</h4>
           <a href="#features">Features</a>
-          <a href="#how-it-works">How It Works</a>
-          <a href="#security">Security</a>
-          <a href="/admin/">Dashboard</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="/use-cases/stablecoin-compliance.html">Use Cases</a>
+          <a href="/demo.html">Demo</a>
         </div>
         <div class="footer-col">
           <h4>Developers</h4>
@@ -441,6 +456,7 @@
           <h4>Company</h4>
           <a href="mailto:contact@fidesorigin.com">Contact</a>
           <a href="/blog/" target="_blank" rel="noopener">Blog</a>
+          <a href="/security.html">Security</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/terms.html">Terms</a>
         </div>
