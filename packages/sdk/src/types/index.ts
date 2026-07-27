@@ -49,26 +49,22 @@ export interface RiskCheckResult {
   address: string;
   /** Chain */
   chain: Chain;
-  /** Overall risk score (0-100) */
-  overallScore: number;
-  /** Overall risk level */
-  overallLevel: RiskLevel;
+  /** Overall risk score (0-100) — backend field: risk_score */
+  risk_score: number;
+  /** Overall risk level — backend field: risk_level */
+  risk_level: string;
   /** Individual risk category scores */
-  scores: RiskScore[];
-  /** All risk flags */
-  flags: RiskFlag[];
+  scores?: RiskScore[];
+  /** All risk flags — backend field: risk_factors */
+  risk_factors: RiskFactor[];
   /** Address type classification */
-  addressType: AddressType;
+  addressType?: AddressType;
   /** Assessment timestamp */
-  timestamp: string;
+  timestamp?: string;
   /** Related entities (exchanges, mixers, etc.) */
   relatedEntities?: Entity[];
   /** Transaction statistics */
   transactionStats?: TransactionStats;
-  /** Risk score (alias for overallScore) */
-  riskScore?: number;
-  /** Risk level (alias for overallLevel) */
-  riskLevel?: string;
   /** Risk tags */
   tags?: string[];
   /** Detailed risk breakdown */
@@ -85,6 +81,26 @@ export interface RiskCheckResult {
     risk: string;
     time: string;
   }>;
+  /** Total number of transactions (from AddressRiskDetailResponse) */
+  transactions_count?: number;
+  /** Recent risk events (from AddressRiskDetailResponse) */
+  recent_events?: RiskEventResponse[];
+  /** Status */
+  status?: string;
+  /** Report count */
+  report_count?: number;
+  /** First seen timestamp */
+  first_seen_at?: string;
+  /** Last updated timestamp */
+  last_updated_at?: string;
+  /** Created timestamp */
+  created_at?: string;
+  /** Legacy alias for risk_score */
+  overallScore?: number;
+  /** Legacy alias for risk_level */
+  overallLevel?: RiskLevel;
+  /** Legacy alias for risk_factors */
+  flags?: RiskFlag[];
 }
 
 export interface BatchRiskCheckResult {
@@ -145,19 +161,15 @@ export type Chain =
   | 'base'
   | 'solana';
 
-export interface RiskFlag {
-  /** Flag identifier */
-  id: string;
-  /** Flag name */
+export interface RiskFactor {
+  /** Factor name */
   name: string;
-  /** Flag category */
-  category: string;
-  /** Risk severity */
-  severity: RiskLevel;
-  /** Flag description */
-  description: string;
-  /** Additional metadata */
-  metadata?: Record<string, unknown>;
+  /** Weight */
+  weight?: number;
+  /** Score */
+  score?: number;
+  /** Description */
+  description?: string;
 }
 
 export interface RiskScore {
@@ -399,21 +411,27 @@ export interface RiskUpdateEvent {
   reason: string;
 }
 
-export interface AlertEvent {
-  /** Alert identifier */
+export interface RiskEventResponse {
+  /** Event ID */
   id: string;
-  /** Alert type */
-  type: string;
-  /** Alert severity */
-  severity: RiskLevel;
-  /** Alert title */
-  title: string;
-  /** Alert description */
+  /** Event type */
+  event_type: string;
+  /** Severity */
+  severity: string;
+  /** Address */
+  address: string;
+  /** Transaction hash */
+  tx_hash?: string;
+  /** Description */
   description: string;
-  /** Related addresses */
-  addresses?: string[];
-  /** Alert timestamp */
-  createdAt: string;
+  /** Details */
+  details?: Record<string, unknown>;
+  /** Triggered rules */
+  triggered_rules?: string[];
+  /** Is notified */
+  is_notified?: boolean;
+  /** Created timestamp */
+  created_at?: string;
 }
 
 export interface RuleMatchEvent {

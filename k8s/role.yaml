@@ -7,10 +7,18 @@ metadata:
   labels:
     app: fidesorigin-data-publisher
 rules:
-  # Allow reading own configmaps and secrets
+  # Allow reading own configmaps
   - apiGroups: [""]
-    resources: ["configmaps", "secrets"]
+    resources: ["configmaps"]
     verbs: ["get", "list", "watch"]
+  # Allow reading specific secrets only (least privilege)
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames:
+      - "fidesorigin-publisher-keys"
+      - "fidesorigin-cloud-keys"
+      - "fidesorigin-vault-keys"
+    verbs: ["get"]
   # Allow updating own configmaps (for leader election / coordination)
   - apiGroups: [""]
     resources: ["configmaps"]

@@ -156,7 +156,7 @@ async function fetchWithRetry<T>(
     try {
       const headers = new Headers({
         "Content-Type": "application/json",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        ...(apiKey ? { "X-API-Key": apiKey } : {}),
       });
 
       // [Fix] Properly handle HeadersInit: Headers object, string[][], or Record
@@ -384,7 +384,7 @@ export class FidesOriginClient {
       ...DEFAULT_RETRY_CONFIG,
       ...config.retryConfig,
     };
-    this.wsUrl = this.baseUrl.replace(/^https/i, "wss").replace(/^http/i, "ws");
+    this.wsUrl = this.baseUrl.replace(/^https/i, "wss").replace(/^http/i, "ws") + "/api/v1/monitor/stream";
     this.timeoutMs = config.timeoutMs ?? config.timeout ?? 30000;
     this.allowBrowserUsage = config.allowBrowserUsage === true;
 
@@ -425,7 +425,7 @@ export class FidesOriginClient {
     }
 
     return fetchWithRetry<RiskCheckResult>(
-      buildUrl(this.baseUrl, '/v1/risk/check', params),
+      buildUrl(this.baseUrl, '/api/v1/address/' + account + '/risk', params),
       { method: 'GET' },
       this.retryConfig,
       this.apiKey,
@@ -447,7 +447,7 @@ export class FidesOriginClient {
     };
 
     return fetchWithRetry<BatchRiskCheckResult>(
-      buildUrl(this.baseUrl, '/v1/risk/batch-check'),
+      buildUrl(this.baseUrl, '/api/v1/address/search'),
       {
         method: 'POST',
         body: JSON.stringify(body),
@@ -464,7 +464,7 @@ export class FidesOriginClient {
   async getAddressRisk(address: string): Promise<AddressRisk> {
     const account = validateAddress(address);
     return fetchWithRetry<AddressRisk>(
-      buildUrl(this.baseUrl, `/v1/risk/address/${account}`),
+      buildUrl(this.baseUrl, `/api/v1/address/${account}/risk`),
       { method: 'GET' },
       this.retryConfig,
       this.apiKey,
@@ -476,7 +476,7 @@ export class FidesOriginClient {
 
   async getDashboardStats(): Promise<DashboardStats> {
     return fetchWithRetry<DashboardStats>(
-      buildUrl(this.baseUrl, '/v1/dashboard/stats'),
+      buildUrl(this.baseUrl, '/api/v1/monitor/stats'),
       { method: 'GET' },
       this.retryConfig,
       this.apiKey,
@@ -498,7 +498,7 @@ export class FidesOriginClient {
     if (options.status) params.status = options.status;
 
     return fetchWithRetry<RuleListResponse>(
-      buildUrl(this.baseUrl, '/v1/rules', params),
+      buildUrl(this.baseUrl, '/api/v1/rules', params),
       { method: 'GET' },
       this.retryConfig,
       this.apiKey,
@@ -511,7 +511,7 @@ export class FidesOriginClient {
       throw new FidesOriginError('Invalid create rule request', 'BAD_REQUEST');
     }
     return fetchWithRetry<Rule>(
-      buildUrl(this.baseUrl, '/v1/rules'),
+      buildUrl(this.baseUrl, '/api/v1/rules'),
       { method: 'POST', body: JSON.stringify(req) },
       this.retryConfig,
       this.apiKey,
@@ -524,7 +524,7 @@ export class FidesOriginClient {
       throw new FidesOriginError('Rule id is required', 'BAD_REQUEST');
     }
     return fetchWithRetry<Rule>(
-      buildUrl(this.baseUrl, `/v1/rules/${encodeURIComponent(id)}`),
+      buildUrl(this.baseUrl, `/api/v1/rules/${encodeURIComponent(id)}`),
       { method: 'PATCH', body: JSON.stringify(req || {}) },
       this.retryConfig,
       this.apiKey,
@@ -537,7 +537,7 @@ export class FidesOriginClient {
       throw new FidesOriginError('Rule id is required', 'BAD_REQUEST');
     }
     await fetchWithRetry<void>(
-      buildUrl(this.baseUrl, `/v1/rules/${encodeURIComponent(id)}`),
+      buildUrl(this.baseUrl, `/api/v1/rules/${encodeURIComponent(id)}`),
       { method: 'DELETE' },
       this.retryConfig,
       this.apiKey,
@@ -545,7 +545,18 @@ export class FidesOriginClient {
     );
   }
 
-  // ─── WebSocket ───────────────────────────────────────────────────────────
+  /** Check single address risk (alias for getAddressRisk) */
+  async checkAddress(address: string, _options?: RiskCheckOptions): Promise<AddressRisk> {
+    return this.getAddressRisk(address);
+  }
+
+  /** Check multiple addresses (alias for batchCheckRisk) */
+  async checkBatchAddresses(input: { addresses: string[]; chain?: import('./types').Chain; detailed?: boolean }): Promise<BatchRiskCheckResponse> {
+    return this.batchCheckRisk({
+      addresses: input.addresses,
+      chainId: input.chain || 'ethereum',
+    });
+  }
 
   createWebSocket(config?: WebSocketConfig): FidesOriginWebSocket {
     return new FidesOriginWebSocket({

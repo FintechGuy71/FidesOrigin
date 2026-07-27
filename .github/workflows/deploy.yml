@@ -72,6 +72,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Build and push with git-sha tag (immutable). Digest is captured for K8s pinning.
+      - name: Get base image digest
+        id: base-digest
+        run: |
+          docker pull node:20-alpine
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' node:20-alpine | cut -d'@' -f2)
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "Base image digest: ${DIGEST}"
+
       - name: Build and push image
         id: build
         uses: docker/build-push-action@v5
@@ -81,6 +89,9 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          # [HIGH Fix] Pin base image digest for supply-chain security
+          build-args: |
+            BASE_IMAGE=node:20-alpine@sha256:${{ steps.base-digest.outputs.digest }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -95,6 +106,11 @@ jobs:
         run: |
           sed -i "s|sha256:\${IMAGE_DIGEST}|${{ steps.digest.outputs.digest }}|g" k8s/deployment.yaml
           sed -i "s|sha256:\${IMAGE_DIGEST}|${{ steps.digest.outputs.digest }}|g" k8s/cronjob.yaml
+          # [CRITICAL Fix] Verify digest was actually replaced
+          if grep -q '\${IMAGE_DIGEST}' k8s/deployment.yaml || grep -q '\${IMAGE_DIGEST}' k8s/cronjob.yaml; then
+            echo "ERROR: IMAGE_DIGEST placeholder was not replaced!"
+            exit 1
+          fi
           echo "--- deployment.yaml ---"
           grep "image:" k8s/deployment.yaml
           echo "--- cronjob.yaml ---"
@@ -140,3 +156,8 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
         run: |
           kubectl get cronjob fidesorigin-batch-sync -n fidesorigin
+
+      # [CRITICAL Fix] Always cleanup kubeconfig, even if previous steps failed
+      - name: Cleanup kubeconfig
+        if: always()
+        run: rm -f ${{ github.workspace }}/kubeconfig.yaml

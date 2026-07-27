@@ -135,11 +135,10 @@ class CacheService:
         if self._redis is None:
             return None
         value = await self._redis.get(key)
-        if value:
-            result = value.decode()
-            # 回写 L1
-            self._set_local(key, result)
-            return result
+        if value is not None:
+            # decode_responses=True already returns str, no need for .decode()
+            self._set_local(key, value)
+            return value
         return None
 
     async def set(
@@ -258,14 +257,16 @@ class CacheService:
 
     async def hget(self, key: str, field: str) -> Optional[str]:
         value = await self.redis.hget(key, field)
-        return value.decode() if value else None
+        # decode_responses=True already returns str
+        return value if value else None
 
     async def hset(self, key: str, field: str, value: str) -> int:
         return await self.redis.hset(key, field, value)
 
     async def hgetall(self, key: str) -> dict:
         data = await self.redis.hgetall(key)
-        return {k.decode(): v.decode() for k, v in data.items()}
+        # decode_responses=True already returns str keys and values
+        return dict(data)
 
     # ==================== 分布式锁 ====================
 
@@ -379,7 +380,8 @@ class CacheService:
                 result.append(None)
             else:
                 try:
-                    result.append(json.loads(v.decode()))
+                    # decode_responses=True already returns str
+                    result.append(json.loads(v))
                 except json.JSONDecodeError:
                     result.append(None)
         return result

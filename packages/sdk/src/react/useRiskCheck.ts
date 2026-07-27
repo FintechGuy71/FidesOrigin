@@ -71,7 +71,7 @@ export function useRiskCheck(
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const result = await client.checkAddress(address, riskOptions);
+      const result = await client.getAddressRisk(address);
       
       setState({
         loading: false,

@@ -1,5 +1,9 @@
+# [HIGH Fix] Pin base image digest to prevent supply-chain attacks.
+# In CI, override with: --build-arg BASE_IMAGE=node:20-alpine@sha256:...
+ARG BASE_IMAGE=node:20-alpine
+
 # ── Build Stage ───────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM ${BASE_IMAGE} AS builder
 
 WORKDIR /app
 
@@ -21,7 +25,7 @@ COPY data-publisher/scripts ./scripts
 RUN npm run build
 
 # ── Production Stage ──────────────────────────────────────────────────
-FROM node:20-alpine AS production
+FROM ${BASE_IMAGE} AS production
 
 # Security: run as non-root
 RUN addgroup -g 1001 -S fides && \

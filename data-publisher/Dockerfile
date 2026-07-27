@@ -1,4 +1,8 @@
-FROM node:22-alpine AS builder
+# [HIGH Fix] Pin base image digest to prevent supply-chain attacks.
+# In CI, override with: --build-arg BASE_IMAGE=node:22-alpine@sha256:...
+ARG BASE_IMAGE=node:22-alpine
+
+FROM ${BASE_IMAGE} AS builder
 
 WORKDIR /app
 
@@ -14,7 +18,7 @@ COPY scripts/ ./scripts/
 RUN npm run build
 
 # Production image
-FROM node:22-alpine
+FROM ${BASE_IMAGE}
 
 WORKDIR /app
 

@@ -1,686 +1,497 @@
-# FidesOrigin 后端深度代码审计报告
+# FidesOrigin Backend Security Audit Report
 
-**审计日期**: 2026-06-17  
-**审计范围**: `/root/.openclaw/workspace/fidesorigin-demo/backend/`  
-**技术栈**: Python 3.11+, FastAPI, SQLAlchemy 2.0 (async), PostgreSQL, Redis  
-**参考标准**: Stripe (开发者优先、API即产品、优雅错误处理), Coinbase (安全优先、合规驱动、清晰抽象层)
-
----
-
-## 执行摘要
-
-本次审计对 FidesOrigin 后端代码进行了六个维度的深度审查：**代码结构**、**代码质量**、**架构模式**、**性能**、**安全性**、**可维护性**。共发现 **4 个 P0-致命问题**、**6 个 P1-严重问题**、**8 个 P2-一般问题**、**12 个 P3-建议**。
-
-**整体评估**: 项目架构设计良好，采用了策略模式、观察者模式、Repository 模式等现代设计模式，依赖注入和结构化日志的实现值得肯定。但存在若干**安全漏洞**、**性能隐患**和**代码质量问题**需要立即修复。
+> **Auditor:** Senior Backend Architect (Subagent)
+> **Scope:** `/root/.openclaw/workspace/fidesorigin-demo/backend/` — All `.py` files
+> **Date:** 2026-07-27
+> **Focus Areas:** API Security, JWT, Database, Error Handling, Logging, Async Operations
 
 ---
 
-## 问题汇总表
+## Summary
 
-| 优先级 | 数量 | 状态 |
-|--------|------|------|
-| P0 - 致命 | 4 | 🔴 需立即修复 |
-| P1 - 严重 | 6 | 🟠 需尽快修复 |
-| P2 - 一般 | 8 | 🟡 建议修复 |
-| P3 - 建议 | 12 | 🟢 可选优化 |
+| Severity | Count |
+|----------|-------|
+| 🔴 CRITICAL | 4 |
+| 🟠 HIGH | 9 |
+| 🟡 MEDIUM | 12 |
+| 🟢 LOW | 8 |
+
+**Overall Assessment:** The codebase shows mature security awareness with well-implemented refresh token rotation, CSRF protection, rate limiting, and structured logging. However, there are **4 CRITICAL bugs** that would cause runtime failures or security bypasses in production, plus several HIGH-severity issues around JWT type verification, test isolation, and WebSocket origin validation.
 
 ---
 
-## P0 - 致命问题（需立即修复）
+## 1. API Security — Authentication, Rate Limiting, Input Validation
 
-### P0-001: 信号量延迟初始化竞态条件
+### 🔴 CRITICAL
 
-**问题描述**:  
-`BlockscoutService._get_semaphore()` 在 `connect()` 中设置 `self._semaphore = None`，然后在 `_get_semaphore()` 中延迟初始化。但在高并发场景下，多个协程可能同时进入 `_get_semaphore()`，导致创建多个 `Semaphore` 实例，破坏并发控制。
-
-**影响**:  
-- 并发请求数可能远超 `BLOCKSCOUT_RATE_LIMIT` 配置，导致 API 限流或被封禁
-- 断路器计数可能不准确
-
-**修复建议**:  
-在 `connect()` 中同步初始化信号量，或使用 `asyncio.Lock` 保护延迟初始化。
+#### C-1: `CacheService.get()` crashes on Redis hit due to double `.decode()`
+- **File:** `app/services/cache_service.py`
+- **Line:** 79-82
+- **Issue:** Redis client is initialized with `decode_responses=True` (line 57), so `redis.get()` already returns `str`. The code then calls `value.decode()` on a string, causing `AttributeError`. This means **all cache reads from Redis crash** — the entire caching layer is broken in production.
+- **Fix:** Remove `.decode()` call when `decode_responses=True`.
 
 ```python
-# 修复前（有问题）
-async def connect(self) -> None:
-    # ...
-    self._semaphore = None  # 延迟初始化
+# BROKEN (current):
+value = await self._redis.get(key)
+if value:
+    result = value.decode()  # AttributeError: 'str' object has no attribute 'decode'
 
-def _get_semaphore(self):
-    if self._semaphore is None:
-        self._semaphore = asyncio.Semaphore(settings.BLOCKSCOUT_RATE_LIMIT)
-    return self._semaphore
-
-# 修复后
-async def connect(self) -> None:
-    # ...
-    self._semaphore = asyncio.Semaphore(settings.BLOCKSCOUT_RATE_LIMIT)
-    logger.info("blockscout_service_connected", base_url=self.base_url)
+# FIXED:
+value = await self._redis.get(key)
+if value is not None:
+    result = value  # Already str
 ```
 
-**相关文件**: `app/services/blockscout_service.py`
+#### C-2: `decode_access_token` does NOT verify `type == "access"`
+- **File:** `app/core/security.py`
+- **Line:** 189-200
+- **Issue:** A refresh token (which also has `sub` and `exp`) could be used as an access token at any API endpoint. The `type` claim is set but never checked during validation.
+- **Fix:** Add `if payload.get("type") != "access": raise AuthenticationException(...)`.
+
+#### C-3: `rotate_refresh_token` does NOT verify `type == "refresh"`
+- **File:** `app/core/security.py`
+- **Line:** 147-160
+- **Issue:** An access token passed to the refresh endpoint would be accepted, rotated, and returned as a new refresh token. This breaks the token type boundary entirely.
+- **Fix:** Add `if payload.get("type") != "refresh": raise AuthenticationException(...)`.
+
+### 🟠 HIGH
+
+#### H-1: WebSocket origin whitelist includes `localhost` in production
+- **File:** `app/controllers/monitor.py`
+- **Line:** 31
+- **Issue:** `_ALLOWED_WS_ORIGINS` is built as `set(settings.CORS_ORIGINS) | {"http://localhost:3000", "http://localhost:5173"}`. The localhost origins are unconditionally added even in production, allowing cross-origin WebSocket connections from any localhost app.
+- **Fix:** Only add localhost origins when `settings.APP_ENV != "production"`.
+
+#### H-2: `request_signature_middleware` skips GET/HEAD read operations on sensitive paths
+- **File:** `app/core/security.py`
+- **Line:** 393-413
+- **Issue:** The condition `if (is_api_write or is_sensitive_path) and request.method in ("POST", "PUT", "PATCH", "DELETE")` means GET requests to `/api/v1/address/report` or `/api/v1/rules` skip signature verification. A replayed GET to a sensitive endpoint is unprotected.
+- **Fix:** Remove the method check for `is_sensitive_path`, or add GET to the protected methods for sensitive paths.
+
+#### H-3: `AddressRepository.search()` silently ignores invalid `risk_level`
+- **File:** `app/repositories/address_repository.py`
+- **Line:** 144-149
+- **Issue:** If an invalid `risk_level` is passed, the `ValueError` from `RiskLevel(risk_level.lower())` is caught and silently ignored. The query returns unfiltered results instead of empty or error.
+- **Fix:** Re-raise `ValidationException` on invalid enum value.
+
+#### H-4: `test_blockscout_service_rejects_bad_base_url` mutates global settings without cleanup
+- **File:** `tests/test_p2p3_fixes.py`
+- **Line:** 113-122
+- **Issue:** Modifies `bss_module.settings.BLOCKSCOUT_BASE_URL` directly. Since `get_settings()` is `@lru_cache()`, this change **persists across tests**, polluting global state for all subsequent test runs.
+- **Fix:** Use `monkeypatch` or call `reset_settings()` after the test.
+
+#### H-5: `risk_engine.py` (legacy) has an `async @property` — runtime crash
+- **File:** `app/services/risk_engine.py`
+- **Line:** 108-112
+- **Issue:** `@property async def blockscout(self):` is invalid Python. Awaiting a property (`await self.blockscout`) raises `TypeError: 'property' object is not awaitable`. This file appears to be legacy but is still imported in tests.
+- **Fix:** Either delete the legacy file or change to an async method.
+
+#### H-6: `ContentSizeLimitMiddleware` sets `request._receive` but Starlette may not use it
+- **File:** `app/main.py`
+- **Line:** 192-210
+- **Issue:** `request._receive = _sized_receive` monkey-patches a private attribute. In newer Starlette/FastAPI versions, the `receive` channel is accessed differently and this patch may be bypassed, making the size limit ineffective.
+- **Fix:** Use a proper ASGI middleware that intercepts the `receive` callable in the ASGI scope.
+
+#### H-7: `database.py` lazy initialization is bypassed at module import
+- **File:** `app/database.py`
+- **Line:** 43
+- **Issue:** `AsyncSessionLocal = get_async_session_maker()` is executed at import time, which immediately calls `get_async_engine()` and creates the engine. The `_async_engine = None` lazy init is useless.
+- **Fix:** Remove the module-level `AsyncSessionLocal = ...` assignment or make it a property/function.
+
+#### H-8: `get_current_user` tries JWT first and raises immediately on invalid token
+- **File:** `app/core/security.py`
+- **Line:** 175-186
+- **Issue:** If a request sends both a malformed Bearer token AND a valid X-API-Key, the function raises on the JWT before trying the API key. This breaks dual-auth fallback for clients that accidentally send both.
+- **Fix:** Catch `AuthenticationException` from JWT and fall through to API key check before raising.
+
+### 🟡 MEDIUM
+
+#### M-1: `mask_sensitive_data` and `_is_sensitive_key` use substring matching
+- **File:** `app/core/security.py` (line 460), `app/core/logging.py` (line 57)
+- **Issue:** `any(s in key_lower for s in _SENSITIVE_FIELDS)` causes false positives. E.g., key `"tokenized_api"` matches `"token"` and gets masked.
+- **Fix:** Use exact key matching or underscore-separated token matching consistently.
+
+#### M-2: `SUPPORTED_CHAINS` is defined twice
+- **File:** `app/validators.py`
+- **Line:** 12, 16
+- **Issue:** The second definition silently overwrites the first. Currently identical, but a future edit to one would be silently ignored.
+- **Fix:** Remove the duplicate.
+
+#### M-3: `LoginRequest.password` max_length=128 but bcrypt truncates at 72 bytes
+- **File:** `app/controllers/auth.py`
+- **Line:** 155
+- **Issue:** The Pydantic model allows passwords up to 128 chars, but bcrypt silently truncates at 72 bytes. The prehash workaround exists (`_prehash_password_for_bcrypt`) but the model validation doesn't communicate this to users.
+- **Fix:** Add a validator note or reduce max_length with documentation.
+
+#### M-4: `_login_attempts_fallback` dict grows unbounded in memory
+- **File:** `app/controllers/auth.py`
+- **Line:** 43
+- **Issue:** When Redis is unavailable, failed login attempts for unique usernames accumulate in memory forever. No TTL or cleanup.
+- **Fix:** Add timestamp-based eviction on access.
+
+#### M-5: `AddressRiskReportRequest.validate_address` does not validate checksum
+- **File:** `app/schemas.py`
+- **Line:** 63-69
+- **Issue:** Only checks prefix (`0x`) and length (42). Invalid Ethereum checksums (EIP-55) pass validation.
+- **Fix:** Add `eth_utils.is_checksum_address()` or similar validation.
+
+#### M-6: `batch_get_transactions` silently swallows exceptions
+- **File:** `app/services/blockscout_service.py`
+- **Line:** 347-359
+- **Issue:** `asyncio.gather(..., return_exceptions=True)` followed by `isinstance(r, dict)` silently drops exceptions. Failed batch items are lost without individual logging.
+- **Fix:** Log exceptions individually before filtering.
+
+#### M-7: `csrf_protection_middleware` CSRF cookie `secure=True` always
+- **File:** `app/core/security.py`
+- **Line:** 252-258
+- **Issue:** The cookie is always `secure=True`, even in local development without HTTPS. Browsers will reject the cookie on `http://localhost`, breaking local dev CSRF flows.
+- **Fix:** `secure=not settings.DEBUG` or similar.
+
+#### M-8: `lock_manager.py` `_generate_token` uses non-cryptographic random
+- **File:** `app/core/lock_manager.py`
+- **Line:** 67-68
+- **Issue:** `random.randint(100000, 999999)` is not cryptographically secure. Lock tokens should use `secrets.token_urlsafe()`.
+- **Fix:** Replace with `secrets.token_urlsafe(16)`.
+
+#### M-9: `message_queue.py` retry_count is never incremented on Redis auto-redelivery
+- **File:** `app/core/message_queue.py`
+- **Line:** 370-390
+- **Issue:** When a message handler fails, the message is NOT acknowledged. Redis Streams will redeliver it, but `envelope.retry_count` is never incremented. A poison pill message will be retried indefinitely until it expires from the stream.
+- **Fix:** Increment `retry_count` in the envelope (persisted to stream or tracked separately) before deciding on DLQ.
+
+#### M-10: `cache_service.py` `clear_pattern` can exceed Redis argument limits
+- **File:** `app/services/cache_service.py`
+- **Line:** 232-237
+- **Issue:** `scan_iter` + `delete(*keys)` with a large keyset can exceed Redis's maximum argument count or block the server.
+- **Fix:** Use pipeline with batched deletes (e.g., 500 keys at a time).
+
+#### M-11: `api_version` and `/` endpoints use ternary `Depends(get_current_user)` in parameter default
+- **File:** `app/main.py`
+- **Line:** 248-257, 282-290
+- **Issue:** `Depends(get_current_user) if settings.is_production else None` is evaluated at function definition time, not call time. If `settings.is_production` changes (e.g., via monkeypatch in tests), the dependency is already baked in.
+- **Fix:** Use a wrapper dependency that checks settings at runtime.
+
+#### M-12: `alembic/env.py` uses async DATABASE_URL for offline migrations
+- **File:** `alembic/env.py`
+- **Line:** 25-28
+- **Issue:** `run_migrations_offline()` returns `settings.DATABASE_URL` which is `postgresql+asyncpg://...`. Alembic offline mode expects a sync dialect. `DATABASE_URL_SYNC` exists but is not used.
+- **Fix:** Use `settings.DATABASE_URL_SYNC` in offline mode.
+
+### 🟢 LOW
+
+#### L-1: `AlertService._should_alert` is not thread-safe / async-safe
+- **File:** `app/services/alert_service.py`
+- **Line:** 42-52
+- **Issue:** `_last_alert_time` and `_alert_counts` are plain dicts. Concurrent coroutines could race on update. Low impact due to 5-min cooldown.
+- **Fix:** Use `asyncio.Lock` if strict correctness is needed.
+
+#### L-2: `risk_engine.py` (legacy) calls `self.db.commit()` directly
+- **File:** `app/services/risk_engine.py`
+- **Line:** ~multiple
+- **Issue:** The legacy engine commits directly, bypassing the request-level transaction managed by `get_db()`. Can cause partial commits on error.
+- **Fix:** Delete the legacy file or use `flush()` only.
+
+#### L-3: `test_engine` created unconditionally at import time
+- **File:** `app/database.py`
+- **Line:** 49-52
+- **Issue:** `test_engine = create_async_engine(...)` runs on every import, even in production. Minor overhead.
+- **Fix:** Move to test-only module or lazy creation.
+
+#### L-4: `BlockscoutService._request` re-creates semaphore on fallback path
+- **File:** `app/services/blockscout_service.py`
+- **Line:** 159-162
+- **Issue:** `_get_semaphore()` creates a new Semaphore if `self._semaphore is None`. Under race conditions, multiple semaphores could be created.
+- **Fix:** Use `asyncio.Lock` around semaphore creation.
+
+#### L-5: `monitor.py` auth cleanup with `del` does not actually clear memory
+- **File:** `app/controllers/monitor.py`
+- **Line:** 139-145
+- **Issue:** `del auth_msg, auth_data, api_key` only removes local variable references. CPython's string interning and garbage collection mean the API key string may remain in memory.
+- **Fix:** This is a best-effort defense; for true security, use `bytearray` and zero-fill, or accept the limitation.
+
+#### L-6: `monitor.py` `_pending_auth_count` decremented only in `finally`
+- **File:** `app/controllers/monitor.py`
+- **Line:** 200-203
+- **Issue:** If the client disconnects before `finally`, the counter is decremented. But if the server crashes between `accept()` and `finally`, the counter leaks. Very low probability.
+- **Fix:** Add periodic reconciliation or use a Redis-backed counter.
+
+#### L-7: `config.py` `DATABASE_URL_SYNC` doesn't use `os.environ` fallback for password
+- **File:** `app/config.py`
+- **Line:** 50-54
+- **Issue:** `DATABASE_URL` uses `os.environ.get("DB_PASSWORD", "")` as fallback, but `DATABASE_URL_SYNC` uses `self.DB_PASSWORD` directly. If DB_PASSWORD is empty string, sync URL has `user:@host` which may fail.
+- **Fix:** Apply same fallback logic to sync URL.
+
+#### L-8: `validators.py` `validate_email` is extremely permissive
+- **File:** `app/validators.py`
+- **Line:** 118-129
+- **Issue:** `"a@b.c"` passes. No real email validation.
+- **Fix:** Use `email-validator` library or a proper regex.
 
 ---
 
-### P0-002: `AddressReport` 模型不存在导致举报功能完全失效
+## 2. JWT Implementation — Short Expiry, Refresh Rotation
 
-**问题描述**:  
-`ReportedAddressStrategy.evaluate()` 中注释说明 "AddressReport 模型不存在，跳过举报检查"，直接返回 `(0, "")`。这意味着基于举报的风险评分规则永远返回 0 分，举报功能完全失效。
+### ✅ What's Done Well
+- **Access token expiry:** 30 minutes (`JWT_EXPIRE_MINUTES = 30`) — good, industry standard.
+- **Refresh token rotation:** Implemented with JTI white-listing in Redis, family tracking, and reuse detection.
+- **JTI hashing:** Uses HMAC-SHA256 to store hashed JTIs in Redis instead of plaintext.
+- **No fallback secret:** Removed hardcoded secrets; raises on missing `SECRET_KEY`.
+- **Token type claim:** Both access and refresh tokens include `type` claim.
 
-**影响**:  
-- 用户举报的地址不会被计入风险评分
-- 举报功能形同虚设，严重影响产品核心功能
+### 🟠 HIGH
 
-**修复建议**:  
-实现 `AddressReport` 模型的查询逻辑，或从数据库中查询举报记录。
+#### H-JWT-1: Access token decoder does not verify `type == "access"`
+- **File:** `app/core/security.py`
+- **Line:** 189-200
+- **Issue:** Refresh tokens can be used as access tokens. See C-2 above.
+- **Severity:** HIGH
 
-```python
-# 修复后
-class ReportedAddressStrategy(RiskRuleStrategy):
-    async def evaluate(self, address, chain, rule, db, blockscout):
-        from sqlalchemy import func, select
-        from app.models import AddressReport
-        
-        result = await db.execute(
-            select(func.count(AddressReport.id))
-            .where(
-                AddressReport.address == address,
-                AddressReport.chain == chain,
-                AddressReport.status == "confirmed"
-            )
-        )
-        report_count = result.scalar() or 0
-        
-        condition = rule.condition or {}
-        threshold = condition.get("min_reports", 1)
-        weight = rule.risk_weight
-        
-        if report_count >= threshold:
-            impact = rule.risk_score_impact or 50
-            score = min(report_count * impact, 100) * weight
-            return score, f"地址被举报 {report_count} 次"
-        
-        return 0, ""
-```
+#### H-JWT-2: Refresh token rotator does not verify `type == "refresh"`
+- **File:** `app/core/security.py`
+- **Line:** 147-160
+- **Issue:** Access tokens can be rotated into refresh tokens. See C-3 above.
+- **Severity:** HIGH
 
-**相关文件**: `app/services/risk_engine_service.py`
+#### H-JWT-3: Refresh token TTL is 7 days
+- **File:** `app/core/security.py`
+- **Line:** 44
+- **Issue:** `JWT_REFRESH_EXPIRE_MINUTES = 10080` (7 days) is on the longer side. NIST SP 800-63B recommends refresh tokens "should have a maximum lifetime" but doesn't specify. OWASP recommends "as short as possible" — typically 1-7 days is acceptable with rotation. With proper rotation implemented, 7 days is borderline but acceptable.
+- **Recommendation:** Consider reducing to 1-3 days for higher-security deployments.
+
+### 🟡 MEDIUM
+
+#### M-JWT-1: Redis fallback disables rotation detection silently
+- **File:** `app/core/security.py`
+- **Line:** 107-111
+- **Issue:** If Redis is unavailable, refresh tokens are still issued and accepted, but rotation/replay detection is disabled. An attacker could replay a stolen refresh token indefinitely.
+- **Fix:** Consider requiring Redis for refresh token operations, or implement an in-memory fallback that at least tracks per-process token usage.
 
 ---
 
-### P0-003: `Transaction` 模型缺少 `address` 字段但代码多处引用
+## 3. Database — SQL Injection Prevention, Proper Indexing
 
-**问题描述**:  
-`Transaction` 模型中没有 `address` 字段，但 `TransactionPatternStrategy.evaluate()`、`LargeTransferStrategy.evaluate()`、`TransactionRepository.create()` 等多处代码使用 `Transaction.address == address` 进行查询。这会导致 SQLAlchemy 抛出 `InvalidRequestError`。
+### ✅ What's Done Well
+- **SQL injection prevention:** All queries use SQLAlchemy ORM/Expression Language with parameterized queries. No raw SQL string concatenation in repositories.
+- **Proper indexing:** Models define indexes on frequently queried columns (`address`, `chain`, `tx_hash`, `risk_score`, `block_timestamp`, etc.).
+- **GIN index on tags:** `Index("ix_addresses_tags", "tags", postgresql_using="gin")` enables efficient array queries.
+- **Connection pooling:** Configured with `pool_pre_ping=True`, `pool_recycle`, `pool_size`, `max_overflow`.
+- **Alembic migrations:** Versioned migrations exist for schema management.
 
-**影响**:  
-- 交易模式分析和大额转账分析功能完全崩溃
-- 任何涉及 `Transaction.address` 的查询都会抛出异常
+### 🟡 MEDIUM
 
-**修复建议**:  
-在 `Transaction` 模型中添加 `address` 字段，或修改查询逻辑使用 `from_address`/`to_address`。
+#### M-DB-1: `AddressRepository.search()` manual LIKE escaping
+- **File:** `app/repositories/address_repository.py`
+- **Line:** 130-134
+- **Issue:** Manual escaping `query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")` is error-prone. SQLAlchemy's `like()` with escape is used correctly, but future changes could break this.
+- **Fix:** Use SQLAlchemy's `literal_column` or a dedicated sanitization utility.
 
-```python
-# 方案1：添加 address 字段到模型
-class Transaction(Base):
-    # ... 现有字段 ...
-    address = Column(String(255), nullable=False, index=True)  # 关联地址（from或to）
+#### M-DB-2: `TransactionRepository.list()` has no repository-level page_size limit
+- **File:** `app/repositories/transaction_repository.py`
+- **Line:** 97-118
+- **Issue:** The API layer validates `page_size <= 100`, but a direct repository call could pass `page_size=1000000`. Defense in depth missing.
+- **Fix:** Add `page_size = min(page_size, 100)` in the repository.
 
-# 方案2：修改查询逻辑（推荐，更语义化）
-# TransactionPatternStrategy.evaluate()
-from sqlalchemy import or_
-result = await db.execute(
-    select(func.count(Transaction.id))
-    .where(
-        or_(
-            Transaction.from_address == address,
-            Transaction.to_address == address
-        ),
-        Transaction.block_timestamp >= day_ago
-    )
-)
-```
+#### M-DB-3: `Address` model `default=dict` for JSON columns
+- **File:** `app/models.py`
+- **Line:** 88, 115
+- **Issue:** `meta_info = Column(JSON, default=dict)` — SQLAlchemy handles callable defaults correctly, but this pattern is sometimes confused with mutable default arguments. Verified safe in current code.
+- **Note:** No action needed, but worth monitoring.
 
-**相关文件**: `app/services/risk_engine_service.py`, `app/repositories/transaction_repository.py`
+#### M-DB-4: Migration `001_initial.py` uses `server_default=sa.text('now()')` for timestamps
+- **File:** `alembic/versions/001_initial.py`
+- **Line:** Multiple
+- **Issue:** `now()` is evaluated at row insertion time on the server. This is fine for `created_at` but for `updated_at`, it requires `onupdate` which is missing in the migration. The model has `onupdate=func.now()` but the migration doesn't.
+- **Fix:** Add `server_onupdate=sa.text('now()')` or a trigger for `updated_at` columns in the migration.
 
----
+### 🟢 LOW
 
-### P0-004: `RuleRepository.toggle()` 参数类型不匹配
-
-**问题描述**:  
-`RuleRepository.toggle()` 方法接受 `rule_id: UUID` 参数，但 `RiskRule` 模型的 `id` 字段是 `BigInteger` 类型。调用 `get_by_id(rule_id)` 时，SQLAlchemy 会因类型不匹配而查询失败。
-
-**影响**:  
-- 规则状态切换功能完全不可用
-- 返回 500 错误
-
-**修复建议**:  
-将参数类型改为 `int` 以匹配模型定义。
-
-```python
-# 修复前
-async def toggle(self, rule_id: UUID, updated_by: str = "system") -> RiskRule:
-
-# 修复后
-async def toggle(self, rule_id: int, updated_by: str = "system") -> RiskRule:
-```
-
-**相关文件**: `app/repositories/rule_repository.py`
+#### L-DB-1: `alembic/env.py` offline mode uses async URL
+- **File:** `alembic/env.py`
+- **Line:** 25
+- **Issue:** See M-12 above. `DATABASE_URL_SYNC` should be used for offline migrations.
 
 ---
 
-## P1 - 严重问题（需尽快修复）
+## 4. Error Handling — Generic Messages to Client, Detailed Server-Side
 
-### P1-001: `DIContainer.cache` 属性在事件循环运行时创建任务存在竞态条件
+### ✅ What's Done Well
+- **Production error masking:** `general_exception_handler` returns `"An internal error occurred"` in production, with full traceback logged server-side.
+- **FidesException structured responses:** Consistent `{"error": {"code": ..., "message": ..., "trace_id": ...}}` format.
+- **Trace ID propagation:** `request.state.trace_id` flows through the request lifecycle and into logs.
 
-**问题描述**:  
-`DIContainer.cache` 属性的懒加载逻辑中，当事件循环正在运行时，使用 `loop.create_task(self._cache.connect())` 异步创建连接任务。这可能导致在连接完成前就有其他代码尝试使用 Redis，引发 `RuntimeError`。
+### 🟠 HIGH
 
-**影响**:  
-- 高并发下可能出现缓存连接未就绪就使用的情况
-- 导致不可预测的 `RuntimeError`
+#### H-EH-1: Controller endpoints catch generic `Exception` and raise `HTTPException`
+- **File:** `app/controllers/addresses.py`, `transactions.py`, `rules.py`, `monitor.py` (HTTP endpoints)
+- **Issue:** All controllers wrap service calls in `try/except Exception: raise HTTPException(...)`. This bypasses the `FidesException` handler in `main.py`, producing inconsistent error response formats. FastAPI's native HTTPException format (`{"detail": ...}`) is different from the Fides JSON format.
+- **Fix:** Remove the generic `except Exception` blocks in controllers and let exceptions propagate to the global handlers. Only catch `FidesException` to re-raise it.
 
-**修复建议**:  
-移除懒加载中的异步连接逻辑，或确保连接完成后再返回。
+#### H-EH-2: `auth.py` uses raw `HTTPException` instead of `FidesException`
+- **File:** `app/controllers/auth.py`
+- **Line:** 134, 178, 206, 228
+- **Issue:** Login failures raise `HTTPException` directly. These produce FastAPI's default error format instead of the structured Fides format.
+- **Fix:** Use `AuthenticationException` (or a new `LoginException`) subclass of `FidesException`.
 
-```python
-# 修复后
-@property
-def cache(self) -> CacheService:
-    if not self._cache:
-        self._cache = CacheService()
-        # 不在属性访问中做异步操作，依赖 lifespan 初始化
-    return self._cache
-```
+### 🟡 MEDIUM
 
-**相关文件**: `app/core/di.py`
+#### M-EH-1: `verify_api_key` catches all exceptions and returns `False`
+- **File:** `app/core/security.py`
+- **Line:** 473-476
+- **Issue:** Database connectivity issues, Redis failures, or unexpected errors cause all API key requests to fail with a generic "Invalid API key" response. This makes debugging difficult.
+- **Fix:** Distinguish between "invalid key" (return False) and "system error" (re-raise or log at ERROR level).
 
----
-
-### P1-002: 速率限制器使用 `cache.incr()` 但不设置 TTL，导致计数器永不过期
-
-**问题描述**:  
-`RateLimiter.is_allowed()` 在首次请求时设置 `expire=60`，但后续使用 `cache.incr()` 递增计数时**不更新 TTL**。这意味着如果持续有请求，计数器永远不会重置，用户将被永久限流。
-
-**影响**:  
-- 活跃用户可能被错误地永久限流
-- 违反速率限制的预期行为
-
-**修复建议**:  
-在 `incr()` 后重新设置 TTL，或使用 Redis 的 `INCR` + `EXPIRE` 原子操作。
-
-```python
-# 修复后
-async def is_allowed(self, key: str) -> bool:
-    # ...
-    count = int(count)
-    if count >= self.requests_per_minute:
-        return False
-    
-    # 增加计数并刷新 TTL
-    await cache.incr(cache_key)
-    await cache.expire(cache_key, 60)  # 刷新 TTL
-    return True
-```
-
-**相关文件**: `app/core/security.py`
+#### M-EH-2: `BlockscoutService._request` doesn't distinguish error types for clients
+- **File:** `app/services/blockscout_service.py`
+- **Line:** 251-273
+- **Issue:** All errors are wrapped in `BlockscoutAPIException` with a string message. Callers can't easily distinguish between 404, 429, 5xx, or network errors.
+- **Fix:** Include the original status code in the exception and/or create subclasses.
 
 ---
 
-### P1-003: `AddressAgeStrategy` 时区处理错误
+## 5. Logging — Structured JSON, Request ID Propagation, No Secrets in Logs
 
-**问题描述**:  
-`AddressAgeStrategy.evaluate()` 中，`first_tx_time.replace(tzinfo=None)` 将 UTC 时间转换为 naive datetime，然后与 `datetime.now(timezone.utc)`（aware datetime）相减。在 Python 3.11+ 中，这会导致 `TypeError`。
+### ✅ What's Done Well
+- **Structured JSON logging:** Uses `structlog` with `JSONRenderer`.
+- **Request ID propagation:** Module-level `ContextVar` `_request_id_var` correctly propagates across async contexts.
+- **Sensitive data masking:** `mask_sensitive_data()`, `sanitize_log_message()`, and `sanitize_event_dict()` implement multi-layer defense.
+- **No secrets in client responses:** Production errors hide details.
+- **Safe header logging:** `request_tracing_middleware` scrubs Authorization, X-API-Key, Cookie before logging.
 
-**影响**:  
-- 地址年龄检查功能崩溃
-- 风险评分计算中断
+### 🟡 MEDIUM
 
-**修复建议**:  
-统一使用 aware datetime 进行计算。
+#### M-LOG-1: Substring matching in sensitive key detection causes over-masking
+- **File:** `app/core/security.py` (line ~460), `app/core/logging.py` (line ~57)
+- **Issue:** `"tokenized_field"` matches `"token"` and gets masked. `"my_api_keychain"` matches `"api_key"`.
+- **Fix:** Use exact token matching: `key_lower.split("_")` intersection with `_SENSITIVE_FIELDS`.
 
-```python
-# 修复前
-first_tx_time = datetime.fromisoformat(first_tx.replace('Z', '+00:00'))
-age_days = (datetime.now(timezone.utc) - first_tx_time.replace(tzinfo=None)).days
+#### M-LOG-2: `AlertService.send_alert` logs payload details at CRITICAL level
+- **File:** `app/services/alert_service.py`
+- **Line:** 70-78
+- **Issue:** `logger.critical("risk_engine_alert", ...)` includes `details=payload["details"]`. If the alert payload ever contains sensitive data (e.g., address, tx_hash), it goes to logs unconditionally. While address/tx_hash are not highly sensitive, in some contexts they could be.
+- **Fix:** Apply `mask_sensitive_data()` to the alert payload before logging.
 
-# 修复后
-first_tx_time = datetime.fromisoformat(first_tx.replace('Z', '+00:00'))
-if first_tx_time.tzinfo is None:
-    first_tx_time = first_tx_time.replace(tzinfo=timezone.utc)
-age_days = (datetime.now(timezone.utc) - first_tx_time).days
-```
-
-**相关文件**: `app/services/risk_engine_service.py`
-
----
-
-### P1-004: `AlertService._should_alert()` 冷却逻辑存在严重缺陷
-
-**问题描述**:  
-`_should_alert()` 的冷却逻辑是**全局冷却**（所有告警类型共享一个 `_last_alert_time`），而不是按告警类型冷却。这意味着一个低优先级的告警会阻止所有后续告警（包括高优先级告警）的发送。
-
-**影响**:  
-- 高优先级告警可能被低优先级告警阻塞
-- 告警遗漏可能导致严重安全事件未被及时发现
-
-**修复建议**:  
-按告警类型分别维护冷却时间。
-
-```python
-# 修复后
-class AlertService:
-    def __init__(self):
-        # ...
-        self._last_alert_time: Dict[str, datetime] = {}  # 按类型记录
-    
-    def _should_alert(self, alert_type: str) -> bool:
-        if not self.enabled:
-            return False
-        
-        now = datetime.now(timezone.utc)
-        last_time = self._last_alert_time.get(alert_type)
-        
-        if last_time is None or now - last_time > timedelta(minutes=self.cooldown_minutes):
-            self._last_alert_time[alert_type] = now
-            self._alert_counts[alert_type] = self._alert_counts.get(alert_type, 0) + 1
-            return True
-        return False
-```
-
-**相关文件**: `app/services/alert_service.py`
+#### M-LOG-3: `request_tracing_middleware` logs query params but doesn't mask all sensitive patterns
+- **File:** `app/core/security.py`
+- **Line:** 490-500
+- **Issue:** The query param masking only checks for `api_key`, `token`, `secret`, `password`, `key`. It misses patterns like `jwt`, `session_id`, `bearer`.
+- **Fix:** Expand the sensitive param list or use the same `_SENSITIVE_FIELDS` frozenset.
 
 ---
 
-### P1-005: `get_db()` 依赖函数在异常时仍尝试 `commit()`
+## 6. Async Operations — Error Handling, Retry Logic, Idempotency
 
-**问题描述**:  
-`get_db()` 在 `yield session` 之后执行 `await session.commit()`。如果业务逻辑中抛出了异常，FastAPI 的依赖注入机制会捕获异常并进入 `except` 块执行 `rollback()`，但 `commit()` 在 `try` 块中，异常发生时不会执行。然而，如果业务逻辑没有抛出异常但手动调用了 `rollback()`，`commit()` 仍会执行，可能导致意外提交。
+### ✅ What's Done Well
+- **Retry with backoff:** `tenacity` provides `stop_after_attempt(3)` + `wait_exponential` on Blockscout API calls.
+- **Circuit breaker:** Implemented with Redis persistence for multi-instance state sharing.
+- **SSRF protection:** URL whitelist on Blockscout endpoints.
+- **Semaphore-based concurrency:** `asyncio.Semaphore` limits concurrent Blockscout requests.
+- **Graceful Redis degradation:** Rate limiter, cache, and refresh token rotation all have local memory fallbacks.
+- **Idempotent cache operations:** `CacheService.get_or_set()` uses distributed locks to prevent cache stampede.
 
-**影响**:  
-- 可能导致不应提交的事务被意外提交
-- 数据一致性风险
+### 🟠 HIGH
 
-**修复建议**:  
-使用 `asynccontextmanager` 明确控制事务边界。
+#### H-ASYNC-1: `database.py` engine created at import time despite "lazy init" claim
+- **File:** `app/database.py`
+- **Line:** 43
+- **Issue:** See H-7 above. The engine is created at import, defeating the lazy initialization and making testing harder.
+- **Fix:** Remove `AsyncSessionLocal = get_async_session_maker()` at module level.
 
-```python
-# 修复后
-@asynccontextmanager
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    session = get_async_session_maker()()
-    try:
-        yield session
-        await session.commit()
-    except Exception:
-        await session.rollback()
-        raise
-    finally:
-        await session.close()
-```
+### 🟡 MEDIUM
 
-**相关文件**: `app/core/di.py`
+#### M-ASYNC-1: `lock_manager.py` `acquire_lock` lacks exponential backoff
+- **File:** `app/core/lock_manager.py`
+- **Line:** 88-111
+- **Issue:** Fixed `RETRY_INTERVAL = 0.5` seconds in a while-true loop creates a thundering herd under high contention.
+- **Fix:** Use exponential backoff (capped at e.g., 5 seconds).
 
----
+#### M-ASYNC-2: `message_queue.py` poison pill messages retry indefinitely
+- **File:** `app/core/message_queue.py`
+- **Line:** 370-395
+- **Issue:** See M-9 above. Failed messages are redelivered by Redis Streams without `retry_count` increment. A permanently failing message will be retried until the stream TTL expires.
+- **Fix:** Track retry count via Redis Streams' `XPENDING` and consumer idle time, or store retry state in Redis.
 
-### P1-006: `BlockscoutService._request()` 在断路器开路时仍尝试连接
+#### M-ASYNC-3: `risk_engine_service.py` `analyze_transaction` warns on DB failure but returns success
+- **File:** `app/services/risk_engine_service.py`
+- **Line:** 323-325
+- **Issue:** If `transaction_repo.create()` fails, the analysis result is still returned and cached. The DB and cache become inconsistent.
+- **Fix:** Either raise the exception (fail the request) or implement a background retry queue for DB writes.
 
-**问题描述**:  
-`_check_circuit()` 在 `_request()` 开头检查断路器状态，但如果断路器开路，它会抛出 `BlockscoutAPIException`，然后被 `tenacity` 的 `@retry` 装饰器捕获并重试。这意味着断路器开路后，请求仍会被重试 3 次，浪费资源。
+#### M-ASYNC-4: `blockscout_service.py` `_check_circuit` is not async but called from async context
+- **File:** `app/services/blockscout_service.py`
+- **Line:** 165-167
+- **Issue:** `_check_circuit()` is a sync method that checks `self._circuit_open`. While this is a simple attribute read, the pattern is inconsistent. The `_record_success` and `_record_failure` methods were fixed to be async (P0 fix verified), but `_check_circuit` remains sync.
+- **Fix:** For consistency, make it async (low priority since it's just an attribute read).
 
-**影响**:  
-- 断路器开路后仍消耗不必要的资源
-- 延迟失败响应时间
+### 🟢 LOW
 
-**修复建议**:  
-在重试装饰器中排除断路器开路异常。
+#### L-ASYNC-1: `alert_service.py` creates a new `httpx.AsyncClient` per alert
+- **File:** `app/services/alert_service.py`
+- **Line:** 83-84
+- **Issue:** `async with httpx.AsyncClient(timeout=10.0) as client:` creates and destroys a connection pool for every alert. In an alert storm, this is expensive.
+- **Fix:** Use a shared client instance or connection pool.
 
-```python
-# 修复后
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=10),
-    retry=retry_if_exception_type(BlockscoutAPIException),
-    reraise=True
-)
-async def get_address_info(self, address: str) -> Dict[str, Any]:
-    # 在方法内部检查断路器，不在 _request 中
-    self._check_circuit()
-    return await self._request("GET", f"/addresses/{address}")
-```
-
-**相关文件**: `app/services/blockscout_service.py`
-
----
-
-## P2 - 一般问题（建议修复）
-
-### P2-001: 多处使用 `from app.core.di import get_container` 局部导入
-
-**问题描述**:  
-`addresses.py`、`transactions.py`、`rules.py` 等 Controller 中多次使用局部导入 `from app.core.di import get_container`。这违反了 Python 的 PEP 8 规范，且可能影响性能（虽然影响很小）。
-
-**影响**:  
-- 代码可读性降低
-- 每次请求都执行导入操作（虽有缓存，但不够优雅）
-
-**修复建议**:  
-将所有导入移到文件顶部。
-
-```python
-# 修复后
-from app.core.di import get_container  # 移到文件顶部
-
-@router.get("/{address}/risk")
-async def get_address_risk(...):
-    repo = get_container().get_address_repository(db)  # 直接使用
-```
-
-**相关文件**: `app/controllers/addresses.py`, `app/controllers/transactions.py`, `app/controllers/rules.py`, `app/controllers/monitor.py`
+#### L-ASYNC-2: `monitor.py` WebSocket cleanup task in `lifespan` is not monitored for liveness
+- **File:** `app/main.py`
+- **Line:** 55-71
+- **Issue:** The `_websocket_cleanup_loop` task runs in the background. If it crashes permanently (not just one exception), stale connections will never be cleaned up.
+- **Fix:** Add a supervisor loop that restarts the cleanup task if it dies.
 
 ---
 
-### P2-002: `RiskEngineService.analyze_transaction()` 中 `calculate_address_risk()` 被调用两次
+## Appendix: File-by-File Quick Reference
 
-**问题描述**:  
-在 `analyze_transaction()` 中，对发送方和接收方分别调用 `calculate_address_risk()`，但 `calculate_address_risk()` 内部已经会缓存结果。然而，如果两个地址相同（自转账），会执行两次相同的计算。
-
-**影响**:  
-- 不必要的重复计算
-- 增加 Blockscout API 调用
-
-**修复建议**:  
-使用集合去重后再计算。
-
-```python
-# 修复后
-addresses_to_check = set()
-if from_addr:
-    addresses_to_check.add((from_addr, "sender"))
-if to_addr:
-    addresses_to_check.add((to_addr, "receiver"))
-
-for addr, role in addresses_to_check:
-    score, level, _ = await self.calculate_address_risk(addr, chain)
-    # ...
-```
-
-**相关文件**: `app/services/risk_engine_service.py`
-
----
-
-### P2-003: `CacheService` 的 L1 内存缓存未实现
-
-**问题描述**:  
-`CacheService` 类中有 `_local_cache` 和 `_local_ttl` 字段，但所有方法都直接访问 Redis，没有使用 L1 内存缓存。注释中提到 "多级缓存：内存（L1）+ Redis（L2）"，但实际未实现。
-
-**影响**:  
-- 缓存读取延迟高于预期（每次都要访问 Redis）
-- 增加 Redis 负载
-
-**修复建议**:  
-实现 L1 内存缓存，优先从内存读取。
-
-```python
-# 修复后
-async def get(self, key: str) -> Optional[str]:
-    # L1 缓存
-    if key in self._local_cache:
-        if self._local_ttl.get(key, 0) > time.time():
-            return self._local_cache[key]
-        else:
-            del self._local_cache[key]
-    
-    # L2 缓存
-    if self._redis is None:
-        return None
-    value = await self._redis.get(key)
-    if value:
-        # 回填 L1
-        self._local_cache[key] = value.decode()
-        self._local_ttl[key] = time.time() + 60  # L1 TTL 60s
-    return value.decode() if value else None
-```
-
-**相关文件**: `app/services/cache_service.py`
+| File | Issues Found | Max Severity |
+|------|-------------|--------------|
+| `app/main.py` | H-EH-1, H-6, M-11 | HIGH |
+| `app/config.py` | L-7 | LOW |
+| `app/core/security.py` | C-2, C-3, H-1, H-2, H-8, M-1, M-3, M-7, M-LOG-3 | CRITICAL |
+| `app/core/middleware.py` | — | — |
+| `app/core/logging.py` | M-1 | MEDIUM |
+| `app/core/exceptions.py` | — | — |
+| `app/core/di.py` | — | — |
+| `app/core/lock_manager.py` | M-8, M-ASYNC-1 | MEDIUM |
+| `app/core/message_queue.py` | M-9, M-ASYNC-2 | MEDIUM |
+| `app/database.py` | H-7, L-3 | HIGH |
+| `app/models.py` | M-DB-3 | MEDIUM |
+| `app/validators.py` | M-2, M-5, L-8 | MEDIUM |
+| `app/schemas.py` | M-5 | MEDIUM |
+| `app/cache.py` | — | — |
+| `app/controllers/auth.py` | H-EH-2, M-3, M-4 | HIGH |
+| `app/controllers/addresses.py` | H-EH-1, M-DB-1 | HIGH |
+| `app/controllers/transactions.py` | H-EH-1 | HIGH |
+| `app/controllers/rules.py` | H-EH-1 | HIGH |
+| `app/controllers/monitor.py` | H-1, M-ASYNC-2, L-5, L-6 | HIGH |
+| `app/services/risk_engine_service.py` | M-ASYNC-3 | MEDIUM |
+| `app/services/risk_engine.py` | H-5, L-2 | HIGH |
+| `app/services/blockscout_service.py` | M-6, M-ASYNC-4, L-4 | MEDIUM |
+| `app/services/cache_service.py` | C-1, M-10 | CRITICAL |
+| `app/services/alert_service.py` | M-LOG-2, L-ASYNC-1 | MEDIUM |
+| `app/services/risk_sync_service.py` | — | — |
+| `app/services/websocket_manager.py` | — | — |
+| `app/repositories/address_repository.py` | H-3, M-DB-1 | HIGH |
+| `app/repositories/transaction_repository.py` | M-DB-2 | MEDIUM |
+| `app/repositories/rule_repository.py` | — | — |
+| `alembic/env.py` | M-12, L-DB-1 | MEDIUM |
+| `alembic/versions/001_initial.py` | M-DB-4 | MEDIUM |
+| `tests/conftest.py` | — | — |
+| `tests/test_api.py` | — | — |
+| `tests/test_cache.py` | — | — |
+| `tests/test_p2p3_fixes.py` | H-4 | HIGH |
+| `tests/test_lock_and_queue.py` | — | — |
+| `tests/test_risk_engine.py` | — | — |
+| `tests/test_migrations.py` | — | — |
+| `tests/test_api_pending.py` | — | — |
 
 ---
 
-### P2-004: `WebSocketManager` 缺少心跳检测自动清理机制
-
-**问题描述**:  
-`WebSocketManager` 有 `cleanup_stale_connections()` 方法，但没有自动调用机制。`monitor.py` 中的 WebSocket 端点虽然发送心跳，但如果客户端异常断开（未发送 close 帧），连接会一直占用资源。
-
-**影响**:  
-- 僵尸连接占用内存和连接数配额
-- 达到 `max_connections` 后拒绝新连接
-
-**修复建议**:  
-添加后台任务定期清理僵尸连接。
-
-```python
-# 在 lifespan 中添加
-@app.on_event("startup")
-async def start_cleanup_task():
-    asyncio.create_task(cleanup_task())
-
-async def cleanup_task():
-    while True:
-        await asyncio.sleep(60)
-        manager = get_container().ws_manager
-        cleaned = await manager.cleanup_stale_connections(max_age_seconds=120)
-        if cleaned > 0:
-            logger.info("websocket_cleanup", cleaned=cleaned)
-```
-
-**相关文件**: `app/services/websocket_manager.py`, `app/main.py`
-
----
-
-### P2-005: `AddressRepository.search()` 的 `ilike` 查询在大数据量下性能差
-
-**问题描述**:  
-`search()` 方法使用 `AddressRisk.address.ilike(f"%{query}%")` 进行模糊查询。区块链地址是 42 字符的十六进制字符串，`ilike` 查询无法使用索引，在大数据量下会进行全表扫描。
-
-**影响**:  
-- 搜索功能在数据量增大后性能急剧下降
-- 可能导致数据库连接池耗尽
-
-**修复建议**:  
-使用前缀匹配（可利用索引）或引入 Elasticsearch/OpenSearch。
-
-```python
-# 修复后
-if query:
-    # 只支持前缀匹配，利用索引
-    base_query = base_query.where(
-        AddressRisk.address.ilike(f"{query}%")
-    )
-```
-
-**相关文件**: `app/repositories/address_repository.py`
-
----
-
-### P2-006: `TransactionRepository.list()` 返回的 `risk_indicators` 字段名不一致
-
-**问题描述**:  
-`Transaction` 模型有 `risk_indicators` 字段，但 `TransactionRepository.list()` 在构建响应时使用了 `tx.risk_factors`（模型中不存在此字段，应该是 `risk_indicators`）。
-
-**影响**:  
-- 交易列表中的风险指标数据为空或错误
-
-**修复建议**:  
-统一字段名。
-
-```python
-# 修复后
-"risk_indicators": tx.risk_indicators or [],
-```
-
-**相关文件**: `app/repositories/transaction_repository.py`
-
----
-
-### P2-007: `RuleRepository` 导入重复 `Tuple`
-
-**问题描述**:  
-`from typing import List, Optional, Tuple, Tuple` 中 `Tuple` 被导入了两次。
-
-**影响**:  
-- 代码质量下降，无功能影响
-
-**修复建议**:  
-```python
-from typing import List, Optional, Tuple
-```
-
-**相关文件**: `app/repositories/rule_repository.py`
-
----
-
-### P2-008: `MonitorStreamMessage` 使用 `datetime.utcnow()` 已废弃
-
-**问题描述**:  
-`schemas.py` 中 `MonitorStreamMessage` 和 `HealthCheckResponse` 使用 `datetime.utcnow()`，Python 3.12+ 已废弃此方法。
-
-**影响**:  
-- 未来 Python 版本兼容性风险
-- 时区信息丢失
-
-**修复建议**:  
-```python
-from datetime import datetime, timezone
-
-# 修复后
-timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-```
-
-**相关文件**: `app/schemas.py`
-
----
-
-## P3 - 建议（可选优化）
-
-### P3-001: 缺少 API 版本控制策略
-
-**建议**: 当前路由前缀为 `/api/v1/`，但缺少版本迁移策略。建议添加 API 版本弃用通知机制和文档。
-
-### P3-002: 缺少请求/响应示例文档
-
-**建议**: FastAPI 的 `responses` 参数已配置，但缺少具体的请求/响应 JSON 示例。建议添加 `examples` 参数。
-
-### P3-003: `get_container()` 全局变量不是线程/协程安全的
-
-**建议**: 使用 `asyncio.Lock` 保护 `_container` 的初始化，虽然 Python 的 GIL 保证了基本安全，但在异步场景下仍建议加锁。
-
-### P3-004: 缺少数据库连接池监控
-
-**建议**: 添加连接池使用情况的指标收集（如当前连接数、等待队列长度），便于运维监控。
-
-### P3-005: `BlockscoutService` 缺少请求超时重试的退避策略配置
-
-**建议**: 将重试配置（最大重试次数、退避时间）提取到 `Settings` 中，便于不同环境调整。
-
-### P3-006: 缺少健康检查的详细指标
-
-**建议**: `/health` 端点目前只返回 `status: healthy`，建议添加数据库连接状态、Redis 连接状态、Blockscout API 可达性等详细信息。
-
-### P3-007: 缺少请求体大小限制
-
-**建议**: 在 FastAPI 应用中配置 `max_request_size`，防止大请求体导致内存耗尽。
-
-### P3-008: `CacheService` 的 `pickle` 序列化存在安全风险
-
-**建议**: `pickle` 可以反序列化任意 Python 对象，如果 Redis 被入侵可能导致 RCE。建议改用 `json` 或 `msgpack`。
-
-### P3-009: 缺少输入长度限制
-
-**建议**: 对 `description`、`evidence` 等字段添加最大长度限制，防止存储过大内容。
-
-### P3-010: 缺少操作幂等性保证
-
-**建议**: 对 `POST /api/v1/address/{address}/report` 等接口添加幂等性键（Idempotency-Key）支持，防止重复提交。
-
-### P3-011: 缺少数据归档策略
-
-**建议**: 交易数据和审计日志会持续增长，建议添加数据归档/清理策略（如保留 90 天）。
-
-### P3-012: 测试覆盖率不足
-
-**建议**: 当前测试文件主要测试 API 端点，缺少对 Service 层、Repository 层的单元测试。建议添加：
-- `RiskEngineService` 的单元测试
-- `BlockscoutService` 的 Mock 测试
-- `CacheService` 的测试
-- 各 Strategy 的独立测试
-
----
-
-## 架构评估
-
-### 优势
-
-1. **分层清晰**: Router → Controller → Service → Repository → Model 的分层明确
-2. **设计模式应用得当**: 策略模式（风险规则）、观察者模式（告警）、Repository 模式（数据访问）
-3. **依赖注入**: DIContainer 实现了 Service Locator 模式，便于测试和替换实现
-4. **结构化日志**: structlog 配置完善，支持请求追踪
-5. **异常体系**: 统一的 `FidesException` 基类，支持错误码和 HTTP 状态码映射
-6. **配置管理**: Pydantic Settings 集中管理，生产环境安全验证
-
-### 待改进
-
-1. **Router 与 Controller 关系**: 当前 Router 直接调用 Service，未完全经过 Controller。建议明确 Controller 的职责，或合并 Router 和 Controller。
-2. **事务管理**: 缺少显式的 Unit of Work 模式，事务边界由 `get_db()` 隐式管理。
-3. **缓存一致性**: 风险规则更新后，缓存中的规则列表不会自动失效。
-
----
-
-## 安全性评估
-
-### 优势
-
-1. **输入验证**: 地址、交易哈希、链类型都有严格的验证
-2. **API Key 认证**: 支持 API Key 和 HMAC 签名验证
-3. **速率限制**: Redis 滑动窗口 + 本地降级
-4. **SQL 注入防护**: 使用 SQLAlchemy ORM 参数化查询
-5. **安全响应头**: HSTS、CSP、X-Frame-Options 等
-
-### 待改进
-
-1. **CORS 配置**: 生产环境 `CORS_ALLOW_HEADERS: ["*"]` 过于宽松
-2. **日志敏感信息**: 需要确认日志中是否可能记录敏感信息（如 API Key）
-3. **Redis 安全**: 配置中 `REDIS_PASSWORD` 可为空，生产环境应强制要求
-
----
-
-## 性能评估
-
-### 优势
-
-1. **全异步**: 数据库、HTTP、Redis 都使用异步客户端
-2. **连接池**: 数据库、Redis、HTTP 都有连接池配置
-3. **缓存策略**: Redis 缓存 + 缓存穿透保护
-4. **并发控制**: 信号量限制 Blockscout API 并发
-
-### 待改进
-
-1. **N+1 查询**: `get_address_risk()` 中多次查询数据库（风险记录、交易数量、风险事件），可优化为单次查询或并行查询
-2. **缓存预热**: 服务启动时未预热常用数据
-3. **数据库索引**: 部分查询字段缺少索引（如 `Transaction.address`）
-
----
-
-## 总结
-
-FidesOrigin 后端代码整体质量良好，架构设计现代，设计模式应用得当。但存在 **4 个 P0 级致命问题**需要立即修复，主要集中在：
-
-1. **信号量竞态条件**（并发控制失效）
-2. **举报功能完全失效**（核心功能缺失）
-3. **Transaction 模型字段不匹配**（查询崩溃）
-4. **参数类型不匹配**（功能不可用）
-
-修复 P0 和 P1 问题后，项目可达到生产可用状态。P2 和 P3 问题可作为后续迭代优化。
-
----
-
-**审计人**: AI Co-Founder (Kimi Claw)  
-**审计完成时间**: 2026-06-17 01:30 GMT+8
+## Recommended Priority Order for Fixes
+
+1. **CRITICAL:** Fix C-1 (`CacheService.get()` double decode) — breaks production cache
+2. **CRITICAL:** Fix C-2 and C-3 (JWT type verification) — token type bypass
+3. **HIGH:** Fix H-1 (WebSocket localhost in production) — CORS bypass
+4. **HIGH:** Fix H-7 (database.py lazy init bypass) — import-time side effects
+5. **HIGH:** Fix H-EH-1 (controller exception handling inconsistency) — API contract breakage
+6. **HIGH:** Fix H-2 (request signature on GET sensitive paths) — replay attack vector
+7. **MEDIUM:** Fix M-1 (substring matching in log masking) — potential over-masking/under-masking
+8. **MEDIUM:** Fix M-9 (message queue poison pill) — infinite retry loop
+9. **MEDIUM:** Fix M-ASYNC-3 (analyze_transaction DB inconsistency) — data integrity

@@ -150,6 +150,10 @@ async def rotate_refresh_token(old_token: str) -> dict:
     except jwt.InvalidTokenError:
         raise AuthenticationException("Invalid refresh token")
     
+    # [CRITICAL Fix] Verify token type is "refresh"
+    if payload.get("type") != "refresh":
+        raise AuthenticationException("Invalid token type: expected refresh token")
+    
     username = payload.get("sub")
     old_jti = payload.get("jti")
     family = payload.get("family")
@@ -222,6 +226,9 @@ def decode_access_token(token: str) -> TokenData:
         payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
         role: str = payload.get("role", "admin")
+        # [CRITICAL Fix] Verify token type is "access"
+        if payload.get("type") != "access":
+            raise AuthenticationException("Invalid token type: expected access token")
         if username is None:
             raise AuthenticationException("Invalid token: missing subject")
         return TokenData(username=username, role=role)
