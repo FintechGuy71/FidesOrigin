@@ -44,6 +44,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
+          retention-days: 7
 
   build:
     runs-on: ubuntu-latest
@@ -68,6 +69,7 @@ jobs:
           path: |
             apps/web/dist
             apps/web/.next
+          retention-days: 7
 
   # [LOW-25 FIX] Security scanning job
   security-scan:
@@ -106,3 +108,4 @@ jobs:
           path: |
             apps/contracts/slither.sarif
             pnpm-audit.json
+          retention-days: 7

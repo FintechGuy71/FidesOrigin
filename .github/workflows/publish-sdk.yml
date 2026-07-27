@@ -18,6 +18,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify signed tag
+        run: |
+          # Ensure this is a signed/annotated tag, not a lightweight tag
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          TAG_TYPE=$(git cat-file -t "$TAG_NAME" 2>/dev/null || echo "")
+          if [ "$TAG_TYPE" != "tag" ]; then
+            echo "❌ Refusal: tag '$TAG_NAME' is a lightweight tag (type=$TAG_TYPE)."
+            echo "   Only annotated/signed tags are allowed for publishing."
+            echo "   Create with: git tag -s $TAG_NAME -m 'release message'"
+            exit 1
+          fi
+          echo "✅ Verified signed/annotated tag: $TAG_NAME"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

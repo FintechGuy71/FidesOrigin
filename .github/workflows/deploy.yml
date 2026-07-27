@@ -21,7 +21,7 @@ jobs:
           node-version: '22'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4  # [Medium Fix #60] Consistent action version
+        uses: pnpm/action-setup@v4 # [Medium Fix #60] Consistent action version
         with:
           version: 11.6.0
 
@@ -52,6 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy]
     if: github.ref == 'refs/heads/main'
+    environment: production-k8s
     permissions:
       contents: read
       packages: write

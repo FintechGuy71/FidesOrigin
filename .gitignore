@@ -87,6 +87,9 @@ k8s/*-sealed-secret.yaml
 # Data sync env
 data-sync/.env
 
+# Generated data files (synced at runtime, must not be committed)
+data-publisher/synced-addresses.json
+
 # Wallet files (contain sensitive mnemonic phrases)
 .wallet-*.json
 

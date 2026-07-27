@@ -39,6 +39,8 @@ jobs:
       - name: Run tests
         run: cd apps/contracts && npx hardhat test
 
+      # [SECURITY] PRIVATE_KEY is scoped ONLY to this single step.
+      # Never move this to job-level env — it would expose the key to ALL steps.
       - name: Deploy
         if: github.event.inputs.confirm == 'DEPLOY'
         env:

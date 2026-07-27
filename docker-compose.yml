@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 services:
   # ── Data Publisher (main service) ───────────────────────────────────
@@ -9,7 +9,7 @@ services:
     container_name: fidesorigin-publisher
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - '9090:9090'
     env_file:
       - data-publisher/.env
     environment:
@@ -34,7 +34,13 @@ services:
     networks:
       - fidesorigin
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:9090/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:9090/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -62,7 +68,7 @@ services:
     networks:
       - fidesorigin
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 3
@@ -73,7 +79,7 @@ services:
     container_name: fidesorigin-prometheus
     restart: unless-stopped
     ports:
-      - "9091:9090"
+      - '127.0.0.1:9091:9090'
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -98,7 +104,7 @@ services:
     container_name: fidesorigin-grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - '127.0.0.1:3000:3000'
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       # [P1-fix] No default password — must set GRAFANA_ADMIN_PASSWORD env var
