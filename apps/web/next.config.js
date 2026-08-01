@@ -9,8 +9,8 @@ const nextConfig = {
     // unoptimized: true,
   },
   eslint: {
-    // Disable ESLint during builds to focus on functionality
-    // ESLint issues will be fixed incrementally
+    // Temporarily disable during A+ transition
+    // Code style issues being fixed incrementally
     ignoreDuringBuilds: true,
   },
   typescript: {
