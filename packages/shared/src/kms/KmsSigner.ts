@@ -384,18 +384,18 @@ export async function createSigner(
       );
     }
     // [MEDIUM Fix #11] 支持 PRIVATE_KEY_FILE 作为更安全的替代方案
-    const privateKeyFromFile = process.env.PRIVATE_KEY_FILE
-      ? (() => {
-          try {
-            const fs = require('fs');
-            return fs.readFileSync(process.env.PRIVATE_KEY_FILE!, 'utf-8').trim();
-          } catch (e) {
-            throw new Error(
-              `Failed to read private key from PRIVATE_KEY_FILE: ${process.env.PRIVATE_KEY_FILE}. Error: ${(e as Error).message}`
-            );
-          }
-        })()
-      : null;
+    let privateKeyFromFile: string | null = null;
+    if (process.env.PRIVATE_KEY_FILE && typeof window === 'undefined') {
+      try {
+        // 动态导入fs模块，避免浏览器构建时解析
+        const fs = require('fs');
+        privateKeyFromFile = fs.readFileSync(process.env.PRIVATE_KEY_FILE, 'utf-8').trim();
+      } catch (e) {
+        throw new Error(
+          `Failed to read private key from PRIVATE_KEY_FILE: ${process.env.PRIVATE_KEY_FILE}. Error: ${(e as Error).message}`
+        );
+      }
+    }
     const finalPrivateKey = privateKeyFromFile ?? privateKey;
 
     if (!finalPrivateKey) {

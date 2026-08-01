@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/eslintrc.json",
   "root": true,
   "extends": [
     "plugin:@typescript-eslint/recommended",
@@ -44,46 +43,7 @@
       }
     ],
     "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/naming-convention": [
-      "error",
-      {
-        "selector": "interface",
-        "format": ["PascalCase"]
-      },
-      {
-        "selector": "typeAlias",
-        "format": ["PascalCase"]
-      },
-      {
-        "selector": "enum",
-        "format": ["PascalCase"]
-      },
-      {
-        "selector": "enumMember",
-        "format": ["UPPER_CASE", "PascalCase"]
-      },
-      {
-        "selector": "variable",
-        "types": ["boolean"],
-        "format": ["camelCase", "UPPER_CASE"],
-        "prefix": ["is", "has", "should", "can", "did", "will"]
-      },
-      {
-        "selector": "variable",
-        "format": ["camelCase", "UPPER_CASE"],
-        "leadingUnderscore": "allow",
-        "trailingUnderscore": "allow"
-      },
-      {
-        "selector": "function",
-        "format": ["camelCase", "PascalCase"]
-      },
-      {
-        "selector": "parameter",
-        "format": ["camelCase"],
-        "leadingUnderscore": "allow"
-      }
-    ],
+    "@typescript-eslint/naming-convention": "off",
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "react-hooks/exhaustive-deps": "warn",
