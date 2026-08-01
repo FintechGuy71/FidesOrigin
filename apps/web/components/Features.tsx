@@ -1,5 +1,23 @@
 "use client";
 
+// 动画和视觉常量
+const AOS_DELAY_MULTIPLIER = 150;
+const MIN_HEIGHT_PX = 280;
+const RADAR_CIRCLES = RADAR_CIRCLES;
+const RADAR_CENTER = 100;
+const AOS_DELAY_MULTIPLIER = 150;
+const MIN_HEIGHT_PX = 280;
+const RADAR_CIRCLES = [40, 70, 100];
+const RADAR_CENTER = 100;
+const ANIMATION_DURATIONS = [60, 120, 180, 240, 300];
+const SCAN_LINE_Y = 180;
+const GRID_SIZE = 100;
+const RISK_COLORS = [35, 55, 75];
+const DASH_OFFSET = 120000;
+const DASH_SPEED = 1500;
+const SVG_VIEWBOX = 200;
+const ICON_SIZE = 24;
+
 /* ================================================================
    FEATURES v3 — Three core capabilities, each with visual anchor.
    ================================================================ */
@@ -42,7 +60,7 @@ function FeatureCard({
     <div
       className="group relative grid gap-8 lg:grid-cols-2 lg:gap-12"
       data-aos="fade-up"
-      data-aos-delay={index * 150}
+      data-aos-delay={index * AOS_DELAY_MULTIPLIER}
     >
       {/* Visual side — alternating left/right */}
       <div
@@ -50,19 +68,19 @@ function FeatureCard({
         style={{
           borderColor: "rgba(255,255,255,0.04)",
           background: "rgba(255,255,255,0.01)",
-          minHeight: "280px",
+          minHeight: `${MIN_HEIGHT_PX}px`,
         }}
       >
         {/* Placeholder visual */}
         {feature.visual === "radar" && (
           <div className="relative h-48 w-48">
-            <svg viewBox="0 0 200 200" className="h-full w-full">
+            <svg viewBox={`0 0 ${SVG_VIEWBOX} ${SVG_VIEWBOX}`} className="h-full w-full">
               {/* Radar rings */}
-              {[40, 70, 100].map((r) => (
+              {RADAR_CIRCLES.map((r) => (
                 <circle
                   key={r}
-                  cx="100"
-                  cy="100"
+                  cx={`${RADAR_CENTER}`}
+                  cy={`${RADAR_CENTER}`}
                   r={r}
                   fill="none"
                   stroke="rgba(139,126,200,0.1)"
@@ -92,7 +110,7 @@ function FeatureCard({
                 strokeWidth="1"
               />
               {/* Center dot */}
-              <circle cx="100" cy="100" r="3" fill="var(--fio-accent)" />
+              <circle cx={`${RADAR_CENTER}`} cy={`${RADAR_CENTER}`} r="3" fill="var(--fio-accent)" />
             </svg>
             <div
               className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-sm px-2 py-1 text-[0.6rem] font-mono"

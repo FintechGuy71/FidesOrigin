@@ -7,10 +7,49 @@ import LiveTransactionStream, { Transaction } from "@/components/LiveTransaction
 import { RiskBadge, RiskScore } from "@fidesorigin/ui";
 
 
+// 事件显示配置
+const MAX_EVENTS_DISPLAY = 50;
+const MAX_EVENT_NAME_LENGTH = 30;
+const MAX_ADDRESS_LENGTH = 10;
+const CHART_UPDATE_INTERVAL = 12;
+const CHART_ANIMATION_OFFSET = -6;
+const BAR_CHART_OFFSET = -8;
+const BAR_CHART_WIDTH = 20;
+
 // API 配置
+const MAX_EVENTS_DISPLAY = 50;
+const MAX_EVENT_NAME_LENGTH = 30;
+const MAX_ADDRESS_LENGTH = 10;
+const CHART_UPDATE_INTERVAL = 12;
+const CHART_ANIMATION_OFFSET = -6;
+const BAR_CHART_OFFSET = -8;
+const BAR_CHART_WIDTH = 20;
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || `${API_BASE}/dashboard`;
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://api.fidesorigin.com/ws";
+
+// WebSocket 重连配置
+const WS_INITIAL_RETRY_DELAY = 1000;
+const WS_MAX_RETRY_DELAY = 30000;
+const WS_RETRY_MULTIPLIER = 2;
+
+// 刷新间隔配置 (毫秒)
+const REFRESH_INTERVALS = {
+  realtime: REFRESH_INTERVALS.realtime,    // 2分钟
+  fast: REFRESH_INTERVALS.fast,        // 5分钟
+  normal: REFRESH_INTERVALS.normal,      // 12分钟
+  slow: REFRESH_INTERVALS.slow,       // 18分钟
+  verySlow: REFRESH_INTERVALS.verySlow,   // 25分钟
+} as const;
+
+// 数值格式化常量
+const FORMATTING = {
+  million: 1000000,
+  thousand: 1000,
+  hundred: 100,
+  minute: 60,
+  second: 1000,
+} as const;
 
 // 统计数据类型
 interface DashboardStats {
@@ -78,7 +117,7 @@ function useDashboardWebSocket(
         setIsConnected(false);
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+          const delay = Math.min(WS_INITIAL_RETRY_DELAY * Math.pow(WS_RETRY_MULTIPLIER, reconnectAttempts.current), WS_MAX_RETRY_DELAY);
           reconnectTimeout.current = setTimeout(connect, delay);
         }
       };
@@ -163,7 +202,7 @@ function getMockEvents(): RiskEvent[] {
       risk: "极高",
       time: "2分钟前",
       status: "已拦截",
-      timestamp: Date.now() - 120000,
+      timestamp: Date.now() - REFRESH_INTERVALS.realtime,
     },
     {
       id: "EVT-002",
@@ -173,7 +212,7 @@ function getMockEvents(): RiskEvent[] {
       risk: "高",
       time: "5分钟前",
       status: "已拦截",
-      timestamp: Date.now() - 300000,
+      timestamp: Date.now() - REFRESH_INTERVALS.fast,
     },
     {
       id: "EVT-003",
@@ -183,7 +222,7 @@ function getMockEvents(): RiskEvent[] {
       risk: "中",
       time: "12分钟前",
       status: "审核中",
-      timestamp: Date.now() - 720000,
+      timestamp: Date.now() - REFRESH_INTERVALS.normal,
     },
     {
       id: "EVT-004",
@@ -193,7 +232,7 @@ function getMockEvents(): RiskEvent[] {
       risk: "极高",
       time: "18分钟前",
       status: "已拦截",
-      timestamp: Date.now() - 1080000,
+      timestamp: Date.now() - REFRESH_INTERVALS.slow,
     },
     {
       id: "EVT-005",
@@ -203,7 +242,7 @@ function getMockEvents(): RiskEvent[] {
       risk: "高",
       time: "25分钟前",
       status: "已标记",
-      timestamp: Date.now() - 1500000,
+      timestamp: Date.now() - REFRESH_INTERVALS.verySlow,
     },
   ];
 }
@@ -267,22 +306,22 @@ function LiveIndicator({ isConnected }: { isConnected: boolean }) {
 
 // 格式化数字
 function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
+  if (num >= FORMATTING.million) {
+    return (num / FORMATTING.million).toFixed(1) + "M";
   }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "K";
+  if (num >= FORMATTING.thousand) {
+    return (num / FORMATTING.thousand).toFixed(1) + "K";
   }
   return num.toString();
 }
 
 // 格式化时间
 function formatTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return "刚刚";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}分钟前`;
-  const hours = Math.floor(minutes / 60);
+  const seconds = Math.floor((Date.now() - timestamp) / FORMATTING.second);
+  if (seconds < FORMATTING.minute) return "刚刚";
+  const minutes = Math.floor(seconds / FORMATTING.minute);
+  if (minutes < FORMATTING.minute) return `${minutes}分钟前`;
+  const hours = Math.floor(minutes / FORMATTING.minute);
   return `${hours}小时前`;
 }
 
@@ -312,7 +351,7 @@ export default function DashboardPage() {
     loadData();
 
     // 定期刷新数据（每 30 秒）
-    const interval = setInterval(loadData, 30000);
+    const interval = setInterval(loadData, WS_MAX_RETRY_DELAY);
     return () => clearInterval(interval);
   }, []);
 
@@ -327,7 +366,7 @@ export default function DashboardPage() {
       const newEvent = { ...event, timestamp: Date.now() };
       const exists = prev.some((e) => e.id === event.id);
       if (exists) return prev;
-      return [newEvent, ...prev].slice(0, 50);
+      return [newEvent, ...prev].slice(0, MAX_EVENTS_DISPLAY);
     });
   }, []);
 
@@ -450,7 +489,7 @@ export default function DashboardPage() {
               {riskTrendData.map((point, i) => (
                 <div key={i} className="text-center p-3 rounded-lg bg-gray-800/30">
                   <div className={`text-xl font-semibold ${
-                    point.score >= 50 ? "text-red-400" : point.score >= 30 ? "text-yellow-400" : "text-green-400"
+                    point.score >= MAX_EVENTS_DISPLAY ? "text-red-400" : point.score >= MAX_EVENT_NAME_LENGTH ? "text-yellow-400" : "text-green-400"
                   }`}>
                     {point.score}
                   </div>
@@ -461,8 +500,8 @@ export default function DashboardPage() {
 
             <div className="h-48 flex items-end justify-between gap-2">
               {riskTrendData.map((point, i) => {
-                const height = `${Math.max(10, point.score)}%`;
-                const color = point.score >= 50 ? "bg-red-500" : point.score >= 30 ? "bg-yellow-500" : "bg-green-500";
+                const height = `${Math.max(MAX_ADDRESS_LENGTH, point.score)}%`;
+                const color = point.score >= MAX_EVENTS_DISPLAY ? "bg-red-500" : point.score >= MAX_EVENT_NAME_LENGTH ? "bg-yellow-500" : "bg-green-500";
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full bg-gray-800 rounded-t-lg relative h-32">
@@ -679,19 +718,19 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">交易哈希</span>
                 <span className="font-mono text-indigo-400">
-                  {selectedTx.hash.slice(0, 20)}...{selectedTx.hash.slice(-8)}
+                  {selectedTx.hash.slice(0, BAR_CHART_WIDTH)}...{selectedTx.hash.slice(BAR_CHART_OFFSET)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">发送方</span>
                 <span className="font-mono text-gray-300">
-                  {selectedTx.from.slice(0, 12)}...{selectedTx.from.slice(-6)}
+                  {selectedTx.from.slice(0, CHART_UPDATE_INTERVAL)}...{selectedTx.from.slice(CHART_ANIMATION_OFFSET)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">接收方</span>
                 <span className="font-mono text-gray-300">
-                  {selectedTx.to.slice(0, 12)}...{selectedTx.to.slice(-6)}
+                  {selectedTx.to.slice(0, CHART_UPDATE_INTERVAL)}...{selectedTx.to.slice(CHART_ANIMATION_OFFSET)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
