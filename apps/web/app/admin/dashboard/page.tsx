@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { RiskBadge, RiskScore, RiskTrend } from "@fidesorigin/ui";
+import { RiskBadge, RiskScore } from "@fidesorigin/ui";
+
 import LiveTransactionStream, { Transaction } from "@/components/LiveTransactionStream";
 
 // API 配置
