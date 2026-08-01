@@ -108,7 +108,7 @@ function useDashboardWebSocket(
           } else if (data.type === "event" && data.event) {
             onNewEvent(data.event);
           }
-        } catch (e) {
+        } catch (_e) {
           console.error("WebSocket message parse error:", e);
         }
       };
@@ -126,7 +126,7 @@ function useDashboardWebSocket(
         setError("WebSocket connection error");
         setIsConnected(false);
       };
-    } catch (e) {
+    } catch (_e) {
       setError("Failed to create WebSocket connection");
     }
   }, [url, onStatsUpdate, onNewEvent]);

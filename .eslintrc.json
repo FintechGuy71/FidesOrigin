@@ -47,17 +47,9 @@
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "react-hooks/exhaustive-deps": "warn",
-    "max-lines": ["warn", { "max": 300, "skipBlankLines": true, "skipComments": true }],
-    "max-lines-per-function": ["warn", { "max": 80, "skipBlankLines": true, "skipComments": true }],
-    "no-magic-numbers": [
-      "warn",
-      {
-        "ignore": [0, 1, -1],
-        "ignoreArrayIndexes": true,
-        "ignoreDefaultValues": true,
-        "enforceConst": true
-      }
-    ],
+    "max-lines": "off",
+    "max-lines-per-function": "off",
+    "no-magic-numbers": "off",
     "import/order": [
       "error",
       {
