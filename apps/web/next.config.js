@@ -2,7 +2,9 @@
 const path = require('path');
 
 const nextConfig = {
-  output: 'export',
+  // Removed output: 'export' to enable Vercel native Next.js support
+  // This allows Edge Middleware, custom headers, and API routes to work
+  // Static pages without data dependencies are automatically statically generated
   distDir: 'dist',
   images: {
     // [H-8 Fix] Removed unoptimized: true to enable Next.js image optimization
