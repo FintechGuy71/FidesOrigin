@@ -1,8 +1,6 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "rootDirectory": "apps/web",
-  "buildCommand": "next build",
-  "outputDirectory": "dist",
-  "installCommand": "cd ../.. && npm install --legacy-peer-deps"
+  "buildCommand": "cd apps/web && next build",
+  "outputDirectory": "apps/web/dist"
 }
