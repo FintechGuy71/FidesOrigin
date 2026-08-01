@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { StaticImageData } from "next/image";
+
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import Image from "next/image";
+
+import type { StaticImageData } from "next/image";
+
 import SecondaryIllustration from "@/public/images/secondary-illustration.svg";
 
 interface ModalVideoProps {

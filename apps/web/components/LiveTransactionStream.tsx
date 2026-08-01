@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+
 import {
   MOCK_ADDRESSES,
   MOCK_RISK_LEVELS,

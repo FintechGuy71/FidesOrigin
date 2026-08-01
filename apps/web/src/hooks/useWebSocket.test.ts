@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { waitFor } from '@testing-library/dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
+
+import { waitFor } from '@testing-library/dom';
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 
 // ============================================================================
 // useWebSocket Hook Implementation

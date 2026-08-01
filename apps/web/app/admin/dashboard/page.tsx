@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { RiskBadge, RiskScore } from "@fidesorigin/ui";
 
 import LiveTransactionStream, { Transaction } from "@/components/LiveTransactionStream";
+
+import { RiskBadge, RiskScore } from "@fidesorigin/ui";
+
 
 // API 配置
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
