@@ -1,46 +1,16 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/blog/(.*)", "dest": "/apps/web/public/blog/$1" },
-    { "src": "/cn/blog/(.*)", "dest": "/apps/web/public/cn/blog/$1" },
-    { "src": "/tw/blog/(.*)", "dest": "/apps/web/public/tw/blog/$1" },
-    { "src": "/jp/blog/(.*)", "dest": "/apps/web/public/jp/blog/$1" },
-    { "src": "/cn", "dest": "/apps/web/public/cn/index.html" },
-    { "src": "/cn/", "dest": "/apps/web/public/cn/index.html" },
-    { "src": "/tw", "dest": "/apps/web/public/tw/index.html" },
-    { "src": "/tw/", "dest": "/apps/web/public/tw/index.html" },
-    { "src": "/jp", "dest": "/apps/web/public/jp/index.html" },
-    { "src": "/jp/", "dest": "/apps/web/public/jp/index.html" },
-    { "src": "/admin", "dest": "/admin/index.html" },
-    { "src": "/admin/", "dest": "/admin/index.html" },
-    { "src": "/admin/(.*)", "dest": "/admin/$1" },
-    { "src": "/cn/address-check", "dest": "/apps/web/public/cn/address-check.html" },
-    { "src": "/tw/address-check", "dest": "/apps/web/public/tw/address-check.html" },
-    { "src": "/jp/address-check", "dest": "/apps/web/public/jp/address-check.html" },
-    { "src": "/address-check", "dest": "/admin/address-check.html" },
-    { "src": "/address-check.html", "dest": "/admin/address-check.html" },
-    { "src": "/assets/(.*)", "dest": "/apps/web/public/assets/$1" },
-    { "src": "/(.*\\.js)", "dest": "/apps/web/public/$1" },
-    { "src": "/(.*\\.css)", "dest": "/apps/web/public/$1" },
-    { "src": "/(.*)", "dest": "/apps/web/public/$1" },
-    { "src": "/", "dest": "/apps/web/public/index.html" }
-  ],
-  "headers": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-        },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=63072000; includeSubDomains; preload"
-        }
-      ]
+      "src": "/(.*)",
+      "dest": "/apps/web/public/$1",
+      "headers": {
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload"
+      }
     }
   ]
 }
