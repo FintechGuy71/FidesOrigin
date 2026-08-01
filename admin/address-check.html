@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.studio.thegraph.com https://rpc.*; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
     <title>FidesOrigin - Address Risk Check</title>
     <meta name="description" content="Check Ethereum address risk in real-time. FidesOrigin scans 20,000+ risk addresses across OFAC, Chainalysis, and more.">
-    <meta name="theme-color" content="#0f172a">
     <meta property="og:title" content="FidesOrigin - Address Risk Check">
     <meta property="og:description" content="Check Ethereum address risk in real-time. FidesOrigin scans 20,000+ risk addresses across OFAC, Chainalysis, and more.">
     <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
@@ -229,7 +233,7 @@
             <p><a href="/" style="color:var(--accent);text-decoration:none;">← Back to FidesOrigin</a></p>
             <p>Data Sources: OFAC, Chainalysis, Etherscan, Uniswap, PoolTogether, and more</p>
             <p>Merkle Root: <code id="merkleRoot">--</code></p>
-            <p><a href="https://fidesorigin.com">fidesorigin.com</a> | <a href="/admin/">Admin Panel</a></p>
+            <p><a href="https://fidesorigin.com" rel="noopener noreferrer">fidesorigin.com</a> | <a href="/admin/">Admin Panel</a></p>
         </div>
     </div>
 
