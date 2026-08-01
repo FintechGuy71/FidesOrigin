@@ -275,7 +275,7 @@
       eth.on('chainChanged', handleChainChanged);
 
     } catch (err) {
-      console.error('Wallet connect error:', err);
+      // console.error('Wallet connect error:', err);
       if (err.code === 4001) {
         setText('wallet-status', 'Connection rejected');
       } else {
@@ -377,7 +377,7 @@
       }
 
     } catch (err) {
-      console.error('Compliance query error:', err);
+      // console.error('Compliance query error:', err);
       if (resultEl) resultEl.classList.add('error');
 
       const statusEl = clearElement('compliance-status');

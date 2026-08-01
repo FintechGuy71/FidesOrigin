@@ -117,7 +117,7 @@ async function fetchCsrfToken() {
             csrfToken = data.csrfToken || '';
         }
     } catch (e) {
-        console.warn('[CSRF] Failed to fetch CSRF token:', e);
+        // console.warn('[CSRF] Failed to fetch CSRF token:', e);
     }
 }
 // Fetch CSRF token on load
@@ -173,7 +173,7 @@ function setLoading(loading) {
 
 async function loadStatsFromSubgraph() {
     if (!SUBGRAPH_URL) {
-        console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph stats.');
+        // console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph stats.');
         return;
     }
     try {
@@ -210,7 +210,7 @@ async function loadStatsFromSubgraph() {
             document.getElementById('greyCount').textContent = grey.toLocaleString();
         }
     } catch (e) {
-        console.error('Stats load failed:', e);
+        // console.error('Stats load failed:', e);
         if (addressMap.size > 0) {
             let black = 0, grey = 0;
             addressMap.forEach(e => {
@@ -232,7 +232,7 @@ async function loadDatabase() {
     try {
         const response = await fetch(dataPath);
         if (!response.ok) {
-            console.warn('[AddressCheck] Database file not found (' + response.status + '). Falling back to subgraph-only mode.');
+            // console.warn('[AddressCheck] Database file not found (' + response.status + '). Falling back to subgraph-only mode.');
             return;
         }
         addressDB = await response.json();
@@ -240,11 +240,11 @@ async function loadDatabase() {
             for (const entry of addressDB.addressLabels) {
                 addressMap.set(entry.address.toLowerCase(), entry);
             }
-            console.log('Database loaded:', addressMap.size, 'addresses');
+            // console.log('Database loaded:', addressMap.size, 'addresses');
         }
         loadStatsFromSubgraph();
     } catch (e) {
-        console.warn('[AddressCheck] Database not loaded (' + e.message + '), using subgraph-only mode.');
+        // console.warn('[AddressCheck] Database not loaded (' + e.message + '), using subgraph-only mode.');
     }
 }
 
@@ -267,14 +267,14 @@ async function fetchBackendRisk(address) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();
     } catch (e) {
-        console.log('Backend API unavailable:', e.message);
+        // console.log('Backend API unavailable:', e.message);
         return null;
     }
 }
 
 async function fetchSubgraphRisk(address) {
     if (!SUBGRAPH_URL) {
-        console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph query.');
+        // console.warn('[Subgraph] No SUBGRAPH_URL configured; skipping subgraph query.');
         return null;
     }
     // [MEDIUM-4 FIX] 使用 GraphQL 变量替代字符串插值，防止注入攻击
@@ -302,7 +302,7 @@ async function fetchSubgraphRisk(address) {
             return data.data.riskProfile;
         }
     } catch (e) {
-        console.log('Subgraph query failed:', e.message);
+        // console.log('Subgraph query failed:', e.message);
     }
     return null;
 }
