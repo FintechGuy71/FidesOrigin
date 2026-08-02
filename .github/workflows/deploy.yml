@@ -31,15 +31,18 @@ jobs:
       - name: Build web app
         run: cd apps/web && pnpm run build
 
-      # Deploy built static files directly to Vercel
-      # Uses --yes to avoid interactive prompts in CI
+      # Build locally and deploy prebuilt output. Server-side builds only receive
+      # apps/web (342 files), so tsconfig extends of monorepo root files fails
+      # with TS5083 Cannot read file '/tsconfig.json'.
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           npm install -g vercel@latest
           cd apps/web
-          vercel --prod --yes --token="$VERCEL_TOKEN"
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          vercel build --prod --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
 
   # [K3-Audit Fix] Build image with immutable git-sha tag, pin digest, deploy to K8s.
   deploy-k8s:
