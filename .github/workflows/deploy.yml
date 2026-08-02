@@ -31,18 +31,15 @@ jobs:
       - name: Build web app
         run: cd apps/web && pnpm run build
 
-      # [M-10 Fix] Use Vercel CLI pull/build/deploy --prebuilt for CI
-      # Avoids interactive issues with 'vercel --prod' in non-TTY environments
+      # Deploy built static files directly to Vercel
+      # Uses --yes to avoid interactive prompts in CI
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
+          npm install -g vercel@latest
           cd apps/web
-          npx vercel@latest pull --yes --environment=production --token=$VERCEL_TOKEN
-          npx vercel@latest build --prod --token=$VERCEL_TOKEN
-          npx vercel@latest deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          vercel --prod --yes --token="$VERCEL_TOKEN"
 
   # [K3-Audit Fix] Build image with immutable git-sha tag, pin digest, deploy to K8s.
   deploy-k8s:
