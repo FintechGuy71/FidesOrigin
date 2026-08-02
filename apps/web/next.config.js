@@ -3,7 +3,7 @@ const path = require('path');
 
 const nextConfig = {
   output: 'export',
-  distDir: 'dist',
+  distDir: '.next',
   images: {
     // [H-8 Fix] Removed unoptimized: true to enable Next.js image optimization
     // unoptimized: true,

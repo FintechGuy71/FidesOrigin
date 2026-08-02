@@ -31,9 +31,8 @@ jobs:
       - name: Build web app
         run: cd apps/web && pnpm run build
 
-      # [M-10 Fix] Let Vercel handle the build on their infrastructure
-      # Using single deploy command instead of pull/build/deploy --prebuilt
-      # to avoid distDir / routes-manifest path mismatches
+      # [M-10 Fix] Use Vercel CLI pull/build/deploy --prebuilt for CI
+      # Avoids interactive issues with 'vercel --prod' in non-TTY environments
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -41,7 +40,9 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           cd apps/web
-          npx vercel@latest --prod --token=$VERCEL_TOKEN --yes
+          npx vercel@latest pull --yes --environment=production --token=$VERCEL_TOKEN
+          npx vercel@latest build --prod --token=$VERCEL_TOKEN
+          npx vercel@latest deploy --prebuilt --prod --token=$VERCEL_TOKEN
 
   # [K3-Audit Fix] Build image with immutable git-sha tag, pin digest, deploy to K8s.
   deploy-k8s:
