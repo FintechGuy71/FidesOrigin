@@ -31,9 +31,11 @@ jobs:
       - name: Build web app
         run: cd apps/web && pnpm run build
 
-      # Build locally and deploy prebuilt output. Server-side builds only receive
-      # apps/web (342 files), so tsconfig extends of monorepo root files fails
-      # with TS5083 Cannot read file '/tsconfig.json'.
+      # Pure static upload via Build Output API v3. `vercel build` auto-detects
+      # the next dependency and bundles a middleware function, but the app uses
+      # static export (output:'export') so middleware cannot run at the edge —
+      # every request then fails with MIDDLEWARE_INVOCATION_FAILED. Hand-building
+      # .vercel/output with only static files bypasses the Next.js builder.
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -41,8 +43,10 @@ jobs:
           npm install -g vercel@latest
           cd apps/web
           vercel link --yes --project fidesorigin-demo --scope fintechguy71s-projects --token="$VERCEL_TOKEN"
-          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-          vercel build --prod --token="$VERCEL_TOKEN"
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static
+          cp -r dist/. .vercel/output/static/
+          printf '{"version":3}' > .vercel/output/config.json
           vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
 
   # [K3-Audit Fix] Build image with immutable git-sha tag, pin digest, deploy to K8s.
