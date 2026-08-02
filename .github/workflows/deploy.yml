@@ -31,11 +31,8 @@ jobs:
       - name: Build web app
         run: cd apps/web && pnpm run build
 
-      # [M-10 Fix] Use official Vercel CLI instead of non-official third-party action
-      # Install Vercel CLI globally and deploy with official vercel/vercel CLI
-      - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
-
+      # [M-10 Fix] Use npx to run Vercel CLI without global install
+      # Avoids pnpm global bin PATH issues on GitHub Actions
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -43,9 +40,9 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           cd apps/web
-          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          vercel build --prod --token=$VERCEL_TOKEN
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          npx vercel@latest pull --yes --environment=production --token=$VERCEL_TOKEN
+          npx vercel@latest build --prod --token=$VERCEL_TOKEN
+          npx vercel@latest deploy --prebuilt --prod --token=$VERCEL_TOKEN
 
   # [K3-Audit Fix] Build image with immutable git-sha tag, pin digest, deploy to K8s.
   deploy-k8s:
