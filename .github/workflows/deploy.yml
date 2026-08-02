@@ -40,6 +40,7 @@ jobs:
         run: |
           npm install -g vercel@latest
           cd apps/web
+          vercel link --yes --project fidesorigin-demo --scope fintechguy71s-projects --token="$VERCEL_TOKEN"
           vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
           vercel build --prod --token="$VERCEL_TOKEN"
           vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
