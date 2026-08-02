@@ -17,13 +17,6 @@ const BAR_CHART_OFFSET = -8;
 const BAR_CHART_WIDTH = 20;
 
 // API 配置
-const MAX_EVENTS_DISPLAY = 50;
-const MAX_EVENT_NAME_LENGTH = 30;
-const MAX_ADDRESS_LENGTH = 10;
-const CHART_UPDATE_INTERVAL = 12;
-const CHART_ANIMATION_OFFSET = -6;
-const BAR_CHART_OFFSET = -8;
-const BAR_CHART_WIDTH = 20;
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || `${API_BASE}/dashboard`;
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://api.fidesorigin.com/ws";
@@ -35,11 +28,11 @@ const WS_RETRY_MULTIPLIER = 2;
 
 // 刷新间隔配置 (毫秒)
 const REFRESH_INTERVALS = {
-  realtime: REFRESH_INTERVALS.realtime,    // 2分钟
-  fast: REFRESH_INTERVALS.fast,        // 5分钟
-  normal: REFRESH_INTERVALS.normal,      // 12分钟
-  slow: REFRESH_INTERVALS.slow,       // 18分钟
-  verySlow: REFRESH_INTERVALS.verySlow,   // 25分钟
+  realtime: 120000,    // 2分钟
+  fast: 300000,        // 5分钟
+  normal: 720000,      // 12分钟
+  slow: 1080000,       // 18分钟
+  verySlow: 1500000,   // 25分钟
 } as const;
 
 // 数值格式化常量
@@ -109,7 +102,7 @@ function useDashboardWebSocket(
             onNewEvent(data.event);
           }
         } catch (_e) {
-          console.error("WebSocket message parse error:", e);
+          console.error("WebSocket message parse error:", _e);
         }
       };
 
