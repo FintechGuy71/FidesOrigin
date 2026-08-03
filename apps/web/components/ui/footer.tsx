@@ -16,24 +16,19 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           {/* Left */}
           <div className="flex items-center gap-2.5">
-            <div
-              className="flex h-6 w-6 items-center justify-center rounded-sm"
-              style={{
-                background: "rgba(201,169,110,0.06)",
-                border: "1px solid rgba(201,169,110,0.12)",
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                  stroke="var(--fio-gold)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="flex flex-col">
+          {/* Logo */}
+          <img
+            src="/brand/logo-dark-icon.png"
+            alt="FidesOrigin"
+            width="24"
+            height="24"
+            className="rounded-sm"
+            style={{
+              background: "rgba(201,169,110,0.06)",
+              border: "1px solid rgba(201,169,110,0.12)",
+            }}
+          />
+          <div className="flex flex-col">
               <span
                 className="text-sm font-medium leading-none"
                 style={{ color: "var(--fio-text)", fontFamily: "var(--font-serif)" }}
