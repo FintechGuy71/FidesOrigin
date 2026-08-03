@@ -17,8 +17,17 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
+    // URL 重写：静态路由补全 .html（Next.js 静态导出兼容）
+    let pathname = url.pathname;
+    if (!pathname.endsWith('.html') && !pathname.endsWith('/') && pathname !== '') {
+      // 检查是否是已知的 HTML 路由（避免重写静态资源）
+      const htmlRoutes = ['/admin/dashboard'];
+      if (htmlRoutes.includes(pathname)) {
+        pathname = pathname + '.html';
+      }
+    }
     // 构建到 Vercel origin 的请求
-    const originUrl = new URL(url.pathname + url.search, VERCEL_ORIGIN);
+    const originUrl = new URL(pathname + url.search, VERCEL_ORIGIN);
     const originRequest = new Request(originUrl, {
       method: request.method,
       headers: request.headers,
