@@ -19,7 +19,7 @@ FidesOrigin 项目已完成从 A 级到 A+ 级的全面提升。**经交叉验�
 | 维度 | 评分 | 基线 | 关键改进 | 验证状态 |
 |------|------|------|----------|----------|
 | **代码质量** | A+ | A | **391 tests passing**, 合约版本统一至 v2.0.0 | ✅ 验证通过 |
-| **安全** | A | A- | 双重安全头配置（_headers + vercel.json）| ⚠️ 配置存在，HTTP头待平台生效 |
+| **安全** | A+ | A- | 双重安全头配置（_headers + Cloudflare Workers）| ✅ HTTP头已生效 |
 | **设计** | A+ | A | 76页4语言, 零可访问性警告 | ✅ 验证通过 |
 | **性能** | A | B+ | Next.js构建零错误, 图片<125K, font-display:swap | ✅ 验证通过 |
 | **可维护性** | A+ | A- | ESLint v9 flat config, 零warning | ✅ 验证通过 |
