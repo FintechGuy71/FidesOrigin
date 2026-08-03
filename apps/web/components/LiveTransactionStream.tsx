@@ -72,12 +72,12 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
         reconnectAttempts.current = 0;
       };
 
-      ws.current.onmessage = (_event) => {
+      ws.current.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           onMessage(data);
         } catch {
-          console.error("WebSocket message parse error:", e);
+          console.error("WebSocket message parse error:");
         }
       };
 
