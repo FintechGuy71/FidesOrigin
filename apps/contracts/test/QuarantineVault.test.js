@@ -70,7 +70,7 @@ describe('QuarantineVault', function () {
   // ========== Deployment ==========
   describe('Deployment', function () {
     it('should have correct VERSION', async function () {
-      expect(await vault.VERSION()).to.equal('1.2.1');
+      expect(await vault.VERSION()).to.equal('2.0.0');
     });
 
     it('should grant operational roles to deployer on deployment', async function () {

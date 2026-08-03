@@ -17,7 +17,7 @@ describe('Upgrade Path Tests', function () {
       });
       await riskRegistry.waitForDeployment();
 
-      expect(await riskRegistry.VERSION()).to.equal('1.2.2');
+      expect(await riskRegistry.VERSION()).to.equal('2.0.0');
       expect(await riskRegistry.hasRole(await riskRegistry.ADMIN_ROLE(), owner.address)).to.be.true;
     });
 
@@ -44,7 +44,7 @@ describe('Upgrade Path Tests', function () {
       // In this test we verify the V2 contract can be deployed but warn about the path.
       const riskRegistryV2Impl = await RiskRegistryV2.deploy();
       await riskRegistryV2Impl.waitForDeployment();
-      expect(await riskRegistryV2Impl.VERSION()).to.equal('2.3.1');
+      expect(await riskRegistryV2Impl.VERSION()).to.equal('2.0.0');
     });
 
     it('should V2 → V3 upgrade preserve data integrity', async function () {

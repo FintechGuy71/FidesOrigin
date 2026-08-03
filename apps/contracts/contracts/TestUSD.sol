@@ -57,7 +57,7 @@ contract TestUSD is ERC20, AccessControl, Pausable {
     uint256 public constant FAUCET_AMOUNT = 1000 * 10**18;
     
     /// @notice 合约版本
-    uint256 public constant VERSION = 3;
+    uint256 public constant VERSION = 2;
     
     // ========== 事件定义 ==========
     event AddressTagged(address indexed account, RiskLevel level, string reason);

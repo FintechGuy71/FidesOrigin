@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
  * @title RiskRegistryV2
  * @notice RiskRegistry 存储兼容升级版 - 三方共识审计修复 V2.3.1
  * @dev 基于 UUPS 代理模式,保持 v0.2.1 存储布局完全兼容
- * @dev VERSION: 2.3.1
+ * @dev VERSION: 2.0.0
  *
  * ⚠️ 升级路径警告:
  * - ✅ 可从 v0.2.1 (RiskRegistry V1 初版) 直接升级
@@ -43,7 +43,7 @@ contract RiskRegistryV2 is
     ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
 
     /// @notice 合约版本号
-    string public constant VERSION = "2.3.1";
+    string public constant VERSION = "2.0.0";
 
     // ============ 风险等级枚举 (V2: 新增 CRITICAL) ============
     enum RiskTier { UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL }

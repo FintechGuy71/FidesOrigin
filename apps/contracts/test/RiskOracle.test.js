@@ -36,7 +36,7 @@ describe('RiskOracle', function () {
 
   describe('Deployment', function () {
     it('should deploy with correct version', async function () {
-      expect(await riskOracle.VERSION()).to.equal('1.2.1');
+      expect(await riskOracle.VERSION()).to.equal('2.0.0');
     });
 
     it('should set correct initial values', async function () {
