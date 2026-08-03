@@ -72,7 +72,7 @@ export default function Testimonials() {
           />
 
           <div className="space-y-10">
-            {journeySteps.map((item, i) => (
+            {journeySteps.map((item, _i) => (
               <div key={item.step} className="relative flex gap-6 lg:gap-10">
                 {/* Step number circle */}
                 <div className="flex-shrink-0">

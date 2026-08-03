@@ -1,4 +1,4 @@
-import Image from "next/image";
+// import Image from "next/image";
 import Spotlight from "@/components/Spotlight";
 
 export const metadata = {

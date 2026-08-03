@@ -63,8 +63,8 @@
     "node": ">=22.0.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
-    "*.{py}": ["ruff check --fix", "ruff format"],
+    "apps/web/**/*.{ts,tsx,js,jsx}": ["cd apps/web && eslint --fix", "prettier --write"],
+    "apps/contracts/**/*.sol": ["prettier --write"],
     "*.{json,md,yaml,yml}": ["prettier --write"]
   },
   "dependencies": {

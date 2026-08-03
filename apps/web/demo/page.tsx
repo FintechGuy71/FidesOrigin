@@ -45,9 +45,9 @@ interface Rule {
 
 // API 配置 - 全部从环境变量读取，无硬编码回退值
 // 如需本地开发回退，请在 .env.local 中设置
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || (API_BASE ? `${API_BASE}/risk` : undefined);
-const RULES_API_URL = process.env.NEXT_PUBLIC_RULES_API_URL || (API_BASE ? `${API_BASE}/rules` : undefined);
+// const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+// const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || (API_BASE ? `${API_BASE}/risk` : undefined);
+// const RULES_API_URL = process.env.NEXT_PUBLIC_RULES_API_URL || (API_BASE ? `${API_BASE}/rules` : undefined);
 
 // 初始规则
 const initialRules: Rule[] = [
@@ -60,14 +60,14 @@ const initialRules: Rule[] = [
 ];
 
 // 工具函数
-const getRiskColor = (level: RiskLevel) => {
-  switch (level) {
-    case "critical": return "text-red-500";
-    case "high": return "text-orange-500";
-    case "medium": return "text-yellow-500";
-    case "low": return "text-green-500";
-  }
-};
+// const getRiskColor = (level: RiskLevel) => {
+//   switch (level) {
+//     case "critical": return "text-red-500";
+//     case "high": return "text-orange-500";
+//     case "medium": return "text-yellow-500";
+//     case "low": return "text-green-500";
+//   }
+// };
 
 const getRiskBg = (level: RiskLevel) => {
   switch (level) {
@@ -229,7 +229,7 @@ async function fetchSubgraphRiskData(address: string): Promise<Partial<RiskRepor
       ],
       transactions: [],
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

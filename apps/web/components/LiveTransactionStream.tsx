@@ -72,11 +72,11 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
         reconnectAttempts.current = 0;
       };
 
-      ws.current.onmessage = (event) => {
+      ws.current.onmessage = (_event) => {
         try {
           const data = JSON.parse(event.data);
           onMessage(data);
-        } catch (e) {
+        } catch {
           console.error("WebSocket message parse error:", e);
         }
       };
@@ -91,11 +91,11 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
         }
       };
 
-      ws.current.onerror = (e) => {
+      ws.current.onerror = (_event) => {
         setError("WebSocket connection error");
         setIsConnected(false);
       };
-    } catch (e) {
+    } catch {
       setError("Failed to create WebSocket connection");
     }
   }, [url, onMessage]);
@@ -238,7 +238,7 @@ export default function LiveTransactionStream({
     }
   }, [maxItems]);
 
-  const { isConnected, error } = useWebSocket(
+  const { isConnected } = useWebSocket(
     useMockData ? undefined : wsUrl,
     handleWebSocketMessage
   );

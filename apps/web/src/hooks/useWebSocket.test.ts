@@ -117,12 +117,12 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         }
       };
 
-      ws.onerror = (err) => {
+      ws.onerror = (__err) => {
         setError('WebSocket error occurred');
         setConnecting(false);
-        optionsRef.current.onError?.(err);
+        optionsRef.current.onError?.(__err);
       };
-    } catch (err) {
+    } catch {
       setError('Failed to create WebSocket connection');
       setConnecting(false);
     }

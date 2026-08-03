@@ -43,7 +43,7 @@ function buildCspHeader(nonce: string): string {
   return directives.join('; ');
 }
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   const nonce = generateNonce();
   const csp = buildCspHeader(nonce);
 

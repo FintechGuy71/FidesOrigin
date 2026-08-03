@@ -5,14 +5,14 @@ const AOS_DELAY_MULTIPLIER = 150;
 const MIN_HEIGHT_PX = 280;
 const RADAR_CIRCLES = [40, 70, 100];
 const RADAR_CENTER = 100;
-const _ANIMATION_DURATIONS = [60, 120, 180, 240, 300];
-const _SCAN_LINE_Y = 180;
-const _GRID_SIZE = 100;
-const _RISK_COLORS = [35, 55, 75];
-const _DASH_OFFSET = 120000;
-const _DASH_SPEED = 1500;
+// const _ANIMATION_DURATIONS = [60, 120, 180, 240, 300];
+// const _SCAN_LINE_Y = 180;
+// const _GRID_SIZE = 100;
+// const _RISK_COLORS = [35, 55, 75];
+// const _DASH_OFFSET = 120000;
+// const _DASH_SPEED = 1500;
 const SVG_VIEWBOX = 200;
-const _ICON_SIZE = 24;
+// const _ICON_SIZE = 24;
 
 /* ================================================================
    FEATURES v3 — Three core capabilities, each with visual anchor.

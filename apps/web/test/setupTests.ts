@@ -1,9 +1,9 @@
-import { expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
 // Extend vitest's expect with jest-dom matchers
-expect.extend(matchers as any);
+expect.extend(matchers as unknown as Parameters<typeof expect.extend>[0]);
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -75,7 +75,7 @@ class MockWebSocket {
   onmessage: ((ev: MessageEvent) => void) | null = null;
   onerror: ((ev: Event) => void) | null = null;
 
-  constructor(url: string | URL, _protocols?: string | string[], _options?: any) {
+  constructor(url: string | URL, _protocols?: string | string[], _options?: unknown) {
     this.url = url.toString();
     // Simulate connection
     setTimeout(() => {
@@ -84,7 +84,7 @@ class MockWebSocket {
     }, 0);
   }
 
-  send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
+  send(_data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
     // Mock send
   }
 

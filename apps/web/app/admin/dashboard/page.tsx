@@ -119,7 +119,7 @@ function useDashboardWebSocket(
         setError("WebSocket connection error");
         setIsConnected(false);
       };
-    } catch (_e) {
+    } catch {
       setError("Failed to create WebSocket connection");
     }
   }, [url, onStatsUpdate, onNewEvent]);
