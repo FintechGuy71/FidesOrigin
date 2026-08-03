@@ -1,0 +1,9 @@
+name = "fidesorigin-security"
+main = "security-headers.js"
+compatibility_date = "2026-08-03"
+
+# 路由配置（部署后手动在 Cloudflare Dashboard 添加）
+# routes = [
+#   { pattern = "fidesorigin.com/*", zone_name = "fidesorigin.com" },
+#   { pattern = "www.fidesorigin.com/*", zone_name = "fidesorigin.com" }
+# ]
