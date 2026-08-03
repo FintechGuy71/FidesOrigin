@@ -26,7 +26,7 @@ contract RiskRegistry is
     bytes32 public constant COMPLIANCE_ENGINE_ROLE = keccak256("COMPLIANCE_ENGINE_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "1.2.2";
+    string public constant VERSION = "2.0.0";
 
     // ============ Data Structures ============
 

@@ -15,7 +15,7 @@ abstract contract RiskOracleStorage {
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "1.2.1";
+    string public constant VERSION = "2.0.0";
 
     // ============ Chainlink Functions Config ============
 

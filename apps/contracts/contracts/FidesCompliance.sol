@@ -35,7 +35,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
     
     /// @notice 合约版本号
-    string public constant VERSION = "1.4.0";
+    string public constant VERSION = "2.0.0";
 
     /// @notice MEV 保护最大 deadline 时长
     uint256 public constant MAX_DEADLINE_DURATION = 5 minutes;

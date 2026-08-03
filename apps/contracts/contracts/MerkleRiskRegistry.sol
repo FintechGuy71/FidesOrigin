@@ -21,7 +21,7 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "1.2.0";
+    string public constant VERSION = "2.0.0";
 
     // ============ Constants ============
 

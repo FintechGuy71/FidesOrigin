@@ -19,7 +19,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    string public constant VERSION = "1.2.1";
+    string public constant VERSION = "2.0.0";
 
     RiskRegistry public riskRegistry;
     PolicyEngine public policyEngine;

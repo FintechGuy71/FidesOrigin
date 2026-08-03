@@ -23,7 +23,7 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     bytes32 public constant COMPLIANCE_ENGINE_ROLE = keccak256("COMPLIANCE_ENGINE_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "1.2.1";
+    string public constant VERSION = "2.0.0";
 
     /// @notice 规则上限（M-01）— P1-9: 从 200 降为 50，限制 evaluatePolicy 复杂度
     uint256 public constant MAX_RULES = 50;
