@@ -2,10 +2,8 @@ name = "fidesorigin-security"
 main = "security-headers.js"
 compatibility_date = "2026-08-03"
 
-# Zone ID for fidesorigin.com
-zone_id = "44932cba7ec489c30d5973d7602c2601"
+workers_dev = false
 
-# Route configuration
 routes = [
   { pattern = "fidesorigin.com/*", zone_name = "fidesorigin.com" },
   { pattern = "www.fidesorigin.com/*", zone_name = "fidesorigin.com" }
