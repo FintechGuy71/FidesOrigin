@@ -1,0 +1,22 @@
+{
+  "name": "@fidesorigin/mempool-watcher",
+  "version": "1.0.0",
+  "description": "FidesOrigin Mempool Intelligence — Real-time transaction monitoring and risk detection",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

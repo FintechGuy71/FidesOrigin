@@ -44,8 +44,8 @@ function validateAndLoadPrivateKey() {
 
     // 3. 尝试派生地址并验证
     try {
-        const { ethers } = require("hardhat");
-        const wallet = new ethers.Wallet(key);
+        const { Wallet } = require("ethers");
+        const wallet = new Wallet(key);
         console.log("[HIGH-9] Loaded deployer address:", wallet.address);
     } catch (e) {
         throw new Error("[HIGH-9] Failed to derive address from ADMIN_PRIVATE_KEY: " + e.message);
@@ -71,6 +71,7 @@ module.exports = {
   solidity: {
     version: '0.8.26',
     settings: {
+      viaIR: true,
       evmVersion: 'cancun',
       optimizer: {
         enabled: true,

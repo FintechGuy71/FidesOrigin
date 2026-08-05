@@ -1,0 +1,34 @@
+{
+  "name": "@fidesorigin/guard-sdk",
+  "version": "1.0.0",
+  "description": "FidesOrigin Pre-Transaction Guard SDK — Zero-gas risk assessment for blockchain transactions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "blockchain",
+    "compliance",
+    "aml",
+    "risk",
+    "ethereum",
+    "fidesorigin"
+  ],
+  "author": "FidesOrigin",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
