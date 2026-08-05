@@ -37,10 +37,6 @@ export default function Header() {
             width="28"
             height="28"
             className="rounded-sm"
-            style={{
-              background: "rgba(201,169,110,0.08)",
-              border: "1px solid rgba(201,169,110,0.15)",
-            }}
           />
           <div className="flex flex-col">
             <span 

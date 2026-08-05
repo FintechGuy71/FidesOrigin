@@ -1,4 +1,3 @@
-import Cta from "@/components/Cta";
 import Features from "@/components/Features";
 import Hero from "@/components/HeroHome";
 import Testimonials from "@/components/Testimonials";
@@ -13,7 +12,6 @@ export default function Home() {
       <Features />
       <Trust />
       <Testimonials />
-      <Cta />
     </>
   );
 }
