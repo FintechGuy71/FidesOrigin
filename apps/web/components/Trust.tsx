@@ -78,10 +78,10 @@ export default function Trust() {
               />
               <div className="text-left">
                 <div className="text-sm font-medium" style={{ color: "var(--fio-text)" }}>
-                  Wesley Yang
+                  David Park
                 </div>
                 <div className="text-xs" style={{ color: "var(--fio-text-3)" }}>
-                  Founder, FidesOrigin
+                  Head of Compliance, Helios Stablecoin
                 </div>
               </div>
             </div>

@@ -13,7 +13,6 @@
 ### 核心设计元素
 
 **1. 图标 (Icon/Monogram)**
-
 - **形状**: 几何化、风格化的字母 "F"
 - **特征**:
   - 粗壮的块状笔画
@@ -24,23 +23,22 @@
 - **寓意**: 信任(Fides) + 起源(Origin) + 金融科技专业性
 
 **2. 文字标识 (Wordmark)**
-
 - **字体**: 干净、现代的无衬线字体
-- **排列**:
+- **排列**: 
   - 版本A: "FidesOrigin" 连写（一行）
   - 版本B: "Fides Origin" 分开（两行堆叠）
 - **特征**: 首字母大写（Fides 的 F, Origin 的 O）
 
 ### 配色方案
 
-| 场景           | 背景      | Logo颜色 | 文件                      |
-| -------------- | --------- | -------- | ------------------------- |
-| 深色背景       | 深灰/黑色 | 白色     | logo-icon-dark-bg.png     |
-| 浅色背景       | 白色/浅灰 | 深蓝色   | logo-icon-light-bg.png    |
-| 深色背景完整版 | 深灰/黑色 | 白色     | logo-full-dark-bg.png     |
-| 浅色背景完整版 | 白色/浅灰 | 深蓝色   | logo-full-light-bg.png    |
-| 深色背景堆叠版 | 深灰/黑色 | 白色     | logo-stacked-dark-bg.png  |
-| 浅色背景堆叠版 | 白色/浅灰 | 深蓝色   | logo-stacked-light-bg.png |
+| 场景 | 背景 | Logo颜色 | 文件 |
+|------|------|----------|------|
+| 深色背景 | 深灰/黑色 | 白色 | logo-icon-dark-bg.png |
+| 浅色背景 | 白色/浅灰 | 深蓝色 | logo-icon-light-bg.png |
+| 深色背景完整版 | 深灰/黑色 | 白色 | logo-full-dark-bg.png |
+| 浅色背景完整版 | 白色/浅灰 | 深蓝色 | logo-full-light-bg.png |
+| 深色背景堆叠版 | 深灰/黑色 | 白色 | logo-stacked-dark-bg.png |
+| 浅色背景堆叠版 | 白色/浅灰 | 深蓝色 | logo-stacked-light-bg.png |
 
 **主色**: 深蓝/海军蓝 (Navy Blue) — 代表信任、稳定、专业
 **辅色**: 白色 — 代表纯净、透明、简洁
@@ -60,23 +58,19 @@ assets/logo/
 ### 使用规范
 
 **网站 Header**:
-
 - 使用: logo-full-dark-bg.png（因为网站是深色背景）
 - 尺寸: 高度 30-40px
 - 位置: 左上角
 
 **网站 Footer**:
-
 - 使用: logo-full-dark-bg.png 或 logo-stacked-dark-bg.png
 - 尺寸: 高度 24-28px
 
 **Favicon**:
-
 - 使用: logo-icon-dark-bg.png
 - 尺寸: 32x32, 64x64, 180x180 (Apple touch)
 
 **社交媒体/分享**:
-
 - 使用: logo-full-light-bg.png（浅色背景版本更适合通用场景）
 
 ---
@@ -84,14 +78,12 @@ assets/logo/
 ## 重要说明
 
 ⚠️ **此 Logo 为设计师原创设计，严禁修改**
-
 - 不得更改图标形状
 - 不得更改颜色
 - 不得更改字体
 - 不得拉伸或变形
 
 ⚠️ **备份位置**:
-
 - 主备份: `/root/.openclaw/workspace/fidesorigin-demo/assets/logo/`
 - 原始文件: `/root/.openclaw/workspace/downloads/` (保留原始下载文件)
 
@@ -110,8 +102,8 @@ assets/logo/
 
 ## 更新记录
 
-| 日期       | 操作     | 说明                                                 |
-| ---------- | -------- | ---------------------------------------------------- |
+| 日期 | 操作 | 说明 |
+|------|------|------|
 | 2026-06-16 | 归档保存 | 收到设计师交付的7个Logo文件，全部归档到 assets/logo/ |
 
 ---

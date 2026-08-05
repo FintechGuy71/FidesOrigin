@@ -30,7 +30,7 @@ export default function Team() {
 
           {/* Team Members */}
           <Spotlight className="group mx-auto grid max-w-sm items-start gap-8 lg:max-w-none lg:grid-cols-2">
-            {/* Wesley - CEO */}
+            {/* Marcus - CEO */}
             <div
               className="group/card relative h-full overflow-hidden rounded-2xl bg-gray-800 p-px before:pointer-events-none before:absolute before:-left-40 before:-top-40 before:z-10 before:h-80 before:w-80 before:translate-x-[var(--mouse-x)] before:translate-y-[var(--mouse-y)] before:rounded-full before:bg-indigo-500/80 before:opacity-0 before:blur-3xl before:transition-opacity before:duration-500 after:pointer-events-none after:absolute after:-left-48 after:-top-48 after:z-30 after:h-64 after:w-64 after:translate-x-[var(--mouse-x)] after:translate-y-[var(--mouse-y)] after:rounded-full after:bg-indigo-500 after:opacity-0 after:blur-3xl after:transition-opacity after:duration-500 hover:after:opacity-20 group-hover:before:opacity-100"
             >
@@ -39,13 +39,13 @@ export default function Team() {
                   {/* Avatar Placeholder */}
                   <div className="mb-6 flex items-center gap-6">
                     <div className="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-indigo-500/20 to-indigo-600/10 ring-2 ring-indigo-500/30">
-                      <span className="text-3xl font-bold text-indigo-300">W</span>
+                      <span className="text-3xl font-bold text-indigo-300">M</span>
                     </div>
                     <div>
                       <h3 className="font-nacelle text-2xl font-semibold text-gray-200">
-                        Wesley
+                        Marcus
                       </h3>
-                      <p className="text-indigo-200/65">杨鸿威</p>
+                      <p className="text-indigo-200/65">Chen Wei</p>
                       <div className="mt-2">
                         <span className="btn-sm relative rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-normal text-indigo-300 before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_bottom,--theme(--color-indigo-500/.15),--theme(--color-indigo-500/.5))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)]">
                           创始人 & CEO
@@ -65,22 +65,22 @@ export default function Team() {
                       <div className="flex items-start gap-3">
                         <div className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500"></div>
                         <div>
-                          <p className="text-gray-200 font-medium">富途牛牛</p>
-                          <p className="text-sm text-indigo-200/60">Web3 产品负责人，主导香港稳定币牌照申请与机构级 Crypto 支付基础设施建设</p>
+                          <p className="text-gray-200 font-medium">Anchor Digital</p>
+                          <p className="text-sm text-indigo-200/60">首席合规官，主导稳定币发行与机构级支付基础设施建设</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500"></div>
                         <div>
-                          <p className="text-gray-200 font-medium">腾讯</p>
-                          <p className="text-sm text-indigo-200/60">微信支付 P10 产品经理，负责国内支付平台及渠道业务</p>
+                          <p className="text-gray-200 font-medium">Global Fintech Corp</p>
+                          <p className="text-sm text-indigo-200/60">产品副总裁，负责跨境支付与合规科技业务</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500"></div>
                         <div>
-                          <p className="text-gray-200 font-medium">字节跳动</p>
-                          <p className="text-sm text-indigo-200/60">财经部门 3-1 产品专家，负责跨境支付业务</p>
+                          <p className="text-gray-200 font-medium">Blockchain Labs</p>
+                          <p className="text-sm text-indigo-200/60">首席技术官，负责智能合约安全与链上合规协议研发</p>
                         </div>
                       </div>
                     </div>
