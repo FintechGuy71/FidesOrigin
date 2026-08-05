@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./utils/ReentrancyGuardUpgradeable.sol";
+import "./interfaces/IPreTransactionGuard.sol";
 import "./interfaces/IAssetCompliance.sol";
 import "./interfaces/IComplianceEngine.sol";
 import "./interfaces/IFidesCompliance.sol";
@@ -74,6 +75,12 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     bool public emergencyMode;
     uint256 public emergencyCooldown;
     uint256 public lastEmergencyTime;
+
+    /// @notice V2.1: PreTransactionGuard 集成
+    IPreTransactionGuard public guard;
+    bool public guardEnabled;
+    uint256 public totalGuardChecks;
+    uint256 public totalGuardBlocked;
 
     /// @notice 两步确认 pending 地址
     address public pendingComplianceEngine;
@@ -158,6 +165,10 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     event RiskThresholdUpdated(string indexed paramName, uint256 oldValue, uint256 newValue, address indexed admin, uint256 timestamp);
     event EmergencyCooldownUpdated(uint256 oldValue, uint256 newValue, address indexed admin, uint256 timestamp);
     event EmergencyCooldownRemaining(uint256 remaining);
+    event GuardCheck(address indexed from, address indexed to, uint8 action, uint256 riskScore);
+    event GuardBlocked(address indexed from, address indexed to, string reason);
+    event GuardSet(address indexed guard);
+    event GuardEnabled(bool enabled);
 
     // M-05: 两步确认事件
     event ComplianceEngineProposed(address indexed proposed, address indexed proposer, uint256 timestamp);
@@ -341,7 +352,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         uint256 amount,
         address token,
         uint256 deadline
-    ) external view returns (bool allowed, uint256 riskScore) {
+    ) external view virtual returns (bool allowed, uint256 riskScore) {
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
             return (false, 0);
         }
@@ -354,6 +365,23 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (emergencyMode) {
             return (false, 0);
         }
+        
+        // V2.1: Guard 预检
+        if (guardEnabled && address(guard) != address(0)) {
+            IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
+                from: from,
+                to: to,
+                value: 0,
+                token: address(0),
+                data: "",
+                chainId: block.chainid
+            });
+            IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(intent);
+            if (result.action == IPreTransactionGuard.Action.BLOCK) {
+                return (false, 100);
+            }
+        }
+        
         if (address(riskRegistry) == address(0)) {
             return (false, 0);
         }
@@ -398,7 +426,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         uint256 amount,
         address token,
         uint256 deadline
-    ) external nonReentrant returns (bool allowed, uint256 riskScore) {
+    ) external nonReentrant virtual returns (bool allowed, uint256 riskScore) {
         // [HIGH-2 FIX] 只有交易发起方本人或授权运营方可以评估交易
         // 防止恶意中间合约/外部地址以任意 from 身份调用，操纵统计数据或批量探测风险
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
@@ -416,6 +444,26 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         }
         if (address(riskRegistry) == address(0)) {
             return (false, 0);
+        }
+        
+        // V2.1: Guard 预检（零Gas快速路径）
+        if (guardEnabled && address(guard) != address(0)) {
+            IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
+                from: from,
+                to: to,
+                value: 0,
+                token: address(0),
+                data: "",
+                chainId: block.chainid
+            });
+            IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(intent);
+            totalGuardChecks++;
+            if (result.action == IPreTransactionGuard.Action.BLOCK) {
+                totalGuardBlocked++;
+                emit GuardBlocked(from, to, result.reason);
+                return (false, 100);
+            }
+            emit GuardCheck(from, to, uint8(result.action), result.riskScore);
         }
 
         uint256 fromRiskScore = _getRiskScore(from);
@@ -713,6 +761,82 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (account == address(0)) revert InvalidAddress();
         _whitelist[account] = status;
         emit WhitelistUpdated(account, status, msg.sender, block.timestamp);
+    }
+    
+    // ============ V2.1: Guard Integration ============
+    
+    /**
+     * @notice 设置 PreTransactionGuard 地址
+     */
+    function setGuard(address _guard) external onlyRole(ADMIN_ROLE) {
+        if (_guard == address(0)) revert InvalidAddress();
+        address old = address(guard);
+        guard = IPreTransactionGuard(_guard);
+        emit GuardSet(_guard);
+    }
+    
+    /**
+     * @notice 启用/禁用 Guard 预检
+     */
+    function setGuardEnabled(bool enabled) external onlyRole(ADMIN_ROLE) {
+        guardEnabled = enabled;
+        emit GuardEnabled(enabled);
+    }
+    
+    /**
+     * @notice 一键启用 Guard（设置地址 + 启用）
+     */
+    function enableGuard(address _guard) external onlyRole(ADMIN_ROLE) {
+        if (_guard == address(0)) revert InvalidAddress();
+        guard = IPreTransactionGuard(_guard);
+        guardEnabled = true;
+        emit GuardSet(_guard);
+        emit GuardEnabled(true);
+    }
+    
+    /**
+     * @notice 一键禁用 Guard
+     */
+    function disableGuard() external onlyRole(ADMIN_ROLE) {
+        guardEnabled = false;
+        emit GuardEnabled(false);
+    }
+    
+    /**
+     * @notice 预览 Guard 检查结果
+     */
+    function previewGuardCheck(address from, address to) 
+        external 
+        view 
+        returns (bool wouldBlock, string memory reason) 
+    {
+        if (!guardEnabled || address(guard) == address(0)) {
+            return (false, "Guard disabled");
+        }
+        
+        IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
+            from: from,
+            to: to,
+            value: 0,
+            token: address(0),
+            data: "",
+            chainId: block.chainid
+        });
+        
+        IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(intent);
+        return (result.action == IPreTransactionGuard.Action.BLOCK, result.reason);
+    }
+    
+    /**
+     * @notice 获取 Guard 统计
+     */
+    function getGuardStats() external view returns (
+        uint256 checks,
+        uint256 blocks,
+        bool enabled,
+        address guardAddress
+    ) {
+        return (totalGuardChecks, totalGuardBlocked, guardEnabled, address(guard));
     }
 
     // ============ Emergency ============
