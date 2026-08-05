@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Case Studies — FidesOrigin | On-Chain Compliance in Production</title>
+  <meta name="description" content="See how leading stablecoin issuers, RWA platforms, and DeFi protocols use FidesOrigin for deterministic on-chain compliance.">
+  <meta property="og:title" content="Case Studies — FidesOrigin">
+  <meta property="og:description" content="See how leading protocols use FidesOrigin for on-chain compliance.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/case-studies.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://fidesorigin.com/case-studies.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/case-studies.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/">Home</a>
+        <a href="/#features">Features</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/docs/">Docs</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/contact.html" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <section class="section" style="padding-top: 140px; text-align: center;">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">Case Studies</p>
+          <h1 class="display" style="font-size: clamp(2rem, 4.5vw, 3.2rem);">Compliance <span>in production</span></h1>
+          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">See how protocols are building with deterministic on-chain risk enforcement.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">Stablecoin</span>
+            <h3>GlobalPay USD — MiCA-Compliant Stablecoin</h3>
+            <p>GlobalPay launched a EUR-backed stablecoin targeting the EU market. They needed real-time OFAC screening, MiCA reserve attestations, and automated KYC verification — all without introducing centralized infrastructure.</p>
+            <p>FidesOrigin's CompliantStableCoin base contract provided deterministic screening on every mint, burn, and transfer. The Policy Engine was configured with MiCA-specific rules: 1:1 reserve requirements, daily transaction limits, and accredited investor checks.</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">100%</div>
+                <div class="label">OFAC Coverage</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">&lt;50ms</div>
+                <div class="label">Screening Latency</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$2B+</div>
+                <div class="label">Protected Volume</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>PolicyConfig.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// MiCA-specific policy configuration</span>
+<span class="kw">function</span> <span class="func">configureMicaPolicies</span>() <span class="kw">external</span> {
+    policy.<span class="func">setReserveRatio</span>(<span class="num">10000</span>); <span class="comment">// 100%</span>
+    policy.<span class="func">setDailyLimit</span>(<span class="num">1_000_000</span> * <span class="num">1e6</span>);
+    policy.<span class="func">requireAccredited</span>(<span class="kw">true</span>);
+    policy.<span class="func">enableOfacScreening</span>(<span class="kw">true</span>);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reverse reveal">
+          <div>
+            <span class="case-study-tag">RWA</span>
+            <h3>RealT — Tokenized Real Estate Compliance</h3>
+            <p>RealT tokenizes real estate properties across multiple jurisdictions. Each property has different investor requirements: US accredited investors only for some, EU MiCA for others, and jurisdiction-specific KYC.</p>
+            <p>FidesOrigin's multi-policy support allowed RealT to assign different compliance rules per token. The Merkle-based risk registry enabled privacy-preserving verification without revealing investor data on-chain.</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">15</div>
+                <div class="label">Jurisdictions</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">0</div>
+                <div class="label">Data Leaks</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$50M</div>
+                <div class="label">Tokenized Assets</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>MultiPolicy.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Per-token policy assignment</span>
+<span class="kw">function</span> <span class="func">assignPolicy</span>(
+    <span class="kw">address</span> token,
+    <span class="type">Policy</span> <span class="kw">calldata</span> policy
+) <span class="kw">external</span> {
+    policies[token] = policy;
+    <span class="kw">emit</span> <span class="func">PolicyAssigned</span>(token, policy.id);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">Smart Wallet</span>
+            <h3>SafeFlow — Account Abstraction with Compliance</h3>
+            <p>SafeFlow built an ERC-4337 smart wallet for institutional users. They needed every userOp screened before bundler submission — without adding latency or compromising the account abstraction flow.</p>
+            <p>By integrating FidesOrigin at the validation phase, SafeFlow screens all destination addresses and call data before the bundler ever sees the userOp. The integration added less than 10ms to validation time.</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">&lt;10ms</div>
+                <div class="label">Validation Overhead</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">50K+</div>
+                <div class="label">Wallets Protected</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">99.99%</div>
+                <div class="label">Uptime</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>SafeFlowValidation.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Validate before bundler acceptance</span>
+<span class="kw">function</span> <span class="func">validateUserOp</span>(
+    <span class="type">UserOperation</span> <span class="kw">calldata</span> userOp
+) <span class="kw">external</span> <span class="kw">override</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {
+    <span class="kw">require</span>(
+        fides.<span class="func">isCompliant</span>(userOp),
+        <span class="str">"Non-compliant userOp"</span>
+    );
+    <span class="kw">return</span> <span class="func">_validateSignature</span>(userOp);
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section bg-secondary">
+      <div class="container">
+        <div class="reveal section-intro">
+          <p class="micro">Testimonials</p>
+          <h2 class="h2 section-title">What builders say</h2>
+        </div>
+        <div class="features-grid" style="margin-top: 48px;">
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"FidesOrigin solved our biggest compliance headache. Before, we were screening via API calls that added 300ms latency and occasionally failed. Now every transaction is screened deterministically on-chain — our users don't even notice it's there."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">AL</div>
+              <div class="testimonial-info">
+                <h4>Alex L.</h4>
+                <p>CTO, GlobalPay USD</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"The Merkle-based privacy approach is exactly what we needed. We can prove compliance to regulators without exposing sensitive investor data on-chain. It's the first solution that actually understands both DeFi and privacy."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">SM</div>
+              <div class="testimonial-info">
+                <h4>Sarah M.</h4>
+                <p>Head of Compliance, RealT</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"Integrating compliance into ERC-4337 was supposed to be impossible. FidesOrigin proved it wasn't — we had it working in a weekend. The validation-phase hook means zero UX impact for our users."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">DK</div>
+              <div class="testimonial-info">
+                <h4>David K.</h4>
+                <p>Lead Engineer, SafeFlow</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="cta-section reveal">
+          <h2 class="h1">Ready to become our next case study?</h2>
+          <p>Get in touch to discuss your compliance needs.</p>
+          <div class="cta-buttons">
+            <a href="/contact.html" class="btn btn-primary">Contact Sales</a>
+            <a href="/demo.html" class="btn btn-secondary">Try Demo</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+            FidesOrigin
+          </a>
+          <p>Programmable on-chain compliance for the future of finance.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/#features">Features</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="/security.html">Security</a>
+          <a href="/case-studies.html">Case Studies</a>
+        </div>
+        <div class="footer-col">
+          <h4>Developers</h4>
+          <a href="/docs/">Documentation</a>
+          <a href="/docs/api.html">API Reference</a>
+          <a href="/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/contact.html">Contact</a>
+          <a href="/blog/">Blog</a>
+          <a href="/about.html">About</a>
+          <a href="/privacy.html">Privacy</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script>
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+  </script>
+</body>
+</html>

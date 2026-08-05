@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>OFAC Sanctions Screening on Blockchain: Best Practices — FidesOrigin Blog</title>
+  <meta name="description" content="Best practices for OFAC sanctions screening on blockchain. How to implement SDN list checks at the smart contract level for stablecoins and DeFi protocols.">
+  <meta property="og:title" content="OFAC Sanctions Screening on Blockchain: Best Practices">
+  <meta property="og:description" content="Best practices for OFAC sanctions screening on blockchain.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="icon" href="../brand/logo-dark-icon.png">
+  <style>
+    .blog-article { padding: 140px 0 60px; }
+    .blog-article .container { max-width: 800px; }
+    .blog-article h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+    .blog-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; color: var(--text-muted); font-size: 0.875rem; }
+    .blog-meta .tag { background: var(--accent-dim); color: var(--accent); padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .blog-content h2 { font-size: 1.4rem; font-weight: 600; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .blog-content h3 { font-size: 1.1rem; font-weight: 600; margin: 32px 0 12px; color: var(--accent); }
+    .blog-content p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; }
+    .blog-content ul, .blog-content ol { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; padding-left: 24px; }
+    .blog-content li { margin-bottom: 8px; }
+    .blog-content code { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+    .blog-content blockquote { border-left: 3px solid var(--accent); padding-left: 20px; margin: 24px 0; color: var(--text-secondary); font-style: italic; }
+    .blog-nav { display: flex; justify-content: space-between; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .blog-nav a { color: var(--accent); font-size: 0.875rem; }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/">Home</a>
+        <a href="/#features">Features</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/docs/">Docs</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/#contact" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <article class="blog-article">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">Blog</p>
+          <h1>OFAC Sanctions Screening on Blockchain: Best Practices</h1>
+          <div class="blog-meta">
+            <span>July 2026</span>
+            <span class="tag">Compliance</span>
+            <span>7 min read</span>
+          </div>
+        </div>
+
+        <div class="blog-content reveal">
+          <p>The Office of Foreign Assets Control (OFAC) maintains the Specially Designated Nationals (SDN) list — a compilation of individuals, entities, and addresses that US persons are prohibited from transacting with. For blockchain protocols, this creates unique challenges that traditional financial institutions don't face.</p>
+
+          <h2>The Challenge of On-Chain Sanctions Screening</h2>
+
+          <p>Unlike traditional finance where transactions flow through intermediaries, blockchain transactions are peer-to-peer. There is no bank to stop a transaction before it settles. This means compliance must be embedded at the protocol level:</p>
+
+          <ul>
+            <li><strong>Pre-transaction screening:</strong> Every transfer must be evaluated before execution</li>
+            <li><strong>Non-custodial environments:</strong> No central authority holds funds or controls access</li>
+            <li><strong>Pseudonymity:</strong> Addresses don't map 1:1 to real-world identities</li>
+            <li><strong>Irreversibility:</strong> Once a transaction is mined, it cannot be undone</li>
+          </ul>
+
+          <h2>Best Practice #1: On-Chain Enforcement</h2>
+
+          <p>The most robust approach is to embed sanctions screening directly into the smart contract. This ensures:</p>
+
+          <ol>
+            <li><strong>Determinism:</strong> Every transaction is screened under identical rules</li>
+            <li><strong>No Bypass:</strong> Even direct contract calls trigger compliance checks</li>
+            <li><strong>Auditability:</strong> Screening decisions are permanently recorded on-chain</li>
+            <li><strong>Availability:</strong> No dependency on external APIs that could fail</li>
+          </ol>
+
+          <h2>Best Practice #2: Risk Tiers, Not Binary Blocks</h2>
+
+          <p>A sophisticated approach uses risk tiers rather than simple allow/block:</p>
+
+          <ul>
+            <li><strong>UNKNOWN:</strong> New addresses with no history — require additional verification</li>
+            <li><strong>LOW:</strong> No flags detected — allow with standard limits</li>
+            <li><strong>MEDIUM:</strong> Some risk indicators — enhanced monitoring</li>
+            <li><strong>HIGH:</strong> Significant risk — quarantine for manual review</li>
+            <li><strong>CRITICAL:</strong> Sanctions match — block and alert</li>
+          </ul>
+
+          <h2>Best Practice #3: Keep Data Fresh</h2>
+
+          <p>OFAC updates the SDN list regularly. On-chain registries must be updated autonomously. FidesOrigin uses Chainlink Functions to fetch the latest sanctions data and update the on-chain RiskRegistry without manual intervention.</p>
+
+          <h2>Best Practice #4: Quarantine Over Block</h2>
+
+          <p>Instead of outright blocking transactions (which can create UX issues and false positives), consider a quarantine mechanism:</p>
+
+          <blockquote>"A quarantine vault holds suspicious funds for review rather than rejecting them outright. This reduces false positives while maintaining compliance."</blockquote>
+
+          <h2>Conclusion</h2>
+
+          <p>OFAC compliance on blockchain is not optional — it's a legal requirement for any protocol operating in or serving US persons. The question is not whether to comply, but how to do so without compromising the benefits of decentralization. On-chain enforcement is the answer.</p>
+        </div>
+
+        <div class="blog-nav reveal">
+          <a href="/blog/">← All Articles</a>
+          <a href="/blog/hong-kong-stablecoin-license.html">Next: HK License →</a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>Programmable on-chain compliance for the future of finance.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/#features">Features</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="/security.html">Security</a>
+          <a href="/admin/">Dashboard</a>
+        </div>
+        <div class="footer-col">
+          <h4>Developers</h4>
+          <a href="/docs/">Documentation</a>
+          <a href="/docs/api.html">API Reference</a>
+          <a href="/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="mailto:contact@fidesorigin.com">Contact</a>
+          <a href="/blog/">Blog</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../wallet-connect.js"></script>
+  <script>
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+  </script>
+</body>
+</html>
