@@ -9,347 +9,238 @@
 <link rel="stylesheet" href="/styles.css"/>
 <title>FidesOrigin — 链上执行级可编程合规协议</title>
 <meta name="description" content="面向稳定币、RWA代币化和DeFi的可编程合规协议。实时风控、自主策略执行、不可篡改审计追踪。"/>
-<meta property="og:title" content="FidesOrigin — 链上执行级可编程合规协议"/>
-<meta property="og:description" content="面向链上金融的可编程合规协议。"/>
+<meta property="og:title" content="FidesOrigin — Execution-Grade 链上 Compliance"/>
+<meta property="og:description" content="Programmable compliance protocol for on-chain finance."/>
 <meta property="og:type" content="website"/>
 <meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="FidesOrigin — 链上执行级可编程合规协议"/>
-<meta name="twitter:description" content="面向链上金融的可编程合规协议。"/>
+<meta name="twitter:title" content="FidesOrigin — Execution-Grade 链上 Compliance"/>
+<meta name="twitter:description" content="Programmable compliance protocol for on-chain finance."/>
 <meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
 <link rel="canonical" href="https://fidesorigin.com/"/>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"FidesOrigin","url":"https://fidesorigin.com","logo":"https://fidesorigin.com/brand/logo-dark-icon.png","description":"Programmable on-chain compliance protocol for tokenized assets and DeFi."},{"@type":"WebSite","url":"https://fidesorigin.com","name":"FidesOrigin"},{"@type":"SoftwareApplication","name":"FidesOrigin Protocol","applicationCategory":"FinanceApplication","operatingSystem":"Web3","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}]}</script>
 <style>
   :root {
-    --fio-ink:#05060a;
-    --fio-ink-soft:#080a10;
-    --fio-surface:#0c0e18;
-    --fio-surface-2:#111320;
-    --fio-surface-3:#181b28;
-    --fio-elevated:#1e2230;
-    --fio-border:#252a3a;
-    --fio-border-light:#2e3448;
-    --fio-text:#f0f1f5;
-    --fio-text-2:#9a9fad;
-    --fio-text-3:#5e6478;
-    --fio-text-4:#3a4055;
-    --fio-accent:#9b8ed8;
-    --fio-accent-dim:#9b8ed81a;
-    --fio-accent-glow:#9b8ed80a;
-    --fio-gold:#d4b87a;
-    --fio-gold-dim:#d4b87a1a;
-    --fio-gold-glow:#d4b87a10;
-    --fio-steel:#7b9ab8;
-    --fio-success:#5ce68a;
-    --fio-warn:#fcd34d;
-    --fio-danger:#fb8e8e;
-    --fio-info:#7ab8f0;
+    --fio-ink:#05060a;--fio-ink-soft:#080a10;--fio-surface:#0c0e18;--fio-surface-2:#111320;--fio-surface-3:#181b28;--fio-elevated:#1e2230;
+    --fio-border:#252a3a;--fio-border-light:#2e3448;--fio-text:#f0f1f5;--fio-text-2:#9a9fad;--fio-text-3:#5e6478;--fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8;--fio-accent-dim:#9b8ed81a;--fio-accent-glow:#9b8ed80a;
+    --fio-gold:#d4b87a;--fio-gold-dim:#d4b87a1a;--fio-gold-glow:#d4b87a10;
+    --fio-steel:#7b9ab8;--fio-success:#5ce68a;--fio-warn:#fcd34d;--fio-danger:#fb8e8e;--fio-info:#7ab8f0;
     --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --font-body:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
   }
-  html,body { margin:0; padding:0; }
-  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
-  a { color:inherit; text-decoration:none; }
-  img { max-width:100%; display:block; }
-  .container { max-width:1200px; margin:0 auto; padding:0 24px; }
-  @media(max-width:768px){ .container { padding:0 16px; } }
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--fio-ink);color:var(--fio-text);line-height:1.7;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .container{max-width:1100px;margin:0 auto;padding:0 24px}
+  @media(max-width:768px){.container{padding:0 16px}}
 
-  /* ─── Animations ─────────────────────────────────────────────── */
-  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
-  @keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
-  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
-  @keyframes gradient-shift { 0%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } 100%{ background-position:0% 50%; } }
-  @keyframes shimmer { 0%{ background-position:-200% 0; } 100%{ background-position:200% 0; } }
-  @keyframes orbit { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
-  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
-  .anim-d1 { animation-delay:0.1s; }
-  .anim-d2 { animation-delay:0.2s; }
-  .anim-d3 { animation-delay:0.35s; }
-  .anim-d4 { animation-delay:0.5s; }
-  .anim-d5 { animation-delay:0.65s; }
-  .anim-d6 { animation-delay:0.8s; }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeScale{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+  @keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 6px var(--fio-gold)}50%{opacity:0.5;box-shadow:0 0 16px var(--fio-gold)}}
+  @keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-20px,20px) scale(0.95)}}
+  .anim-fade-up{animation:fadeUp .8s cubic-bezier(0.16,1,0.3,1) both}
+  .anim-fade-scale{animation:fadeScale .7s cubic-bezier(0.16,1,0.3,1) both}
+  .anim-d1{animation-delay:.1s}.anim-d2{animation-delay:.2s}.anim-d3{animation-delay:.35s}.anim-d4{animation-delay:.5s}.anim-d5{animation-delay:.65s}
 
-  /* ─── Navigation ─────────────────────────────────────────────── */
-  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
-  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
-  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
-  .nav-logo { display:flex; align-items:center; gap:10px; }
-  .nav-logo img { height:28px; width:auto; }
-  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
-  .nav-links { display:none; align-items:center; gap:32px; }
-  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
-  .nav-links a:hover { color:var(--fio-text); }
-  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
-  .nav-links a:hover::after { width:100%; }
-  .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); }
-  .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
-  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
-  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
-  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
-  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+  .nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(5,6,10,.8);backdrop-filter:blur(20px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.03);transition:all .3s}
+  .nav-scrolled{background:rgba(5,6,10,.95);border-bottom-color:rgba(255,255,255,.06)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .nav-logo{display:flex;align-items:center;gap:10px}
+  .nav-logo img{height:28px;width:auto}
+  .nav-logo-text{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--fio-text);letter-spacing:-.025em}
+  .nav-links{display:none;align-items:center;gap:32px}
+  .nav-links a{font-size:.8125rem;color:var(--fio-text-2);transition:all .2s;position:relative;font-weight:450}
+  .nav-links a:hover{color:var(--fio-text)}
+  .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--fio-gold);transition:width .25s ease;border-radius:1px}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{font-size:.8125rem;font-weight:600;color:var(--fio-ink);padding:8px 20px;border-radius:8px;transition:all .25s;background:var(--fio-gold)}
+  .nav-cta:hover{background:#e0c88a;transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,184,122,.25)}
+  .nav-cta-outline{font-size:.8125rem;font-weight:500;color:var(--fio-gold);padding:7px 18px;border:1px solid rgba(212,184,122,.2);border-radius:8px;transition:all .25s;background:rgba(212,184,122,.04)}
+  .nav-cta-outline:hover{background:rgba(212,184,122,.1);border-color:rgba(212,184,122,.35)}
+  .nav-mobile-btn{display:flex;width:40px;height:40px;align-items:center;justify-content:center;color:var(--fio-text-2);background:none;border:none;cursor:pointer}
+  @media(min-width:900px){.nav-links{display:flex}.nav-mobile-btn{display:none}}
 
-  /* ─── Hero ───────────────────────────────────────────────────── */
-  .hero { position:relative; overflow:hidden; min-height:100vh; display:flex; align-items:center; background:var(--fio-ink); }
-  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
-  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
-  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
-  .hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 0),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 0); background-size:100px 100px; mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent); -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent); pointer-events:none; }
-  .hero-inner { position:relative; z-index:2; padding:160px 0 100px; width:100%; }
-  .hero-layout { display:grid; grid-template-columns:1fr; gap:48px; align-items:center; }
-  @media(min-width:1024px){ .hero-layout { grid-template-columns:1.1fr 0.9fr; } }
+  .hero{position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;background:var(--fio-ink)}
+  .hero-ambient{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  .hero-ambient .orb{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
+  .hero-ambient .orb-1{width:600px;height:600px;background:rgba(155,142,216,.08);top:-10%;left:-5%;animation:orb-float 20s ease-in-out infinite}
+  .hero-ambient .orb-2{width:500px;height:500px;background:rgba(212,184,122,.06);bottom:-15%;right:-5%;animation:orb-float 25s ease-in-out infinite reverse}
+  .hero-ambient .orb-3{width:350px;height:350px;background:rgba(122,184,240,.05);top:50%;right:25%;animation:orb-float 18s ease-in-out infinite;animation-delay:-8s}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 0),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 0);background-size:100px 100px;mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent);-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent);pointer-events:none}
+  .hero-inner{position:relative;z-index:2;padding:160px 0 100px;width:100%}
+  .hero-left{text-align:center;max-width:720px;margin:0 auto}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;background:var(--fio-gold-dim);border:1px solid rgba(212,184,122,.15);border-radius:100px;font-size:.75rem;font-family:var(--font-mono);color:var(--fio-gold);margin-bottom:32px}
+  .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--fio-gold);animation:pulse-dot 2s infinite}
+  .hero-title{font-family:var(--font-display);font-size:clamp(2.8rem,6vw,5rem);font-weight:500;line-height:1.05;letter-spacing:-.025em;color:var(--fio-text);margin-bottom:24px}
+  .hero-title .line2{display:block}
+  .hero-title-accent{background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-subtitle{font-size:clamp(1.05rem,1.4vw,1.25rem);line-height:1.7;color:var(--fio-text-2);max-width:480px;margin:0 auto 36px}
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
+  .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:var(--fio-gold);color:var(--fio-ink);font-size:.9rem;font-weight:600;border-radius:10px;border:none;cursor:pointer;transition:all .25s cubic-bezier(0.16,1,0.3,1);box-shadow:0 0 32px rgba(212,184,122,.2)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(212,184,122,.4)}
+  .btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:transparent;color:var(--fio-text);font-size:.9rem;font-weight:500;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .25s}
+  .btn-secondary:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.2)}
 
-  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-gold-dim); border:1px solid rgba(212,184,122,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-gold); margin-bottom:32px; }
-  .hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--fio-gold); animation:pulse-dot 2s infinite; }
+  .stats-section{padding:0 0 80px;position:relative;z-index:2}
+  .stats-bar{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(min-width:640px){.stats-bar{grid-template-columns:repeat(4,1fr);gap:20px}}
+  .stat-item{padding:40px 20px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;text-align:center;transition:all .35s cubic-bezier(0.16,1,0.3,1)}
+  .stat-item:hover{border-color:var(--fio-border-light);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3)}
+  .stat-num{font-family:var(--font-mono);font-size:clamp(2.4rem,4vw,3.6rem);font-weight:700;color:var(--fio-gold);line-height:1;margin-bottom:8px}
+  .stat-label{font-size:.78rem;color:var(--fio-text-3);font-family:var(--font-mono);letter-spacing:.02em}
 
-  .hero-title { font-family:var(--font-display); font-size:clamp(2.6rem,5.5vw,4.5rem); font-weight:500; line-height:1.05; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:24px; }
-  .hero-title .line2 { display:block; }
-  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-  .hero-subtitle { font-size:clamp(1.05rem,1.4vw,1.2rem); line-height:1.7; color:var(--fio-text-2); max-width:520px; margin-bottom:36px; }
-  .hero-ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:48px; }
-  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
-  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
-  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
-  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
-  .btn-sm { padding:10px 20px; font-size:0.8125rem; }
+  .trust-logos-section{padding:40px 0;border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)}
+  .trust-logos-label{text-align:center;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.15em;color:var(--fio-text-3);margin-bottom:28px}
+  .trust-logos-grid{display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap}
+  .trust-logo-item{display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:10px;font-size:.8rem;color:var(--fio-text-3);transition:all .3s}
+  .trust-logo-item:hover{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--fio-text-2)}
+  .trust-logo-icon{width:20px;height:20px;opacity:.6}
 
-  /* Hero visual */
-  .hero-visual { position:relative; display:none; }
-  @media(min-width:1024px){ .hero-visual { display:block; } }
-  .hero-code-block { background:rgba(8,10,16,0.9); border:1px solid rgba(255,255,255,0.06); border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5), 0 0 60px rgba(155,142,216,0.06); backdrop-filter:blur(10px); }
-  .hero-code-header { display:flex; align-items:center; gap:8px; padding:14px 18px; background:rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.04); }
-  .hero-code-dot { width:10px; height:10px; border-radius:50%; }
-  .hero-code-dot.r { background:#ff5f57; }
-  .hero-code-dot.y { background:#febc2e; }
-  .hero-code-dot.g { background:#28c840; }
-  .hero-code-title { font-size:0.7rem; color:var(--fio-text-3); margin-left:8px; font-family:var(--font-mono); }
-  .hero-code-body { padding:20px 24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.7; overflow:hidden; }
-  .hero-code-body .kw { color:#c678dd; }
-  .hero-code-body .fn { color:#61afef; }
-  .hero-code-body .str { color:#98c379; }
-  .hero-code-body .num { color:#d19a66; }
-  .hero-code-body .cm { color:#5c6370; font-style:italic; }
-  .hero-code-body .ty { color:#e5c07b; }
+  .section{padding:120px 0}
+  @media(min-width:768px){.section{padding:140px 0}}
+  .section-alt{background:var(--fio-ink-soft)}
+  .section-header{text-align:center;max-width:600px;margin:0 auto 72px}
+  .section-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--fio-text-3);margin-bottom:16px;padding:4px 12px;border:1px solid rgba(255,255,255,.06);border-radius:6px}
+  .section-title{font-family:var(--font-display);font-size:clamp(1.8rem,3.8vw,2.8rem);font-weight:500;line-height:1.1;letter-spacing:-.02em;color:var(--fio-text);margin-bottom:18px}
+  .section-desc{font-size:1.05rem;line-height:1.7;color:var(--fio-text-2);max-width:560px;margin:0 auto}
+  .section-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(155,142,216,.15),rgba(212,184,122,.1),transparent);max-width:500px;margin:48px auto 0}
 
-  /* ─── Stats Bar ──────────────────────────────────────────────── */
-  .stats-section { padding:0 0 60px; position:relative; z-index:2; }
-  .stats-bar { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-  @media(min-width:640px){ .stats-bar { grid-template-columns:repeat(4,1fr); gap:20px; } }
-  .stat-item { padding:28px 20px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; text-align:center; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); }
-  .stat-item:hover { border-color:var(--fio-border-light); transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,0.3); }
-  .stat-num { font-family:var(--font-mono); font-size:clamp(1.8rem,3vw,2.4rem); font-weight:700; color:var(--fio-gold); line-height:1; margin-bottom:8px; }
-  .stat-label { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); letter-spacing:0.02em; }
-  .stat-desc { font-size:0.8rem; color:var(--fio-text-3); margin-top:4px; }
+  .product-grid{display:grid;gap:20px}
+  @media(min-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)}}
+  .product-card{position:relative;padding:60px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;transition:all .4s cubic-bezier(0.16,1,0.3,1);overflow:hidden}
+  .product-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(155,142,216,.2),transparent);opacity:0;transition:opacity .4s}
+  .product-card:hover::before{opacity:1}
+  .product-card::after{content:'';position:absolute;inset:0;border-radius:18px;opacity:0;transition:opacity .5s ease;background:linear-gradient(135deg,rgba(155,142,216,.06) 0%,transparent 40%,rgba(212,184,122,.04) 100%);pointer-events:none;z-index:0}
+  .product-card:hover::after{opacity:1}
+  .product-card:hover{border-color:var(--fio-border-light);transform:translateY(-5px);box-shadow:0 32px 64px rgba(0,0,0,.4),0 0 60px -12px rgba(155,142,216,.06)}
+  .product-card-accent{border-color:rgba(155,142,216,.12);background:linear-gradient(180deg,rgba(155,142,216,.03) 0%,var(--fio-surface) 60%)}
+  .product-card>*{position:relative;z-index:1}
+  .product-icon-wrap{width:64px;height:64px;border-radius:16px;background:var(--fio-accent-dim);border:1px solid rgba(155,142,216,.12);display:flex;align-items:center;justify-content:center;margin-bottom:28px;font-size:1.6rem}
+  .product-card h3{font-family:var(--font-display);font-size:1.45rem;font-weight:500;color:var(--fio-text);margin-bottom:10px}
+  .product-card p{font-size:.95rem;line-height:1.7;color:var(--fio-text-2)}
 
-  /* ─── Trust Logos ────────────────────────────────────────────── */
-  .trust-logos-section { padding:40px 0; border-top:1px solid rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.04); }
-  .trust-logos-label { text-align:center; font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.15em; color:var(--fio-text-3); margin-bottom:28px; }
-  .trust-logos-grid { display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap; }
-  .trust-logo-item { display:flex; align-items:center; gap:8px; padding:10px 18px; background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.04); border-radius:10px; font-size:0.8rem; color:var(--fio-text-3); transition:all 0.3s; }
-  .trust-logo-item:hover { border-color:rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:var(--fio-text-2); }
-  .trust-logo-icon { width:20px; height:20px; opacity:0.6; }
+  .arch-flow{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:48px}
+  .arch-node{padding:28px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;text-align:center;min-width:180px;transition:all .3s}
+  .arch-node:hover{border-color:var(--fio-border-light);transform:translateY(-2px)}
+  .arch-node-icon{width:40px;height:40px;margin:0 auto 12px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .arch-node h4{font-size:.95rem;font-weight:600;color:var(--fio-text);margin-bottom:4px}
+  .arch-node p{font-size:.72rem;color:var(--fio-text-3)}
+  .arch-arrow{color:var(--fio-text-4);font-size:1.2rem}
+  @media(max-width:768px){.arch-flow{flex-direction:column}.arch-arrow{transform:rotate(90deg)}}
 
-  /* ─── Section Base ───────────────────────────────────────────── */
-  .section { padding:100px 0; }
-  @media(min-width:768px){ .section { padding:130px 0; } }
-  .section-alt { background:var(--fio-ink-soft); }
-  .section-header { text-align:center; max-width:640px; margin:0 auto 72px; }
-  .section-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-text-3); margin-bottom:16px; padding:4px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; }
-  .section-title { font-family:var(--font-display); font-size:clamp(1.8rem,3.8vw,2.8rem); font-weight:500; line-height:1.1; letter-spacing:-0.02em; color:var(--fio-text); margin-bottom:18px; }
-  .section-desc { font-size:1.05rem; line-height:1.7; color:var(--fio-text-2); max-width:560px; margin:0 auto; }
+  .usecase-grid{display:grid;gap:20px}
+  @media(min-width:768px){.usecase-grid{grid-template-columns:repeat(3,1fr)}}
+  .usecase-card{position:relative;padding:48px 36px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;transition:all .35s cubic-bezier(0.16,1,0.3,1);overflow:hidden}
+  .usecase-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--fio-accent),var(--fio-gold));opacity:0;transition:opacity .4s}
+  .usecase-card:hover{border-color:var(--fio-border-light);transform:translateY(-4px)}
+  .usecase-card:hover::after{opacity:1}
+  .usecase-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+  .usecase-card h3{font-family:var(--font-display);font-size:1.25rem;font-weight:500;color:var(--fio-text);margin-bottom:8px}
+  .usecase-card p{font-size:.9rem;line-height:1.7;color:var(--fio-text-2)}
 
-  /* ─── 产品 Cards ──────────────────────────────────────────── */
-  .product-grid { display:grid; gap:20px; }
-  @media(min-width:768px){ .product-grid { grid-template-columns:repeat(2,1fr); } }
-  .product-card { position:relative; padding:40px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); overflow:hidden; }
-  .product-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(155,142,216,0.2),transparent); opacity:0; transition:opacity 0.4s; }
-  .product-card:hover::before { opacity:1; }
-  .product-card:hover { border-color:var(--fio-border-light); transform:translateY(-5px); box-shadow:0 32px 64px rgba(0,0,0,0.4), 0 0 60px -12px rgba(155,142,216,0.06); }
-  .product-card-accent { border-color:rgba(155,142,216,0.12); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
-  .product-icon-wrap { width:52px; height:52px; border-radius:14px; background:var(--fio-accent-dim); border:1px solid rgba(155,142,216,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:24px; font-size:1.35rem; }
-  .product-card h3 { font-family:var(--font-display); font-size:1.35rem; font-weight:500; color:var(--fio-text); margin-bottom:6px; }
-  .product-subtitle { font-size:0.78rem; color:var(--fio-text-3); font-family:var(--font-mono); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.05em; }
-  .product-card p { font-size:0.92rem; line-height:1.7; color:var(--fio-text-2); margin-bottom:20px; }
-  .product-tags { display:flex; flex-wrap:wrap; gap:8px; }
-  .product-tag { font-size:0.72rem; font-family:var(--font-mono); padding:5px 12px; background:rgba(155,142,216,0.06); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.1); border-radius:6px; }
+  .trust-grid{display:grid;gap:16px;grid-template-columns:repeat(2,1fr)}
+  @media(min-width:640px){.trust-grid{grid-template-columns:repeat(4,1fr)}}
+  .trust-item{text-align:center;padding:40px 20px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;transition:all .3s}
+  .trust-item:hover{border-color:rgba(212,184,122,.15);background:rgba(212,184,122,.02)}
+  .trust-icon{width:48px;height:48px;margin:0 auto 16px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+  .trust-icon.purple{background:var(--fio-accent-dim);color:var(--fio-accent)}
+  .trust-icon.gold{background:var(--fio-gold-dim);color:var(--fio-gold)}
+  .trust-icon.green{background:rgba(92,230,138,.06);color:var(--fio-success)}
+  .trust-icon.blue{background:rgba(122,184,240,.06);color:var(--fio-info)}
+  .trust-item h4{font-size:.95rem;font-weight:600;color:var(--fio-text);margin-bottom:8px}
+  .trust-badge{display:inline-block;padding:4px 12px;border-radius:100px;font-size:.7rem;font-weight:600;font-family:var(--font-mono)}
+  .trust-badge.ok{background:rgba(92,230,138,.1);color:var(--fio-success)}
 
-  /* ─── How It Works ───────────────────────────────────────────── */
-  .hiw-steps { max-width:800px; margin:0 auto; }
-  .hiw-step { display:flex; gap:24px; padding:36px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
-  .hiw-step:last-child { border-bottom:none; }
-  .hiw-num { flex-shrink:0; width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:1rem; font-weight:600; }
-  .hiw-num.purple { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.12); }
-  .hiw-num.gold { background:var(--fio-gold-dim); color:var(--fio-gold); border:1px solid rgba(212,184,122,0.12); }
-  .hiw-num.green { background:rgba(92,230,138,0.06); color:var(--fio-success); border:1px solid rgba(92,230,138,0.1); }
-  .hiw-num.blue { background:rgba(122,184,240,0.06); color:var(--fio-info); border:1px solid rgba(122,184,240,0.1); }
-  .hiw-content h3 { font-family:var(--font-display); font-size:1.2rem; font-weight:500; color:var(--fio-text); margin-bottom:8px; }
-  .hiw-content p { font-size:0.92rem; color:var(--fio-text-2); line-height:1.7; }
+  .testimonial-section{padding:120px 0}
+  @media(min-width:768px){.testimonial-section{padding:140px 0}}
+  .testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto}
+  .testimonial-card{padding:40px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;position:relative;display:flex;flex-direction:column;justify-content:space-between}
+  .testimonial-card::before{content:'"';position:absolute;top:20px;left:30px;font-family:var(--font-display);font-size:4rem;color:var(--fio-text-4);line-height:1}
+  .testimonial-text{font-size:.92rem;line-height:1.7;color:var(--fio-text-2);font-style:italic;margin-bottom:24px;padding-left:20px;position:relative;z-index:1}
+  .testimonial-author{display:flex;align-items:center;gap:14px;margin-top:auto}
+  .testimonial-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0}
+  .testimonial-avatar.helios{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+  .testimonial-avatar.keyvault{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+  .testimonial-avatar.fortress{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+  .testimonial-info h4{font-size:.95rem;font-weight:600;color:var(--fio-text)}
+  .testimonial-info p{font-size:.8rem;color:var(--fio-text-3)}
+  @media(max-width:1024px){.testimonial-grid{grid-template-columns:1fr;max-width:600px}}
 
-  /* ─── API Code Section ───────────────────────────────────────── */
-  .api-section { padding:100px 0; }
-  .api-grid { display:grid; grid-template-columns:1fr; gap:48px; align-items:center; }
-  @media(min-width:1024px){ .api-grid { grid-template-columns:1fr 1.1fr; gap:64px; } }
-  .api-content h2 { font-family:var(--font-display); font-size:clamp(1.6rem,3vw,2.2rem); font-weight:500; line-height:1.15; letter-spacing:-0.02em; margin-bottom:16px; }
-  .api-content p { font-size:1rem; color:var(--fio-text-2); line-height:1.7; margin-bottom:24px; }
-  .api-features { display:flex; flex-direction:column; gap:14px; }
-  .api-feature { display:flex; align-items:center; gap:12px; font-size:0.9rem; color:var(--fio-text-2); }
-  .api-feature svg { flex-shrink:0; color:var(--fio-success); }
-  .api-code-wrap { background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:18px; overflow:hidden; }
-  .api-code-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); }
-  .api-code-tabs { display:flex; gap:4px; }
-  .api-code-tab { padding:6px 14px; border-radius:6px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-text-3); cursor:pointer; border:none; background:none; transition:all 0.2s; }
-  .api-code-tab.active { background:rgba(255,255,255,0.04); color:var(--fio-text); }
-  .api-code-body { padding:24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.75; overflow-x:auto; }
-  .api-code-body .kw { color:#c678dd; }
-  .api-code-body .fn { color:#61afef; }
-  .api-code-body .str { color:#98c379; }
-  .api-code-body .num { color:#d19a66; }
-  .api-code-body .cm { color:#5c6370; font-style:italic; }
+  .pricing-grid{display:grid;gap:20px}
+  @media(min-width:768px){.pricing-grid{grid-template-columns:repeat(3,1fr)}}
+  .pricing-card{position:relative;padding:40px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;transition:all .3s}
+  .pricing-card:hover{border-color:var(--fio-border-light)}
+  .pricing-card.featured{border-color:rgba(155,142,216,.2);background:linear-gradient(180deg,rgba(155,142,216,.03) 0%,var(--fio-surface) 40%)}
+  .pricing-badge{position:absolute;top:0;right:0;padding:7px 16px;background:var(--fio-accent-dim);color:var(--fio-accent);font-size:.65rem;font-weight:600;font-family:var(--font-mono);border-radius:0 18px 0 10px;letter-spacing:.05em}
+  .pricing-tier{font-size:.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--fio-text-3);margin-bottom:8px}
+  .pricing-price{font-family:var(--font-mono);font-size:2.4rem;font-weight:700;color:var(--fio-text);line-height:1;margin-bottom:6px}
+  .pricing-period{font-size:.8rem;color:var(--fio-text-3);font-family:var(--font-mono);margin-bottom:24px}
+  .pricing-features{list-style:none;margin:0 0 32px;padding:0}
+  .pricing-features li{display:flex;align-items:flex-start;gap:10px;font-size:.85rem;color:var(--fio-text-2);margin-bottom:12px}
+  .pricing-features li::before{content:"";width:16px;height:16px;flex-shrink:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d4b87a' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat;margin-top:1px}
+  .pricing-btn{display:block;width:100%;text-align:center;padding:12px;border-radius:10px;font-size:.875rem;font-weight:600;transition:all .25s;cursor:pointer;border:none}
+  .pricing-btn-primary{background:var(--fio-accent);color:var(--fio-ink)}
+  .pricing-btn-primary:hover{background:#aba0e0}
+  .pricing-btn-secondary{background:transparent;color:var(--fio-text);border:1px solid rgba(255,255,255,.1)}
+  .pricing-btn-secondary:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.18)}
 
-  /* ─── 用例 ──────────────────────────────────────────────── */
-  .usecase-grid { display:grid; gap:20px; }
-  @media(min-width:768px){ .usecase-grid { grid-template-columns:repeat(3,1fr); } }
-  .usecase-card { position:relative; padding:36px 32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); overflow:hidden; }
-  .usecase-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--fio-accent),var(--fio-gold)); opacity:0; transition:opacity 0.4s; }
-  .usecase-card:hover { border-color:var(--fio-border-light); transform:translateY(-4px); }
-  .usecase-card:hover::after { opacity:1; }
-  .usecase-num { font-family:var(--font-mono); font-size:0.7rem; color:var(--fio-text-4); margin-bottom:16px; letter-spacing:0.05em; }
-  .usecase-card h3 { font-family:var(--font-display); font-size:1.15rem; font-weight:500; color:var(--fio-text); margin-bottom:12px; }
-  .usecase-card p { font-size:0.88rem; line-height:1.7; color:var(--fio-text-2); }
-  .usecase-stats { display:flex; gap:20px; margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.04); }
-  .usecase-stat { font-size:0.75rem; color:var(--fio-text-3); }
-  .usecase-stat strong { display:block; color:var(--fio-gold); font-family:var(--font-mono); font-size:0.95rem; }
+  .cta-banner{padding:120px 0;position:relative;overflow:hidden;background:var(--fio-ink-soft)}
+  @media(min-width:768px){.cta-banner{padding:140px 0}}
+  .cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,.05) 0%,transparent 70%)}
+  .cta-inner{position:relative;z-index:1;text-align:center;max-width:600px;margin:0 auto}
+  .cta-title{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:500;color:var(--fio-text);margin-bottom:24px}
+  .cta-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 
-  /* ─── 安全 & Trust ───────────────────────────────────────── */
-  .trust-grid { display:grid; gap:16px; grid-template-columns:repeat(2,1fr); }
-  @media(min-width:640px){ .trust-grid { grid-template-columns:repeat(4,1fr); } }
-  .trust-item { text-align:center; padding:32px 20px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; transition:all 0.3s; }
-  .trust-item:hover { border-color:rgba(212,184,122,0.15); background:rgba(212,184,122,0.02); }
-  .trust-icon { width:44px; height:44px; margin:0 auto 14px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
-  .trust-icon.purple { background:var(--fio-accent-dim); color:var(--fio-accent); }
-  .trust-icon.gold { background:var(--fio-gold-dim); color:var(--fio-gold); }
-  .trust-icon.green { background:rgba(92,230,138,0.06); color:var(--fio-success); }
-  .trust-icon.blue { background:rgba(122,184,240,0.06); color:var(--fio-info); }
-  .trust-item h4 { font-size:0.9rem; font-weight:600; color:var(--fio-text); margin-bottom:6px; }
-  .trust-item p { font-size:0.78rem; color:var(--fio-text-3); line-height:1.5; }
-  .trust-badge { display:inline-block; margin-top:10px; padding:3px 10px; border-radius:100px; font-size:0.65rem; font-weight:600; font-family:var(--font-mono); }
-  .trust-badge.ok { background:rgba(92,230,138,0.1); color:var(--fio-success); }
+  .footer{background:var(--fio-ink);border-top:1px solid rgba(255,255,255,.04);padding:64px 0 32px}
+  .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:48px;margin-bottom:48px}
+  @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:32px}}
+  @media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
+  .footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .footer-brand img{height:26px;width:auto;border-radius:6px}
+  .footer-brand span{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--fio-text)}
+  .footer-desc{font-size:.85rem;color:var(--fio-text-3);line-height:1.6;max-width:280px}
+  .footer-col h4{font-size:.8rem;font-weight:600;color:var(--fio-text);margin-bottom:16px;text-transform:uppercase;letter-spacing:.08em}
+  .footer-col a{display:block;color:var(--fio-text-3);font-size:.85rem;padding:5px 0;transition:color .2s}
+  .footer-col a:hover{color:var(--fio-text-2)}
+  .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.04);font-size:.75rem;color:var(--fio-text-4);font-family:var(--font-mono)}
+  @media(max-width:640px){.footer-bottom{flex-direction:column;gap:8px;text-align:center}}
 
-  /* ─── 定价 ────────────────────────────────────────────────── */
-  .pricing-grid { display:grid; gap:20px; }
-  @media(min-width:768px){ .pricing-grid { grid-template-columns:repeat(3,1fr); } }
-  .pricing-card { position:relative; padding:40px 32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.3s; }
-  .pricing-card:hover { border-color:var(--fio-border-light); }
-  .pricing-card.featured { border-color:rgba(155,142,216,0.2); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 40%); }
-  .pricing-badge { position:absolute; top:0; right:0; padding:7px 16px; background:var(--fio-accent-dim); color:var(--fio-accent); font-size:0.65rem; font-weight:600; font-family:var(--font-mono); border-radius:0 18px 0 10px; letter-spacing:0.05em; }
-  .pricing-tier { font-size:0.75rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.08em; color:var(--fio-text-3); margin-bottom:8px; }
-  .pricing-price { font-family:var(--font-mono); font-size:2.4rem; font-weight:700; color:var(--fio-text); line-height:1; margin-bottom:6px; }
-  .pricing-period { font-size:0.8rem; color:var(--fio-text-3); font-family:var(--font-mono); margin-bottom:24px; }
-  .pricing-desc { font-size:0.9rem; color:var(--fio-text-2); line-height:1.6; margin-bottom:28px; }
-  .pricing-features { list-style:none; margin:0 0 32px; padding:0; }
-  .pricing-features li { display:flex; align-items:flex-start; gap:10px; font-size:0.85rem; color:var(--fio-text-2); margin-bottom:12px; }
-  .pricing-features li::before { content:""; width:16px; height:16px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d4b87a' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat; margin-top:1px; }
-  .pricing-btn { display:block; width:100%; text-align:center; padding:12px; border-radius:10px; font-size:0.875rem; font-weight:600; transition:all 0.25s; cursor:pointer; border:none; }
-  .pricing-btn-primary { background:var(--fio-accent); color:var(--fio-ink); }
-  .pricing-btn-primary:hover { background:#aba0e0; }
-  .pricing-btn-secondary { background:transparent; color:var(--fio-text); border:1px solid rgba(255,255,255,0.1); }
-  .pricing-btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.18); }
+  .mobile-menu{display:none;position:fixed;inset:0;z-index:999;background:rgba(5,6,10,.97);backdrop-filter:blur(20px);padding:80px 24px 24px}
+  .mobile-menu.active{display:block}
+  .mobile-menu a{display:block;padding:16px 0;font-size:1.1rem;color:var(--fio-text);border-bottom:1px solid rgba(255,255,255,.04)}
+  .mobile-menu-close{position:absolute;top:16px;right:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--fio-text-2);background:none;border:none;cursor:pointer;font-size:1.5rem}
+  .mobile-menu .lang-row{display:flex;gap:16px;margin-top:16px}
+  .mobile-menu .lang-row a{font-size:.9rem;color:var(--fio-text-3);border:none;padding:8px 0}
 
-  /* ─── CTA Banner ─────────────────────────────────────────────── */
-  .cta-banner { padding:100px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
-  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
-  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
-  .cta-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:500; color:var(--fio-text); margin-bottom:16px; }
-  .cta-desc { font-size:1.05rem; color:var(--fio-text-2); margin-bottom:32px; line-height:1.7; }
-  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .reveal{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(0.16,1,0.3,1)}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  .reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.35s}.reveal-delay-4{transition-delay:.5s}
 
-  /* ─── Footer ─────────────────────────────────────────────────── */
-  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
-  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
-  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
-  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
-  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  .footer-brand img { height:26px; width:auto; border-radius:6px; }
-  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
-  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
-  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
-  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
-  .footer-col a:hover { color:var(--fio-text-2); }
-  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
-  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
-
-  /* ─── Mobile Menu ────────────────────────────────────────────── */
-  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
-  .mobile-menu.active { display:block; }
-  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
-  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
-  .mobile-menu .lang-row { display:flex; gap:16px; margin-top:16px; }
-  .mobile-menu .lang-row a { font-size:0.9rem; color:var(--fio-text-3); border:none; padding:8px 0; }
-
-  /* ─── Scroll Reveal ──────────────────────────────────────────── */
-  .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
-  .reveal.visible { opacity:1; transform:translateY(0); }
-  .reveal-delay-1 { transition-delay:0.1s; }
-  .reveal-delay-2 { transition-delay:0.2s; }
-  .reveal-delay-3 { transition-delay:0.35s; }
-  .reveal-delay-4 { transition-delay:0.5s; }
-
-  /* ─── Language Switcher ──────────────────────────────────────── */
-  .lang-switch { display:flex; align-items:center; gap:4px; font-size:0.75rem; font-family:var(--font-mono); }
-  .lang-switch a { padding:5px 10px; border-radius:6px; color:var(--fio-text-3); transition:all 0.2s; }
-  .lang-switch a:hover { color:var(--fio-text); background:rgba(255,255,255,0.04); }
-  .lang-switch a.active { color:var(--fio-gold); background:var(--fio-gold-dim); }
-
-  /* ─── Testimonial ────────────────────────────────────────────── */
-  .testimonial-section { padding:100px 0; }
-  .testimonial-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1200px; margin:0 auto; }
-  .testimonial-card { padding:40px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; position:relative; display:flex; flex-direction:column; justify-content:space-between; }
-  .testimonial-card::before { content:'"'; position:absolute; top:20px; left:30px; font-family:var(--font-display); font-size:4rem; color:var(--fio-text-4); line-height:1; }
-  .testimonial-text { font-size:0.95rem; line-height:1.7; color:var(--fio-text-2); font-style:italic; margin-bottom:28px; padding-left:20px; position:relative; z-index:1; }
-  .testimonial-author { display:flex; align-items:center; gap:14px; }
-  .testimonial-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.85rem; flex-shrink:0; }
-  .testimonial-avatar.anchor { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
-  .testimonial-avatar.vault { background:linear-gradient(135deg,#06b6d4,#3b82f6); }
-  .testimonial-avatar.terra { background:linear-gradient(135deg,#f59e0b,#ef4444); }
-  .testimonial-info h4 { font-size:0.95rem; font-weight:600; color:var(--fio-text); }
-  .testimonial-info p { font-size:0.8rem; color:var(--fio-text-3); }
-
-  /* ─── 架构 Visual ────────────────────────────────────── */
-  .arch-flow { display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; margin-top:48px; }
-  .arch-node { padding:20px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; text-align:center; min-width:160px; transition:all 0.3s; }
-  .arch-node:hover { border-color:var(--fio-border-light); transform:translateY(-2px); }
-  .arch-node-icon { width:36px; height:36px; margin:0 auto 10px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
-  .arch-node h4 { font-size:0.9rem; font-weight:600; color:var(--fio-text); margin-bottom:4px; }
-  .arch-node p { font-size:0.72rem; color:var(--fio-text-3); }
-  .arch-arrow { color:var(--fio-text-4); font-size:1.2rem; }
-  @media(max-width:768px){ .arch-flow { flex-direction:column; } .arch-arrow { transform:rotate(90deg); } }
+  .lang-switch{display:flex;align-items:center;gap:4px;font-size:.75rem;font-family:var(--font-mono)}
+  .lang-switch a{padding:5px 10px;border-radius:6px;color:var(--fio-text-3);transition:all .2s}
+  .lang-switch a:hover{color:var(--fio-text);background:rgba(255,255,255,.04)}
+  .lang-switch a.active{color:var(--fio-gold);background:var(--fio-gold-dim)}
 </style>
 </head>
 <body style="background:var(--fio-ink);color:var(--fio-text)">
 
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
-  <a href="#products" onclick="closeMobileMenu()">产品</a>
-  <a href="#architecture" onclick="closeMobileMenu()">架构</a>
-  <a href="#use-cases" onclick="closeMobileMenu()">用例</a>
-  <a href="#security" onclick="closeMobileMenu()">安全</a>
+  <a href="#products" onclick="closeMobileMenu()">Products</a>
+  <a href="#architecture" onclick="closeMobileMenu()">Architecture</a>
+  <a href="#use-cases" onclick="closeMobileMenu()">Use Cases</a>
+  <a href="#security" onclick="closeMobileMenu()">Security</a>
   <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
   <a href="/docs/" onclick="closeMobileMenu()">文档</a>
   <div class="lang-row">
-    <a href="/">EN</a>
-    <a href="/cn/" class="active">CN</a>
-    <a href="/tw/">TW</a>
-    <a href="/jp/">JP</a>
+    <a href="/">EN</a><a href="/cn/" class="active">CN</a><a href="/tw/">TW</a><a href="/jp/">JP</a>
   </div>
   <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">预约演示</a>
 </div>
 
-<!-- Navigation -->
 <header class="nav" id="mainNav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
@@ -363,10 +254,7 @@
       <a href="#security">安全</a>
       <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
       <div class="lang-switch">
-        <a href="/">EN</a>
-        <a href="/cn/" class="active">CN</a>
-        <a href="/tw/">TW</a>
-        <a href="/jp/">JP</a>
+        <a href="/">EN</a><a href="/cn/" class="active">CN</a><a href="/tw/">TW</a><a href="/jp/">JP</a>
       </div>
       <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">预约演示</a>
     </nav>
@@ -376,450 +264,190 @@
   </div>
 </header>
 
-<!-- Hero Section -->
 <section class="hero">
-  <div class="hero-bg-glow"></div>
+  <div class="hero-ambient">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
   <div class="hero-grid"></div>
   <div class="container">
     <div class="hero-inner">
-      <div class="hero-layout">
-        <div class="hero-left">
-          <div class="hero-badge anim-fade-up anim-d1">
-            <span class="hero-badge-dot"></span>
-            <span>v1.0 — Hong Kong Stablecoin License Ready</span>
-          </div>
-          <h1 class="hero-title anim-fade-up anim-d2">
-            执行级合规能力<br>
-            <span class="line2 hero-title-accent">链上可编程执行</span>
-          </h1>
-          <p class="hero-subtitle anim-fade-up anim-d3">
-            面向稳定币、RWA和机构级DeFi的可编程合规协议。零链下依赖的链上风控。
-          </p>
-          <div class="hero-ctas anim-fade-up anim-d4">
-            <a href="mailto:contact@fidesorigin.com" class="btn-primary">
-              请求演示
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
-            </a>
-            <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-              在GitHub上查看
-            </a>
-          </div>
-          <div class="stats-bar anim-fade-up anim-d5">
-            <div class="stat-item">
-              <div class="stat-num">&lt;50ms</div>
-              <div class="stat-label">风险扫描延迟</div>
-              <div class="stat-desc">实时筛查</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-num">6+</div>
-              <div class="stat-label">支持网络</div>
-              <div class="stat-desc">以太坊、Base等</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-num">100%</div>
-              <div class="stat-label">链上执行</div>
-              <div class="stat-desc">不可篡改可审计</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-num">MIT</div>
-              <div class="stat-label">开源许可</div>
-              <div class="stat-desc">完全透明</div>
-            </div>
-          </div>
+      <div class="hero-left">
+        <div class="hero-badge anim-fade-up anim-d1">
+          <span class="hero-badge-dot"></span>
+          <span>v1.0 — 香港稳定币牌照就绪</span>
         </div>
-        <div class="hero-visual anim-fade-scale anim-d4">
-          <div class="hero-code-block">
-            <div class="hero-code-header">
-              <span class="hero-code-dot r"></span>
-              <span class="hero-code-dot y"></span>
-              <span class="hero-code-dot g"></span>
-              <span class="hero-code-title">FidesOrigin SDK</span>
-            </div>
-            <div class="hero-code-body">
-<span class="cm">// Initialize compliance engine</span>
-<span class="kw">const</span> fides = <span class="kw">await</span> <span class="fn">FidesOrigin</span>.<span class="fn">connect</span>({
-  provider: window.ethereum,
-  network: <span class="str">"sepolia"</span>,
-  apiKey: <span class="str">"fio_live_***"</span>
-});
-
-<span class="cm">// Screen address before transaction</span>
-<span class="kw">const</span> result = <span class="kw">await</span> fides.<span class="fn">screenAddress</span>({
-  address: <span class="str">"0x742d..."</span>,
-  riskLevel: <span class="str">"high"</span>
-});
-
-<span class="cm">// Enforce policy on-chain</span>
-<span class="kw">if</span> (result.status === <span class="str">"CLEAR"</span>) {
-  <span class="kw">await</span> fides.<span class="fn">execute</span>(tx);
-}
-            </div>
-          </div>
+        <h1 class="hero-title anim-fade-up anim-d2">
+          执行级合规能力<br><span class="line2 hero-title-accent">链上可编程执行</span>
+        </h1>
+        <p class="hero-subtitle anim-fade-up anim-d3">面向稳定币、RWA和DeFi的可编程合规协议。</p>
+        <div class="hero-ctas anim-fade-up anim-d4">
+          <a href="mailto:contact@fidesorigin.com" class="btn-primary">请求演示 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
+        </div>
+        <div class="stats-bar anim-fade-up anim-d5">
+          <div class="stat-item"><div class="stat-num">&lt;50ms</div><div class="stat-label">风险扫描</div></div>
+          <div class="stat-item"><div class="stat-num">6+</div><div class="stat-label">网络</div></div>
+          <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">链上</div></div>
+          <div class="stat-item"><div class="stat-num">MIT</div><div class="stat-label">许可</div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Trust Logos -->
 <section class="trust-logos-section">
   <div class="container">
     <div class="trust-logos-label">为机构信任而生</div>
     <div class="trust-logos-grid reveal">
-      <div class="trust-logo-item">
-        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        香港金管局牌照就绪
-      </div>
-      <div class="trust-logo-item">
-        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        智能合约已审计
-      </div>
-      <div class="trust-logo-item">
-        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        多源风险情报
-      </div>
-      <div class="trust-logo-item">
-        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        亚50毫秒响应
-      </div>
-      <div class="trust-logo-item">
-        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        实时监控
-      </div>
-      <div class="trust-logo-item">
-        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        不可篡改审计追踪
-      </div>
+      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>HKMA 许可</div>
+      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>已审计</div>
+      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>多源</div>
+      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>&lt;50ms</div>
+      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Real-Time</div>
+      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Immutable</div>
     </div>
   </div>
 </section>
 
-<!-- 产品 Section -->
 <section class="section" id="products">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-eyebrow">核心产品</div>
       <h2 class="section-title">四大引擎。一个合规栈。</h2>
-      <p class="section-desc">From real-time risk detection to autonomous on-chain execution — every layer designed for institutions that operate at scale.</p>
     </div>
     <div class="product-grid">
       <div class="product-card product-card-accent reveal reveal-delay-1">
-        <div class="product-icon-wrap" style="color:var(--fio-accent)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        </div>
+        <div class="product-icon-wrap" style="color:var(--fio-accent)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
         <h3>风险雷达</h3>
-        <div class="product-subtitle">实时情报</div>
-        <p>Aggregate risk data from Chainalysis, Elliptic, and OFAC in a single query. Every address scored, every transaction monitored, every decision traceable — in under 50 milliseconds. Build your own risk models or use our pre-configured scoring.</p>
-        <div class="product-tags">
-          <span class="product-tag">Chainalysis</span>
-          <span class="product-tag">Elliptic</span>
-          <span class="product-tag">OFAC</span>
-          <span class="product-tag">&lt;50ms</span>
-        </div>
+        <p>实时风险评分</p>
       </div>
       <div class="product-card reveal reveal-delay-2">
-        <div class="product-icon-wrap" style="color:var(--fio-gold)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
-        </div>
+        <div class="product-icon-wrap" style="color:var(--fio-gold)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
         <h3>策略引擎</h3>
-        <div class="product-subtitle">可编程规则</div>
-        <p>Define compliance rules as executable code: KYC thresholds, transaction limits, geographic restrictions, time locks. Rules are enforced at the smart contract level — no exceptions, no delays, no manual intervention required.</p>
-        <div class="product-tags">
-          <span class="product-tag">KYC/AML</span>
-          <span class="product-tag">Tx Limits</span>
-          <span class="product-tag">Geo-Fencing</span>
-          <span class="product-tag">Multi-Sig</span>
-        </div>
+        <p>可编程规则</p>
       </div>
       <div class="product-card reveal reveal-delay-1">
-        <div class="product-icon-wrap" style="color:var(--fio-success)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <h3>审计 Shield</h3>
-        <div class="product-subtitle">不可篡改合规</div>
-        <p>Every decision, every override, every policy change — permanently recorded on-chain with cryptographic proofs. Generate regulator-ready reports for HKMA, SEC, and MiCA with a single API call. 审计-ready from day one.</p>
-        <div class="product-tags">
-          <span class="product-tag">HKMA</span>
-          <span class="product-tag">SEC</span>
-          <span class="product-tag">MiCA</span>
-          <span class="product-tag">Immutable</span>
-        </div>
+        <div class="product-icon-wrap" style="color:var(--fio-success)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>审计盾</h3>
+        <p>不可篡改记录</p>
       </div>
       <div class="product-card reveal reveal-delay-2">
-        <div class="product-icon-wrap" style="color:var(--fio-info)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </div>
+        <div class="product-icon-wrap" style="color:var(--fio-info)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
         <h3>地址检查</h3>
-        <div class="product-subtitle">交易前筛查</div>
-        <p>在交易提交前筛查任意钱包地址。四级实时风险评分：VIP、Normal、Greylist、Blacklist。在风险交易上链前拦截，节省Gas费用和法律风险。</p>
-        <div class="product-tags">
-          <span class="product-tag">Pre-Tx</span>
-          <span class="product-tag">4-Tier Risk</span>
-          <span class="product-tag">Real-Time</span>
-          <span class="product-tag">API</span>
-        </div>
+        <p>交易前筛查</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 架构 Section -->
 <section class="section section-alt" id="architecture">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-eyebrow">架构</div>
-      <h2 class="section-title">风险数据 &rarr; 引擎 &rarr; 链上执行</h2>
-      <p class="section-desc">FidesOrigin closes the gap between off-chain risk intelligence and on-chain execution — enabling true end-to-end compliance automation at institutional scale.</p>
+      <div class="section-eyebrow">Architecture</div>
+      <h2 class="section-title">Risk to 链上 Action</h2>
     </div>
+    <div class="section-divider reveal"></div>
     <div class="arch-flow reveal">
       <div class="arch-node">
-        <div class="arch-node-icon purple" style="background:var(--fio-accent-dim);color:var(--fio-accent)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
-        </div>
+        <div class="arch-node-icon purple" style="background:var(--fio-accent-dim);color:var(--fio-accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg></div>
         <h4>接入</h4>
-        <p>多源风险数据</p>
+        <p>多源数据</p>
       </div>
       <span class="arch-arrow">&rarr;</span>
       <div class="arch-node">
-        <div class="arch-node-icon gold" style="background:var(--fio-gold-dim);color:var(--fio-gold)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-        </div>
+        <div class="arch-node-icon gold" style="background:var(--fio-gold-dim);color:var(--fio-gold)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div>
         <h4>评估</h4>
-        <p>策略引擎评分</p>
+        <p>策略评分</p>
       </div>
       <span class="arch-arrow">&rarr;</span>
       <div class="arch-node">
-        <div class="arch-node-icon green" style="background:rgba(92,230,138,0.06);color:var(--fio-success)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
+        <div class="arch-node-icon green" style="background:rgba(92,230,138,.06);color:var(--fio-success)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <h4>执行</h4>
-        <p>链上强制执行</p>
+        <p>链上执行</p>
       </div>
       <span class="arch-arrow">&rarr;</span>
       <div class="arch-node">
-        <div class="arch-node-icon blue" style="background:rgba(122,184,240,0.06);color:var(--fio-info)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17v-2H4.5A2.5 2.5 0 012 12.5v-1A2.5 2.5 0 014.5 9H9V7H4.5A4.5 4.5 0 000 11.5v1A4.5 4.5 0 004.5 17H9zm6 0h4.5A4.5 4.5 0 0024 12.5v-1A4.5 4.5 0 0019.5 7H15v2h4.5A2.5 2.5 0 0122 11.5v1a2.5 2.5 0 01-2.5 2.5H15v2zM8 11h8v2H8z"/></svg>
-        </div>
+        <div class="arch-node-icon blue" style="background:rgba(122,184,240,.06);color:var(--fio-info)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17v-2H4.5A2.5 2.5 0 012 12.5v-1A2.5 2.5 0 014.5 9H9V7H4.5A4.5 4.5 0 000 11.5v1A4.5 4.5 0 004.5 17H9zm6 0h4.5A4.5 4.5 0 0024 12.5v-1A4.5 4.5 0 0019.5 7H15v2h4.5A2.5 2.5 0 0122 11.5v1a2.5 2.5 0 01-2.5 2.5H15v2zM8 11h8v2H8z"/></svg></div>
         <h4>审计</h4>
-        <p>不可篡改合规日志</p>
-      </div>
-    </div>
-    <div class="hiw-steps" style="margin-top:56px">
-      <div class="hiw-step reveal">
-        <div class="hiw-num purple">01</div>
-        <div class="hiw-content">
-          <h3>Risk Intelligence 接入ion</h3>
-          <p>Pull real-time risk signals from Chainalysis, Elliptic, TRM Labs, and OFAC sanction lists. Our Risk Oracle aggregates and normalizes multi-source data into a unified risk score — updated continuously, not batched.</p>
-        </div>
-      </div>
-      <div class="hiw-step reveal">
-        <div class="hiw-num gold">02</div>
-        <div class="hiw-content">
-          <h3>策略评估</h3>
-          <p>The 策略引擎 evaluates each transaction against your configurable rule set — KYC status, transaction limits, geographic restrictions, velocity checks, and custom business logic. Sub-50ms evaluation latency.</p>
-        </div>
-      </div>
-      <div class="hiw-step reveal">
-        <div class="hiw-num green">03</div>
-        <div class="hiw-content">
-          <h3>链上执行</h3>
-          <p>已批准交易通过审计过的智能合约执行。被拒绝的交易在飞行前拦截，详细的合规原因不可篡改地记录上链。不会因不合规交易浪费Gas。</p>
-        </div>
-      </div>
-      <div class="hiw-step reveal">
-        <div class="hiw-num blue">04</div>
-        <div class="hiw-content">
-          <h3>审计 &amp; Reporting</h3>
-          <p>Every action generates an immutable audit trail with cryptographic proofs. Generate regulator-ready compliance reports for HKMA, SEC, and MiCA via API or dashboard — ready for your next regulatory audit.</p>
-        </div>
+        <p>不可篡改日志</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- API Code Section -->
-<section class="api-section" id="api">
+<section class="section" id="api">
   <div class="container">
-    <div class="api-grid">
-      <div class="api-content reveal">
-        <div class="section-eyebrow">开发者优先</div>
-        <h2>几分钟内集成合规，而非数月</h2>
-        <p>我们的SDK和REST API让您只需几行代码即可为任何Web3应用添加机构级合规能力。无需区块链专业知识。</p>
-        <div class="api-features">
-          <div class="api-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
-            TypeScript与Python SDK，完整类型安全
-          </div>
-          <div class="api-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
-            RESTful API，OpenAPI 3.0规范
-          </div>
-          <div class="api-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
-            WebSocket实时风险流订阅
-          </div>
-          <div class="api-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
-            GraphQL端点，灵活数据查询
-          </div>
-        </div>
-        <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap">
-          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-primary btn-sm">查看文档</a>
-          <a href="/address-check.html" class="btn-secondary btn-sm">试用地址检查</a>
-        </div>
-      </div>
-      <div class="reveal reveal-delay-2">
-        <div class="api-code-wrap">
-          <div class="api-code-header">
-            <div class="api-code-tabs">
-              <button class="api-code-tab active">TypeScript</button>
-              <button class="api-code-tab">Python</button>
-              <button class="api-code-tab">cURL</button>
-            </div>
-            <span style="font-size:0.7rem;color:var(--fio-text-3);font-family:var(--font-mono)">SDK v1.0.0</span>
-          </div>
-          <div class="api-code-body">
-<span class="cm">// Initialize the compliance engine</span>
-<span class="kw">import</span> { FidesOrigin } <span class="kw">from</span> <span class="str">'@fidesorigin/sdk'</span>;
-
-<span class="kw">const</span> client = <span class="kw">await</span> FidesOrigin.<span class="fn">connect</span>({
-  apiKey: <span class="str">'fio_live_***'</span>,
-  network: <span class="str">'ethereum'</span>,
-  environment: <span class="str">'production'</span>
-});
-
-<span class="cm">// Screen an address in real-time</span>
-<span class="kw">const</span> screening = <span class="kw">await</span> client.<span class="fn">screenAddress</span>({
-  address: <span class="str">'0x742d35Cc6634C0532925a3b8D4E6D3b6e8d3e8D9'</span>,
-  sources: [<span class="str">'chainalysis'</span>, <span class="str">'ofac'</span>, <span class="str">'elliptic'</span>]
-});
-
-<span class="cm">// Result: { status: 'CLEAR', riskScore: 12, ... }</span>
-
-<span class="cm">// Enforce a policy check</span>
-<span class="kw">const</span> policy = <span class="kw">await</span> client.<span class="fn">checkPolicy</span>({
-  sender: <span class="str">'0x...'</span>,
-  recipient: <span class="str">'0x...'</span>,
-  amount: <span class="str">'1000000000000000000'</span>, <span class="cm">// 1 ETH</span>
-  policyId: <span class="str">'stablecoin-hkma-v1'</span>
-});
-          </div>
-        </div>
-      </div>
+    <div class="section-header reveal">
+      <div class="section-eyebrow">开发者优先</div>
+      <h2 class="section-title">几分钟内集成</h2>
+      <p class="section-desc">TypeScript、Python 和 REST API。</p>
+    </div>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:40px;" class="reveal">
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-primary">查看文档</a>
+      <a href="/address-check.html" class="btn-secondary">试用地址检查</a>
     </div>
   </div>
 </section>
 
-<!-- 用例 -->
 <section class="section section-alt" id="use-cases">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-eyebrow">用例</div>
       <h2 class="section-title">谁在使用 FidesOrigin</h2>
-      <p class="section-desc">链上金融的合规基础设施。</p>
     </div>
     <div class="usecase-grid">
       <div class="usecase-card reveal reveal-delay-1">
-        <div class="usecase-num">01 / 稳定币发行商</div>
+        <div class="usecase-icon" style="background:var(--fio-accent-dim);color:var(--fio-accent)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
         <h3>稳定币发行商</h3>
-        <p>Meet Hong Kong's stablecoin licensing requirements with a fully auditable compliance stack. Automate KYC checks, transaction monitoring, and regulatory reporting — all verifiable on-chain.</p>
-        <div class="usecase-stats">
-          <div class="usecase-stat"><strong>HKMA</strong>License Ready</div>
-          <div class="usecase-stat"><strong>100%</strong>审计 Trail</div>
-        </div>
+        <p>HKMA就绪合规栈</p>
       </div>
       <div class="usecase-card reveal reveal-delay-2">
-        <div class="usecase-num">02 / 加密货币交易所</div>
+        <div class="usecase-icon" style="background:var(--fio-gold-dim);color:var(--fio-gold)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <h3>加密货币交易所</h3>
-        <p>实时筛查每笔存取款。通过将多源风险情报直接集成到交易流程中来降低AML风险敞口。合规开销减少80%。</p>
-        <div class="usecase-stats">
-          <div class="usecase-stat"><strong>&lt;50ms</strong>每次检查</div>
-          <div class="usecase-stat"><strong>80%</strong>成本降低</div>
-        </div>
+        <p>实时存款筛查</p>
       </div>
       <div class="usecase-card reveal reveal-delay-3">
-        <div class="usecase-num">03 / DeFi 协议</div>
+        <div class="usecase-icon" style="background:rgba(92,230,138,.06);color:var(--fio-success)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         <h3>DeFi 协议</h3>
-        <p>在不牺牲去中心化的前提下添加机构级合规。可编程策略让您定义谁可以与您的协议交互以及在什么条件下交互。</p>
-        <div class="usecase-stats">
-          <div class="usecase-stat"><strong>On-Chain</strong>Execution</div>
-          <div class="usecase-stat"><strong>非托管</strong>设计</div>
-        </div>
+        <p>无需托管的合规</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 安全 & Trust -->
 <section class="section" id="security">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-eyebrow">安全与信任</div>
-      <h2 class="section-title">Compliance-Ready by 设计</h2>
-      <p class="section-desc">Built to meet the standards of global financial regulators. Not afterthought — from day one.</p>
+      <div class="section-eyebrow">安全</div>
+      <h2 class="section-title">设计即合规</h2>
     </div>
     <div class="trust-grid reveal">
       <div class="trust-item">
-        <div class="trust-icon purple">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <h4>Smart Contract 审计</h4>
-        <p>独立审计师全面安全审查</p>
-        <span class="trust-badge ok">已验证</span>
+        <div class="trust-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <h4>已审计</h4>
+        <span class="trust-badge ok">Verified</span>
       </div>
       <div class="trust-item">
-        <div class="trust-icon gold">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        </div>
-        <h4>不可篡改审计追踪</h4>
-        <p>每个决策永久记录上链</p>
+        <div class="trust-icon gold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+        <h4>不可篡改</h4>
         <span class="trust-badge ok">运行中</span>
       </div>
       <div class="trust-item">
-        <div class="trust-icon green">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
-        </div>
-        <h4>多区域合规</h4>
-        <p>支持HKMA、MiCA、SEC和FinCEN框架</p>
-        <span class="trust-badge ok">4个区域</span>
+        <div class="trust-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg></div>
+        <h4>多区域</h4>
+        <span class="trust-badge ok">4 个区域</span>
       </div>
       <div class="trust-item">
-        <div class="trust-icon blue">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        </div>
-        <h4>实时监控</h4>
-        <p>持续数据更新的亚50毫秒风险评分</p>
+        <div class="trust-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+        <h4>实时</h4>
         <span class="trust-badge ok">实时</span>
-      </div>
-    </div>
-    <div style="margin-top:48px;text-align:center" class="reveal">
-      <div style="display:inline-flex;align-items:center;gap:32px;padding:24px 40px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;flex-wrap:wrap;justify-content:center">
-        <div style="text-align:center">
-          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">6+</div>
-          <div style="font-size:0.75rem;color:var(--fio-text-3)">支持网络</div>
-        </div>
-        <div style="width:1px;height:40px;background:rgba(255,255,255,0.06)"></div>
-        <div style="text-align:center">
-          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">4</div>
-          <div style="font-size:0.75rem;color:var(--fio-text-3)">监管框架</div>
-        </div>
-        <div style="width:1px;height:40px;background:rgba(255,255,255,0.06)"></div>
-        <div style="text-align:center">
-          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">3+</div>
-          <div style="font-size:0.75rem;color:var(--fio-text-3)">风险数据源</div>
-        </div>
-        <div style="width:1px;height:40px;background:rgba(255,255,255,0.06)"></div>
-        <div style="text-align:center">
-          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">MIT</div>
-          <div style="font-size:0.75rem;color:var(--fio-text-3)">开源</div>
-        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Testimonial -->
 <section class="testimonial-section section-alt">
   <div class="container">
     <div class="section-header reveal">
@@ -828,92 +456,70 @@
     </div>
     <div class="testimonial-grid">
       <div class="testimonial-card reveal">
-        <div class="testimonial-text">
-          "FidesOrigin 将我们的整个合规工作流自动化了。过去需要一个 12 人团队的工作，现在完全在链上运行。我们将运营成本降低了 80%，同时超越了香港金管局和新加坡金管局的监管要求。"
-        </div>
+        <div class="testimonial-text">"FidesOrigin automated our compliance workflow. We cut overhead by 80% while exceeding HKMA requirements."</div>
         <div class="testimonial-author">
-          <div class="testimonial-avatar anchor">陈</div>
-          <div class="testimonial-info">
-            <h4>Marcus Chen</h4>
-            <p>首席合规官，Anchor Digital</p>
-          </div>
+          <div class="testimonial-avatar helios">DP</div>
+          <div class="testimonial-info"><h4>David Park</h4><p>Head of Compliance, Helios</p></div>
         </div>
       </div>
       <div class="testimonial-card reveal reveal-delay-1">
-        <div class="testimonial-text">
-          "TypeScript SDK 两周内就上线了。他们的 policy-as-code 模型让我们直接把合规能力嵌入智能钱包流程——没有离链黑盒，完全确定性执行。"
-        </div>
+        <div class="testimonial-text">"Production-ready in two weeks. Policy-as-code embedded directly into our smart wallet flows."</div>
         <div class="testimonial-author">
-          <div class="testimonial-avatar vault">AR</div>
-          <div class="testimonial-info">
-            <h4>Alex Rutherford</h4>
-            <p>首席技术官，VaultFlow</p>
-          </div>
+          <div class="testimonial-avatar keyvault">JL</div>
+          <div class="testimonial-info"><h4>James Liu</h4><p>VP Engineering, KeyVault</p></div>
         </div>
       </div>
       <div class="testimonial-card reveal reveal-delay-2">
-        <div class="testimonial-text">
-          "在三个司法管辖区代币化房地产意味着要穿越复杂的本地监管迷宫。FidesOrigin 的可编程合规层为我们提供了一个统一的、可审计的框架，满足了每一位监管者的要求。"
-        </div>
+        <div class="testimonial-text">"A single, auditable framework that satisfied every regulator across three jurisdictions."</div>
         <div class="testimonial-author">
-          <div class="testimonial-avatar terra">PS</div>
-          <div class="testimonial-info">
-            <h4>Priya Sharma</h4>
-            <p>创始人 &amp; CEO，TerraBlock</p>
-          </div>
+          <div class="testimonial-avatar fortress">MT</div>
+          <div class="testimonial-info"><h4>Michael Torres</h4><p>Chief Legal Officer, Fortress RWA</p></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 定价 -->
 <section class="section" id="pricing">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-eyebrow">定价</div>
       <h2 class="section-title">选择您的路径</h2>
-      <p class="section-desc">开源面向构建者。托管面向运营者。定制面向企业。</p>
     </div>
     <div class="pricing-grid">
       <div class="pricing-card reveal reveal-delay-1">
         <div class="pricing-tier">开源</div>
         <div class="pricing-price">$0</div>
         <div class="pricing-period">永久</div>
-        <div class="pricing-desc">自托管。完整源代码。社区支持。非常适合希望完全掌控的开发者和研究人员。</div>
         <ul class="pricing-features">
-          <li>所有核心智能合约</li>
-          <li>Risk registry &amp; oracle</li>
+          <li>核心智能合约</li>
+          <li>风险注册表和预言机</li>
           <li>策略引擎</li>
-          <li>社区Discord</li>
+          <li>社区支持</li>
         </ul>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="pricing-btn pricing-btn-secondary">查看 GitHub</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="pricing-btn pricing-btn-secondary">在GitHub上查看</a>
       </div>
       <div class="pricing-card featured reveal reveal-delay-2">
         <div class="pricing-badge">推荐</div>
         <div class="pricing-tier">托管</div>
-        <div class="pricing-price">联系我们 Us</div>
-        <div class="pricing-period">定制价格</div>
-        <div class="pricing-desc">我们运行基础设施。您专注于产品。包含SLA保障。非常适合生产部署。</div>
+        <div class="pricing-price">定制</div>
+        <div class="pricing-period">SLA保障</div>
         <ul class="pricing-features">
-          <li>托管 node hosting</li>
-          <li>99.9% SLA保证</li>
-          <li>自定义策略规则</li>
+          <li>托管基础设施</li>
+          <li>99.9% SLA</li>
+          <li>自定义策略</li>
           <li>优先支持</li>
-          <li>HKMA合规审查</li>
         </ul>
-        <a href="mailto:contact@fidesorigin.com" class="pricing-btn pricing-btn-primary">预约演示</a>
+        <a href="mailto:contact@fidesorigin.com" class="pricing-btn pricing-btn-primary">请求演示</a>
       </div>
       <div class="pricing-card reveal reveal-delay-3">
         <div class="pricing-tier">企业</div>
-        <div class="pricing-price">Custom</div>
+        <div class="pricing-price">定制</div>
         <div class="pricing-period">定制合作</div>
-        <div class="pricing-desc">完全定制、专属团队、白手套式机构规模化部署上线。</div>
         <ul class="pricing-features">
           <li>专属SRE团队</li>
-          <li>自定义链集成</li>
-          <li>私有风险数据源</li>
-          <li>监管联络</li>
+          <li>自定义链</li>
+          <li>私有风险源</li>
           <li>源代码托管</li>
         </ul>
         <a href="mailto:contact@fidesorigin.com" class="pricing-btn pricing-btn-secondary">联系销售</a>
@@ -922,36 +528,29 @@
   </div>
 </section>
 
-<!-- CTA Banner -->
 <section class="cta-banner">
   <div class="container">
     <div class="cta-inner reveal">
-      <h2 class="cta-title">准备好构建合规的链上金融了吗？</h2>
-      <p class="cta-desc">Schedule a demo to see how FidesOrigin can integrate with your infrastructure — from stablecoin issuance to exchange compliance.</p>
+      <h2 class="cta-title">准备好构建了吗？</h2>
       <div class="cta-ctas">
         <a href="mailto:contact@fidesorigin.com" class="btn-primary">预约演示</a>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary">阅读文档</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Footer -->
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-brand">
-          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
-          <span>FidesOrigin</span>
-        </div>
-        <p class="footer-desc">面向代币化资产和DeFi的链上合规协议。</p>
+        <div class="footer-brand"><img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px"><span>FidesOrigin</span></div>
+        <p class="footer-desc">On-chain compliance protocol for tokenized assets and DeFi.</p>
       </div>
       <div class="footer-col">
         <h4>产品</h4>
         <a href="#products">风险雷达</a>
         <a href="#products">策略引擎</a>
-        <a href="#products">审计 Shield</a>
+        <a href="#products">审计盾</a>
         <a href="/address-check.html">地址检查</a>
         <a href="/pricing.html">定价</a>
       </div>
@@ -972,90 +571,19 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 FidesOrigin. MIT License.</span>
-      <span>香港 &middot; 新加坡 &middot; 旧金山</span>
+      <span>&copy; 2026 FidesOrigin. MIT 许可.</span>
+      <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
     </div>
   </div>
 </footer>
 
 <script>
-// Scroll reveal
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-// Nav scroll effect
-const nav = document.getElementById('mainNav');
-let lastScroll = 0;
-window.addEventListener('scroll', () => {
-  const scrollY = window.scrollY;
-  if (scrollY > 60) { nav.classList.add('nav-scrolled'); }
-  else { nav.classList.remove('nav-scrolled'); }
-  lastScroll = scrollY;
-}, { passive: true });
-
-// Mobile menu
-function closeMobileMenu() {
-  document.getElementById('mobileMenu').classList.remove('active');
-}
-
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', function(e) {
-    const href = this.getAttribute('href');
-    if (href === '#') return;
-    const target = document.querySelector(href);
-    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
-});
-
-// Counter animation for stats
-function animateCounter(el, target, suffix = '') {
-  const duration = 2000;
-  const start = performance.now();
-  const isNum = !isNaN(parseFloat(target));
-  if (!isNum) { el.textContent = target; return; }
-  const endVal = parseFloat(target);
-  function step(now) {
-    const progress = Math.min((now - start) / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    const current = Math.floor(ease * endVal);
-    el.textContent = current + suffix;
-    if (progress < 1) requestAnimationFrame(step);
-    else el.textContent = target + suffix;
-  }
-  requestAnimationFrame(step);
-}
-
-// Trigger counter animation when stats are visible
-const statsObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.querySelectorAll('.stat-num').forEach(stat => {
-        const text = stat.textContent.trim();
-        if (!stat.dataset.animated) {
-          stat.dataset.animated = 'true';
-          const match = text.match(/^([\d<]+)(.*)$/);
-          if (match) {
-            const num = match[1].replace('<', '');
-            const suffix = (match[1].startsWith('<') ? '<' : '') + match[2];
-            if (!isNaN(parseFloat(num))) {
-              stat.textContent = '0';
-              animateCounter(stat, num, suffix);
-            }
-          }
-        }
-      });
-    }
-  });
-}, { threshold: 0.3 });
-document.querySelectorAll('.stats-bar').forEach(bar => statsObserver.observe(bar));
+const revealObserver=new IntersectionObserver((e)=>{e.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('visible')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+const nav=document.getElementById('mainNav');
+window.addEventListener('scroll',()=>{window.scrollY>60?nav.classList.add('nav-scrolled'):nav.classList.remove('nav-scrolled')},{passive:true});
+function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('active')}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',function(e){const h=this.getAttribute('href');if(h==='#')return;const t=document.querySelector(h);if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}})});
 </script>
-
 </body>
 </html>
