@@ -87,8 +87,8 @@ export default function Workflows() {
                     {step.sub}
                   </p>
 
-                  {/* Detail bullets */}
-                  <div className="mt-4 space-y-2">
+                  {/* Detail bullets - REMOVED for cleaner design */}
+                  <div className="mt-4 space-y-2" style={{ display: 'none' }}>
                     {i === 0 && [
                       "实时地址风险评分",
                       "多数据源交叉验证",

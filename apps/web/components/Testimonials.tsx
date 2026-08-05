@@ -8,32 +8,26 @@ const journeySteps = [
   {
     step: "01",
     title: "KYC Onboarding",
-    desc: "用户完成身份验证，系统为其分配风险等级和交易限额。",
-    detail: "Identity verified · Risk tier: Normal · Daily limit: $50K",
+    desc: "身份验证与风险分级。",
+    detail: "Identity verified · Risk tier assigned",
   },
   {
     step: "02",
     title: "Real-Time Risk Scan",
-    desc: "每笔交易触发实时风险扫描，聚合多源数据评估地址信誉。",
-    detail: "Chainalysis · Elliptic · OFAC · Sub-50ms latency",
+    desc: "每笔交易实时风控。",
+    detail: "Chainalysis · Elliptic · OFAC",
   },
   {
     step: "03",
     title: "Policy Execution",
-    desc: "合规策略自动执行：限额检查、地域限制、黑名单拦截。",
-    detail: "Tx limit check · Geo-fencing · Blacklist screening",
+    desc: "合规策略自动执行。",
+    detail: "KYC/AML · Tx Limits · Geo-fencing",
   },
   {
     step: "04",
     title: "On-Chain Settlement",
-    desc: "通过的智能合约自动执行转账，记录不可篡改的审计日志。",
-    detail: "Smart contract execution · Immutable audit log",
-  },
-  {
-    step: "05",
-    title: "Regulatory Report",
-    desc: "一键生成 HKMA / SEC / MiCA 合规报告，满足监管报送要求。",
-    detail: "HKMA · SEC · MiCA · One-click generation",
+    desc: "智能合约自动转账。",
+    detail: "Immutable audit log",
   },
 ];
 

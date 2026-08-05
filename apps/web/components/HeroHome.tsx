@@ -121,8 +121,7 @@ export default function HeroHome() {
               className="fio-animate-fade-up fio-delay-3 mt-6 max-w-lg text-base leading-relaxed"
               style={{ color: "var(--fio-text-2)" }}
             >
-              链上执行级可编程合规协议。实时风控、智能策略执行、
-              不可篡改审计追踪 — 为稳定币、RWA 代币化与 DeFi 协议而生。
+              实时风控、策略执行、审计追踪 — 为稳定币与 DeFi 而生。
             </p>
 
             {/* Divider */}
