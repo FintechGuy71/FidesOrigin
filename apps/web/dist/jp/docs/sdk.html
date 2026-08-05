@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>SDK — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin JavaScript SDK。インストール、設定、オンチェーン・コンプライアンスの統合。">
+  <meta property="og:title" content="SDK ガイド — FidesOrigin">
+  <meta property="og:description" content="FidesOrigin SDK 統合ガイド。TypeScript、React、WebSocket クライアント。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SDK ガイド — FidesOrigin">
+  <meta name="twitter:description" content="FidesOrigin SDK 統合ガイド。TypeScript、React、WebSocket クライアント。">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/jp/docs/sdk.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/docs/sdk.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/docs/sdk.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/docs/sdk.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/docs/sdk.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <nav class="nav" aria-label="メインナビゲーション">
+    <div class="nav-inner">
+      <a href="/jp/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/jp/#features">機能</a>
+        <a href="/jp/#how-it-works">仕組み</a>
+        <a href="/jp/#security">セキュリティ</a>
+        <a href="/jp/docs/">ドキュメント</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="言語">
+            JP
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/docs/sdk.html">English</a>
+            <a href="/cn/docs/sdk.html">简体中文</a>
+            <a href="/tw/docs/sdk.html">繁體中文</a>
+            <a href="/jp/docs/sdk.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/jp/#contact" class="nav-cta">始める</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="メニューを切り替え" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="メニューを閉じる">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="/jp/#features">機能</a>
+    <a href="/jp/#how-it-works">仕組み</a>
+    <a href="/jp/#security">セキュリティ</a>
+    <a href="/jp/docs/">ドキュメント</a>
+    <div class="lang-row">
+      <a href="/docs/sdk.html">EN</a>
+      <a href="/cn/docs/sdk.html">CN</a>
+      <a href="/tw/docs/sdk.html">TW</a>
+      <a href="/jp/docs/sdk.html">JP</a>
+    </div>
+  </div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" id="docsSidebar">
+      <div class="docs-sidebar-title">ドキュメント</div>
+      <ul class="docs-nav-tree">
+        <li><a href="/jp/docs/">概要</a></li>
+        <li><a href="/jp/docs/api.html">API リファレンス</a></li>
+        <li><a href="/jp/docs/sdk.html" class="active">SDK</a></li>
+      </ul>
+      <div class="docs-sidebar-title">リソース</div>
+      <ul class="docs-nav-tree">
+        <li><a href="/blog/" target="_blank" rel="noopener">ブログ</a></li>
+        <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="/admin/">ダッシュボード</a></li>
+      </ul>
+    </aside>
+
+    <button class="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="サイドバーを切り替え">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      ドキュメントメニュー
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+
+    <main class="docs-content">
+      <h1>SDK</h1>
+      <p class="docs-lead">ウォレット統合とオンチェーン・コンプライアンス用 JavaScript SDK。</p>
+
+      <h2>インストール</h2>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>npm</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>npm install @fidesorigin/sdk</code></pre>
+      </div>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>yarn</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>yarn add @fidesorigin/sdk</code></pre>
+      </div>
+
+      <h2>クイックスタート</h2>
+
+      <h3>SDK を初期化</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>import { FidesOrigin } from '@fidesorigin/sdk';
+
+const fides = new FidesOrigin({
+  apiKey: 'YOUR_API_KEY',
+  network: 'sepolia' // または 'mainnet', 'base'
+});</code></pre>
+      </div>
+
+      <h3>住所リスクをチェック</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>const result = await fides.evaluateAddress('0x...');
+
+console.log(result.riskTier); // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+console.log(result.isSanctioned); // true または false</code></pre>
+      </div>
+
+      <h3>イベントを購読</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>fides.on('RiskDetected', (event) => {
+  console.log('リスク検出:', event.address, event.riskTier);
+});
+
+fides.on('SanctionAdded', (event) => {
+  console.log('制裁追加:', event.address);
+});</code></pre>
+      </div>
+
+      <h2>コア API</h2>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr><th>メソッド</th><th>戻り値</th><th>説明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>connect(provider)</code></td><td>Promise&lt;void&gt;</td><td>Web3 プロバイダーに接続</td></tr>
+            <tr><td><code>evaluateAddress(addr)</code></td><td>Promise&lt;RiskProfile&gt;</td><td>住所のリスクプロファイルを取得</td></tr>
+            <tr><td><code>evaluateTx(tx)</code></td><td>Promise&lt;TxResult&gt;</td><td>トランザクションの事前スクリーニング</td></tr>
+            <tr><td><code>subscribe(event)</code></td><td>EventEmitter</td><td>オンチェーン・イベントを購読</td></tr>
+            <tr><td><code>disconnect()</code></td><td>void</td><td>接続をクリーンアップ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Solidity 統合</h2>
+      <p>FidesOrigin コントラクトを Solidity プロジェクトに直接インポート：</p>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>Solidity 0.8.20</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@fidesorigin/contracts/CompliantStableCoin.sol";
+
+contract MyStableCoin is CompliantStableCoin {
+    constructor()
+        CompliantStableCoin("MyStableCoin", "MSC")
+    {
+        policy = IssuerPolicy({
+            maxTxAmount: 1_000_000 * 10**6,
+            dailyLimit: 10_000_000 * 10**6,
+            allowMediumRisk: true,
+            allowHighRisk: false,
+            blockMixer: true,
+            requireDestinationKYC: true,
+            cooldownPeriod: 24 hours
+        });
+    }
+}</code></pre>
+      </div>
+
+      <h2>型</h2>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="コードをコピー">コピー</button>
+        </div>
+        <pre><code>interface RiskProfile {
+  address: string;
+  riskScore: number;
+  riskTier: 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  isSanctioned: boolean;
+  tags: string[];
+  entityName: string;
+  lastUpdated: string;
+}
+
+interface TxResult {
+  allowed: boolean;
+  riskScore: number;
+  riskTier: string;
+  quarantineRequired: boolean;
+  reason: string | null;
+}</code></pre>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/jp/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>未来の金融のためのプログラマブル・オンチェーン・コンプライアンス。</p>
+        </div>
+        <div class="footer-col">
+          <h4>製品</h4>
+          <a href="/jp/#features">機能</a>
+          <a href="/jp/#how-it-works">仕組み</a>
+          <a href="/jp/#security">セキュリティ</a>
+          <a href="/admin/">ダッシュボード</a>
+        </div>
+        <div class="footer-col">
+          <h4>開発者</h4>
+          <a href="/jp/docs/">ドキュメント</a>
+          <a href="/jp/docs/api.html">API リファレンス</a>
+          <a href="/jp/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>会社</h4>
+          <a href="mailto:contact@fidesorigin.com">お問い合わせ</a>
+          <a href="/blog/">ブログ</a>
+          <a href="/jp/privacy.html">プライバシーポリシー</a>
+          <a href="/jp/terms.html">利用規約</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>オンチェーン金融の世界のために作られました。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script nonce="2726c7f26c">
+    (function() {
+      var menu = document.getElementById('mobileMenu');
+      var btn = document.querySelector('.nav-mobile-btn');
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      function toggle() {
+        var active = menu.classList.toggle('active');
+        document.body.style.overflow = active ? 'hidden' : '';
+        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+      }
+      if (btn) btn.addEventListener('click', toggle);
+      if (closeBtn) closeBtn.addEventListener('click', toggle);
+      menu.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', toggle); });
+    })();
+    (function() {
+      var btn = document.getElementById('langToggleBtn');
+      var menu = document.getElementById('langMenu');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
+    })();
+    (function() {
+      var sidebar = document.getElementById('docsSidebar');
+      var toggle = document.getElementById('sidebarToggle');
+      if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+          var active = sidebar.classList.toggle('active');
+          toggle.setAttribute('aria-expanded', active ? 'true' : 'false');
+        });
+      }
+    })();
+    (function() {
+      document.querySelectorAll('.docs-code-block').forEach(function(block) {
+        var btn = block.querySelector('.docs-code-copy');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+          var code = block.querySelector('pre');
+          if (code) {
+            navigator.clipboard.writeText(code.textContent).then(function() {
+              btn.textContent = 'コピー済み';
+              btn.classList.add('copied');
+              setTimeout(function() { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 2000);
+            });
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

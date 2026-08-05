@@ -1,589 +1,461 @@
 <!DOCTYPE html>
-<html lang="ja" class="scroll-smooth">
+<html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css"/>
-<title>FidesOrigin — オンチェーン・コンプライアンスの実行基盤</title>
-<meta name="description" content="ステーブルコイン、RWAトークン化、DeFi向けのプログラマブル・コンプライアンス・プロトコル。リアルタイムのリスク管理、自律的なポリシー実行、改ざん不可能な監査証跡。"/>
-<meta property="og:title" content="FidesOrigin — Execution-Grade オンチェーン Compliance"/>
-<meta property="og:description" content="Programmable compliance protocol for on-chain finance."/>
-<meta property="og:type" content="website"/>
-<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="FidesOrigin — Execution-Grade オンチェーン Compliance"/>
-<meta name="twitter:description" content="Programmable compliance protocol for on-chain finance."/>
-<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
-<link rel="canonical" href="https://fidesorigin.com/"/>
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"FidesOrigin","url":"https://fidesorigin.com","logo":"https://fidesorigin.com/brand/logo-dark-icon.png","description":"Programmable on-chain compliance protocol for tokenized assets and DeFi."},{"@type":"WebSite","url":"https://fidesorigin.com","name":"FidesOrigin"},{"@type":"SoftwareApplication","name":"FidesOrigin Protocol","applicationCategory":"FinanceApplication","operatingSystem":"Web3","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}]}</script>
-<style>
-  :root {
-    --fio-ink:#05060a;--fio-ink-soft:#080a10;--fio-surface:#0c0e18;--fio-surface-2:#111320;--fio-surface-3:#181b28;--fio-elevated:#1e2230;
-    --fio-border:#252a3a;--fio-border-light:#2e3448;--fio-text:#f0f1f5;--fio-text-2:#9a9fad;--fio-text-3:#5e6478;--fio-text-4:#3a4055;
-    --fio-accent:#9b8ed8;--fio-accent-dim:#9b8ed81a;--fio-accent-glow:#9b8ed80a;
-    --fio-gold:#d4b87a;--fio-gold-dim:#d4b87a1a;--fio-gold-glow:#d4b87a10;
-    --fio-steel:#7b9ab8;--fio-success:#5ce68a;--fio-warn:#fcd34d;--fio-danger:#fb8e8e;--fio-info:#7ab8f0;
-    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
-  }
-  html,body{margin:0;padding:0}
-  body{font-family:var(--font-sans);background:var(--fio-ink);color:var(--fio-text);line-height:1.7;-webkit-font-smoothing:antialiased}
-  a{color:inherit;text-decoration:none}
-  img{max-width:100%;display:block}
-  .container{max-width:1100px;margin:0 auto;padding:0 24px}
-  @media(max-width:768px){.container{padding:0 16px}}
-
-  @keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes fadeScale{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
-  @keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 6px var(--fio-gold)}50%{opacity:0.5;box-shadow:0 0 16px var(--fio-gold)}}
-  @keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-20px,20px) scale(0.95)}}
-  .anim-fade-up{animation:fadeUp .8s cubic-bezier(0.16,1,0.3,1) both}
-  .anim-fade-scale{animation:fadeScale .7s cubic-bezier(0.16,1,0.3,1) both}
-  .anim-d1{animation-delay:.1s}.anim-d2{animation-delay:.2s}.anim-d3{animation-delay:.35s}.anim-d4{animation-delay:.5s}.anim-d5{animation-delay:.65s}
-
-  .nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(5,6,10,.8);backdrop-filter:blur(20px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.03);transition:all .3s}
-  .nav-scrolled{background:rgba(5,6,10,.95);border-bottom-color:rgba(255,255,255,.06)}
-  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
-  .nav-logo{display:flex;align-items:center;gap:10px}
-  .nav-logo img{height:28px;width:auto}
-  .nav-logo-text{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--fio-text);letter-spacing:-.025em}
-  .nav-links{display:none;align-items:center;gap:32px}
-  .nav-links a{font-size:.8125rem;color:var(--fio-text-2);transition:all .2s;position:relative;font-weight:450}
-  .nav-links a:hover{color:var(--fio-text)}
-  .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--fio-gold);transition:width .25s ease;border-radius:1px}
-  .nav-links a:hover::after{width:100%}
-  .nav-cta{font-size:.8125rem;font-weight:600;color:var(--fio-ink);padding:8px 20px;border-radius:8px;transition:all .25s;background:var(--fio-gold)}
-  .nav-cta:hover{background:#e0c88a;transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,184,122,.25)}
-  .nav-cta-outline{font-size:.8125rem;font-weight:500;color:var(--fio-gold);padding:7px 18px;border:1px solid rgba(212,184,122,.2);border-radius:8px;transition:all .25s;background:rgba(212,184,122,.04)}
-  .nav-cta-outline:hover{background:rgba(212,184,122,.1);border-color:rgba(212,184,122,.35)}
-  .nav-mobile-btn{display:flex;width:40px;height:40px;align-items:center;justify-content:center;color:var(--fio-text-2);background:none;border:none;cursor:pointer}
-  @media(min-width:900px){.nav-links{display:flex}.nav-mobile-btn{display:none}}
-
-  .hero{position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;background:var(--fio-ink)}
-  .hero-ambient{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
-  .hero-ambient .orb{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
-  .hero-ambient .orb-1{width:600px;height:600px;background:rgba(155,142,216,.08);top:-10%;left:-5%;animation:orb-float 20s ease-in-out infinite}
-  .hero-ambient .orb-2{width:500px;height:500px;background:rgba(212,184,122,.06);bottom:-15%;right:-5%;animation:orb-float 25s ease-in-out infinite reverse}
-  .hero-ambient .orb-3{width:350px;height:350px;background:rgba(122,184,240,.05);top:50%;right:25%;animation:orb-float 18s ease-in-out infinite;animation-delay:-8s}
-  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 0),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 0);background-size:100px 100px;mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent);-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent);pointer-events:none}
-  .hero-inner{position:relative;z-index:2;padding:160px 0 100px;width:100%}
-  .hero-left{text-align:center;max-width:720px;margin:0 auto}
-  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;background:var(--fio-gold-dim);border:1px solid rgba(212,184,122,.15);border-radius:100px;font-size:.75rem;font-family:var(--font-mono);color:var(--fio-gold);margin-bottom:32px}
-  .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--fio-gold);animation:pulse-dot 2s infinite}
-  .hero-title{font-family:var(--font-display);font-size:clamp(2.8rem,6vw,5rem);font-weight:500;line-height:1.05;letter-spacing:-.025em;color:var(--fio-text);margin-bottom:24px}
-  .hero-title .line2{display:block}
-  .hero-title-accent{background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-  .hero-subtitle{font-size:clamp(1.05rem,1.4vw,1.25rem);line-height:1.7;color:var(--fio-text-2);max-width:480px;margin:0 auto 36px}
-  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
-  .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:var(--fio-gold);color:var(--fio-ink);font-size:.9rem;font-weight:600;border-radius:10px;border:none;cursor:pointer;transition:all .25s cubic-bezier(0.16,1,0.3,1);box-shadow:0 0 32px rgba(212,184,122,.2)}
-  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(212,184,122,.4)}
-  .btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:transparent;color:var(--fio-text);font-size:.9rem;font-weight:500;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .25s}
-  .btn-secondary:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.2)}
-
-  .stats-section{padding:0 0 80px;position:relative;z-index:2}
-  .stats-bar{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-  @media(min-width:640px){.stats-bar{grid-template-columns:repeat(4,1fr);gap:20px}}
-  .stat-item{padding:40px 20px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;text-align:center;transition:all .35s cubic-bezier(0.16,1,0.3,1)}
-  .stat-item:hover{border-color:var(--fio-border-light);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3)}
-  .stat-num{font-family:var(--font-mono);font-size:clamp(2.4rem,4vw,3.6rem);font-weight:700;color:var(--fio-gold);line-height:1;margin-bottom:8px}
-  .stat-label{font-size:.78rem;color:var(--fio-text-3);font-family:var(--font-mono);letter-spacing:.02em}
-
-  .trust-logos-section{padding:40px 0;border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)}
-  .trust-logos-label{text-align:center;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.15em;color:var(--fio-text-3);margin-bottom:28px}
-  .trust-logos-grid{display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap}
-  .trust-logo-item{display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:10px;font-size:.8rem;color:var(--fio-text-3);transition:all .3s}
-  .trust-logo-item:hover{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--fio-text-2)}
-  .trust-logo-icon{width:20px;height:20px;opacity:.6}
-
-  .section{padding:120px 0}
-  @media(min-width:768px){.section{padding:140px 0}}
-  .section-alt{background:var(--fio-ink-soft)}
-  .section-header{text-align:center;max-width:600px;margin:0 auto 72px}
-  .section-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--fio-text-3);margin-bottom:16px;padding:4px 12px;border:1px solid rgba(255,255,255,.06);border-radius:6px}
-  .section-title{font-family:var(--font-display);font-size:clamp(1.8rem,3.8vw,2.8rem);font-weight:500;line-height:1.1;letter-spacing:-.02em;color:var(--fio-text);margin-bottom:18px}
-  .section-desc{font-size:1.05rem;line-height:1.7;color:var(--fio-text-2);max-width:560px;margin:0 auto}
-  .section-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(155,142,216,.15),rgba(212,184,122,.1),transparent);max-width:500px;margin:48px auto 0}
-
-  .product-grid{display:grid;gap:20px}
-  @media(min-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)}}
-  .product-card{position:relative;padding:60px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;transition:all .4s cubic-bezier(0.16,1,0.3,1);overflow:hidden}
-  .product-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(155,142,216,.2),transparent);opacity:0;transition:opacity .4s}
-  .product-card:hover::before{opacity:1}
-  .product-card::after{content:'';position:absolute;inset:0;border-radius:18px;opacity:0;transition:opacity .5s ease;background:linear-gradient(135deg,rgba(155,142,216,.06) 0%,transparent 40%,rgba(212,184,122,.04) 100%);pointer-events:none;z-index:0}
-  .product-card:hover::after{opacity:1}
-  .product-card:hover{border-color:var(--fio-border-light);transform:translateY(-5px);box-shadow:0 32px 64px rgba(0,0,0,.4),0 0 60px -12px rgba(155,142,216,.06)}
-  .product-card-accent{border-color:rgba(155,142,216,.12);background:linear-gradient(180deg,rgba(155,142,216,.03) 0%,var(--fio-surface) 60%)}
-  .product-card>*{position:relative;z-index:1}
-  .product-icon-wrap{width:64px;height:64px;border-radius:16px;background:var(--fio-accent-dim);border:1px solid rgba(155,142,216,.12);display:flex;align-items:center;justify-content:center;margin-bottom:28px;font-size:1.6rem}
-  .product-card h3{font-family:var(--font-display);font-size:1.45rem;font-weight:500;color:var(--fio-text);margin-bottom:10px}
-  .product-card p{font-size:.95rem;line-height:1.7;color:var(--fio-text-2)}
-
-  .arch-flow{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:48px}
-  .arch-node{padding:28px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;text-align:center;min-width:180px;transition:all .3s}
-  .arch-node:hover{border-color:var(--fio-border-light);transform:translateY(-2px)}
-  .arch-node-icon{width:40px;height:40px;margin:0 auto 12px;border-radius:10px;display:flex;align-items:center;justify-content:center}
-  .arch-node h4{font-size:.95rem;font-weight:600;color:var(--fio-text);margin-bottom:4px}
-  .arch-node p{font-size:.72rem;color:var(--fio-text-3)}
-  .arch-arrow{color:var(--fio-text-4);font-size:1.2rem}
-  @media(max-width:768px){.arch-flow{flex-direction:column}.arch-arrow{transform:rotate(90deg)}}
-
-  .usecase-grid{display:grid;gap:20px}
-  @media(min-width:768px){.usecase-grid{grid-template-columns:repeat(3,1fr)}}
-  .usecase-card{position:relative;padding:48px 36px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;transition:all .35s cubic-bezier(0.16,1,0.3,1);overflow:hidden}
-  .usecase-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--fio-accent),var(--fio-gold));opacity:0;transition:opacity .4s}
-  .usecase-card:hover{border-color:var(--fio-border-light);transform:translateY(-4px)}
-  .usecase-card:hover::after{opacity:1}
-  .usecase-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
-  .usecase-card h3{font-family:var(--font-display);font-size:1.25rem;font-weight:500;color:var(--fio-text);margin-bottom:8px}
-  .usecase-card p{font-size:.9rem;line-height:1.7;color:var(--fio-text-2)}
-
-  .trust-grid{display:grid;gap:16px;grid-template-columns:repeat(2,1fr)}
-  @media(min-width:640px){.trust-grid{grid-template-columns:repeat(4,1fr)}}
-  .trust-item{text-align:center;padding:40px 20px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;transition:all .3s}
-  .trust-item:hover{border-color:rgba(212,184,122,.15);background:rgba(212,184,122,.02)}
-  .trust-icon{width:48px;height:48px;margin:0 auto 16px;border-radius:12px;display:flex;align-items:center;justify-content:center}
-  .trust-icon.purple{background:var(--fio-accent-dim);color:var(--fio-accent)}
-  .trust-icon.gold{background:var(--fio-gold-dim);color:var(--fio-gold)}
-  .trust-icon.green{background:rgba(92,230,138,.06);color:var(--fio-success)}
-  .trust-icon.blue{background:rgba(122,184,240,.06);color:var(--fio-info)}
-  .trust-item h4{font-size:.95rem;font-weight:600;color:var(--fio-text);margin-bottom:8px}
-  .trust-badge{display:inline-block;padding:4px 12px;border-radius:100px;font-size:.7rem;font-weight:600;font-family:var(--font-mono)}
-  .trust-badge.ok{background:rgba(92,230,138,.1);color:var(--fio-success)}
-
-  .testimonial-section{padding:120px 0}
-  @media(min-width:768px){.testimonial-section{padding:140px 0}}
-  .testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto}
-  .testimonial-card{padding:40px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;position:relative;display:flex;flex-direction:column;justify-content:space-between}
-  .testimonial-card::before{content:'"';position:absolute;top:20px;left:30px;font-family:var(--font-display);font-size:4rem;color:var(--fio-text-4);line-height:1}
-  .testimonial-text{font-size:.92rem;line-height:1.7;color:var(--fio-text-2);font-style:italic;margin-bottom:24px;padding-left:20px;position:relative;z-index:1}
-  .testimonial-author{display:flex;align-items:center;gap:14px;margin-top:auto}
-  .testimonial-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0}
-  .testimonial-avatar.helios{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
-  .testimonial-avatar.keyvault{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
-  .testimonial-avatar.fortress{background:linear-gradient(135deg,#f59e0b,#ef4444)}
-  .testimonial-info h4{font-size:.95rem;font-weight:600;color:var(--fio-text)}
-  .testimonial-info p{font-size:.8rem;color:var(--fio-text-3)}
-  @media(max-width:1024px){.testimonial-grid{grid-template-columns:1fr;max-width:600px}}
-
-  .pricing-grid{display:grid;gap:20px}
-  @media(min-width:768px){.pricing-grid{grid-template-columns:repeat(3,1fr)}}
-  .pricing-card{position:relative;padding:40px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;transition:all .3s}
-  .pricing-card:hover{border-color:var(--fio-border-light)}
-  .pricing-card.featured{border-color:rgba(155,142,216,.2);background:linear-gradient(180deg,rgba(155,142,216,.03) 0%,var(--fio-surface) 40%)}
-  .pricing-badge{position:absolute;top:0;right:0;padding:7px 16px;background:var(--fio-accent-dim);color:var(--fio-accent);font-size:.65rem;font-weight:600;font-family:var(--font-mono);border-radius:0 18px 0 10px;letter-spacing:.05em}
-  .pricing-tier{font-size:.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--fio-text-3);margin-bottom:8px}
-  .pricing-price{font-family:var(--font-mono);font-size:2.4rem;font-weight:700;color:var(--fio-text);line-height:1;margin-bottom:6px}
-  .pricing-period{font-size:.8rem;color:var(--fio-text-3);font-family:var(--font-mono);margin-bottom:24px}
-  .pricing-features{list-style:none;margin:0 0 32px;padding:0}
-  .pricing-features li{display:flex;align-items:flex-start;gap:10px;font-size:.85rem;color:var(--fio-text-2);margin-bottom:12px}
-  .pricing-features li::before{content:"";width:16px;height:16px;flex-shrink:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d4b87a' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat;margin-top:1px}
-  .pricing-btn{display:block;width:100%;text-align:center;padding:12px;border-radius:10px;font-size:.875rem;font-weight:600;transition:all .25s;cursor:pointer;border:none}
-  .pricing-btn-primary{background:var(--fio-accent);color:var(--fio-ink)}
-  .pricing-btn-primary:hover{background:#aba0e0}
-  .pricing-btn-secondary{background:transparent;color:var(--fio-text);border:1px solid rgba(255,255,255,.1)}
-  .pricing-btn-secondary:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.18)}
-
-  .cta-banner{padding:120px 0;position:relative;overflow:hidden;background:var(--fio-ink-soft)}
-  @media(min-width:768px){.cta-banner{padding:140px 0}}
-  .cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,.05) 0%,transparent 70%)}
-  .cta-inner{position:relative;z-index:1;text-align:center;max-width:600px;margin:0 auto}
-  .cta-title{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:500;color:var(--fio-text);margin-bottom:24px}
-  .cta-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-
-  .footer{background:var(--fio-ink);border-top:1px solid rgba(255,255,255,.04);padding:64px 0 32px}
-  .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:48px;margin-bottom:48px}
-  @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:32px}}
-  @media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
-  .footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  .footer-brand img{height:26px;width:auto;border-radius:6px}
-  .footer-brand span{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--fio-text)}
-  .footer-desc{font-size:.85rem;color:var(--fio-text-3);line-height:1.6;max-width:280px}
-  .footer-col h4{font-size:.8rem;font-weight:600;color:var(--fio-text);margin-bottom:16px;text-transform:uppercase;letter-spacing:.08em}
-  .footer-col a{display:block;color:var(--fio-text-3);font-size:.85rem;padding:5px 0;transition:color .2s}
-  .footer-col a:hover{color:var(--fio-text-2)}
-  .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.04);font-size:.75rem;color:var(--fio-text-4);font-family:var(--font-mono)}
-  @media(max-width:640px){.footer-bottom{flex-direction:column;gap:8px;text-align:center}}
-
-  .mobile-menu{display:none;position:fixed;inset:0;z-index:999;background:rgba(5,6,10,.97);backdrop-filter:blur(20px);padding:80px 24px 24px}
-  .mobile-menu.active{display:block}
-  .mobile-menu a{display:block;padding:16px 0;font-size:1.1rem;color:var(--fio-text);border-bottom:1px solid rgba(255,255,255,.04)}
-  .mobile-menu-close{position:absolute;top:16px;right:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--fio-text-2);background:none;border:none;cursor:pointer;font-size:1.5rem}
-  .mobile-menu .lang-row{display:flex;gap:16px;margin-top:16px}
-  .mobile-menu .lang-row a{font-size:.9rem;color:var(--fio-text-3);border:none;padding:8px 0}
-
-  .reveal{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(0.16,1,0.3,1)}
-  .reveal.visible{opacity:1;transform:translateY(0)}
-  .reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.35s}.reveal-delay-4{transition-delay:.5s}
-
-  .lang-switch{display:flex;align-items:center;gap:4px;font-size:.75rem;font-family:var(--font-mono)}
-  .lang-switch a{padding:5px 10px;border-radius:6px;color:var(--fio-text-3);transition:all .2s}
-  .lang-switch a:hover{color:var(--fio-text);background:rgba(255,255,255,.04)}
-  .lang-switch a.active{color:var(--fio-gold);background:var(--fio-gold-dim)}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>FidesOrigin — プログラマブル・オンチェーン・コンプライアンス</title>
+  <meta name="description" content="オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。">
+  <meta name="author" content="FidesOrigin">
+  <meta property="og:title" content="FidesOrigin — プログラマブル・オンチェーン・コンプライアンス">
+  <meta property="og:description" content="オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/jp/">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/jp/">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"FidesOrigin","url":"https://fidesorigin.com/jp/","logo":"https://fidesorigin.com/brand/logo-dark-icon.png","description":"オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。","sameAs":["https://github.com/FintechGuy71/FidesOrigin"]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"FidesOrigin","url":"https://fidesorigin.com/jp/"}
+</script>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
-<body style="background:var(--fio-ink);color:var(--fio-text)">
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
-<div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
-  <a href="#products" onclick="closeMobileMenu()">Products</a>
-  <a href="#architecture" onclick="closeMobileMenu()">Architecture</a>
-  <a href="#use-cases" onclick="closeMobileMenu()">Use Cases</a>
-  <a href="#security" onclick="closeMobileMenu()">Security</a>
-  <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
-  <a href="/jp/docs/" onclick="closeMobileMenu()">ドキュメント</a>
-  <div class="lang-row">
-    <a href="/">EN</a><a href="/cn/">CN</a><a href="/tw/">TW</a><a href="/jp/" class="active">JP</a>
-  </div>
-  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">デモを依頼</a>
-</div>
-
-<header class="nav" id="mainNav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
-      <span class="nav-logo-text">FidesOrigin</span>
-    </a>
-    <nav class="nav-links">
-      <a href="#products">製品</a>
-      <a href="#architecture">アーキテクチャ</a>
-      <a href="#use-cases">ユースケース</a>
-      <a href="#security">セキュリティ</a>
-      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
-      <div class="lang-switch">
-        <a href="/">EN</a><a href="/cn/">CN</a><a href="/tw/">TW</a><a href="/jp/" class="active">JP</a>
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/jp/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="#features">ユースケース</a>
+        <a href="#how-it-works">仕組み</a>
+        <a href="#security">セキュリティ</a>
+        <a href="#developers">ドキュメント</a>
       </div>
-      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">デモを依頼</a>
-    </nav>
-    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="Language">
+            JP
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/">English</a>
+            <a href="/cn/">简体中文</a>
+            <a href="/tw/">繁體中文</a>
+            <a href="/jp/">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="wallet-connect-wrap">
+          <button class="wallet-btn" id="wallet-btn" aria-label="ウォレット接続">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+            ウォレット接続
+          </button>
+          <div class="wallet-connected" id="wallet-connected">
+            <div class="wallet-info">
+              <span class="wallet-address" id="wallet-address"></span>
+              <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
+            </div>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="切断">切断</button>
+          </div>
+        </div>
+        <a href="#contact" class="nav-cta">アクセス申請</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="モバイルナビゲーション">
+    <button type="button" class="mobile-menu-close" aria-label="メニューを閉じる">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="#features">ユースケース</a>
+    <a href="#how-it-works">仕組み</a>
+    <a href="#security">セキュリティ</a>
+    <a href="#developers">ドキュメント</a>
+    <div class="lang-row">
+      <a href="/">EN</a>
+      <a href="/cn/">CN</a>
+      <a href="/tw/">TW</a>
+      <a href="/jp/">JP</a>
+    </div>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected">
+      <span id="mobile-wallet-address"></span>
+      <button id="mobile-wallet-disconnect" aria-label="切断">切断</button>
+    </div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="ウォレット接続">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
+      ウォレット接続
     </button>
   </div>
-</header>
 
-<section class="hero">
-  <div class="hero-ambient">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
-  <div class="hero-grid"></div>
-  <div class="container">
-    <div class="hero-inner">
-      <div class="hero-left">
-        <div class="hero-badge anim-fade-up anim-d1">
-          <span class="hero-badge-dot"></span>
-          <span>v1.0 — 香港ステーブルコインライセンス対応</span>
-        </div>
-        <h1 class="hero-title anim-fade-up anim-d2">
-          実行レベルの<br><span class="line2 hero-title-accent">オンチェーン・コンプライアンス</span>
-        </h1>
-        <p class="hero-subtitle anim-fade-up anim-d3">ステーブルコイン、RWA、DeFi向けのプログラマブル・コンプライアンス。</p>
-        <div class="hero-ctas anim-fade-up anim-d4">
-          <a href="mailto:contact@fidesorigin.com" class="btn-primary">デモを依頼 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
-        </div>
-        <div class="stats-bar anim-fade-up anim-d5">
-          <div class="stat-item"><div class="stat-num">&lt;50ms</div><div class="stat-label">リスクスキャン</div></div>
-          <div class="stat-item"><div class="stat-num">6+</div><div class="stat-label">ネットワーク</div></div>
-          <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">オンチェーン</div></div>
-          <div class="stat-item"><div class="stat-num">MIT</div><div class="stat-label">ライセンス</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+  <main id="main-content">
 
-<section class="trust-logos-section">
-  <div class="container">
-    <div class="trust-logos-label">機関投資家の信頼のために構築</div>
-    <div class="trust-logos-grid reveal">
-      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>HKMA ライセンス</div>
-      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>監査済み</div>
-      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>マルチソース</div>
-      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>&lt;50ms</div>
-      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Real-Time</div>
-      <div class="trust-logo-item"><svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Immutable</div>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="gradient-orb"></div>
+    <div class="gradient-orb"></div>
+    <div class="container hero-content">
+      <div class="hero-badge animate-fadeInUp">
+        <span class="dot"></span>
+        Sepolia テストネット稼働中
+      </div>
+      <h1 class="display animate-fadeInUp animate-delay-1">
+        オンチェーンでネイティブに<br>
+        <span>動くリスクコントロール</span>
+      </h1>
+      <p class="lead animate-fadeInUp animate-delay-2 hero-lead">
+        FidesOrigin はデジタルアセットインフラのプログラマブル・オンチェーン・コンプライアンスです。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。
+      </p>
+      <div class="hero-buttons animate-fadeInUp animate-delay-3">
+        <a href="#contact" class="btn btn-primary">
+          アクセス申請
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
+        </a>
+        <a href="/admin/" class="btn btn-secondary">ダッシュボード</a>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section" id="products">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">コア製品</div>
-      <h2 class="section-title">4つのエンジン。1つのスタック。</h2>
-    </div>
-    <div class="product-grid">
-      <div class="product-card product-card-accent reveal reveal-delay-1">
-        <div class="product-icon-wrap" style="color:var(--fio-accent)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
-        <h3>リスク・レーダー</h3>
-        <p>リアルタイム・リスク・スコアリング</p>
-      </div>
-      <div class="product-card reveal reveal-delay-2">
-        <div class="product-icon-wrap" style="color:var(--fio-gold)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
-        <h3>ポリシー・エンジン</h3>
-        <p>プログラマブル・ルール</p>
-      </div>
-      <div class="product-card reveal reveal-delay-1">
-        <div class="product-icon-wrap" style="color:var(--fio-success)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <h3>監査シールド</h3>
-        <p>改ざん不可の記録</p>
-      </div>
-      <div class="product-card reveal reveal-delay-2">
-        <div class="product-icon-wrap" style="color:var(--fio-info)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
-        <h3>アドレス・チェック</h3>
-        <p>取引前スクリーニング</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt" id="architecture">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">Architecture</div>
-      <h2 class="section-title">Risk to オンチェーン Action</h2>
-    </div>
-    <div class="section-divider reveal"></div>
-    <div class="arch-flow reveal">
-      <div class="arch-node">
-        <div class="arch-node-icon purple" style="background:var(--fio-accent-dim);color:var(--fio-accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg></div>
-        <h4>取り込み</h4>
-        <p>マルチソース・データ</p>
-      </div>
-      <span class="arch-arrow">&rarr;</span>
-      <div class="arch-node">
-        <div class="arch-node-icon gold" style="background:var(--fio-gold-dim);color:var(--fio-gold)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div>
-        <h4>評価</h4>
-        <p>ポリシー・スコアリング</p>
-      </div>
-      <span class="arch-arrow">&rarr;</span>
-      <div class="arch-node">
-        <div class="arch-node-icon green" style="background:rgba(92,230,138,.06);color:var(--fio-success)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <h4>実行</h4>
-        <p>オンチェーン・アクション</p>
-      </div>
-      <span class="arch-arrow">&rarr;</span>
-      <div class="arch-node">
-        <div class="arch-node-icon blue" style="background:rgba(122,184,240,.06);color:var(--fio-info)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17v-2H4.5A2.5 2.5 0 012 12.5v-1A2.5 2.5 0 014.5 9H9V7H4.5A4.5 4.5 0 000 11.5v1A4.5 4.5 0 004.5 17H9zm6 0h4.5A4.5 4.5 0 0024 12.5v-1A4.5 4.5 0 0019.5 7H15v2h4.5A2.5 2.5 0 0122 11.5v1a2.5 2.5 0 01-2.5 2.5H15v2zM8 11h8v2H8z"/></svg></div>
-        <h4>監査</h4>
-        <p>改ざん不可のログ</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="api">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">開発者ファースト</div>
-      <h2 class="section-title">数分で統合</h2>
-      <p class="section-desc">TypeScript、Python、REST API。</p>
-    </div>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:40px;" class="reveal">
-      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-primary">ドキュメントを見る</a>
-      <a href="/address-check.html" class="btn-secondary">アドレス・チェックを試す</a>
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt" id="use-cases">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">ユースケース</div>
-      <h2 class="section-title">FidesOriginの活用例</h2>
-    </div>
-    <div class="usecase-grid">
-      <div class="usecase-card reveal reveal-delay-1">
-        <div class="usecase-icon" style="background:var(--fio-accent-dim);color:var(--fio-accent)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-        <h3>ステーブルコイン発行体</h3>
-        <p>HKMA対応コンプライアンス・スタック</p>
-      </div>
-      <div class="usecase-card reveal reveal-delay-2">
-        <div class="usecase-icon" style="background:var(--fio-gold-dim);color:var(--fio-gold)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-        <h3>暗号資産取引所</h3>
-        <p>リアルタイム入金スクリーニング</p>
-      </div>
-      <div class="usecase-card reveal reveal-delay-3">
-        <div class="usecase-icon" style="background:rgba(92,230,138,.06);color:var(--fio-success)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
-        <h3>DeFiプロトコル</h3>
-        <p>カストディ不要のコンプライアンス</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="security">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">セキュリティ</div>
-      <h2 class="section-title">設計段階からのコンプライアンス</h2>
-    </div>
-    <div class="trust-grid reveal">
-      <div class="trust-item">
-        <div class="trust-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-        <h4>監査済み</h4>
-        <span class="trust-badge ok">Verified</span>
-      </div>
-      <div class="trust-item">
-        <div class="trust-icon gold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
-        <h4>改ざん不可</h4>
-        <span class="trust-badge ok">稼働中</span>
-      </div>
-      <div class="trust-item">
-        <div class="trust-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg></div>
-        <h4>マルチリージョン</h4>
-        <span class="trust-badge ok">4地域</span>
-      </div>
-      <div class="trust-item">
-        <div class="trust-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
-        <h4>リアルタイム</h4>
-        <span class="trust-badge ok">ライブ</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="testimonial-section section-alt">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">Trusted By</div>
-      <h2 class="section-title">パートナーの声</h2>
-    </div>
-    <div class="testimonial-grid">
-      <div class="testimonial-card reveal">
-        <div class="testimonial-text">"FidesOrigin automated our compliance workflow. We cut overhead by 80% while exceeding HKMA requirements."</div>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar helios">DP</div>
-          <div class="testimonial-info"><h4>David Park</h4><p>Head of Compliance, Helios</p></div>
-        </div>
-      </div>
-      <div class="testimonial-card reveal reveal-delay-1">
-        <div class="testimonial-text">"Production-ready in two weeks. Policy-as-code embedded directly into our smart wallet flows."</div>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar keyvault">JL</div>
-          <div class="testimonial-info"><h4>James Liu</h4><p>VP Engineering, KeyVault</p></div>
-        </div>
-      </div>
-      <div class="testimonial-card reveal reveal-delay-2">
-        <div class="testimonial-text">"A single, auditable framework that satisfied every regulator across three jurisdictions."</div>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar fortress">MT</div>
-          <div class="testimonial-info"><h4>Michael Torres</h4><p>Chief Legal Officer, Fortress RWA</p></div>
+  <!-- Wallet Compliance Panel -->
+  <section class="section wallet-compliance" id="wallet-compliance">
+    <div class="container">
+      <div class="compliance-panel" id="compliance-panel">
+        <h4>確認中…</h4>
+        <div class="compliance-result" id="compliance-result">
+          <div id="compliance-status">確認中…</div>
+          <div id="compliance-details" class="compliance-details"></div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section" id="pricing">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">料金</div>
-      <h2 class="section-title">あなたの選択</h2>
-    </div>
-    <div class="pricing-grid">
-      <div class="pricing-card reveal reveal-delay-1">
-        <div class="pricing-tier">オープンソース</div>
-        <div class="pricing-price">$0</div>
-        <div class="pricing-period">永続</div>
-        <ul class="pricing-features">
-          <li>すべてのコア・スマートコントラクト</li>
-          <li>リスクレジストリ＆オラクル</li>
-          <li>ポリシー・エンジン</li>
-          <li>コミュニティサポート</li>
-        </ul>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="pricing-btn pricing-btn-secondary">GitHubを見る</a>
-      </div>
-      <div class="pricing-card featured reveal reveal-delay-2">
-        <div class="pricing-badge">おすすめ</div>
-        <div class="pricing-tier">マネージド</div>
-        <div class="pricing-price">お問い合わせ</div>
-        <div class="pricing-period">SLA保証</div>
-        <ul class="pricing-features">
-          <li>マネージド・インフラ</li>
-          <li>99.9% SLA</li>
-          <li>カスタム・ポリシー・ルール</li>
-          <li>優先サポート</li>
-        </ul>
-        <a href="mailto:contact@fidesorigin.com" class="pricing-btn pricing-btn-primary">デモを依頼</a>
-      </div>
-      <div class="pricing-card reveal reveal-delay-3">
-        <div class="pricing-tier">エンタープライズ</div>
-        <div class="pricing-price">特注</div>
-        <div class="pricing-period">特注契約</div>
-        <ul class="pricing-features">
-          <li>専任SREチーム</li>
-          <li>カスタム・チェーン統合</li>
-          <li>プライベート・リスクデータソース</li>
-          <li>ソースコード・エスクロー</li>
-        </ul>
-        <a href="mailto:contact@fidesorigin.com" class="pricing-btn pricing-btn-secondary">営業に問い合わせ</a>
+  <!-- Trust Section -->
+  <section class="section trust-section">
+    <div class="container">
+      <div class="trust-bar reveal">
+        <div class="trust-stat">
+          <div class="number" data-count="20645" data-prefix="" data-suffix="+">0</div>
+          <div class="label">リスクアドレス</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="202" data-prefix="" data-suffix="">0</div>
+          <div class="label">テスト通過</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="50" data-prefix="" data-suffix="ms">0</div>
+          <div class="label">チェック時間</div>
+        </div>
+        <div class="trust-stat">
+          <div class="number" data-count="7" data-prefix="" data-suffix="">0</div>
+          <div class="label">ネットワーク</div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="cta-banner">
-  <div class="container">
-    <div class="cta-inner reveal">
-      <h2 class="cta-title">コンプライアントなオンチェーン金融を構築？</h2>
-      <div class="cta-ctas">
-        <a href="mailto:contact@fidesorigin.com" class="btn-primary">デモを予約</a>
+  <!-- Features Section -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">機能</p>
+        <h2 class="h2 section-title">オンチェーン・コンプライアンスに必要な全て</h2>
+        <p class="lead section-lead">Web3 のためにゼロから構築されたフルスタック・コンプライアンス・プロトコル。</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3>リアルタイムリスク管理</h3>
+          <p>すべての取引をミリ秒単位でオンチェーンリスクプロファイルに対してスクリーニング。APIレイテンシなし、ダウンタイムなし。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3>コンプライアンスエンジン</h3>
+          <p>スマートコントラクトレベルでの決定論的ポリシー執行。ルールはコードであり、設定ではありません。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h3>隔離された資金</h3>
+          <p>疑わしい資産を管理された金庫に隔離。レビュー可能、回復可能、完全に監査可能。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+          </div>
+          <h3>マルチチェーン対応</h3>
+          <p>Ethereum、Base などに対応。統合ガバナンスによるクロスチェーンリスクプロファイル。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.131A8 8 0 008 8m0 0a8 8 0 008 8m0 0a8 8 0 008-8m-8 8v4m0 0h8m-8 0H4"/></svg>
+          </div>
+          <h3>プライバシー保護</h3>
+          <p>Merkle ベースのリスクコミットメントにより、機密性の高いアドレスデータを開示せずにコンプライアンスを検証。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <h3>開発者 API</h3>
+          <p>RESTful API、WebSocket ストリーム、TypeScript SDK。数時間で統合、数週間ではなく。</p>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand"><img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px"><span>FidesOrigin</span></div>
-        <p class="footer-desc">On-chain compliance protocol for tokenized assets and DeFi.</p>
+  <!-- How It Works -->
+  <section class="section bg-secondary" id="how-it-works">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">仕組み</p>
+        <h2 class="h2 section-title">3層の保護</h2>
+        <p class="lead section-lead">リスク・レジストリ &rarr; ポリシー・エンジン &rarr; コンプライアンス・エンジン。すべてのトランザクションはチェーンに到達する前にスクリーニングされます。</p>
       </div>
-      <div class="footer-col">
-        <h4>製品</h4>
-        <a href="#products">リスク・レーダー</a>
-        <a href="#products">ポリシー・エンジン</a>
-        <a href="#products">監査シールド</a>
-        <a href="/address-check.html">アドレス・チェック</a>
-        <a href="/pricing.html">料金</a>
-      </div>
-      <div class="footer-col">
-        <h4>開発者</h4>
-        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
-        <a href="/jp/docs/">ドキュメント</a>
-        <a href="/jp/docs/api">APIリファレンス</a>
-        <a href="/jp/changelog.html">変更履歴</a>
-      </div>
-      <div class="footer-col">
-        <h4>会社</h4>
-        <a href="/jp/about.html">会社概要</a>
-        <a href="/jp/case-studies.html">導入事例</a>
-        <a href="mailto:contact@fidesorigin.com">お問い合わせ</a>
-        <a href="/jp/privacy.html">プライバシー</a>
-        <a href="/jp/terms.html">利用規約</a>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-number">1</div>
+          <h3>リスクレジストリ</h3>
+          <p>OFAC、Chainalysis、OpenSanctions からの集約リスクデータ。Chainlink Functions を介して自律的に更新。</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">2</div>
+          <h3>ポリシーエンジン</h3>
+          <p>取引制限、アドレススクリーニング、管轄区域ベースの執行に対する設定可能なルール。</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">3</div>
+          <h3>コンプライアンスエンジン</h3>
+          <p>決定論的なオンチェーン執行。すべての送金が評価されます——バイパス経路なし、オフチェーン依存なし。</p>
+        </div>
       </div>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 FidesOrigin. MIT ライセンス.</span>
-      <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
-    </div>
-  </div>
-</footer>
+  </section>
 
-<script>
-const revealObserver=new IntersectionObserver((e)=>{e.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('visible')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
-const nav=document.getElementById('mainNav');
-window.addEventListener('scroll',()=>{window.scrollY>60?nav.classList.add('nav-scrolled'):nav.classList.remove('nav-scrolled')},{passive:true});
-function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('active')}
-document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',function(e){const h=this.getAttribute('href');if(h==='#')return;const t=document.querySelector(h);if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}})});
-</script>
+  <!-- Use Cases -->
+  <section class="section" id="use-cases">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">ユースケース</p>
+        <h2 class="h2 section-title">実際の問題に対する実際の保護</h2>
+        <p class="lead section-lead">ステーブルコイン発行体、RWAプラットフォーム、スマートウォレット、AIエージェント向けに構築。</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>ステーブルコイン決済レール</h3>
+          <p>すべての発行、燃焼、送金に OFAC / UN 制裁チェックを組み込み。オフチェーンの摩擦なしに香港および EU MiCA コンプライアンスを満たす。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>RWA トークン化</h3>
+          <p>トークン化証券が手を変える前に適格投資家ステータスと管轄区域を検証。常に最新のオンチェーン KYC。</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <h3>スマートコントラクトウォレット</h3>
+          <p>ウォレットコントラクト自体にリスクチェックを埋め込み。すべての取引が実行前に評価——生のコントラクトコールでもバイパス不可能。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security & Compliance -->
+  <section class="section" id="security">
+    <div class="container">
+      <div class="reveal section-intro">
+        <p class="micro">セキュリティとコンプライアンス</p>
+        <h2 class="h2 section-title">規制された金融のために構築</h2>
+        <p class="lead section-lead">分散化を損なうことなく、グローバルなコンプライアンス基準を満たします。</p>
+      </div>
+      <div class="compliance-grid">
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h3>OFAC</h3>
+          <p>SDN リストスクリーニング</p>
+          <span class="badge">有効</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+          <h3>FATF</h3>
+          <p>Travel Rule 対応</p>
+          <span class="badge">有効</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          <h3>VASP</h3>
+          <p>仮想資産サービス</p>
+          <span class="badge">対応</span>
+        </div>
+        <div class="compliance-item reveal">
+          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <h3>SOC 2</h3>
+          <p>Type II 監査</p>
+          <span class="badge">進行中</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Developer Experience -->
+  <section class="section bg-secondary" id="developers">
+    <div class="container">
+      <div class="dev-grid">
+        <div class="reveal">
+          <p class="micro">開発者エクスペリエンス</p>
+          <h2 class="h2 section-title">3行で統合</h2>
+          <p class="lead section-lead">スマートコントラクトレベルでリスクエンジンを継承。すべてのトークン送金はオンチェーンリスクプロファイルに対して自動スクリーニングされます。</p>
+          <div class="dev-steps">
+            <div class="dev-step">
+              <span class="dev-step-num">01</span>
+              <p class="body-sm"><code class='code-accent'>CompliantStableCoin</code> を継承するか、<code class='code-accent'>FidesCompliance</code> を送金フックに接続</p>
+            </div>
+            <div class="dev-step">
+              <span class="dev-step-num">02</span>
+              <p class="body-sm">管理ダッシュボードまたは直接オンチェーンでリスク閾値とポリシーを設定</p>
+            </div>
+            <div class="dev-step">
+              <span class="dev-step-num">03</span>
+              <p class="body-sm">すべての送金がスクリーニングされ、実行され、記録される——決定論的にオンチェーンで</p>
+            </div>
+          </div>
+          <div class="dev-actions">
+            <a href="/jp/docs/" target="_blank" rel="noopener" class="btn btn-primary btn-sm">ドキュメント</a>
+            <a href="/jp/docs/sdk.html" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">SDK をダウンロード</a>
+          </div>
+        </div>
+        <div class="reveal">
+          <div class="code-block">
+            <div class="code-header">
+              <span>CompliantStableCoin.sol</span>
+              <span>Solidity 0.8.26</span>
+            </div>
+            <div class="code-body">
+<pre><span class="comment">// ステーブルコインはオンチェーンリスクスクリーニングを継承</span>
+<span class="kw">contract</span> <span class="type">CompliantStableCoin</span> <span class="kw">is</span> <span class="type">ERC20</span>, <span class="type">IFidesCompliance</span> {
+
+    <span class="kw">function</span> <span class="func">_update</span>(
+        <span class="kw">address</span> from, <span class="kw">address</span> to,
+        <span class="kw">uint256</span> amount
+    ) <span class="kw">internal override</span> {
+        <span class="comment">// 送金実行前に評価</span>
+        (<span class="kw">bool</span> allowed, <span class="kw">uint256</span> risk) =
+            fides.<span class="func">evaluateTransaction</span>(
+                from, to, amount, <span class="kw">address</span>(<span class="kw">this</span>)
+            );
+
+        <span class="kw">if</span> (!allowed)
+            <span class="kw">revert</span> <span class="func">ComplianceViolation</span>(from, to, risk);
+
+        <span class="kw">super</span>.<span class="func">_update</span>(from, to, amount);
+    }
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact / CTA -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="cta-section reveal">
+        <h2 class="h1">オンチェーンで構築する準備はできましたか？</h2>
+        <p>FidesOrigin プロトコル、SDK、およびドキュメントへのアクセスをリクエストしてください。</p>
+        <div class="cta-buttons">
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary btn-light">
+            contact@fidesorigin.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/jp/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+            FidesOrigin
+          </a>
+          <p>金融の未来のためのプログラマブル・オンチェーン・コンプライアンス。</p>
+        </div>
+        <div class="footer-col">
+          <h4>製品</h4>
+          <a href="#features">ユースケース</a>
+          <a href="#how-it-works">仕組み</a>
+          <a href="#security">セキュリティ</a>
+          <a href="/admin/">ダッシュボード</a>
+        </div>
+        <div class="footer-col">
+          <h4>開発者</h4>
+          <a href="/jp/docs/" target="_blank" rel="noopener">ドキュメント</a>
+          <a href="/jp/docs/api.html" target="_blank" rel="noopener">API リファレンス</a>
+          <a href="/jp/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>会社</h4>
+          <a href="mailto:contact@fidesorigin.com">お問い合わせ</a>
+          <a href="/blog/" target="_blank" rel="noopener">ブログ</a>
+          <a href="/jp/privacy.html">プライバシーポリシー</a>
+          <a href="/jp/terms.html">利用規約</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. 全著作権所有。</p>
+        <p>オンチェーン金融の世界のために</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script src="/index-scripts.js"></script>
 </body>
 </html>

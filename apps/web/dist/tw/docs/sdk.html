@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>SDK — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin JavaScript SDK。安裝、配置並集成鏈上合規。">
+  <meta property="og:title" content="SDK 指南 — FidesOrigin">
+  <meta property="og:description" content="FidesOrigin SDK 整合指南。TypeScript、React、WebSocket 客戶端。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SDK 指南 — FidesOrigin">
+  <meta name="twitter:description" content="FidesOrigin SDK 整合指南。TypeScript、React、WebSocket 客戶端。">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/tw/docs/sdk.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/docs/sdk.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/docs/sdk.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/docs/sdk.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/docs/sdk.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <nav class="nav" aria-label="主導航">
+    <div class="nav-inner">
+      <a href="/tw/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/tw/#features">功能</a>
+        <a href="/tw/#how-it-works">工作原理</a>
+        <a href="/tw/#security">安全</a>
+        <a href="/tw/docs/">文件</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="語言">
+            TW
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/docs/sdk.html">English</a>
+            <a href="/cn/docs/sdk.html">简体中文</a>
+            <a href="/tw/docs/sdk.html">繁體中文</a>
+            <a href="/jp/docs/sdk.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/tw/#contact" class="nav-cta">開始使用</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="切換菜單" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="關閉菜單">
+      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
+    </button>
+    <a href="/tw/#features">功能</a>
+    <a href="/tw/#how-it-works">工作原理</a>
+    <a href="/tw/#security">安全</a>
+    <a href="/tw/docs/">文件</a>
+    <div class="lang-row">
+      <a href="/docs/sdk.html">EN</a>
+      <a href="/cn/docs/sdk.html">CN</a>
+      <a href="/tw/docs/sdk.html">TW</a>
+      <a href="/jp/docs/sdk.html">JP</a>
+    </div>
+  </div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" id="docsSidebar">
+      <div class="docs-sidebar-title">文件</div>
+      <ul class="docs-nav-tree">
+        <li><a href="/tw/docs/">概覽</a></li>
+        <li><a href="/tw/docs/api.html">API 參考</a></li>
+        <li><a href="/tw/docs/sdk.html" class="active">SDK</a></li>
+      </ul>
+      <div class="docs-sidebar-title">資源</div>
+      <ul class="docs-nav-tree">
+        <li><a href="/blog/" target="_blank" rel="noopener">博客</a></li>
+        <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="/admin/">控制台</a></li>
+      </ul>
+    </aside>
+
+    <button class="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="切換側邊欄">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      文件菜單
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+
+    <main class="docs-content">
+      <h1>SDK</h1>
+      <p class="docs-lead">用於錢包集成和鏈上合規的 JavaScript SDK。</p>
+
+      <h2>安裝</h2>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>npm</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>npm install @fidesorigin/sdk</code></pre>
+      </div>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>yarn</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>yarn add @fidesorigin/sdk</code></pre>
+      </div>
+
+      <h2>快速開始</h2>
+
+      <h3>初始化 SDK</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>import { FidesOrigin } from '@fidesorigin/sdk';
+
+const fides = new FidesOrigin({
+  apiKey: 'YOUR_API_KEY',
+  network: 'sepolia' // 或 'mainnet', 'base'
+});</code></pre>
+      </div>
+
+      <h3>檢查地址風險</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>const result = await fides.evaluateAddress('0x...');
+
+console.log(result.riskTier); // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+console.log(result.isSanctioned); // true 或 false</code></pre>
+      </div>
+
+      <h3>訂閱事件</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>fides.on('RiskDetected', (event) => {
+  console.log('檢測到風險:', event.address, event.riskTier);
+});
+
+fides.on('SanctionAdded', (event) => {
+  console.log('新增制裁:', event.address);
+});</code></pre>
+      </div>
+
+      <h2>核心 API</h2>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr><th>方法</th><th>返回</th><th>描述</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>connect(provider)</code></td><td>Promise&lt;void&gt;</td><td>連接 Web3 提供商</td></tr>
+            <tr><td><code>evaluateAddress(addr)</code></td><td>Promise&lt;RiskProfile&gt;</td><td>獲取地址風險檔案</td></tr>
+            <tr><td><code>evaluateTx(tx)</code></td><td>Promise&lt;TxResult&gt;</td><td>交易預篩查</td></tr>
+            <tr><td><code>subscribe(event)</code></td><td>EventEmitter</td><td>訂閱鏈上事件</td></tr>
+            <tr><td><code>disconnect()</code></td><td>void</td><td>清理連接</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Solidity 集成</h2>
+      <p>將 FidesOrigin 合約直接導入您的 Solidity 項目：</p>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>Solidity 0.8.20</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@fidesorigin/contracts/CompliantStableCoin.sol";
+
+contract MyStableCoin is CompliantStableCoin {
+    constructor()
+        CompliantStableCoin("MyStableCoin", "MSC")
+    {
+        policy = IssuerPolicy({
+            maxTxAmount: 1_000_000 * 10**6,
+            dailyLimit: 10_000_000 * 10**6,
+            allowMediumRisk: true,
+            allowHighRisk: false,
+            blockMixer: true,
+            requireDestinationKYC: true,
+            cooldownPeriod: 24 hours
+        });
+    }
+}</code></pre>
+      </div>
+
+      <h2>類型</h2>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="複製代碼">複製</button>
+        </div>
+        <pre><code>interface RiskProfile {
+  address: string;
+  riskScore: number;
+  riskTier: 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  isSanctioned: boolean;
+  tags: string[];
+  entityName: string;
+  lastUpdated: string;
+}
+
+interface TxResult {
+  allowed: boolean;
+  riskScore: number;
+  riskTier: string;
+  quarantineRequired: boolean;
+  reason: string | null;
+}</code></pre>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/tw/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>面向未來金融的可編程鏈上合規。</p>
+        </div>
+        <div class="footer-col">
+          <h4>產品</h4>
+          <a href="/tw/#features">功能</a>
+          <a href="/tw/#how-it-works">工作原理</a>
+          <a href="/tw/#security">安全</a>
+          <a href="/admin/">控制台</a>
+        </div>
+        <div class="footer-col">
+          <h4>開發者</h4>
+          <a href="/tw/docs/">文件</a>
+          <a href="/tw/docs/api.html">API 參考</a>
+          <a href="/tw/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>公司</h4>
+          <a href="mailto:contact@fidesorigin.com">聯繫我們</a>
+          <a href="/blog/">博客</a>
+          <a href="/tw/privacy.html">隱私政策</a>
+          <a href="/tw/terms.html">服務條款</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. 保留所有權利。</p>
+        <p>為鏈上金融世界精心打造。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script nonce="2726c7f26c">
+    (function() {
+      var menu = document.getElementById('mobileMenu');
+      var btn = document.querySelector('.nav-mobile-btn');
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      function toggle() {
+        var active = menu.classList.toggle('active');
+        document.body.style.overflow = active ? 'hidden' : '';
+        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+      }
+      if (btn) btn.addEventListener('click', toggle);
+      if (closeBtn) closeBtn.addEventListener('click', toggle);
+      menu.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', toggle); });
+    })();
+    (function() {
+      var btn = document.getElementById('langToggleBtn');
+      var menu = document.getElementById('langMenu');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
+    })();
+    (function() {
+      var sidebar = document.getElementById('docsSidebar');
+      var toggle = document.getElementById('sidebarToggle');
+      if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+          var active = sidebar.classList.toggle('active');
+          toggle.setAttribute('aria-expanded', active ? 'true' : 'false');
+        });
+      }
+    })();
+    (function() {
+      document.querySelectorAll('.docs-code-block').forEach(function(block) {
+        var btn = block.querySelector('.docs-code-copy');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+          var code = block.querySelector('pre');
+          if (code) {
+            navigator.clipboard.writeText(code.textContent).then(function() {
+              btn.textContent = '已複製';
+              btn.classList.add('copied');
+              setTimeout(function() { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
+            });
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
