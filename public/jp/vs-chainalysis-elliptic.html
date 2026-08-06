@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>FidesOrigin vs Chainalysis vs Elliptic — 実行グレード・コンプライアンス比較</title>
+<meta name="description" content="FidesOriginのオンチェーン実行コンプライアンスをChainalysisおよびEllipticと比較。リアルタイム攔截と事後分析、トランザクション単位課金と年間サブスクリプション。"/>
+<meta property="og:title" content="FidesOrigin vs Chainalysis vs Elliptic — コンプライアンス比較"/>
+<meta property="og:description" content="実行グレードのオンチェーン・コンプライアンスと従来型アナリティクスの比較。リアルタイム攔截、価格設定、アーキテクチャの違いをご確認ください。"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta property="og:url" content="https://fidesorigin.com/vs-chainalysis-elliptic.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="FidesOrigin vs Chainalysis vs Elliptic"/>
+<meta name="twitter:description" content="実行グレード・コンプライアンス比較。リアルタイム攔截と事後アナリティクス。"/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/vs-chainalysis-elliptic.html"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"FidesOrigin vs Chainalysis vs Elliptic","url":"https://fidesorigin.com/vs-chainalysis-elliptic.html","description":"コンプライアンス・プロトコル比較マトリックス"}</script>
+<style>
+  :root {
+    --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320;
+    --fio-surface-3:#181b28; --fio-elevated:#1e2230; --fio-border:#252a3a; --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-accent-glow:#9b8ed80a;
+    --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-gold-glow:#d4b87a10;
+    --fio-steel:#7b9ab8; --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .container { max-width:1200px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
+  .anim-d4 { animation-delay:0.5s; } .anim-d5 { animation-delay:0.65s; } .anim-d6 { animation-delay:0.8s; }
+
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); }
+  .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  .hero { position:relative; overflow:hidden; min-height:70vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-inner { position:relative; z-index:2; padding:100px 0 60px; width:100%; text-align:center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-gold-dim); border:1px solid rgba(212,184,122,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-gold); margin-bottom:32px; }
+  .hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--fio-gold); animation:pulse-dot 2s infinite; }
+  .hero-title { font-family:var(--font-display); font-size:clamp(2.2rem,5vw,3.8rem); font-weight:500; line-height:1.05; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:20px; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(1rem,1.4vw,1.15rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 36px; }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+
+  .section { padding:100px 0; }
+  @media(min-width:768px){ .section { padding:130px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+  .section-header { text-align:center; max-width:640px; margin:0 auto 72px; }
+  .section-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-text-3); margin-bottom:16px; padding:4px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; }
+  .section-title { font-family:var(--font-display); font-size:clamp(1.8rem,3.8vw,2.8rem); font-weight:500; line-height:1.1; letter-spacing:-0.02em; color:var(--fio-text); margin-bottom:18px; }
+  .section-desc { font-size:1.05rem; line-height:1.7; color:var(--fio-text-2); max-width:560px; margin:0 auto; }
+
+  .diff-grid { display:grid; gap:20px; }
+  @media(min-width:768px){ .diff-grid { grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:1024px){ .diff-grid { grid-template-columns:repeat(4,1fr); } }
+  .diff-card { padding:36px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); overflow:hidden; position:relative; }
+  .diff-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(155,142,216,0.2),transparent); opacity:0; transition:opacity 0.4s; }
+  .diff-card:hover::before { opacity:1; }
+  .diff-card:hover { border-color:var(--fio-border-light); transform:translateY(-5px); box-shadow:0 32px 64px rgba(0,0,0,0.4); }
+  .diff-card.fides { border-color:rgba(155,142,216,0.12); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
+  .diff-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; font-size:1.25rem; }
+  .diff-icon.purple { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.12); }
+  .diff-icon.gold { background:var(--fio-gold-dim); color:var(--fio-gold); border:1px solid rgba(212,184,122,0.12); }
+  .diff-icon.green { background:rgba(92,230,138,0.06); color:var(--fio-success); border:1px solid rgba(92,230,138,0.1); }
+  .diff-icon.blue { background:rgba(122,184,240,0.06); color:var(--fio-info); border:1px solid rgba(122,184,240,0.1); }
+  .diff-card h3 { font-family:var(--font-display); font-size:1.1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; }
+  .diff-card p { font-size:0.88rem; line-height:1.7; color:var(--fio-text-2); }
+  .diff-highlight { font-family:var(--font-mono); font-size:0.72rem; color:var(--fio-gold); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+
+  .compare-wrap { overflow-x:auto; margin-top:48px; }
+  .compare-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+  .compare-table thead th { padding:16px 20px; text-align:left; font-family:var(--font-display); font-weight:500; color:var(--fio-text); border-bottom:2px solid var(--fio-border); background:var(--fio-surface-2); }
+  .compare-table thead th:first-child { border-radius:12px 0 0 0; }
+  .compare-table thead th:last-child { border-radius:0 12px 0 0; }
+  .compare-table th.fides-col { background:linear-gradient(180deg,rgba(155,142,216,0.08) 0%,var(--fio-surface-2) 100%); color:var(--fio-accent); }
+  .compare-table tbody td { padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--fio-text-2); vertical-align:top; }
+  .compare-table tbody tr:hover td { background:rgba(255,255,255,0.015); }
+  .compare-table tbody tr:last-child td { border-bottom:none; }
+  .compare-table tbody tr:last-child td:first-child { border-radius:0 0 0 12px; }
+  .compare-table tbody tr:last-child td:last-child { border-radius:0 0 12px 0; }
+  .compare-table .td-dim { color:var(--fio-text-3); font-style:italic; }
+  .compare-table .td-highlight { color:var(--fio-accent); font-weight:500; }
+  .compare-table .td-gold { color:var(--fio-gold); font-weight:500; }
+  .compare-table .td-success { color:var(--fio-success); font-weight:500; }
+  .compare-table .td-warn { color:var(--fio-warn); font-weight:500; }
+  .compare-table .check { color:var(--fio-success); font-weight:700; }
+  .compare-table .cross { color:var(--fio-danger); font-weight:700; }
+
+  .arch-compare { display:grid; gap:24px; margin-top:48px; }
+  @media(min-width:768px){ .arch-compare { grid-template-columns:repeat(3,1fr); } }
+  .arch-box { padding:32px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; text-align:center; position:relative; }
+  .arch-box.fides { border-color:rgba(155,142,216,0.2); }
+  .arch-box h4 { font-family:var(--font-display); font-size:1.1rem; font-weight:500; color:var(--fio-text); margin-bottom:6px; }
+  .arch-box .tag { font-size:0.7rem; font-family:var(--font-mono); color:var(--fio-text-3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:20px; }
+  .arch-stack { display:flex; flex-direction:column; gap:8px; }
+  .arch-layer { padding:12px 16px; border-radius:10px; font-size:0.82rem; font-family:var(--font-mono); }
+  .arch-layer.top { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.12); }
+  .arch-layer.mid { background:rgba(255,255,255,0.03); color:var(--fio-text-2); border:1px solid rgba(255,255,255,0.06); }
+  .arch-layer.bot { background:rgba(212,184,122,0.06); color:var(--fio-gold); border:1px solid rgba(212,184,122,0.1); }
+  .arch-arrow-down { text-align:center; color:var(--fio-text-4); font-size:1.5rem; margin:8px 0; }
+  .arch-vs-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); padding:4px 16px; background:var(--fio-surface-2); border:1px solid var(--fio-border); border-radius:100px; font-size:0.65rem; font-family:var(--font-mono); color:var(--fio-text-3); text-transform:uppercase; letter-spacing:0.08em; }
+
+  .biz-grid { display:grid; gap:24px; margin-top:48px; }
+  @media(min-width:768px){ .biz-grid { grid-template-columns:repeat(3,1fr); } }
+  .biz-card { padding:36px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; position:relative; }
+  .biz-card.fides { border-color:rgba(155,142,216,0.2); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 40%); }
+  .biz-card h4 { font-family:var(--font-display); font-size:1.15rem; font-weight:500; color:var(--fio-text); margin-bottom:4px; }
+  .biz-card .price { font-family:var(--font-mono); font-size:2rem; font-weight:700; color:var(--fio-gold); line-height:1; margin:16px 0 8px; }
+  .biz-card .price-note { font-size:0.78rem; color:var(--fio-text-3); margin-bottom:20px; }
+  .biz-card ul { list-style:none; margin:0; padding:0; }
+  .biz-card ul li { display:flex; align-items:flex-start; gap:10px; font-size:0.85rem; color:var(--fio-text-2); margin-bottom:10px; }
+  .biz-card ul li::before { content:""; width:16px; height:16px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%235ce68a' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat; margin-top:2px; }
+  .biz-card ul li.x::before { background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fb8e8e' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 18L18 6M6 6l12 12'/%3E%3C/svg%3E") center/contain no-repeat; }
+
+  .cta-banner { padding:100px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:500; color:var(--fio-text); margin-bottom:16px; }
+  .cta-desc { font-size:1.05rem; color:var(--fio-text-2); margin-bottom:32px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+
+  .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+  .reveal-delay-3 { transition-delay:0.35s; }
+  .reveal-delay-4 { transition-delay:0.5s; }
+
+  .quote-box { padding:32px 36px; background:var(--fio-surface); border-left:3px solid var(--fio-gold); border-radius:0 14px 14px 0; margin:32px 0; }
+  .quote-box p { font-size:1rem; line-height:1.7; color:var(--fio-text-2); font-style:italic; margin:0; }
+  .quote-box cite { display:block; margin-top:12px; font-size:0.82rem; color:var(--fio-text-3); font-style:normal; }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/" onclick="closeMobileMenu()">ホーム</a>
+  <a href="/architecture.html" onclick="closeMobileMenu()">アーキテクチャ</a>
+  <a href="/blog/" onclick="closeMobileMenu()">ブログ</a>
+  <a href="/pricing.html" onclick="closeMobileMenu()">料金</a>
+  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">デモを依頼する</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/">ホーム</a>
+      <a href="/architecture.html">アーキテクチャ</a>
+      <a href="/blog/">ブログ</a>
+      <a href="/pricing.html">料金</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">デモを依頼する</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="メニューを開く">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">
+        <span class="hero-badge-dot"></span>
+        <span>競合分析</span>
+      </div>
+      <h1 class="hero-title anim-fade-up anim-d2">
+        アナリティクスを超えて &mdash;<br>
+        <span class="hero-title-accent">実行グレード・コンプライアンス</span>
+      </h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">
+        Chainalysis と Elliptic は暗号資産コンプライアンスの基礎を築きました。FidesOrigin は次の段階へ進みます：執行機能を実行レイヤーに直接組み込み、トランザクションが発生する前に阻止します。
+      </p>
+      <div class="hero-ctas anim-fade-up anim-d4" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="#matrix" class="btn-primary">比較を見る</a>
+        <a href="mailto:contact@fidesorigin.com" class="btn-secondary">デモを依頼する</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="key-diffs">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">4つの根本的な違い</div>
+      <h2 class="section-title">FidesOriginを特徴づけるもの</h2>
+      <p class="section-desc">同じ業界でありながら、スタックの異なるレイヤーに位置します。アーキテクチャとタイミングの4つの次元が、全く異なる結果を生み出します。</p>
+    </div>
+    <div class="diff-grid">
+      <div class="diff-card fides reveal reveal-delay-1">
+        <div class="diff-icon purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="diff-highlight">タイミング</div>
+        <h3>リアルタイム・インターセプション</h3>
+        <p>Chainalysis と Elliptic はトランザクション確認<em>後</em>に調査のための分析を行います。FidesOrigin は実行<em>前</em>に評価し阻止するため、損失を記録するのではなく未然に防ぎます。</p>
+      </div>
+      <div class="diff-card reveal reveal-delay-2">
+        <div class="diff-icon gold">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div class="diff-highlight">実行レイヤー</div>
+        <h3>スマートコントラクト・ネイティブ</h3>
+        <p>従来のツールはオフチェーンに存在し、人間の判断のためのデータを提供します。FidesOrigin は執行ロジックをスマートコントラクトに組み込むことで、コンプライアンスを決定的かつ回避不可能なものにします。</p>
+      </div>
+      <div class="diff-card reveal reveal-delay-3">
+        <div class="diff-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <div class="diff-highlight">価格設定</div>
+        <h3>トランザクション単位課金</h3>
+        <p>年間SaaSサブスクリプション（5万&ndash;50万ドル）は小規模なプレイヤーを締め出します。トランザクション単位課金（10&ndash;50セント）は使用量に応じてスケールし、前払いの縛りがありません。</p>
+      </div>
+      <div class="diff-card reveal reveal-delay-4">
+        <div class="diff-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        </div>
+        <div class="diff-highlight">オープン性</div>
+        <h3>MITライセンス、監査済み</h3>
+        <p>クローズドソースのコンプライアンスは不透明性のリスクを生み出します。FidesOrigin のソースコードは全てMITライセンスで公開され、複数回の第三者監査を受けています。規制当局や監査人は全てのコードを検証できます。</p>
+      </div>
+    </div>
+    <div class="quote-box reveal">
+      <p>"根本的な変化は『こういうことが起きた』から『このトランザクションは実行されない』へです。この差こそが、コンプライアンスの見せかけと真のリスク予防の間の隔たりです。"</p>
+      <cite>&mdash; プロトコル設計ノート、FidesOrigin v2.4.1</cite>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="matrix">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">機能マトリックス</div>
+      <h2 class="section-title">直接比較</h2>
+      <p class="section-desc">オンチェーン・コンプライアンス・インフラにとって重要な13の次元での客観的な比較です。</p>
+    </div>
+    <div class="compare-wrap reveal">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:26%">次元</th>
+            <th class="fides-col" style="width:25%">FidesOrigin</th>
+            <th style="width:24.5%">Chainalysis</th>
+            <th style="width:24.5%">Elliptic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>コア機能</strong></td>
+            <td class="td-highlight">リアルタイム・インターセプション</td>
+            <td class="td-dim">事後調査</td>
+            <td class="td-dim">事後調査</td>
+          </tr>
+          <tr>
+            <td><strong>テクノロジー・レイヤー</strong></td>
+            <td class="td-highlight">実行（コントラクトカーネル）</td>
+            <td class="td-dim">情報（DBクエリ）</td>
+            <td class="td-dim">情報（DBクエリ）</td>
+          </tr>
+          <tr>
+            <td><strong>レスポンス時間</strong></td>
+            <td class="td-success">&lt;50ms</td>
+            <td class="td-warn">数分〜数時間</td>
+            <td class="td-warn">数分〜数時間</td>
+          </tr>
+          <tr>
+            <td><strong>デプロイメント</strong></td>
+            <td class="td-highlight">プラガブル・モジュール</td>
+            <td>API / SaaS</td>
+            <td>API / SaaS</td>
+          </tr>
+          <tr>
+            <td><strong>価格モデル</strong></td>
+            <td class="td-gold">トランザクション単位（10&ndash;50&cent;）</td>
+            <td>年間サブスクリプション（$$$$）</td>
+            <td>年間サブスクリプション（$$$$）</td>
+          </tr>
+          <tr>
+            <td><strong>AI / ML</strong></td>
+            <td class="td-highlight">内蔵 GNN + リアルタイム・スコアリング</td>
+            <td class="td-dim">限定的</td>
+            <td class="td-dim">限定的</td>
+          </tr>
+          <tr>
+            <td><strong>オンチェーン実行</strong></td>
+            <td class="td-success">100% オンチェーン</td>
+            <td class="td-danger">オフチェーン</td>
+            <td class="td-danger">オフチェーン</td>
+          </tr>
+          <tr>
+            <td><strong>マルチチェーン</strong></td>
+            <td class="td-success">6+ ネットワーク</td>
+            <td>主要ネットワーク</td>
+            <td>主要ネットワーク</td>
+          </tr>
+          <tr>
+            <td><strong>ライセンス</strong></td>
+            <td class="td-success">MIT（オープンソース）</td>
+            <td class="td-danger">プロプライエタリ</td>
+            <td class="td-danger">プロプライエタリ</td>
+          </tr>
+          <tr>
+            <td><strong>監査履歴</strong></td>
+            <td class="td-success">複数回の第三者監査</td>
+            <td>内部監査</td>
+            <td>内部監査</td>
+          </tr>
+          <tr>
+            <td><strong>ポリシー・アズ・コード</strong></td>
+            <td class="td-success"><span class="check">&#10003;</span> 実行可能なルール</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> UI経由で設定</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> UI経由で設定</td>
+          </tr>
+          <tr>
+            <td><strong>改ざん不可能な監査証跡</strong></td>
+            <td class="td-success"><span class="check">&#10003;</span> オンチェーン・ログ</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> データベース記録</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> データベース記録</td>
+          </tr>
+          <tr>
+            <td><strong>ゼロ確認インターセプション</strong></td>
+            <td class="td-success"><span class="check">&#10003;</span> メンプール・ウォッチャー</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 確認が必要</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 確認が必要</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">アーキテクチャ</div>
+      <h2 class="section-title">実行レイヤー vs 情報レイヤー</h2>
+      <p class="section-desc">アーキテクチャの差は機能の違い以上のものです。根本的に異なるセキュリティモデルです。</p>
+    </div>
+    <div class="arch-compare reveal">
+      <div class="arch-box fides">
+        <div class="arch-vs-badge" style="color:var(--fio-accent);">FidesOrigin</div>
+        <h4>FidesOrigin</h4>
+        <div class="tag">実行グレード</div>
+        <div class="arch-stack">
+          <div class="arch-layer top">AIモデル（GNN + MLスコアリング）</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer mid">Oracle &rarr; リスク・レジストリ</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer bot">スマートコントラクト・エンフォースメント</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--fio-text-3);margin-top:16px;line-height:1.6;">コンプライアンス判断は<strong>トランザクション実行パスの内部</strong>で行われます。回避の余地はありません。</p>
+      </div>
+      <div class="arch-box">
+        <div class="arch-vs-badge">Chainalysis</div>
+        <h4>Chainalysis</h4>
+        <div class="tag">情報レイヤー</div>
+        <div class="arch-stack">
+          <div class="arch-layer top">集中型データベース</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer mid">APIクエリ・レスポンス</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer bot">クライアントサイド判断</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--fio-text-3);margin-top:16px;line-height:1.6;">リスクデータを提供します。<strong>クライアント</strong>が行動するかどうかを判断します。エンフォースメントは任意かつ回避可能です。</p>
+      </div>
+      <div class="arch-box">
+        <div class="arch-vs-badge">Elliptic</div>
+        <h4>Elliptic</h4>
+        <div class="tag">情報レイヤー</div>
+        <div class="arch-stack">
+          <div class="arch-layer top">集中型データベース</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer mid">APIクエリ・レスポンス</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer bot">クライアントサイド判断</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--fio-text-3);margin-top:16px;line-height:1.6;">Chainalysisと同様：データプロバイダであり、エンフォーサーではありません。<strong>検知</strong>と<strong>阻止</strong>の間の致命的な隔たりです。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">ビジネスモデル</div>
+      <h2 class="section-title">SaaSサブスクリプション vs インフラストラクチャ税</h2>
+      <p class="section-desc">価格設定モデルは、コンプライアンス・スタックにおける価値獲得への根本的に異なるアプローチを反映しています。</p>
+    </div>
+    <div class="biz-grid reveal">
+      <div class="biz-card fides">
+        <div style="font-size:0.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--fio-accent);margin-bottom:4px;">FidesOrigin</div>
+        <h4>トランザクション単位課金</h4>
+        <div class="price">10&ndash;50&cent;</div>
+        <div class="price-note">1トランザクションあたり + 価値の0.01&ndash;0.05%</div>
+        <ul>
+          <li>年間契約なし</li>
+          <li>使用量に応じてスケール</li>
+          <li>スタートアップにも利用可能</li>
+          <li>エンタープライズ量割引</li>
+        </ul>
+      </div>
+      <div class="biz-card">
+        <div style="font-size:0.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--fio-text-3);margin-bottom:4px;">Chainalysis</div>
+        <h4>年間サブスクリプション</h4>
+        <div class="price">$50K&ndash;$500K</div>
+        <div class="price-note">年間、ティア別</div>
+        <ul>
+          <li>フルプラットフォームアクセス</li>
+          <li>専任サポート</li>
+          <li>高額な前払いコスト</li>
+          <li class="x">小規模チームには障壁が高い</li>
+        </ul>
+      </div>
+      <div class="biz-card">
+        <div style="font-size:0.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--fio-text-3);margin-bottom:4px;">Elliptic</div>
+        <h4>年間サブスクリプション</h4>
+        <div class="price">$30K&ndash;$300K</div>
+        <div class="price-note">年間、ティア別</div>
+        <ul>
+          <li>APIアクセスバンドル</li>
+          <li>カスタム統合サポート</li>
+          <li>超過利用料金</li>
+          <li class="x">トランザクション単位課金なし</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">ユースケース比較</div>
+      <h2 class="section-title">各ソリューションの適した場面</h2>
+      <p class="section-desc">どのツールも万能ではありません。適切な選択は、リスクモデル、予算、規制要件に依存します。</p>
+    </div>
+    <div style="display:grid;gap:20px;" class="reveal">
+      <div style="padding:32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--fio-accent-dim);color:var(--fio-accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.8rem;font-weight:600;">01</div>
+          <h3 style="font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:var(--fio-text);margin:0;">ステーブルコイン発行者がHKMAライセンスを取得する場合</h3>
+        </div>
+        <p style="font-size:0.9rem;color:var(--fio-text-2);line-height:1.7;margin:0 0 16px;">香港拠点のステーブルコイン発行者は、HKMA審査官に対してリアルタイムのAMLスクリーニング、改ざん不可能な監査証跡、自動化された償還管理を実証する必要があります。</p>
+        <div style="display:grid;gap:12px;">
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-accent);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-accent);margin-bottom:4px;">FidesOrigin</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-2);line-height:1.6;margin:0;">プラガブル・コンプライアンス・モジュールがステーブルコイン・コントラクトに直接組み込まれます。全ての送金が50ms以内にスクリーニングされます。全ての判断がオンチェーンに改ざん不可能に記録されます。監査証跡は暗号化されたものであり、データベースのエクスポートではありません。ある発行者はFidesOriginを使用してHKMAの<em>原則的承認</em>を取得しました。</p>
+          </div>
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-text-4);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-text-3);margin-bottom:4px;">Chainalysis / Elliptic</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-3);line-height:1.6;margin:0;">API経由でリスクデータを提供します。発行者はカスタム統合を構築し、監査ログをデータベースに保存し、規制当局に対して全てのスクリーニング呼び出しが実際に実行されたことを証明する必要があります。オンチェーン・エンフォースメントがないため、コンプライアンスは統合コードの品質に依存します。</p>
+          </div>
+        </div>
+      </div>
+      <div style="padding:32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--fio-gold-dim);color:var(--fio-gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.8rem;font-weight:600;">02</div>
+          <h3 style="font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:var(--fio-text);margin:0;">DeFiプロトコルが機関投資家の資本を惹きつけたい場合</h3>
+        </div>
+        <p style="font-size:0.9rem;color:var(--fio-text-2);line-height:1.7;margin:0 0 16px;">オンチェーン・レンディング・プロトコルは、資金を預ける前にコンプライアンス保証を求める機関LPを惹きつける必要があります。</p>
+        <div style="display:grid;gap:12px;">
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-accent);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-accent);margin-bottom:4px;">FidesOrigin</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-2);line-height:1.6;margin:0;">プロトコル・レベルでGuardモジュールを統合。全ての借入/貸出/清算がポリシーに対してチェックされます。機関LPはオンチェーンでコンプライアンス・ロジックを検証できます。ブラックボックスではありません &mdash; ポリシーそのものがコードです。</p>
+          </div>
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-text-4);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-text-3);margin-bottom:4px;">Chainalysis / Elliptic</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-3);line-height:1.6;margin:0;">プロトコルはUIレベルでリスクAPIにクエリします。熟練したユーザーはUIを bypass してスマートコントラクトと直接やり取りでき、リスクチェックを発火させることはありません。コンプライアンスの見せかけであり、エンフォースメントではありません。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">意思決定フレームワーク</div>
+      <h2 class="section-title">いつ何を選ぶか</h2>
+      <p class="section-desc">正直なガイダンス：各ソリューションには理想的なユースケースがあります。</p>
+    </div>
+    <div style="display:grid;gap:20px;grid-template-columns:1fr;" class="reveal">
+      <div style="padding:28px 32px;background:var(--fio-surface);border:1px solid rgba(155,142,216,0.15);border-radius:18px;">
+        <h3 style="font-family:var(--font-display);font-size:1.1rem;font-weight:500;color:var(--fio-accent);margin-bottom:12px;">以下が必要な場合は、FidesOriginをお選びください：</h3>
+        <ul style="list-style:none;margin:0;padding:0;">
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> リアルタイム・トランザクション・インターセプション（検知だけでなく阻止）</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 規制当局向けのオンチェーン改ざん不可能監査証跡</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> トランザクション単位課金（年間契約なし）</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 監査・修正可能なオープンソース・インフラストラクチャ</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> ステーブルコインやRWAトークン化にライセンス級コンプライアンスが必要</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:0;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> ゼロ確認メンプール・リスク・インターセプション</li>
+        </ul>
+      </div>
+      <div style="padding:28px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;">
+        <h3 style="font-family:var(--font-display);font-size:1.1rem;font-weight:500;color:var(--fio-text-2);margin-bottom:12px;">以下が必要な場合は、Chainalysis / Ellipticをお選びください：</h3>
+        <ul style="list-style:none;margin:0;padding:0;">
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 法執行機関向けの捜査フォレンジクス</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 過去のトランザクション追跡とグラフ分析</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 脅威インテリジェンスとダークネット監視</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 専任コンプライアンス・チームを持つ大企業</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:0;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 年間10万ドル以上のSaaSサブスクリプション予算</li>
+        </ul>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:0.85rem;color:var(--fio-text-3);margin-top:24px;" class="reveal">多くの組織は両方を併用しています：Chainalysis/Ellipticを調査・インテリジェンス用に、FidesOriginをリアルタイム・エンフォースメント用に。</p>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">実行グレード・コンプライアンスを実際にご確認ください</h2>
+      <p class="cta-desc">30分間のデモをご予約ください。リアルタイム・インターセプションがライブ・テストネットでどのように動作するかをご紹介いたします。</p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">デモを依頼する</a>
+        <a href="/architecture.html" class="btn-secondary">アーキテクチャを見る</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">トークン化資産およびDeFi向けのオンチェーン・コンプライアンス・プロトコル。</p>
+      </div>
+      <div class="footer-col">
+        <h4>製品</h4>
+        <a href="/">リスクレーダー</a>
+        <a href="/">ポリシー・エンジン</a>
+        <a href="/">監査シールド</a>
+        <a href="/address-check.html">アドレスチェック</a>
+        <a href="/pricing.html">料金</a>
+      </div>
+      <div class="footer-col">
+        <h4>開発者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">ドキュメント</a>
+        <a href="/docs/api">APIリファレンス</a>
+        <a href="/changelog.html">変更履歴</a>
+      </div>
+      <div class="footer-col">
+        <h4>企業情報</h4>
+        <a href="/about.html">概要</a>
+        <a href="/case-studies.html">ケーススタディ</a>
+        <a href="mailto:contact@fidesorigin.com">お問い合わせ</a>
+        <a href="/privacy.html">プライバシー</a>
+        <a href="/terms.html">利用規約</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>香港 &middot; シンガポール &middot; サンフランシスコ</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+</script>
+
+</body>
+</html>

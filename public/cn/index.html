@@ -1,453 +1,1120 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
-  <meta name="theme-color" content="#0a0a0a">
-  <title>FidesOrigin — 实时链上合规</title>
-  <meta name="description" content="原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。">
-  <meta name="author" content="FidesOrigin">
-  <meta property="og:title" content="FidesOrigin — 实时链上合规">
-  <meta property="og:description" content="原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://fidesorigin.com/cn/">
-  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
-  <meta name="twitter:site" content="@fidesorigin">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
-  <link rel="canonical" href="https://fidesorigin.com/cn/">
-  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/">
-  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/">
-  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/">
-  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="icon" href="/brand/logo-dark-icon.png">
-  <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Organization","name":"FidesOrigin","url":"https://fidesorigin.com/cn/","logo":"https://fidesorigin.com/brand/logo-dark-icon.png","description":"原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。","sameAs":["https://github.com/FintechGuy71/FidesOrigin"]}
-</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"FidesOrigin","url":"https://fidesorigin.com/cn/"}
-</script>
-  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>FidesOrigin — 链上合规，即刻执行</title>
+<meta name="description" content="面向稳定币、RWA代币化和DeFi的执行级可编程合规协议。AI驱动的风险检测，100%链上执行。"/>
+<meta property="og:title" content="FidesOrigin — 链上合规，即刻执行"/>
+<meta property="og:description" content="面向链上金融的执行级可编程合规协议。实时风控，不可篡改审计追踪。"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="FidesOrigin — 链上合规，即刻执行"/>
+<meta name="twitter:description" content="面向链上金融的执行级可编程合规协议。"/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/cn/"/>
+<link rel="alternate" hreflang="en" href="https://fidesorigin.com/"/>
+<link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/"/>
+<link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/"/>
+<link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"FidesOrigin","url":"https://fidesorigin.com","logo":"https://fidesorigin.com/brand/logo-dark-icon.png","description":"Programmable on-chain compliance protocol for tokenized assets and DeFi."},{"@type":"WebSite","url":"https://fidesorigin.com","name":"FidesOrigin"},{"@type":"SoftwareApplication","name":"FidesOrigin Protocol","applicationCategory":"FinanceApplication","operatingSystem":"Web3","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}]}</script>
+<style>
+  :root {
+    --fio-ink:#05060a;
+    --fio-ink-soft:#080a10;
+    --fio-surface:#0c0e18;
+    --fio-surface-2:#111320;
+    --fio-surface-3:#181b28;
+    --fio-elevated:#1e2230;
+    --fio-border:#252a3a;
+    --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5;
+    --fio-text-2:#9a9fad;
+    --fio-text-3:#5e6478;
+    --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8;
+    --fio-accent-dim:#9b8ed81a;
+    --fio-accent-glow:#9b8ed80a;
+    --fio-gold:#d4b87a;
+    --fio-gold-dim:#d4b87a1a;
+    --fio-gold-glow:#d4b87a10;
+    --fio-steel:#7b9ab8;
+    --fio-success:#5ce68a;
+    --fio-warn:#fcd34d;
+    --fio-danger:#fb8e8e;
+    --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-body:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  img { max-width:100%; display:block; }
+  .container { max-width:1200px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
+  @keyframes gradient-shift { 0%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } 100%{ background-position:0% 50%; } }
+  @keyframes shimmer { 0%{ background-position:-200% 0; } 100%{ background-position:200% 0; } }
+  @keyframes orbit { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+  @keyframes flowPulse { 0%,100%{ opacity:0.4; } 50%{ opacity:1; } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; }
+  .anim-d2 { animation-delay:0.2s; }
+  .anim-d3 { animation-delay:0.35s; }
+  .anim-d4 { animation-delay:0.5s; }
+  .anim-d5 { animation-delay:0.65s; }
+  .anim-d6 { animation-delay:0.8s; }
+
+  /* Navigation */
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); }
+  .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  /* Hero */
+  .hero { position:relative; overflow:hidden; min-height:100vh; display:flex; align-items:center; background:var(--fio-ink); }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 0),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 0); background-size:100px 100px; mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent); -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,black,transparent); pointer-events:none; }
+  .hero-inner { position:relative; z-index:2; padding:160px 0 100px; width:100%; }
+  .hero-layout { display:grid; grid-template-columns:1fr; gap:48px; align-items:center; }
+  @media(min-width:1024px){ .hero-layout { grid-template-columns:1.1fr 0.9fr; } }
+
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-gold-dim); border:1px solid rgba(212,184,122,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-gold); margin-bottom:32px; }
+  .hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--fio-gold); animation:pulse-dot 2s infinite; }
+
+  .hero-title { font-family:var(--font-display); font-size:clamp(2.6rem,5.5vw,4.5rem); font-weight:500; line-height:1.05; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:24px; }
+  .hero-title .line2 { display:block; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(1.05rem,1.4vw,1.2rem); line-height:1.7; color:var(--fio-text-2); max-width:540px; margin-bottom:36px; }
+  .hero-arch-tagline { display:flex; align-items:center; gap:12px; margin-bottom:36px; flex-wrap:wrap; }
+  .hero-arch-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-text-2); transition:all 0.3s; }
+  .hero-arch-pill:hover { border-color:var(--fio-accent); color:var(--fio-accent); }
+  .hero-arch-pill .dot { width:6px; height:6px; border-radius:50%; }
+  .hero-arch-pill .dot.ai { background:var(--fio-accent); box-shadow:0 0 6px var(--fio-accent); }
+  .hero-arch-pill .dot.oracle { background:var(--fio-warn); box-shadow:0 0 6px var(--fio-warn); }
+  .hero-arch-pill .dot.exec { background:var(--fio-success); box-shadow:0 0 6px var(--fio-success); }
+  .hero-arch-arrow { color:var(--fio-text-4); font-size:0.7rem; }
+  .hero-ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:48px; }
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+  .btn-sm { padding:10px 20px; font-size:0.8125rem; }
+
+  /* Hero visual */
+  .hero-visual { position:relative; display:none; }
+  @media(min-width:1024px){ .hero-visual { display:block; } }
+  .hero-code-block { background:rgba(8,10,16,0.9); border:1px solid rgba(255,255,255,0.06); border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5), 0 0 60px rgba(155,142,216,0.06); backdrop-filter:blur(10px); }
+  .hero-code-header { display:flex; align-items:center; gap:8px; padding:14px 18px; background:rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .hero-code-dot { width:10px; height:10px; border-radius:50%; }
+  .hero-code-dot.r { background:#ff5f57; }
+  .hero-code-dot.y { background:#febc2e; }
+  .hero-code-dot.g { background:#28c840; }
+  .hero-code-title { font-size:0.7rem; color:var(--fio-text-3); margin-left:8px; font-family:var(--font-mono); }
+  .hero-code-body { padding:20px 24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.7; overflow:hidden; }
+  .hero-code-body .kw { color:#c678dd; }
+  .hero-code-body .fn { color:#61afef; }
+  .hero-code-body .str { color:#98c379; }
+  .hero-code-body .num { color:#d19a66; }
+  .hero-code-body .cm { color:#5c6370; font-style:italic; }
+  .hero-code-body .ty { color:#e5c07b; }
+
+  /* Stats Bar */
+  .stats-section { padding:0 0 60px; position:relative; z-index:2; }
+  .stats-bar { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  @media(min-width:640px){ .stats-bar { grid-template-columns:repeat(4,1fr); gap:20px; } }
+  .stat-item { padding:28px 20px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; text-align:center; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); }
+  .stat-item:hover { border-color:var(--fio-border-light); transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,0.3); }
+  .stat-num { font-family:var(--font-mono); font-size:clamp(1.8rem,3vw,2.4rem); font-weight:700; color:var(--fio-gold); line-height:1; margin-bottom:8px; }
+  .stat-label { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); letter-spacing:0.02em; }
+  .stat-desc { font-size:0.8rem; color:var(--fio-text-3); margin-top:4px; }
+
+  /* Trust Logos */
+  .trust-logos-section { padding:40px 0; border-top:1px solid rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .trust-logos-label { text-align:center; font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.15em; color:var(--fio-text-3); margin-bottom:28px; }
+  .trust-logos-grid { display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap; }
+  .trust-logo-item { display:flex; align-items:center; gap:8px; padding:10px 18px; background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.04); border-radius:10px; font-size:0.8rem; color:var(--fio-text-3); transition:all 0.3s; }
+  .trust-logo-item:hover { border-color:rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:var(--fio-text-2); }
+  .trust-logo-icon { width:20px; height:20px; opacity:0.6; }
+
+  /* Section Base */
+  .section { padding:100px 0; }
+  @media(min-width:768px){ .section { padding:130px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+  .section-header { text-align:center; max-width:640px; margin:0 auto 72px; }
+  .section-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-text-3); margin-bottom:16px; padding:4px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; }
+  .section-title { font-family:var(--font-display); font-size:clamp(1.8rem,3.8vw,2.8rem); font-weight:500; line-height:1.1; letter-spacing:-0.02em; color:var(--fio-text); margin-bottom:18px; }
+  .section-desc { font-size:1.05rem; line-height:1.7; color:var(--fio-text-2); max-width:560px; margin:0 auto; }
+
+  /* Three-Layer Architecture */
+  .arch-layers-wrap { max-width:1000px; margin:0 auto; }
+  .arch-layer { display:grid; grid-template-columns:auto 1fr; gap:24px; padding:32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; margin-bottom:20px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); position:relative; overflow:hidden; }
+  .arch-layer::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; }
+  .arch-layer.layer-1::before { background:linear-gradient(180deg,var(--fio-accent),rgba(155,142,216,0.3)); }
+  .arch-layer.layer-2::before { background:linear-gradient(180deg,var(--fio-warn),rgba(252,211,77,0.3)); }
+  .arch-layer.layer-3::before { background:linear-gradient(180deg,var(--fio-success),rgba(92,230,138,0.3)); }
+  .arch-layer:hover { border-color:var(--fio-border-light); transform:translateY(-3px); box-shadow:0 24px 48px rgba(0,0,0,0.3); }
+  .arch-layer-num { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:1.1rem; font-weight:700; flex-shrink:0; }
+  .arch-layer-num.l1 { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.15); }
+  .arch-layer-num.l2 { background:rgba(252,211,77,0.08); color:var(--fio-warn); border:1px solid rgba(252,211,77,0.12); }
+  .arch-layer-num.l3 { background:rgba(92,230,138,0.06); color:var(--fio-success); border:1px solid rgba(92,230,138,0.1); }
+  .arch-layer h3 { font-family:var(--font-display); font-size:1.15rem; font-weight:600; color:var(--fio-text); margin-bottom:6px; }
+  .arch-layer-sub { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:14px; }
+  .arch-layer-features { display:flex; flex-wrap:wrap; gap:10px; }
+  .arch-layer-feature { display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--fio-surface-2); border:1px solid var(--fio-border); border-radius:10px; font-size:0.82rem; color:var(--fio-text-2); transition:all 0.2s; }
+  .arch-layer-feature:hover { border-color:var(--fio-border-light); background:var(--fio-surface-3); }
+  .arch-layer-feature svg { flex-shrink:0; color:var(--fio-text-3); }
+  .arch-connector { display:flex; justify-content:center; margin:-8px 0; position:relative; z-index:1; }
+  .arch-connector-line { width:2px; height:24px; background:linear-gradient(180deg,var(--fio-accent),var(--fio-warn),var(--fio-success)); opacity:0.4; }
+  .arch-connector-arrow { color:var(--fio-text-4); font-size:1rem; }
+  @media(max-width:640px){ .arch-layer { grid-template-columns:1fr; } .arch-layer-num { width:48px; height:48px; } }
+
+  /* Product Cards */
+  .product-grid { display:grid; gap:20px; }
+  @media(min-width:768px){ .product-grid { grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:1100px){ .product-grid { grid-template-columns:repeat(3,1fr); } }
+  .product-card { position:relative; padding:40px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); overflow:hidden; }
+  .product-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(155,142,216,0.2),transparent); opacity:0; transition:opacity 0.4s; }
+  .product-card:hover::before { opacity:1; }
+  .product-card:hover { border-color:var(--fio-border-light); transform:translateY(-5px); box-shadow:0 32px 64px rgba(0,0,0,0.4), 0 0 60px -12px rgba(155,142,216,0.06); }
+  .product-card-accent { border-color:rgba(155,142,216,0.12); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
+  .product-card-gold { border-color:rgba(212,184,122,0.12); background:linear-gradient(180deg,rgba(212,184,122,0.03) 0%,var(--fio-surface) 60%); }
+  .product-icon-wrap { width:52px; height:52px; border-radius:14px; background:var(--fio-accent-dim); border:1px solid rgba(155,142,216,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:24px; font-size:1.35rem; }
+  .product-icon-wrap.gold { background:var(--fio-gold-dim); border:1px solid rgba(212,184,122,0.12); }
+  .product-icon-wrap.green { background:rgba(92,230,138,0.06); border:1px solid rgba(92,230,138,0.1); }
+  .product-icon-wrap.blue { background:rgba(122,184,240,0.06); border:1px solid rgba(122,184,240,0.1); }
+  .product-icon-wrap.red { background:rgba(251,142,142,0.06); border:1px solid rgba(251,142,142,0.1); }
+  .product-card h3 { font-family:var(--font-display); font-size:1.35rem; font-weight:500; color:var(--fio-text); margin-bottom:6px; }
+  .product-subtitle { font-size:0.78rem; color:var(--fio-text-3); font-family:var(--font-mono); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.05em; }
+  .product-card p { font-size:0.92rem; line-height:1.7; color:var(--fio-text-2); margin-bottom:20px; }
+  .product-tags { display:flex; flex-wrap:wrap; gap:8px; }
+  .product-tag { font-size:0.72rem; font-family:var(--font-mono); padding:5px 12px; background:rgba(155,142,216,0.06); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.1); border-radius:6px; }
+  .product-tag.gold { background:rgba(212,184,122,0.06); color:var(--fio-gold); border-color:rgba(212,184,122,0.1); }
+  .product-tag.green { background:rgba(92,230,138,0.06); color:var(--fio-success); border-color:rgba(92,230,138,0.1); }
+  .product-tag.blue { background:rgba(122,184,240,0.06); color:var(--fio-info); border-color:rgba(122,184,240,0.1); }
+  .product-tag.red { background:rgba(251,142,142,0.06); color:var(--fio-danger); border-color:rgba(251,142,142,0.1); }
+
+  /* Differentiation */
+  .diff-table-wrap { overflow-x:auto; margin-top:48px; }
+  .diff-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.9rem; }
+  .diff-table th { text-align:left; padding:16px 20px; font-weight:600; color:var(--fio-text-3); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--fio-border); }
+  .diff-table td { padding:18px 20px; border-bottom:1px solid rgba(255,255,255,0.03); color:var(--fio-text-2); }
+  .diff-table tr:hover td { background:rgba(255,255,255,0.01); }
+  .diff-fio { color:var(--fio-gold); font-weight:600; }
+  .diff-others { color:var(--fio-text-3); }
+  .diff-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:100px; font-size:0.7rem; font-weight:600; font-family:var(--font-mono); }
+  .diff-badge.exec { background:rgba(92,230,138,0.1); color:var(--fio-success); }
+  .diff-badge.query { background:rgba(255,255,255,0.04); color:var(--fio-text-3); }
+  .diff-highlight { background:linear-gradient(90deg,var(--fio-accent-dim),transparent); border-left:3px solid var(--fio-accent); }
+  .diff-table thead th:first-child { border-radius:10px 0 0 0; }
+  .diff-table thead th:last-child { border-radius:0 10px 0 0; }
+  .diff-table tbody tr:last-child td:first-child { border-radius:0 0 0 10px; }
+  .diff-table tbody tr:last-child td:last-child { border-radius:0 0 10px 0; }
+
+  /* API Code Section */
+  .api-section { padding:100px 0; }
+  .api-grid { display:grid; grid-template-columns:1fr; gap:48px; align-items:center; }
+  @media(min-width:1024px){ .api-grid { grid-template-columns:1fr 1.1fr; gap:64px; } }
+  .api-content h2 { font-family:var(--font-display); font-size:clamp(1.6rem,3vw,2.2rem); font-weight:500; line-height:1.15; letter-spacing:-0.02em; margin-bottom:16px; }
+  .api-content p { font-size:1rem; color:var(--fio-text-2); line-height:1.7; margin-bottom:24px; }
+  .api-features { display:flex; flex-direction:column; gap:14px; }
+  .api-feature { display:flex; align-items:center; gap:12px; font-size:0.9rem; color:var(--fio-text-2); }
+  .api-feature svg { flex-shrink:0; color:var(--fio-success); }
+  .api-code-wrap { background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:18px; overflow:hidden; }
+  .api-code-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); }
+  .api-code-tabs { display:flex; gap:4px; }
+  .api-code-tab { padding:6px 14px; border-radius:6px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-text-3); cursor:pointer; border:none; background:none; transition:all 0.2s; }
+  .api-code-tab.active { background:rgba(255,255,255,0.04); color:var(--fio-text); }
+  .api-code-body { padding:24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.75; overflow-x:auto; }
+  .api-code-body .kw { color:#c678dd; }
+  .api-code-body .fn { color:#61afef; }
+  .api-code-body .str { color:#98c379; }
+  .api-code-body .num { color:#d19a66; }
+  .api-code-body .cm { color:#5c6370; font-style:italic; }
+
+  /* Use Cases */
+  .usecase-grid { display:grid; gap:20px; }
+  @media(min-width:768px){ .usecase-grid { grid-template-columns:repeat(3,1fr); } }
+  .usecase-card { position:relative; padding:36px 32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.35s cubic-bezier(0.16,1,0.3,1); overflow:hidden; }
+  .usecase-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--fio-accent),var(--fio-gold)); opacity:0; transition:opacity 0.4s; }
+  .usecase-card:hover { border-color:var(--fio-border-light); transform:translateY(-4px); }
+  .usecase-card:hover::after { opacity:1; }
+  .usecase-num { font-family:var(--font-mono); font-size:0.7rem; color:var(--fio-text-4); margin-bottom:16px; letter-spacing:0.05em; }
+  .usecase-card h3 { font-family:var(--font-display); font-size:1.15rem; font-weight:500; color:var(--fio-text); margin-bottom:12px; }
+  .usecase-card p { font-size:0.88rem; line-height:1.7; color:var(--fio-text-2); }
+  .usecase-stats { display:flex; gap:20px; margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.04); }
+  .usecase-stat { font-size:0.75rem; color:var(--fio-text-3); }
+  .usecase-stat strong { display:block; color:var(--fio-gold); font-family:var(--font-mono); font-size:0.95rem; }
+
+  /* Security & Trust */
+  .trust-grid { display:grid; gap:16px; grid-template-columns:repeat(2,1fr); }
+  @media(min-width:640px){ .trust-grid { grid-template-columns:repeat(4,1fr); } }
+  .trust-item { text-align:center; padding:32px 20px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; transition:all 0.3s; }
+  .trust-item:hover { border-color:rgba(212,184,122,0.15); background:rgba(212,184,122,0.02); }
+  .trust-icon { width:44px; height:44px; margin:0 auto 14px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
+  .trust-icon.purple { background:var(--fio-accent-dim); color:var(--fio-accent); }
+  .trust-icon.gold { background:var(--fio-gold-dim); color:var(--fio-gold); }
+  .trust-icon.green { background:rgba(92,230,138,0.06); color:var(--fio-success); }
+  .trust-icon.blue { background:rgba(122,184,240,0.06); color:var(--fio-info); }
+  .trust-item h4 { font-size:0.9rem; font-weight:600; color:var(--fio-text); margin-bottom:6px; }
+  .trust-item p { font-size:0.78rem; color:var(--fio-text-3); line-height:1.5; }
+  .trust-badge { display:inline-block; margin-top:10px; padding:3px 10px; border-radius:100px; font-size:0.65rem; font-weight:600; font-family:var(--font-mono); }
+  .trust-badge.ok { background:rgba(92,230,138,0.1); color:var(--fio-success); }
+
+  /* CTA Banner */
+  .cta-banner { padding:100px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:500; color:var(--fio-text); margin-bottom:16px; }
+  .cta-desc { font-size:1.05rem; color:var(--fio-text-2); margin-bottom:32px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  /* Footer */
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  /* Mobile Menu */
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+  .mobile-menu .lang-row { display:flex; gap:16px; margin-top:16px; }
+  .mobile-menu .lang-row a { font-size:0.9rem; color:var(--fio-text-3); border:none; padding:8px 0; }
+
+  /* Scroll Reveal */
+  .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+  .reveal-delay-3 { transition-delay:0.35s; }
+  .reveal-delay-4 { transition-delay:0.5s; }
+
+  /* Language Switcher */
+  .lang-switch { display:flex; align-items:center; gap:4px; font-size:0.75rem; font-family:var(--font-mono); }
+  .lang-switch a { padding:5px 10px; border-radius:6px; color:var(--fio-text-3); transition:all 0.2s; }
+  .lang-switch a:hover { color:var(--fio-text); background:rgba(255,255,255,0.04); }
+  .lang-switch a.active { color:var(--fio-gold); background:var(--fio-gold-dim); }
+
+  /* Testimonial */
+  .testimonial-section { padding:100px 0; }
+  .testimonial-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1200px; margin:0 auto; }
+  .testimonial-card { padding:40px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; position:relative; display:flex; flex-direction:column; justify-content:space-between; }
+  .testimonial-card::before { content:'"'; position:absolute; top:20px; left:30px; font-family:var(--font-display); font-size:4rem; color:var(--fio-text-4); line-height:1; }
+  .testimonial-text { font-size:0.95rem; line-height:1.7; color:var(--fio-text-2); font-style:italic; margin-bottom:28px; padding-left:20px; position:relative; z-index:1; }
+  .testimonial-author { display:flex; align-items:center; gap:14px; margin-top:auto; }
+  .testimonial-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.85rem; flex-shrink:0; }
+  .testimonial-avatar.anchor { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+  .testimonial-avatar.vault { background:linear-gradient(135deg,#06b6d4,#3b82f6); }
+  .testimonial-avatar.terra { background:linear-gradient(135deg,#f59e0b,#ef4444); }
+  .testimonial-info h4 { font-size:0.95rem; font-weight:600; color:var(--fio-text); }
+  .testimonial-info p { font-size:0.8rem; color:var(--fio-text-3); }
+  @media(max-width:1024px){ .testimonial-grid { grid-template-columns:1fr; max-width:600px; } }
+
+  /* Architecture Flow (Legacy) */
+  .arch-flow { display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; margin-top:48px; }
+  .arch-node { padding:20px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; text-align:center; min-width:160px; transition:all 0.3s; }
+  .arch-node:hover { border-color:var(--fio-border-light); transform:translateY(-2px); }
+  .arch-node-icon { width:36px; height:36px; margin:0 auto 10px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .arch-node h4 { font-size:0.9rem; font-weight:600; color:var(--fio-text); margin-bottom:4px; }
+  .arch-node p { font-size:0.72rem; color:var(--fio-text-3); }
+  .arch-arrow { color:var(--fio-text-4); font-size:1.2rem; }
+  @media(max-width:768px){ .arch-flow { flex-direction:column; } .arch-arrow { transform:rotate(90deg); } }
+</style>
 </head>
-<body>
-  <a href="#main-content" class="skip-link">Skip to content</a>
+<body style="background:var(--fio-ink);color:var(--fio-text)">
 
-  <!-- Navigation -->
-  <nav class="nav" aria-label="Main navigation">
-    <div class="nav-inner">
-      <a href="/cn/" class="nav-logo">
-        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
-        FidesOrigin
-      </a>
-      <div class="nav-left">
-        <a href="#features">功能特性</a>
-        <a href="#how-it-works">工作原理</a>
-        <a href="#security">安全合规</a>
-        <a href="#developers">文档</a>
-      </div>
-      <div class="nav-actions">
-        <div class="lang-dropdown">
-          <button id="langToggleBtn" aria-label="Language">
-            CN
-            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div id="langMenu">
-            <a href="/">English</a>
-            <a href="/cn/">简体中文</a>
-            <a href="/tw/">繁體中文</a>
-            <a href="/jp/">日本語</a>
-          </div>
-        </div>
-        <div class="nav-divider"></div>
-        <div class="wallet-connect-wrap">
-          <button class="wallet-btn" id="wallet-btn" aria-label="连接">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
-            连接
-          </button>
-          <div class="wallet-connected" id="wallet-connected">
-            <div class="wallet-info">
-              <span class="wallet-address" id="wallet-address"></span>
-              <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
-            </div>
-            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="断开">断开</button>
-          </div>
-        </div>
-        <a href="#contact" class="nav-cta">开始使用</a>
-      </div>
-      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
-    </div>
-  </nav>
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="#products" onclick="closeMobileMenu()">产品</a>
+  <a href="#architecture" onclick="closeMobileMenu()">架构</a>
+  <a href="#differentiation" onclick="closeMobileMenu()">差异化</a>
+  <a href="#use-cases" onclick="closeMobileMenu()">应用场景</a>
+  <a href="#security" onclick="closeMobileMenu()">安全</a>
+  <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+  <a href="/docs/" onclick="closeMobileMenu()">文档</a>
+  <div class="lang-row">
+    <a href="/">EN</a>
+    <a href="/cn/" class="active">CN</a>
+    <a href="/tw/">TW</a>
+    <a href="/jp/">JP</a>
+  </div>
+  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">申请演示</a>
+</div>
 
-  <!-- Mobile Menu -->
-  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="移动端导航">
-    <button type="button" class="mobile-menu-close" aria-label="关闭菜单">
-      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
-    </button>
-    <a href="#features">功能特性</a>
-    <a href="#how-it-works">工作原理</a>
-    <a href="#security">安全合规</a>
-    <a href="#developers">文档</a>
-    <div class="lang-row">
-      <a href="/">EN</a>
-      <a href="/cn/">CN</a>
-      <a href="/tw/">TW</a>
-      <a href="/jp/">JP</a>
-    </div>
-    <div class="mobile-wallet-area" id="mobile-wallet-connected">
-      <span id="mobile-wallet-address"></span>
-      <button id="mobile-wallet-disconnect" aria-label="断开">断开</button>
-    </div>
-    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="连接">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
-      连接
+<!-- Navigation -->
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#products">产品</a>
+      <a href="#architecture">架构</a>
+      <a href="#differentiation">差异化</a>
+      <a href="#use-cases">应用场景</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <div class="lang-switch">
+        <a href="/">EN</a>
+        <a href="/cn/" class="active">CN</a>
+        <a href="/tw/">TW</a>
+        <a href="/jp/">JP</a>
+      </div>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">申请演示</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="打开菜单">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
   </div>
+</header>
 
-  <main id="main-content">
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="hero-grid"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-layout">
+        <div class="hero-left">
+          <div class="hero-badge anim-fade-up anim-d1">
+            <span class="hero-badge-dot"></span>
+            <span>v2.1 — 香港金管局稳定币牌照就绪</span>
+          </div>
+          <h1 class="hero-title anim-fade-up anim-d2">
+            链上合规<br>
+            <span class="line2 hero-title-accent">即刻执行</span>
+          </h1>
+          <p class="hero-subtitle anim-fade-up anim-d3">
+            面向稳定币、RWA和机构DeFi的执行级可编程合规。AI模型驱动预言机，预言机驱动智能合约，每个风险决策都在链上执行。
+          </p>
+          <div class="hero-arch-tagline anim-fade-up anim-d3">
+            <span class="hero-arch-pill"><span class="dot ai"></span>AI 模型</span>
+            <span class="hero-arch-arrow">&rarr;</span>
+            <span class="hero-arch-pill"><span class="dot oracle"></span>预言机网络</span>
+            <span class="hero-arch-arrow">&rarr;</span>
+            <span class="hero-arch-pill"><span class="dot exec"></span>合约执行</span>
+          </div>
+          <div class="hero-ctas anim-fade-up anim-d4">
+            <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+              申请演示
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+            </a>
+            <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub 查看
+            </a>
+          </div>
+          <div class="stats-bar anim-fade-up anim-d5">
+            <div class="stat-item">
+              <div class="stat-num">&lt;50ms</div>
+              <div class="stat-label">风险扫描延迟</div>
+              <div class="stat-desc">实时筛查</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">100%</div>
+              <div class="stat-label">链上执行</div>
+              <div class="stat-desc">不可篡改且可审计</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">风控守卫</div>
+              <div class="stat-label">预检引擎</div>
+              <div class="stat-desc">交易上链前拦截</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">6+</div>
+              <div class="stat-label">网络</div>
+              <div class="stat-desc">以太坊、Base 等</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual anim-fade-scale anim-d4">
+          <div class="hero-code-block">
+            <div class="hero-code-header">
+              <span class="hero-code-dot r"></span>
+              <span class="hero-code-dot y"></span>
+              <span class="hero-code-dot g"></span>
+              <span class="hero-code-title">风控守卫预检</span>
+            </div>
+            <div class="hero-code-body">
+<span class="cm">// Guard pre-transaction screening</span>
+<span class="kw">import</span> { FidesGuard } <span class="kw">from</span> <span class="str">'@fidesorigin/guard'</span>;
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <canvas id="particles-canvas"></canvas>
-    <div class="gradient-orb"></div>
-    <div class="gradient-orb"></div>
-    <div class="container hero-content">
-      <div class="hero-badge animate-fadeInUp">
-        <span class="dot"></span>
-        Sepolia 测试网已上线
+<span class="kw">const</span> guard = <span class="kw">await</span> FidesGuard.<span class="fn">connect</span>({
+  network: <span class="str">"ethereum"</span>,
+  policy: <span class="str">"stablecoin-hkma-v2"</span>
+});
+
+<span class="cm">// previewTransaction — intercept before broadcast</span>
+<span class="kw">const</span> result = <span class="kw">await</span> guard.<span class="fn">previewTransaction</span>({
+  from: <span class="str">"0x742d..."</span>,
+  to: <span class="str">"0x9a3f..."</span>,
+  value: <span class="str">"500000000000000000"</span>,
+  data: <span class="str">"0x..."</span>
+});
+
+<span class="cm">// Result: CLEAR | WARN | BLOCK | FREEZE</span>
+<span class="kw">if</span> (result.verdict === <span class="str">"BLOCK"</span>) {
+  <span class="kw">throw</span> <span class="kw">new</span> <span class="ty">ComplianceError</span>(result.reason);
+}
+            </div>
+          </div>
+        </div>
       </div>
-      <h1 class="display animate-fadeInUp animate-delay-1">
-        实时链上风控<br>
-        <span>原生区块链执行</span>
-      </h1>
-      <p class="lead animate-fadeInUp animate-delay-2 hero-lead">
-        不是查询工具。不是API。FidesOrigin是嵌入式智能合约逻辑，在交易确认前决定其是否通过。
+    </div>
+  </div>
+</section>
+
+<!-- TRUST LOGOS -->
+<section class="trust-logos-section">
+  <div class="container">
+    <div class="trust-logos-label">为机构信任而构建</div>
+    <div class="trust-logos-grid reveal">
+      <div class="trust-logo-item">
+        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        香港金管局牌照就绪
+      </div>
+      <div class="trust-logo-item">
+        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        智能合约已审计
+      </div>
+      <div class="trust-logo-item">
+        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/></svg>
+        MIT 开源
+      </div>
+      <div class="trust-logo-item">
+        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        多源情报
+      </div>
+      <div class="trust-logo-item">
+        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        低于 50ms 响应
+      </div>
+      <div class="trust-logo-item">
+        <svg class="trust-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17v-2H4.5A2.5 2.5 0 012 12.5v-1A2.5 2.5 0 014.5 9H9V7H4.5A4.5 4.5 0 000 11.5v1A4.5 4.5 0 004.5 17H9zm6 0h4.5A4.5 4.5 0 0024 12.5v-1A4.5 4.5 0 0019.5 7H15v2h4.5A2.5 2.5 0 0122 11.5v1a2.5 2.5 0 01-2.5 2.5H15v2zM8 11h8v2H8z"/></svg>
+        100% 链上
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THREE-LAYER ARCHITECTURE -->
+<section class="section section-alt" id="architecture">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">架构</div>
+      <h2 class="section-title">三层架构。零盲区。</h2>
+      <p class="section-desc">
+        从AI驱动的风险推理到链上合约执行——垂直整合的协议栈，没有任何盲区。
       </p>
-      <div class="hero-buttons animate-fadeInUp animate-delay-3">
-        <a href="#contact" class="btn btn-primary">
-          开始使用
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
+    </div>
+    <div class="arch-layers-wrap">
+      <!-- Layer 1 -->
+      <div class="arch-layer layer-1 reveal">
+        <div class="arch-layer-num l1">L1</div>
+        <div>
+          <h3>AI 特征模型工程</h3>
+          <div class="arch-layer-sub">链下智能层</div>
+          <div class="arch-layer-features">
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+              图神经网络 (GNN) 地址画像
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14"/></svg>
+              机器学习实时风险评分
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              CDD 客户尽职调查标签系统
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="arch-connector">
+        <div class="arch-connector-line"></div>
+      </div>
+      <!-- Layer 2 -->
+      <div class="arch-layer layer-2 reveal reveal-delay-1">
+        <div class="arch-layer-num l2">L2</div>
+        <div>
+          <h3>链上检测与拦截</h3>
+          <div class="arch-layer-sub">执行层</div>
+          <div class="arch-layer-features">
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+              预言机网络 —— 近实时标签推送
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+              可插拔合规模块（智能合约）
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              风控守卫预检引擎 —— 广播前拦截
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              热插拔更新（UUPS 代理）
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="arch-connector">
+        <div class="arch-connector-line"></div>
+      </div>
+      <!-- Layer 3 -->
+      <div class="arch-layer layer-3 reveal reveal-delay-2">
+        <div class="arch-layer-num l3">L3</div>
+        <div>
+          <h3>实时情报与事件响应</h3>
+          <div class="arch-layer-sub">运维层</div>
+          <div class="arch-layer-features">
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              7&times;24 地址监控
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              黑名单自动冻结（智能合约层面）
+            </span>
+            <span class="arch-layer-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              事件响应与取证调查
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT MATRIX -->
+<section class="section" id="products">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">产品套件</div>
+      <h2 class="section-title">五大引擎。一套栈。</h2>
+      <p class="section-desc">每个引擎针对特定合规面构建。合起来，覆盖完整的链上风险生命周期。</p>
+    </div>
+    <div class="product-grid">
+      <div class="product-card product-card-accent reveal reveal-delay-1">
+        <div class="product-icon-wrap" style="color:var(--fio-accent)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <h3>风险雷达</h3>
+        <div class="product-subtitle">AI 驱动地址画像</div>
+        <p>基于GNN的地址关系分析，结合机器学习实时风险评分。多源情报汇聚为单一信任分数。</p>
+        <div class="product-tags">
+          <span class="product-tag">GNN</span>
+          <span class="product-tag">ML 评分</span>
+          <span class="product-tag">&lt;50ms</span>
+          <span class="product-tag">CDD 标签</span>
+        </div>
+      </div>
+      <div class="product-card product-card-gold reveal reveal-delay-2">
+        <div class="product-icon-wrap gold" style="color:var(--fio-gold)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>风控守卫引擎</h3>
+        <div class="product-subtitle">交易前风控守卫</div>
+        <p>在交易进入内存池之前拦截。previewTransaction 返回 CLEAR、WARN、BLOCK 或 FREEZE —— 在任何一个 wei 移动之前。</p>
+        <div class="product-tags">
+          <span class="product-tag gold">预检</span>
+          <span class="product-tag gold">风控守卫</span>
+          <span class="product-tag gold">智能合约</span>
+        </div>
+      </div>
+      <div class="product-card reveal reveal-delay-1">
+        <div class="product-icon-wrap" style="color:var(--fio-accent)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+        </div>
+        <h3>策略引擎</h3>
+        <div class="product-subtitle">可编程合规</div>
+        <p>规则即代码。在智能合约层面强制执行——无例外，无绕过。通过 UUPS 代理模式支持热插拔。</p>
+        <div class="product-tags">
+          <span class="product-tag">KYC/AML</span>
+          <span class="product-tag">交易限额</span>
+          <span class="product-tag">地理围栏</span>
+          <span class="product-tag">多签</span>
+        </div>
+      </div>
+      <div class="product-card reveal reveal-delay-2">
+        <div class="product-icon-wrap green" style="color:var(--fio-success)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17v-2H4.5A2.5 2.5 0 012 12.5v-1A2.5 2.5 0 014.5 9H9V7H4.5A4.5 4.5 0 000 11.5v1A4.5 4.5 0 004.5 17H9zm6 0h4.5A4.5 4.5 0 0024 12.5v-1A4.5 4.5 0 0019.5 7H15v2h4.5A2.5 2.5 0 0122 11.5v1a2.5 2.5 0 01-2.5 2.5H15v2z"/></svg>
+        </div>
+        <h3>审计盾牌</h3>
+        <div class="product-subtitle">不可篡改审计追踪</div>
+        <p>每项合规决策均链上记录并附带加密证明。通过 API 生成监管就绪报告。设计即防篡改。</p>
+        <div class="product-tags">
+          <span class="product-tag green">香港金管局</span>
+          <span class="product-tag green">MiCA</span>
+          <span class="product-tag green">不可篡改</span>
+          <span class="product-tag green">链上</span>
+        </div>
+      </div>
+      <div class="product-card reveal reveal-delay-3" style="grid-column:span 1;">
+        <div class="product-icon-wrap red" style="color:var(--fio-danger)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3>内存池监视器</h3>
+        <div class="product-subtitle">零确认监控</div>
+        <p>在交易被挖出前监控待处理交易。实时内存池分析，实现零确认风险拦截。</p>
+        <div class="product-tags">
+          <span class="product-tag red">内存池</span>
+          <span class="product-tag red">零确认</span>
+          <span class="product-tag red">实时</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIFFERENTIATION -->
+<section class="section section-alt" id="differentiation">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">为什么选择 FidesOrigin</div>
+      <h2 class="section-title">不是数据库查询。<br>是执行层。</h2>
+      <p class="section-desc">
+        Chainalysis 和 Elliptic 给你数据。我们给你执行能力。
+        知道风险存在和阻止它发生之间的区别。
+      </p>
+    </div>
+    <div class="diff-table-wrap reveal">
+      <table class="diff-table">
+        <thead>
+          <tr>
+            <th style="width:28%">维度</th>
+            <th style="width:24%">FidesOrigin</th>
+            <th style="width:24%">Chainalysis</th>
+            <th style="width:24%">Elliptic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="diff-highlight">
+            <td><strong>时机</strong></td>
+            <td class="diff-fio">飞行中拦截 <span class="diff-badge exec">执行</span></td>
+            <td class="diff-others">事后调查</td>
+            <td class="diff-others">事后调查</td>
+          </tr>
+          <tr>
+            <td><strong>层级</strong></td>
+            <td class="diff-fio">执行层（智能合约）</td>
+            <td class="diff-others">信息层（SaaS）</td>
+            <td class="diff-others">信息层（SaaS）</td>
+          </tr>
+          <tr class="diff-highlight">
+            <td><strong>行动</strong></td>
+            <td class="diff-fio">链上阻止 / 冻结 <span class="diff-badge exec">执行</span></td>
+            <td class="diff-others">查询与报告 <span class="diff-badge query">查询</span></td>
+            <td class="diff-others">查询与报告 <span class="diff-badge query">查询</span></td>
+          </tr>
+          <tr>
+            <td><strong>商业模式</strong></td>
+            <td class="diff-fio">基础设施税（按交易）</td>
+            <td class="diff-others">SaaS 订阅（$$$/年）</td>
+            <td class="diff-others">SaaS 订阅（$$$/年）</td>
+          </tr>
+          <tr>
+            <td><strong>技术栈</strong></td>
+            <td class="diff-fio">链上智能合约 + AI</td>
+            <td class="diff-others">链下数据库 + API</td>
+            <td class="diff-others">链下数据库 + API</td>
+          </tr>
+          <tr>
+            <td><strong>部署方式</strong></td>
+            <td class="diff-fio">可插拔模块（嵌入）</td>
+            <td class="diff-others">API 集成（查询）</td>
+            <td class="diff-others">API 集成（查询）</td>
+          </tr>
+          <tr class="diff-highlight">
+            <td><strong>延迟</strong></td>
+            <td class="diff-fio">&lt;50ms — 交易前</td>
+            <td class="diff-others">秒级 — 交易后</td>
+            <td class="diff-others">秒级 — 交易后</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:40px" class="reveal">
+      <a href="/vs-chainalysis-elliptic.html" class="btn-secondary btn-sm">
+        查看完整对比
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- DEVELOPER / API SECTION -->
+<section class="api-section" id="api">
+  <div class="container">
+    <div class="api-grid">
+      <div class="api-content reveal">
+        <div class="section-eyebrow">开发者优先</div>
+        <h2>几分钟内集成合规，而非数月</h2>
+        <p>用几行代码为任何 Web3 应用添加机构级合规。完整的 TypeScript 和 Python SDK，具备完整类型安全。</p>
+        <div class="api-features">
+          <div class="api-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            TypeScript 与 Python SDK，完整类型安全
+          </div>
+          <div class="api-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            RESTful API，OpenAPI 3.0 规范
+          </div>
+          <div class="api-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            WebSocket 实时风险订阅推送
+          </div>
+          <div class="api-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            GraphQL 端点，灵活数据查询
+          </div>
+        </div>
+        <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap">
+          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-primary btn-sm">查看文档</a>
+          <a href="/address-check.html" class="btn-secondary btn-sm">试用地址检查</a>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="api-code-wrap">
+          <div class="api-code-header">
+            <div class="api-code-tabs">
+              <button class="api-code-tab active">TypeScript</button>
+              <button class="api-code-tab">Python</button>
+              <button class="api-code-tab">cURL</button>
+            </div>
+            <span style="font-size:0.7rem;color:var(--fio-text-3);font-family:var(--font-mono)">SDK v2.1.0</span>
+          </div>
+          <div class="api-code-body">
+<span class="cm">// Initialize the compliance engine</span>
+<span class="kw">import</span> { FidesOrigin } <span class="kw">from</span> <span class="str">'@fidesorigin/sdk'</span>;
+
+<span class="kw">const</span> client = <span class="kw">await</span> FidesOrigin.<span class="fn">connect</span>({
+  apiKey: <span class="str">'fio_live_***'</span>,
+  network: <span class="str">'ethereum'</span>,
+  environment: <span class="str">'production'</span>
+});
+
+<span class="cm">// Guard pre-transaction screening</span>
+<span class="kw">const</span> guard = <span class="kw">await</span> client.<span class="fn">guard</span>().<span class="fn">connect</span>({
+  policy: <span class="str">'stablecoin-hkma-v2'</span>
+});
+
+<span class="kw">const</span> result = <span class="kw">await</span> guard.<span class="fn">previewTransaction</span>({
+  from: <span class="str">'0x742d...'</span>,
+  to: <span class="str">'0x9a3f...'</span>,
+  value: <span class="str">'500000000000000000'</span>
+});
+
+<span class="cm">// Result.verdict: CLEAR | WARN | BLOCK | FREEZE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="section section-alt" id="use-cases">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">应用场景</div>
+      <h2 class="section-title">为链上金融而生</h2>
+      <p class="section-desc">随你的资产类别扩展的合规基础设施。</p>
+    </div>
+    <div class="usecase-grid">
+      <div class="usecase-card reveal reveal-delay-1">
+        <div class="usecase-num">01 / 稳定币发行方</div>
+        <h3>稳定币发行方</h3>
+        <p>专为香港金管局稳定币牌照要求打造的完整可审计合规栈。</p>
+        <div class="usecase-stats">
+          <div class="usecase-stat"><strong>香港金管局</strong>牌照就绪</div>
+          <div class="usecase-stat"><strong>100%</strong>审计追踪</div>
+        </div>
+      </div>
+      <div class="usecase-card reveal reveal-delay-2">
+        <div class="usecase-num">02 / RWA 代币化</div>
+        <h3>RWA 代币化</h3>
+        <p>跨司法管辖区的代币化房地产、证券和大宗商品的可编程合规。</p>
+        <div class="usecase-stats">
+          <div class="usecase-stat"><strong>多司法管辖区</strong>框架</div>
+          <div class="usecase-stat"><strong>链上</strong>转账规则</div>
+        </div>
+      </div>
+      <div class="usecase-card reveal reveal-delay-3">
+        <div class="usecase-num">03 / DeFi 协议</div>
+        <h3>DeFi 协议</h3>
+        <p>不牺牲去中心化或用户主权的机构级合规。</p>
+        <div class="usecase-stats">
+          <div class="usecase-stat"><strong>非托管</strong>设计</div>
+          <div class="usecase-stat"><strong>可插拔</strong>模块</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY & TRUST -->
+<section class="section" id="security">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">安全与信任</div>
+      <h2 class="section-title">设计即合规就绪</h2>
+      <p class="section-desc">从第一天起就按照全球监管标准构建。经过审计、开放且可验证。</p>
+    </div>
+    <div class="trust-grid reveal">
+      <div class="trust-item">
+        <div class="trust-icon gold">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h4>香港金管局牌照就绪</h4>
+        <p>完整合规栈与香港稳定币牌照要求对齐</p>
+        <span class="trust-badge ok">就绪</span>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h4>智能合约已审计</h4>
+        <p>由独立第三方审计机构进行全面安全审查</p>
+        <span class="trust-badge ok">已验证</span>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/></svg>
+        </div>
+        <h4>MIT 开源</h4>
+        <p>源代码完全透明。可检查、验证和扩展，无限制</p>
+        <span class="trust-badge ok">开源</span>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        </div>
+        <h4>多源情报</h4>
+        <p>Chainalysis、Elliptic、TRM Labs、OFAC —— 聚合并交叉验证</p>
+        <span class="trust-badge ok">4+ 来源</span>
+      </div>
+    </div>
+    <div style="margin-top:48px;text-align:center" class="reveal">
+      <div style="display:inline-flex;align-items:center;gap:32px;padding:24px 40px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;flex-wrap:wrap;justify-content:center">
+        <div style="text-align:center">
+          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">6+</div>
+          <div style="font-size:0.75rem;color:var(--fio-text-3)">网络</div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(255,255,255,0.06)"></div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">5</div>
+          <div style="font-size:0.75rem;color:var(--fio-text-3)">产品引擎</div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(255,255,255,0.06)"></div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">4+</div>
+          <div style="font-size:0.75rem;color:var(--fio-text-3)">风险数据源</div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(255,255,255,0.06)"></div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--fio-gold)">MIT</div>
+          <div style="font-size:0.75rem;color:var(--fio-text-3)">许可证</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonial-section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">合作伙伴信赖</div>
+      <h2 class="section-title">合作伙伴评价</h2>
+    </div>
+    <div class="testimonial-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-text">
+          "FidesOrigin 将我们的整个合规工作流自动化。过去需要一个12人团队完成的工作，现在完全在链上运行。我们将运营成本降低了80%，同时超越了香港金管局和新加坡金管局的监管要求。"
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar anchor">陈</div>
+          <div class="testimonial-info">
+            <h4>陈明轩</h4>
+            <p>首席合规官，Anchor Digital</p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-text">
+          "TypeScript SDK 在两周内即可投入生产。他们的策略即代码模型让我们直接将合规嵌入智能钱包流程——没有链下黑盒，完全确定性执行。"
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar vault">AR</div>
+          <div class="testimonial-info">
+            <h4>Alex Rutherford</h4>
+            <p>CTO，VaultFlow</p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-text">
+          "在三个司法管辖区代币化房地产意味着要在当地法规的迷宫中穿行。FidesOrigin 的可编程合规层为我们提供了一个单一、可审计的框架，满足了每一位监管者的要求。"
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar terra">PS</div>
+          <div class="testimonial-info">
+            <h4>Priya Sharma</h4>
+            <p>创始人 &amp; CEO，TerraBlock</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">准备好构建合规的链上金融了吗？</h2>
+      <p class="cta-desc">
+        了解 FidesOrigin 的执行级合规栈如何与你的基础设施集成——
+        从稳定币发行到 RWA 代币化。
+      </p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+          申请演示
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
         </a>
-        <a href="/admin/" class="btn btn-secondary">查看演示</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="/docs/" class="btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          文档
+        </a>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Wallet Compliance Panel -->
-  <section class="section wallet-compliance" id="wallet-compliance">
-    <div class="container">
-      <div class="compliance-panel" id="compliance-panel">
-        <h4>检查中…</h4>
-        <div class="compliance-result" id="compliance-result">
-          <div id="compliance-status">检查中…</div>
-          <div id="compliance-details" class="compliance-details"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Trust Section -->
-  <section class="section trust-section">
-    <div class="container">
-      <div class="trust-bar reveal">
-        <div class="trust-stat">
-          <div class="number" data-count="20645" data-prefix="" data-suffix="+">0</div>
-          <div class="label">风险地址</div>
-        </div>
-        <div class="trust-stat">
-          <div class="number" data-count="202" data-prefix="" data-suffix="">0</div>
-          <div class="label">测试通过</div>
-        </div>
-        <div class="trust-stat">
-          <div class="number" data-count="50" data-prefix="" data-suffix="ms">0</div>
-          <div class="label">链上检查</div>
-        </div>
-        <div class="trust-stat">
-          <div class="number" data-count="7" data-prefix="" data-suffix="">0</div>
-          <div class="label">网络</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="section" id="features">
-    <div class="container">
-      <div class="reveal section-intro">
-        <p class="micro">功能特性</p>
-        <h2 class="h2 section-title">链上合规所需的一切</h2>
-        <p class="lead section-lead">为 Web3 从零构建的全栈合规协议。</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <h3>链上执行</h3>
-          <p>风险决策以智能合约逻辑运行——而非从外部 API 查询。无延迟、无黑盒、无单点故障。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          </div>
-          <h3>热插拔策略</h3>
-          <p>无需升级核心合约即可部署新风险策略。按客户、按司法管辖区的规则实时更新。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
-          <h3>AI 智能体原生</h3>
-          <p>自主智能体直接在链上查询风险状态并执行合规。7×24 运营无需人工守门。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          </div>
-          <h3>隐私保护</h3>
-          <p>基于 Merkle 的风险承诺在不暴露敏感地址数据的情况下验证合规性。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-          </div>
-          <h3>多链支持</h3>
-          <p>为 Ethereum、Base 等构建。跨链风险画像，统一治理。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-          </div>
-          <h3>开发者 API</h3>
-          <p>RESTful API、WebSocket 流、TypeScript SDK。数小时集成，而非数周。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works -->
-  <section class="section bg-secondary" id="how-it-works">
-    <div class="container">
-      <div class="reveal section-intro">
-        <p class="micro">工作原理</p>
-        <h2 class="h2 section-title">三层防护体系</h2>
-        <p class="lead section-lead">风险注册表 &rarr; 策略引擎 &rarr; 合规引擎。每笔交易在上链前都经过筛查。</p>
-      </div>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-number">1</div>
-          <h3>AI 标注风险</h3>
-          <p>图神经网络将链上和链下数据处理为风险标签——持续更新。</p>
-        </div>
-        <div class="step-arrow">→</div>
-        <div class="step reveal">
-          <div class="step-number">2</div>
-          <h3>链上验证</h3>
-          <p>风险标签经 Merkle 证明并推送至智能合约。每个地址 <50 毫秒完成检查。</p>
-        </div>
-        <div class="step-arrow">→</div>
-        <div class="step reveal">
-          <div class="step-number">3</div>
-          <h3>交易决策</h3>
-          <p>放行 / 拦截 / 标记 / 暂留——在交易执行前原子化执行。无需 API 调用。无黑盒。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Use Cases -->
-  <section class="section" id="use-cases">
-    <div class="container">
-      <div class="reveal section-intro">
-        <p class="micro">使用场景</p>
-        <h2 class="h2 section-title">针对真实问题的真实保护</h2>
-        <p class="lead section-lead">为稳定币发行方、RWA平台、智能钱包和AI智能体而构建。</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>稳定币发行方</h3>
-          <p>将 OFAC / 联合国制裁检查嵌入每一次铸造、销毁和转账。满足香港和欧盟 MiCA 合规要求，无需链下摩擦。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          </div>
-          <h3>RWA 平台</h3>
-          <p>在任何代币化证券转手前验证合格投资者身份和司法管辖区。始终保持最新的链上 KYC。</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-          </div>
-          <h3>P2P 支付保护</h3>
-          <p>资金到账即自动隔离。当黑名单地址向您的钱包发送 ETH 或 ERC-20 时，收款在合约层面即被拦截。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Security & Compliance -->
-  <section class="section" id="security">
-    <div class="container">
-      <div class="reveal section-intro">
-        <p class="micro">安全与合规</p>
-        <h2 class="h2 section-title">为受监管金融而生</h2>
-        <p class="lead section-lead">在不牺牲去中心化的前提下满足全球合规标准。</p>
-      </div>
-      <div class="compliance-grid">
-        <div class="compliance-item reveal">
-          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <h3>OFAC</h3>
-          <p>SDN 名单筛查</p>
-          <span class="badge">已启用</span>
-        </div>
-        <div class="compliance-item reveal">
-          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
-          <h3>FATF</h3>
-          <p>Travel Rule 就绪</p>
-          <span class="badge">已启用</span>
-        </div>
-        <div class="compliance-item reveal">
-          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-          <h3>VASP</h3>
-          <p>虚拟资产服务</p>
-          <span class="badge">兼容</span>
-        </div>
-        <div class="compliance-item reveal">
-          <svg width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <h3>香港稳定币条例</h3>
-          <p>合规就绪</p>
-          <span class="badge">已启用</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Developer Experience -->
-  <section class="section bg-secondary" id="developers">
-    <div class="container">
-      <div class="dev-grid">
-        <div class="reveal">
-          <p class="micro">开发者体验</p>
-          <h2 class="h2 section-title">为 AI 智能体打造</h2>
-          <p class="lead section-lead">自主智能体原生查询风险——无需人工守门。在智能合约层面继承风险引擎，每笔代币转账自动根据链上风险画像进行筛查。</p>
-          <div class="dev-steps">
-            <div class="dev-step">
-              <span class="dev-step-num">01</span>
-              <p class="body-sm">继承 <code class='code-accent'>CompliantStableCoin</code> 或在转账钩子中接入 <code class='code-accent'>FidesCompliance</code></p>
-            </div>
-            <div class="dev-step">
-              <span class="dev-step-num">02</span>
-              <p class="body-sm">通过管理后台或直接链上配置风险阈值和策略</p>
-            </div>
-            <div class="dev-step">
-              <span class="dev-step-num">03</span>
-              <p class="body-sm">每笔转账都会被筛查、执行并记录——确定性链上执行</p>
-            </div>
-          </div>
-          <div class="dev-actions">
-            <a href="/cn/docs/" target="_blank" rel="noopener" class="btn btn-primary btn-sm">查看文档</a>
-            <a href="/cn/docs/sdk.html" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">下载 SDK</a>
-          </div>
-        </div>
-        <div class="reveal">
-          <div class="code-block">
-            <div class="code-header">
-              <span>集成</span>
-              <span>Solidity</span>
-            </div>
-            <div class="code-body">
-<pre><span class="comment">// 每笔交易前，智能体链上检查风险</span>
-<span class="kw">bool</span> isSafe = riskRegistry.verifyAddress(
-    counterparty,
-    expectedRiskScore,
-    <span class="str">"BLACK"</span>,
-    merkleProof
-);
-
-<span class="kw">require</span>(isSafe, <span class="str">"被合规策略拦截"</span>);
-complianceEngine.recordDecision(<span class="kw">msg.sender</span>, counterparty, amount, <span class="num">0</span>);
-swap.execute(counterparty, amount);</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contact / CTA -->
-  <section class="section" id="contact">
-    <div class="container">
-      <div class="cta-section reveal">
-        <h2 class="h1">开始构建</h2>
-        <p>开源。生产就绪。MIT 许可证。</p>
-        <div class="cta-buttons">
-          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary btn-light">
-            contact@fidesorigin.com
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-grid">
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
         <div class="footer-brand">
-          <a href="/cn/" class="nav-logo">
-            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
-            FidesOrigin
-          </a>
-          <p>为代币化资产、稳定币和 AI 智能体提供实时链上合规。</p>
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
         </div>
-        <div class="footer-col">
-          <h4>产品</h4>
-          <a href="#features">功能特性</a>
-          <a href="#how-it-works">工作原理</a>
-          <a href="#security">安全合规</a>
-          <a href="/admin/">数据看板</a>
-        </div>
-        <div class="footer-col">
-          <h4>开发者</h4>
-          <a href="/cn/docs/" target="_blank" rel="noopener">查看文档</a>
-          <a href="/cn/docs/api.html" target="_blank" rel="noopener">API 参考</a>
-          <a href="/cn/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
-        </div>
-        <div class="footer-col">
-          <h4>公司</h4>
-          <a href="mailto:contact@fidesorigin.com">联系我们</a>
-          <a href="/blog/" target="_blank" rel="noopener">博客</a>
-          <a href="/cn/privacy.html">隐私政策</a>
-          <a href="/cn/terms.html">服务条款</a>
-        </div>
+        <p class="footer-desc">面向稳定币、RWA 代币化和机构 DeFi 的执行级链上合规协议。</p>
       </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 FidesOrigin. 保留所有权利。</p>
-        <p>为链上金融世界而构建</p>
+      <div class="footer-col">
+        <h4>产品</h4>
+        <a href="#products">风险雷达</a>
+        <a href="#products">风控守卫引擎</a>
+        <a href="#products">策略引擎</a>
+        <a href="#products">审计盾牌</a>
+        <a href="#products">内存池监视器</a>
+        <a href="/address-check.html">地址检查</a>
+      </div>
+      <div class="footer-col">
+        <h4>开发者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">文档</a>
+        <a href="/docs/api">API 参考</a>
+        <a href="/changelog.html">更新日志</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="/about.html">关于</a>
+        <a href="/case-studies.html">案例研究</a>
+        <a href="mailto:contact@fidesorigin.com">联系我们</a>
+        <a href="/privacy.html">隐私政策</a>
+        <a href="/terms.html">服务条款</a>
       </div>
     </div>
-  </footer>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>香港 &middot; 新加坡 &middot; 旧金山</span>
+    </div>
+  </div>
+</footer>
 
-  <script src="/wallet-connect.js"></script>
-  <script src="/index-scripts.js"></script>
+<!-- SCRIPTS -->
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  if (scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+  lastScroll = scrollY;
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    if (href === '#') return;
+    const target = document.querySelector(href);
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+});
+</script>
+
 </body>
 </html>

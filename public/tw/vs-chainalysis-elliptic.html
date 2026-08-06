@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>FidesOrigin 對比 Chainalysis 對比 Elliptic — 執行級合規方案對比</title>
+<meta name="description" content="對比 FidesOrigin 的鏈上執行合規方案與 Chainalysis 和 Elliptic。即時攔截對比事後分析，按筆收費對比年度訂閱。"/>
+<meta property="og:title" content="FidesOrigin 對比 Chainalysis 對比 Elliptic — 合規方案對比"/>
+<meta property="og:description" content="執行級鏈上合規對比傳統分析。了解即時攔截、定價和架構的差異。"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta property="og:url" content="https://fidesorigin.com/vs-chainalysis-elliptic.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="FidesOrigin 對比 Chainalysis 對比 Elliptic"/>
+<meta name="twitter:description" content="執行級合規對比。即時攔截對比事後分析。"/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/vs-chainalysis-elliptic.html"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"FidesOrigin 對比 Chainalysis 對比 Elliptic","url":"https://fidesorigin.com/vs-chainalysis-elliptic.html","description":"合規方案對比矩陣"}</script>
+<style>
+  :root {
+    --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320;
+    --fio-surface-3:#181b28; --fio-elevated:#1e2230; --fio-border:#252a3a; --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-accent-glow:#9b8ed80a;
+    --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-gold-glow:#d4b87a10;
+    --fio-steel:#7b9ab8; --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .container { max-width:1200px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
+  .anim-d4 { animation-delay:0.5s; } .anim-d5 { animation-delay:0.65s; } .anim-d6 { animation-delay:0.8s; }
+
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); }
+  .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  .hero { position:relative; overflow:hidden; min-height:70vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-inner { position:relative; z-index:2; padding:100px 0 60px; width:100%; text-align:center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-gold-dim); border:1px solid rgba(212,184,122,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-gold); margin-bottom:32px; }
+  .hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--fio-gold); animation:pulse-dot 2s infinite; }
+  .hero-title { font-family:var(--font-display); font-size:clamp(2.2rem,5vw,3.8rem); font-weight:500; line-height:1.05; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:20px; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(1rem,1.4vw,1.15rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 36px; }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+
+  .section { padding:100px 0; }
+  @media(min-width:768px){ .section { padding:130px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+  .section-header { text-align:center; max-width:640px; margin:0 auto 72px; }
+  .section-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-text-3); margin-bottom:16px; padding:4px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; }
+  .section-title { font-family:var(--font-display); font-size:clamp(1.8rem,3.8vw,2.8rem); font-weight:500; line-height:1.1; letter-spacing:-0.02em; color:var(--fio-text); margin-bottom:18px; }
+  .section-desc { font-size:1.05rem; line-height:1.7; color:var(--fio-text-2); max-width:560px; margin:0 auto; }
+
+  .diff-grid { display:grid; gap:20px; }
+  @media(min-width:768px){ .diff-grid { grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:1024px){ .diff-grid { grid-template-columns:repeat(4,1fr); } }
+  .diff-card { padding:36px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); overflow:hidden; position:relative; }
+  .diff-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(155,142,216,0.2),transparent); opacity:0; transition:opacity 0.4s; }
+  .diff-card:hover::before { opacity:1; }
+  .diff-card:hover { border-color:var(--fio-border-light); transform:translateY(-5px); box-shadow:0 32px 64px rgba(0,0,0,0.4); }
+  .diff-card.fides { border-color:rgba(155,142,216,0.12); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
+  .diff-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; font-size:1.25rem; }
+  .diff-icon.purple { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.12); }
+  .diff-icon.gold { background:var(--fio-gold-dim); color:var(--fio-gold); border:1px solid rgba(212,184,122,0.12); }
+  .diff-icon.green { background:rgba(92,230,138,0.06); color:var(--fio-success); border:1px solid rgba(92,230,138,0.1); }
+  .diff-icon.blue { background:rgba(122,184,240,0.06); color:var(--fio-info); border:1px solid rgba(122,184,240,0.1); }
+  .diff-card h3 { font-family:var(--font-display); font-size:1.1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; }
+  .diff-card p { font-size:0.88rem; line-height:1.7; color:var(--fio-text-2); }
+  .diff-highlight { font-family:var(--font-mono); font-size:0.72rem; color:var(--fio-gold); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+
+  .compare-wrap { overflow-x:auto; margin-top:48px; }
+  .compare-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+  .compare-table thead th { padding:16px 20px; text-align:left; font-family:var(--font-display); font-weight:500; color:var(--fio-text); border-bottom:2px solid var(--fio-border); background:var(--fio-surface-2); }
+  .compare-table thead th:first-child { border-radius:12px 0 0 0; }
+  .compare-table thead th:last-child { border-radius:0 12px 0 0; }
+  .compare-table th.fides-col { background:linear-gradient(180deg,rgba(155,142,216,0.08) 0%,var(--fio-surface-2) 100%); color:var(--fio-accent); }
+  .compare-table tbody td { padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--fio-text-2); vertical-align:top; }
+  .compare-table tbody tr:hover td { background:rgba(255,255,255,0.015); }
+  .compare-table tbody tr:last-child td { border-bottom:none; }
+  .compare-table tbody tr:last-child td:first-child { border-radius:0 0 0 12px; }
+  .compare-table tbody tr:last-child td:last-child { border-radius:0 0 12px 0; }
+  .compare-table .td-dim { color:var(--fio-text-3); font-style:italic; }
+  .compare-table .td-highlight { color:var(--fio-accent); font-weight:500; }
+  .compare-table .td-gold { color:var(--fio-gold); font-weight:500; }
+  .compare-table .td-success { color:var(--fio-success); font-weight:500; }
+  .compare-table .td-warn { color:var(--fio-warn); font-weight:500; }
+  .compare-table .check { color:var(--fio-success); font-weight:700; }
+  .compare-table .cross { color:var(--fio-danger); font-weight:700; }
+
+  .arch-compare { display:grid; gap:24px; margin-top:48px; }
+  @media(min-width:768px){ .arch-compare { grid-template-columns:repeat(3,1fr); } }
+  .arch-box { padding:32px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; text-align:center; position:relative; }
+  .arch-box.fides { border-color:rgba(155,142,216,0.2); }
+  .arch-box h4 { font-family:var(--font-display); font-size:1.1rem; font-weight:500; color:var(--fio-text); margin-bottom:6px; }
+  .arch-box .tag { font-size:0.7rem; font-family:var(--font-mono); color:var(--fio-text-3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:20px; }
+  .arch-stack { display:flex; flex-direction:column; gap:8px; }
+  .arch-layer { padding:12px 16px; border-radius:10px; font-size:0.82rem; font-family:var(--font-mono); }
+  .arch-layer.top { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.12); }
+  .arch-layer.mid { background:rgba(255,255,255,0.03); color:var(--fio-text-2); border:1px solid rgba(255,255,255,0.06); }
+  .arch-layer.bot { background:rgba(212,184,122,0.06); color:var(--fio-gold); border:1px solid rgba(212,184,122,0.1); }
+  .arch-arrow-down { text-align:center; color:var(--fio-text-4); font-size:1.5rem; margin:8px 0; }
+  .arch-vs-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); padding:4px 16px; background:var(--fio-surface-2); border:1px solid var(--fio-border); border-radius:100px; font-size:0.65rem; font-family:var(--font-mono); color:var(--fio-text-3); text-transform:uppercase; letter-spacing:0.08em; }
+
+  .biz-grid { display:grid; gap:24px; margin-top:48px; }
+  @media(min-width:768px){ .biz-grid { grid-template-columns:repeat(3,1fr); } }
+  .biz-card { padding:36px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; position:relative; }
+  .biz-card.fides { border-color:rgba(155,142,216,0.2); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 40%); }
+  .biz-card h4 { font-family:var(--font-display); font-size:1.15rem; font-weight:500; color:var(--fio-text); margin-bottom:4px; }
+  .biz-card .price { font-family:var(--font-mono); font-size:2rem; font-weight:700; color:var(--fio-gold); line-height:1; margin:16px 0 8px; }
+  .biz-card .price-note { font-size:0.78rem; color:var(--fio-text-3); margin-bottom:20px; }
+  .biz-card ul { list-style:none; margin:0; padding:0; }
+  .biz-card ul li { display:flex; align-items:flex-start; gap:10px; font-size:0.85rem; color:var(--fio-text-2); margin-bottom:10px; }
+  .biz-card ul li::before { content:""; width:16px; height:16px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%235ce68a' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat; margin-top:2px; }
+  .biz-card ul li.x::before { background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fb8e8e' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 18L18 6M6 6l12 12'/%3E%3C/svg%3E") center/contain no-repeat; }
+
+  .cta-banner { padding:100px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:500; color:var(--fio-text); margin-bottom:16px; }
+  .cta-desc { font-size:1.05rem; color:var(--fio-text-2); margin-bottom:32px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+
+  .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+  .reveal-delay-3 { transition-delay:0.35s; }
+  .reveal-delay-4 { transition-delay:0.5s; }
+
+  .quote-box { padding:32px 36px; background:var(--fio-surface); border-left:3px solid var(--fio-gold); border-radius:0 14px 14px 0; margin:32px 0; }
+  .quote-box p { font-size:1rem; line-height:1.7; color:var(--fio-text-2); font-style:italic; margin:0; }
+  .quote-box cite { display:block; margin-top:12px; font-size:0.82rem; color:var(--fio-text-3); font-style:normal; }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/" onclick="closeMobileMenu()">首頁</a>
+  <a href="/architecture.html" onclick="closeMobileMenu()">架構</a>
+  <a href="/blog/" onclick="closeMobileMenu()">部落格</a>
+  <a href="/pricing.html" onclick="closeMobileMenu()">定價</a>
+  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">申請演示</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/">首頁</a>
+      <a href="/architecture.html">架構</a>
+      <a href="/blog/">部落格</a>
+      <a href="/pricing.html">定價</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">申請演示</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="打開選單">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">
+        <span class="hero-badge-dot"></span>
+        <span>競品分析</span>
+      </div>
+      <h1 class="hero-title anim-fade-up anim-d2">
+        超越分析 &mdash;<br>
+        <span class="hero-title-accent">執行級合規</span>
+      </h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">
+        Chainalysis 和 Elliptic 奠定了加密合規的基礎。FidesOrigin 邁出了下一步：將執法能力直接嵌入執行層，在交易發生前即予以阻止。
+      </p>
+      <div class="hero-ctas anim-fade-up anim-d4" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="#matrix" class="btn-primary">查看對比</a>
+        <a href="mailto:contact@fidesorigin.com" class="btn-secondary">申請演示</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="key-diffs">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">四大核心差異</div>
+      <h2 class="section-title">FidesOrigin 的獨特之處</h2>
+      <p class="section-desc">同屬一個產業，但處於技術堆疊的不同層級。四個維度上，架構與時機的差異造就了截然不同的結果。</p>
+    </div>
+    <div class="diff-grid">
+      <div class="diff-card fides reveal reveal-delay-1">
+        <div class="diff-icon purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="diff-highlight">時機</div>
+        <h3>即時攔截</h3>
+        <p>Chainalysis 和 Elliptic 在交易確認<em>之後</em>進行分析以供調查。FidesOrigin 在執行<em>之前</em>進行評估並阻止，防患於未然，而非事後記錄。</p>
+      </div>
+      <div class="diff-card reveal reveal-delay-2">
+        <div class="diff-icon gold">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div class="diff-highlight">執行層</div>
+        <h3>智能合約原生</h3>
+        <p>傳統工具存在於鏈外，為人工決策提供資料。FidesOrigin 將執法邏輯嵌入智能合約，使合規具有確定性且不可繞過。</p>
+      </div>
+      <div class="diff-card reveal reveal-delay-3">
+        <div class="diff-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <div class="diff-highlight">定價</div>
+        <h3>按筆收費</h3>
+        <p>年度 SaaS訂閱（5萬&ndash;50萬美元）將小型參與者拒之門外。按筆收費（10&ndash;50美分）隨用量擴展，無需預付承諾。</p>
+      </div>
+      <div class="diff-card reveal reveal-delay-4">
+        <div class="diff-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        </div>
+        <div class="diff-highlight">開放性</div>
+        <h3>MIT 授權，已稽核</h3>
+        <p>閉源合規存在不透明風險。FidesOrigin 完整原始碼採用 MIT 授權，並經過多輪第三方稽核。監管機構和稽核方可逐行驗證。</p>
+      </div>
+    </div>
+    <div class="quote-box reveal">
+      <p>"根本性的轉變是從'發生了什麼'到'這筆交易不會執行'。這一差異正是合規作秀與真正風險預防之間的鴻溝。"</p>
+      <cite>&mdash; 協定設計說明，FidesOrigin v2.4.1</cite>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="matrix">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">功能矩陣</div>
+      <h2 class="section-title">正面交鋒對比</h2>
+      <p class="section-desc">在 13 個對鏈上合規基礎設施至關重要的維度上進行客觀對比。</p>
+    </div>
+    <div class="compare-wrap reveal">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:26%">維度</th>
+            <th class="fides-col" style="width:25%">FidesOrigin</th>
+            <th style="width:24.5%">Chainalysis</th>
+            <th style="width:24.5%">Elliptic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>核心能力</strong></td>
+            <td class="td-highlight">即時攔截</td>
+            <td class="td-dim">事後調查</td>
+            <td class="td-dim">事後調查</td>
+          </tr>
+          <tr>
+            <td><strong>技術層級</strong></td>
+            <td class="td-highlight">執行層（合約核心）</td>
+            <td class="td-dim">資訊層（資料庫查詢）</td>
+            <td class="td-dim">資訊層（資料庫查詢）</td>
+          </tr>
+          <tr>
+            <td><strong>回應時間</strong></td>
+            <td class="td-success">&lt;50毫秒</td>
+            <td class="td-warn">數分鐘至數小時</td>
+            <td class="td-warn">數分鐘至數小時</td>
+          </tr>
+          <tr>
+            <td><strong>部署方式</strong></td>
+            <td class="td-highlight">可插拔模組</td>
+            <td>API / SaaS訂閱</td>
+            <td>API / SaaS訂閱</td>
+          </tr>
+          <tr>
+            <td><strong>定價模式</strong></td>
+            <td class="td-gold">按筆收費（10&ndash;50美分）</td>
+            <td>年度訂閱（$$$$）</td>
+            <td>年度訂閱（$$$$）</td>
+          </tr>
+          <tr>
+            <td><strong>AI / 機器學習</strong></td>
+            <td class="td-highlight">內建 GNN + 即時評分</td>
+            <td class="td-dim">有限</td>
+            <td class="td-dim">有限</td>
+          </tr>
+          <tr>
+            <td><strong>鏈上執行</strong></td>
+            <td class="td-success">100% 鏈上</td>
+            <td class="td-danger">鏈外</td>
+            <td class="td-danger">鏈外</td>
+          </tr>
+          <tr>
+            <td><strong>多鏈支援</strong></td>
+            <td class="td-success">6+ 網路</td>
+            <td>主流網路</td>
+            <td>主流網路</td>
+          </tr>
+          <tr>
+            <td><strong>授權條款</strong></td>
+            <td class="td-success">MIT（開源）</td>
+            <td class="td-danger">專有</td>
+            <td class="td-danger">專有</td>
+          </tr>
+          <tr>
+            <td><strong>稽核歷史</strong></td>
+            <td class="td-success">多輪第三方稽核</td>
+            <td>內部稽核</td>
+            <td>內部稽核</td>
+          </tr>
+          <tr>
+            <td><strong>策略即程式碼</strong></td>
+            <td class="td-success"><span class="check">&#10003;</span> 可執行規則</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 透過 UI 設定</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 透過 UI 設定</td>
+          </tr>
+          <tr>
+            <td><strong>不可竄改稽核追蹤</strong></td>
+            <td class="td-success"><span class="check">&#10003;</span> 鏈上日誌</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 資料庫記錄</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 資料庫記錄</td>
+          </tr>
+          <tr>
+            <td><strong>零確認攔截</strong></td>
+            <td class="td-success"><span class="check">&#10003;</span> 記憶體池監控</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 需要確認</td>
+            <td class="td-dim"><span class="cross">&#10007;</span> 需要確認</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">架構</div>
+      <h2 class="section-title">執行層 對比 資訊層</h2>
+      <p class="section-desc">架構差異不僅僅是功能差異。這是一種根本不同的安全模型。</p>
+    </div>
+    <div class="arch-compare reveal">
+      <div class="arch-box fides">
+        <div class="arch-vs-badge" style="color:var(--fio-accent);">FidesOrigin</div>
+        <h4>FidesOrigin</h4>
+        <div class="tag">執行級</div>
+        <div class="arch-stack">
+          <div class="arch-layer top">AI 模型（GNN + ML 評分）</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer mid">Oracle &rarr; 風險登錄檔</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer bot">智能合約執法</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--fio-text-3);margin-top:16px;line-height:1.6;">合規決策在<strong>交易執行路徑內部</strong>完成。無可繞過。</p>
+      </div>
+      <div class="arch-box">
+        <div class="arch-vs-badge">Chainalysis</div>
+        <h4>Chainalysis</h4>
+        <div class="tag">資訊層</div>
+        <div class="arch-stack">
+          <div class="arch-layer top">中心化資料庫</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer mid">API 查詢回應</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer bot">客戶端決策</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--fio-text-3);margin-top:16px;line-height:1.6;">提供風險資料。由<strong>客戶端</strong>決定是否採取行動。執法是可選且可繞過的。</p>
+      </div>
+      <div class="arch-box">
+        <div class="arch-vs-badge">Elliptic</div>
+        <h4>Elliptic</h4>
+        <div class="tag">資訊層</div>
+        <div class="arch-stack">
+          <div class="arch-layer top">中心化資料庫</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer mid">API 查詢回應</div>
+          <div class="arch-arrow-down">&#8595;</div>
+          <div class="arch-layer bot">客戶端決策</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--fio-text-3);margin-top:16px;line-height:1.6;">與 Chainalysis 類似：資料提供者，而非執法者。<strong>發現</strong>與<strong>阻止</strong>之間的關鍵鴻溝。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">商業模式</div>
+      <h2 class="section-title">SaaS訂閱 對比 基礎設施稅</h2>
+      <p class="section-desc">定價模式反映了在合規技術堆疊中價值獲取的根本不同方式。</p>
+    </div>
+    <div class="biz-grid reveal">
+      <div class="biz-card fides">
+        <div style="font-size:0.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--fio-accent);margin-bottom:4px;">FidesOrigin</div>
+        <h4>按筆收費</h4>
+        <div class="price">10&ndash;50&cent;</div>
+        <div class="price-note">每筆交易 + 價值的 0.01&ndash;0.05%</div>
+        <ul>
+          <li>無年度承諾</li>
+          <li>隨用量擴展</li>
+          <li>新創企業可負擔</li>
+          <li>企業量大優惠</li>
+        </ul>
+      </div>
+      <div class="biz-card">
+        <div style="font-size:0.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--fio-text-3);margin-bottom:4px;">Chainalysis</div>
+        <h4>年度訂閱</h4>
+        <div class="price">$50K&ndash;$500K</div>
+        <div class="price-note">每年，按層級計費</div>
+        <ul>
+          <li>全平台存取</li>
+          <li>專屬支援</li>
+          <li>高昂的預付成本</li>
+          <li class="x">小型團隊難以承受</li>
+        </ul>
+      </div>
+      <div class="biz-card">
+        <div style="font-size:0.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--fio-text-3);margin-bottom:4px;">Elliptic</div>
+        <h4>年度訂閱</h4>
+        <div class="price">$30K&ndash;$300K</div>
+        <div class="price-note">每年，按層級計費</div>
+        <ul>
+          <li>API 存取套裝</li>
+          <li>客製整合支援</li>
+          <li>超額用量費</li>
+          <li class="x">無按筆收費選項</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">用例對比</div>
+      <h2 class="section-title">各方案適用場景</h2>
+      <p class="section-desc">沒有工具是萬能的。正確的選擇取決於您的風險模型、預算和監管要求。</p>
+    </div>
+    <div style="display:grid;gap:20px;" class="reveal">
+      <div style="padding:32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--fio-accent-dim);color:var(--fio-accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.8rem;font-weight:600;">01</div>
+          <h3 style="font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:var(--fio-text);margin:0;">穩定幣發行方需要香港金管局牌照</h3>
+        </div>
+        <p style="font-size:0.9rem;color:var(--fio-text-2);line-height:1.7;margin:0 0 16px;">一家香港穩定幣發行方必須向香港金管局審查員證明其即時反洗錢篩查、不可竄改的稽核追蹤以及自動化的贖回控制能力。</p>
+        <div style="display:grid;gap:12px;">
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-accent);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-accent);margin-bottom:4px;">FidesOrigin</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-2);line-height:1.6;margin:0;">可插拔合規模組直接嵌入穩定幣合約。每筆轉帳在 50毫秒內完成篩查。所有決策在鏈上不可竄改地記錄。稽核追蹤是加密的，而非資料庫匯出。已有發行方使用 FidesOrigin 獲得香港金管局<em>原則性批准</em>。</p>
+          </div>
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-text-4);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-text-3);margin-bottom:4px;">Chainalysis / Elliptic</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-3);line-height:1.6;margin:0;">透過 API 提供風險資料。發行方必須構建客製整合，將稽核日誌儲存在資料庫中，並向監管機構證明每次篩查呼叫確實被執行。沒有鏈上執法意味著合規效果取決於整合程式碼的品質。</p>
+          </div>
+        </div>
+      </div>
+      <div style="padding:32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--fio-gold-dim);color:var(--fio-gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.8rem;font-weight:600;">02</div>
+          <h3 style="font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:var(--fio-text);margin:0;">DeFi 協定希望吸引機構資金</h3>
+        </div>
+        <p style="font-size:0.9rem;color:var(--fio-text-2);line-height:1.7;margin:0 0 16px;">一個鏈上借貸協定需要吸引要求合規保障的制度性流動性提供者，才願意存入資金。</p>
+        <div style="display:grid;gap:12px;">
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-accent);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-accent);margin-bottom:4px;">FidesOrigin</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-2);line-height:1.6;margin:0;">在協定層面整合 Guard 模組。每筆借入/借出/清算都經過策略檢查。機構流動性提供者可以在鏈上驗證合規邏輯。沒有黑箱 &mdash; 策略即程式碼。</p>
+          </div>
+          <div style="padding:16px 20px;background:var(--fio-ink-soft);border-radius:12px;border-left:3px solid var(--fio-text-4);">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--fio-text-3);margin-bottom:4px;">Chainalysis / Elliptic</div>
+            <p style="font-size:0.85rem;color:var(--fio-text-3);line-height:1.6;margin:0;">協定在 UI 層面查詢風險 API。進階使用者可以繞過 UI，直接與智能合約互動，永遠不會觸發風險檢查。合規作秀，而非執法。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">決策框架</div>
+      <h2 class="section-title">何時選擇什麼</h2>
+      <p class="section-desc">客觀建議：每種方案都有其理想的應用場景。</p>
+    </div>
+    <div style="display:grid;gap:20px;grid-template-columns:1fr;" class="reveal">
+      <div style="padding:28px 32px;background:var(--fio-surface);border:1px solid rgba(155,142,216,0.15);border-radius:18px;">
+        <h3 style="font-family:var(--font-display);font-size:1.1rem;font-weight:500;color:var(--fio-accent);margin-bottom:12px;">當您需要以下能力時，選擇 FidesOrigin：</h3>
+        <ul style="list-style:none;margin:0;padding:0;">
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 即時交易攔截（不僅是檢測）</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 面向監管機構的鏈上不可竄改稽核追蹤</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 按筆收費定價（無年度承諾）</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 可稽核和修改的開源基礎設施</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 穩定幣或 RWA 代幣化需要牌照級合規</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:0;"><span style="color:var(--fio-success);font-weight:700;flex-shrink:0;">&#10003;</span> 零確認記憶體池風險攔截</li>
+        </ul>
+      </div>
+      <div style="padding:28px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:18px;">
+        <h3 style="font-family:var(--font-display);font-size:1.1rem;font-weight:500;color:var(--fio-text-2);margin-bottom:12px;">當您需要以下能力時，選擇 Chainalysis / Elliptic：</h3>
+        <ul style="list-style:none;margin:0;padding:0;">
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 面向執法機構的調查取證</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 歷史交易追蹤和圖譜分析</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 威脅情報和暗網監控</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:10px;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 擁有專屬合規團隊的大型企業</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--fio-text-2);margin-bottom:0;"><span style="color:var(--fio-warn);font-weight:700;flex-shrink:0;">&#10003;</span> 預算支援 10萬美元以上的年度 SaaS訂閱</li>
+        </ul>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:0.85rem;color:var(--fio-text-3);margin-top:24px;" class="reveal">許多組織同時使用兩者：Chainalysis/Elliptic 用於調查和情報，FidesOrigin 用於即時執法。</p>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">親身體驗執行級合規</h2>
+      <p class="cta-desc">預約 30 分鐘演示。我們將向您展示即時攔截在活測試網上的運作原理。</p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">申請演示</a>
+        <a href="/architecture.html" class="btn-secondary">查看架構</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">面向代幣化資產和 DeFi 的鏈上合規協定。</p>
+      </div>
+      <div class="footer-col">
+        <h4>產品</h4>
+        <a href="/">風險雷達</a>
+        <a href="/">策略引擎</a>
+        <a href="/">稽核盾</a>
+        <a href="/address-check.html">地址檢查</a>
+        <a href="/pricing.html">定價</a>
+      </div>
+      <div class="footer-col">
+        <h4>開發者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">文件</a>
+        <a href="/docs/api">API 參考</a>
+        <a href="/changelog.html">更新日誌</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="/about.html">關於我們</a>
+        <a href="/case-studies.html">案例研究</a>
+        <a href="mailto:contact@fidesorigin.com">聯絡我們</a>
+        <a href="/privacy.html">隱私權政策</a>
+        <a href="/terms.html">服務條款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT 授權條款。</span>
+      <span>香港 &middot; 新加坡 &middot; 舊金山</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+</script>
+
+</body>
+</html>

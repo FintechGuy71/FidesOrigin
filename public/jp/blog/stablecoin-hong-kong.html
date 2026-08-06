@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>ステーブルコインコンプライアンスの実践 —— 香港ライセンス要件と技術実装</title>
+<meta name="description" content="FidesOriginが香港金融管理局のステーブルコインライセンス要件を満たす方法。準備監査、AMLスクリーニング、償還コントロール、および規制報告の技術実装。"/>
+<meta property="og:title" content="ステーブルコインコンプライアンスの実践 —— 香港ライセンス要件と技術実装"/>
+<meta property="og:description" content="香港金融管理局ステーブルコインコンプライアンスの技術実装。準備監査、AML、償還、および報告。"/>
+<meta property="og:type" content="article"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta property="og:url" content="https://fidesorigin.com/jp/blog/stablecoin-hong-kong.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="ステーブルコインコンプライアンスの実践 —— 香港"/>
+<meta name="twitter:description" content="香港金融管理局ステーブルコインコンプライアンス要件の技術実装。"/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/jp/blog/stablecoin-hong-kong.html"/>
+<link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/stablecoin-hong-kong.html"/>
+<link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/stablecoin-hong-kong.html"/>
+<link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/stablecoin-hong-kong.html"/>
+<link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/stablecoin-hong-kong.html"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"ステーブルコインコンプライアンスの実践 —— 香港ライセンス要件と技術実装","author":{"@type":"Organization","name":"FidesOrigin"},"publisher":{"@type":"Organization","name":"FidesOrigin","logo":{"@type":"ImageObject","url":"https://fidesorigin.com/brand/logo-dark-icon.png"}},"datePublished":"2026-08-06","url":"https://fidesorigin.com/jp/blog/stablecoin-hong-kong.html"}</script>
+<style>
+  :root { --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320; --fio-border:#252a3a; --fio-border-light:#2e3448; --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055; --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0; --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace; }
+  html,body { margin:0; padding:0; } body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; } a { color:inherit; text-decoration:none; } .container { max-width:860px; margin:0 auto; padding:0 24px; } @media(max-width:768px){ .container { padding:0 16px; } } .container-wide { max-width:1200px; margin:0 auto; padding:0 24px; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } } .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; } .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; } .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); } .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; } .nav-logo { display:flex; align-items:center; gap:10px; } .nav-logo img { height:28px; width:auto; } .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; } .nav-links { display:none; align-items:center; gap:32px; } .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; } .nav-links a:hover { color:var(--fio-text); } .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; } .nav-links a:hover::after { width:100%; } .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); } .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); } .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; } @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+  .hero { position:relative; overflow:hidden; min-height:55vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; } .hero-bg-glow { position:absolute; inset:0; pointer-events:none; } .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); } .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); } .hero-inner { position:relative; z-index:2; padding:80px 0 50px; width:100%; text-align:center; } .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-accent-dim); border:1px solid rgba(155,142,216,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-accent); margin-bottom:24px; } .hero-title { font-family:var(--font-display); font-size:clamp(1.7rem,4.2vw,3rem); font-weight:500; line-height:1.1; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:16px; } .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; } .hero-subtitle { font-size:clamp(0.95rem,1.3vw,1.1rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 24px; } .hero-meta { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); }
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); } .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); } .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; } .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+  .section { padding:80px 0; } @media(min-width:768px){ .section { padding:100px 0; } } .section-alt { background:var(--fio-ink-soft); }
+  .article-body { font-size:1.05rem; line-height:1.8; color:var(--fio-text-2); } .article-body h2 { font-family:var(--font-display); font-size:clamp(1.4rem,3vw,1.9rem); font-weight:500; color:var(--fio-text); margin:56px 0 20px; letter-spacing:-0.02em; } .article-body h3 { font-family:var(--font-display); font-size:clamp(1.1rem,2vw,1.35rem); font-weight:500; color:var(--fio-text); margin:36px 0 14px; } .article-body p { margin-bottom:20px; } .article-body strong { color:var(--fio-text); font-weight:600; } .article-body ul { margin-bottom:20px; padding-left:24px; } .article-body li { margin-bottom:8px; } .article-body a { color:var(--fio-accent); text-decoration:underline; text-underline-offset:3px; } .article-body a:hover { color:var(--fio-gold); } .article-body code { font-family:var(--font-mono); font-size:0.88em; background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; color:var(--fio-gold); }
+  .code-block { background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:14px; overflow:hidden; margin:28px 0; } .code-header { display:flex; align-items:center; gap:8px; padding:12px 16px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); } .code-header .dot { width:10px; height:10px; border-radius:50%; } .code-header .dot.r { background:#ff5f57; } .code-header .dot.y { background:#febc2e; } .code-header .dot.g { background:#28c840; } .code-header .title { font-size:0.7rem; color:var(--fio-text-3); margin-left:8px; font-family:var(--font-mono); } .code-body { padding:20px 24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.75; overflow-x:auto; color:var(--fio-text-2); } .code-body .kw { color:#c678dd; } .code-body .fn { color:#61afef; } .code-body .str { color:#98c379; } .code-body .num { color:#d19a66; } .code-body .cm { color:#5c6370; font-style:italic; }
+  .info-box { padding:24px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:28px 0; } .info-box.purple { border-color:rgba(155,142,216,0.15); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); } .info-box.gold { border-color:rgba(212,184,122,0.15); background:linear-gradient(180deg,rgba(212,184,122,0.03) 0%,var(--fio-surface) 60%); } .info-box h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; } .info-box p { font-size:0.92rem; color:var(--fio-text-2); line-height:1.7; margin:0; }
+  .cta-banner { padding:80px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); } .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); } .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; } .cta-title { font-family:var(--font-display); font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:500; color:var(--fio-text); margin-bottom:14px; } .cta-desc { font-size:1rem; color:var(--fio-text-2); margin-bottom:28px; line-height:1.7; } .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; } .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; } @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } } @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } } .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; } .footer-brand img { height:26px; width:auto; border-radius:6px; } .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); } .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; } .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; } .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; } .footer-col a:hover { color:var(--fio-text-2); } .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); } @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; } .mobile-menu.active { display:block; } .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); } .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+  .reveal { opacity:0; transform:translateY(30px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); } .reveal.visible { opacity:1; transform:translateY(0); }
+  .toc { position:sticky; top:80px; padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; margin-bottom:32px; } .toc h4 { font-family:var(--font-display); font-size:0.85rem; font-weight:500; color:var(--fio-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em; } .toc a { display:block; font-size:0.8rem; color:var(--fio-text-3); padding:6px 0; transition:color 0.2s; border-bottom:1px solid rgba(255,255,255,0.02); } .toc a:hover { color:var(--fio-accent); } .toc a:last-child { border-bottom:none; } @media(max-width:1024px){ .toc { position:static; } }
+  .article-layout { display:grid; grid-template-columns:1fr 260px; gap:48px; } @media(max-width:1024px){ .article-layout { grid-template-columns:1fr; } }
+  .req-grid { display:grid; gap:16px; grid-template-columns:repeat(2,1fr); margin:28px 0; } @media(max-width:640px){ .req-grid { grid-template-columns:1fr; } } .req-card { padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; } .req-card h5 { font-family:var(--font-display); font-size:0.95rem; font-weight:500; color:var(--fio-text); margin-bottom:8px; display:flex; align-items:center; gap:8px; } .req-card p { font-size:0.85rem; color:var(--fio-text-2); line-height:1.6; margin:0; } .req-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.85rem; }
+  .flow-diagram { padding:28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:24px 0; } .flow-diagram h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:20px; text-align:center; } .flow-step { display:flex; align-items:center; gap:12px; margin-bottom:12px; } .flow-step:last-child { margin-bottom:0; } .flow-num { width:32px; height:32px; border-radius:8px; background:var(--fio-accent-dim); color:var(--fio-accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.75rem; font-weight:600; flex-shrink:0; } .flow-num.ok { background:rgba(92,230,138,0.1); color:var(--fio-success); } .flow-num.block { background:rgba(251,142,142,0.1); color:var(--fio-danger); } .flow-text { font-size:0.88rem; color:var(--fio-text-2); } .flow-arrow-v { text-align:center; color:var(--fio-text-4); font-size:1.2rem; margin:4px 0 4px 10px; }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/jp/" onclick="closeMobileMenu()">ホーム</a>
+  <a href="/jp/architecture.html" onclick="closeMobileMenu()">アーキテクチャ</a>
+  <a href="/jp/blog/" onclick="closeMobileMenu()">ブログ</a>
+  <a href="/jp/pricing.html" onclick="closeMobileMenu()">料金</a>
+  <a href="mailto:contact@fidesorigin.com" class="btn-primary" style="display:inline-block;margin-top:16px;text-align:center">デモをリクエスト</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/jp/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/jp/">ホーム</a>
+      <a href="/jp/architecture.html">アーキテクチャ</a>
+      <a href="/jp/blog/">ブログ</a>
+      <a href="/jp/pricing.html">料金</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">デモをリクエスト</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">規制ディープダイブ</div>
+      <h1 class="hero-title anim-fade-up anim-d2">ステーブルコインコンプライアンスの実践<br><span class="hero-title-accent">香港ライセンス要件と技術実装</span></h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">FidesOriginが香港金融管理局のステーブルコインライセンス要件を満たすための技術ガイド。準備監査から償還コントロールまで、すべてオンチェーンで実装。</p>
+      <div class="hero-meta anim-fade-up anim-d3">FidesOrigin コンプライアンス &middot; 2026年8月 &middot; 15分読了</div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="article-layout">
+      <article class="article-body reveal">
+        <h2 id="hkma">香港金融管理局ステーブルコインフレームワーク</h2>
+        <p>2024年12月、香港金融管理局（HKMA）は、待望のステーブルコイン規制フレームワークを発表し、香港で運営する、または香港居住者を対象とするステーブルコイン発行者のためのライセンス制度を確立しました。このフレームワークは、世界的に最も包括的なものの一つであり、準備管理、償還権、AML/CFTコンプライアンス、および公衆開示を網羅しています。</p>
+        <p>発行者にとっての課題は、ルールを理解することだけではありません——それらを、規制要件とブロックチェーンテクノロジーの制約の両方を満たす方法で実装することです。この記事では、FidesOriginがHKMAの各要件を具体的なオンチェーン実装にどのようにマッピングするかを説明します。</p>
+
+        <div class="info-box gold">
+          <h4>香港金融管理局の主要要件一覧</h4>
+          <p>香港金融管理局のフレームワーク（2024年12月の協議結論で概説）は、ライセンスを受けたステーブルコイン発行者に以下を要求します：（1）ステーブルコイン価値を完全に裏付ける準備の維持；（2）1営業日以内の額面償還；（3）堅牢なAML/CFTコントロールの実装；（4）所定の開示；（5）継続的な監督と監査の受け入れ。</p>
+        </div>
+
+        <h2 id="requirements">香港金融管理局コンプライアンスの4つの柱</h2>
+        <p>香港金融管理局の要件は、4つの柱にグループ化できます。各柱には規制意図と技術実装パスがあります。</p>
+
+        <div class="req-grid reveal">
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:var(--fio-accent-dim);color:var(--fio-accent);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></span> 準備資産</h5>
+            <p>高品質流動性資産による全額裏付け。分離保管。毎日の評価。公開認証。</p>
+          </div>
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:var(--fio-gold-dim);color:var(--fio-gold);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> 償還権</h5>
+            <p>T+1以内の額面償還。恣意的な制限なし。償還リクエストに対する自動コンプライアンスチェック。</p>
+          </div>
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:rgba(92,230,138,0.1);color:var(--fio-success);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span> AML / CFT</h5>
+            <p>リアルタイムトランザクションモニタリング。アドレススクリーニング。疑わしい活動報告。Travel Ruleコンプライアンス。</p>
+          </div>
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:rgba(122,184,240,0.1);color:var(--fio-info);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span> 開示</h5>
+            <p>完全な条項を含むホワイトペーパー。準備構成レポート。監査結果。リアルタイムの供給量と準備データ。</p>
+          </div>
+        </div>
+
+        <h2 id="reserve">柱1：準備資産管理</h2>
+        <p><strong>規制意図：</strong>流通中のすべてのステーブルコインは、分離保管された高品質流動性資産により1:1で裏付けられている必要があります。準備は検証可能、監査可能であり、発行者の破産から保護されている必要があります。</p>
+        <p><strong>FidesOriginの実装：</strong>FidesOriginは準備を保持しません（これは発行者の財務機能です）が、準備状況を透明かつ監査可能にするオンチェーンインフラストラクチャを提供します。</p>
+
+        <h3>オンチェーン準備認証</h3>
+        <p>発行者の財務ウォレット（マルチシグGnosis Safe）は準備資産を保持します。FidesOriginのSubgraphは、財務ウォレットの残高とステーブルコイン総供給量をインデックス化し、リアルタイムで裏付け比率を計算します：</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">Subgraph: Reserve Backing Ratio (GraphQL)</span></div>
+          <div class="code-body"><span class="cm"># Real-time reserve backing query</span>
+<span class="kw">query</span> <span class="fn">ReserveStatus</span> {
+  treasurySnapshot(orderBy: timestamp, orderDirection: desc, first: 1) {
+    reserveAssetsUSD
+    stablecoinSupply
+    backingRatio
+    timestamp
+    custodianAttestationHash
+  }
+}
+<span class="cm"># Returns: { backingRatio: 1.0012, reserveAssetsUSD: "1001200000", ... }</span></div>
+        </div>
+
+        <p><code>custodianAttestationHash</code>は、保管銀行が毎日公開するMerkleルートで、オフチェーン準備報告書にコミットします。誰でも、発行者の言葉を信頼することなく、オンチェーン供給量が認証された準備と一致することを検証できます。</p>
+
+        <h3>緊急停止と準備回復</h3>
+        <p>裏付け比率が1.0未満になった場合（過少担保を示す）、FidesOriginのポリシーエンジンは自動的に以下をトリガーできます：</p>
+        <ul>
+          <li><strong>鋳造停止：</strong>新しいステーブルコインの発行は、準備が回復するまで停止されます</li>
+          <li><strong>償還優先：</strong>償還は他のすべての転送より先に処理されます</li>
+          <li><strong>アラートエスカレーション：</strong>発行者の財務およびコンプライアンスチームへのマルチチャネルアラート</li>
+        </ul>
+
+        <h2 id="redemption">柱2：償還権</h2>
+        <p><strong>規制意図：</strong>ステーブルコインホルダーは、1営業日以内にそのトークンを基礎となる法定通貨価値に交換でき、恣意的な制限や差別的な条項なしに行う必要があります。</p>
+        <p><strong>FidesOriginの実装：</strong>償還フローは、コンプライアンスチェックをスマートコントラクトに直接埋め込み、償還リクエストが自動的に処理される一方でAMLコントロールが維持されることを保証します。</p>
+
+        <div class="flow-diagram">
+          <h4>FidesOriginを使用した償還フロー</h4>
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">ユーザーがdAppまたはAPIを介して償還リクエストを開始</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">ガードプリチェック：KYCステータス、制裁スクリーニング、速度制限</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num ok">3a</div><div class="flow-text"><strong>合格：</strong>ステーブルコインが焼却され、法定通貨が財務から解放され、TXハッシュが記録される</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num block">3b</div><div class="flow-text"><strong>不合格：</strong>償還がブロックされ、ユーザーに通知され、コンプライアンスアラートが生成され、監査ログが書き込まれる</div></div>
+        </div>
+
+        <p>償還フローの重要な設計上の決定：</p>
+        <ul>
+          <li><strong>ノンカストディアルKYC：</strong>KYCステータスは、プライバシーが必要な場合にゼロ知識証明で検証可能なオンチェーン証明として保存されます。集中型データベースではありません。発行者は個人データを開示することなくKYCが確認されたことを証明できます。</li>
+          <li><strong>速度制限：</strong>ポリシーエンジンは、1アドレスあたりの日次/時間ごとの償還制限を強制し、突然の銀行擠兌や構造化償還によるマネーロンダリングを防ぎます。</li>
+          <li><strong>監査ログ：</strong>すべての償還試行（成功または失敗）は、オフチェーンの法定通貨転送レコードにマッピングされる一意のコンプライアンス参照IDとともにオンチェーンに記録されます。</li>
+        </ul>
+
+        <h2 id="aml">柱3：AML / CFTコントロール</h2>
+        <p><strong>規制意図：</strong>顧客デューデリジェンス、トランザクションモニタリング、制裁スクリーニング、および疑わしい活動報告を含む包括的なAML/CFTプログラムを実装します。</p>
+        <p><strong>FidesOriginの実装：</strong>これは、FidesOriginのコアアーキテクチャが最大の価値を提供する領域です。プロトコルは3層のAML保護を提供します：</p>
+
+        <h3>レイヤー1：アドレススクリーニング（取引前）</h3>
+        <p>すべての取引は、実行前にリスクレジストリに対してスクリーニングされます。レジストリには以下が含まれます：</p>
+        <ul>
+          <li>OFAC SDNリスト（OFAC公開後1時間以内に更新）</li>
+          <li>FATF高リスク管轄区域</li>
+          <li>ChainalysisおよびEllipticが特定した高リスクアドレス</li>
+          <li>内部発行者ブラックリスト（例：既知の詐欺に関連するアドレス）</li>
+        </ul>
+
+        <h3>レイヤー2：トランザクションモニタリング（継続的）</h3>
+        <p>取引前スクリーニングと取引後分析の間に、FidesOriginはSubgraphを介してリアルタイムトランザクションモニタリングを提供します：</p>
+        <ul>
+          <li><strong>パターン検出：</strong>構造化（大金額を小額取引に分割）、複数のアドレスを介した迅速な移動、ミキサーとの相互作用パターン</li>
+          <li><strong>閾値アラート：</strong>設定可能な閾値を超える取引に対する自動アラート</li>
+          <li><strong>クロスチェーントラッキング：</strong>秘匿化の試みを特定するためのブリッジ転送の監視</li>
+        </ul>
+
+        <h3>レイヤー3：疑わしい活動報告</h3>
+        <p>システムが疑わしい活動を検出すると、構造化されたSAR（疑わしい活動報告）ペイロードが生成され、発行者のコンプライアンスチームがレビューし、香港の共同財務情報局（JFIU）に提出できます：</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">SAR Payload Generation</span></div>
+          <div class="code-body">{
+  <span class="str">"reportId"</span>: <span class="str">"SAR-2026-08-06-0042"</span>,
+  <span class="str">"triggerType"</span>: <span class="str">"STRUCTURING_PATTERN"</span>,
+  <span class="str">"subjectAddress"</span>: <span class="str">"0x742d...3e8D9"</span>,
+  <span class="str">"totalAmountUSD"</span>: <span class="num">450000</span>,
+  <span class="str">"transactionCount"</span>: <span class="num">47</span>,
+  <span class="str">"timeWindow"</span>: <span class="str">"24h"</span>,
+  <span class="str">"riskIndicators"</span>: [
+    { <span class="str">"type"</span>: <span class="str">"MIXER_INTERACTION"</span>, <span class="str">"confidence"</span>: <span class="num">0.94</span> },
+    { <span class="str">"type"</span>: <span class="str">"VELOCITY_ANOMALY"</span>, <span class="str">"confidence"</span>: <span class="num">0.89</span> }
+  ],
+  <span class="str">"onChainEvidence"</span>: <span class="str">"ipfs://QmXyZ..."</span>,
+  <span class="str">"complianceReference"</span>: <span class="str">"FIO-HK-20260806-0042"</span>
+}</div>
+        </div>
+
+        <h2 id="disclosure">柱4：開示と透明性</h2>
+        <p><strong>規制意図：</strong>ステーブルコインホルダーと規制機関は、ステーブルコインの条項、準備状況、および監査結果に関する正確かつタイムリーな情報にアクセスできる必要があります。</p>
+        <p><strong>FidesOriginの実装：</strong>Subgraphはリアルタイム開示エンジンとして機能し、すべてのコンプライアンス関連データへのプログラマティックアクセスを提供します。</p>
+
+        <h2 id="flows">エンドツーエンドコンプライアンスフロー</h2>
+        <p>以上をすべて組み合わせると、FidesOriginを使用する香港ライセンス取得ステーブルコインの3つの主要な運用フローは以下の通りです：</p>
+
+        <h3>発行フロー</h3>
+        <div class="flow-diagram">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">ユーザーが発行者のオンボーディングポータルでKYCを完了</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">KYC証明書がオンチェーン証明として鋳造される</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">ユーザーが発行者の預託口座に法定通貨を入金</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num ok">4</div><div class="flow-text">預託者が入金を確認 &rarr; ポリシーエンジンが鋳造を承認 &rarr; ステーブルコインがユーザーウォレットに鋳造される</div></div>
+        </div>
+
+        <h3>転送フロー</h3>
+        <div class="flow-diagram">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">ユーザーが受信者アドレスに転送を開始</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">ガードプリチェック：KYCステータス、制裁リスト、速度制限、GNNリスクスコア</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num ok">3a</div><div class="flow-text"><strong>合格：</strong>転送が実行され、コンプライアンスイベントが記録される</div></div>
+          <div class="flow-step"><div class="flow-num block">3b</div><div class="flow-text"><strong>不合格：</strong>取引が理由とともにリバートされ、アラートが生成される</div></div>
+        </div>
+
+        <h3>償還フロー</h3>
+        <div class="flow-diagram">
+          <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">ユーザーがdAppを介して償還をリクエスト</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">ガードが検証：KYC有効、制裁なし、速度制限内</div></div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step"><div class="flow-num ok">3a</div><div class="flow-text"><strong>合格：</strong>ステーブルコインが焼却され、法定通貨転送が開始され、コンプライアンスログが書き込まれる</div></div>
+          <div class="flow-step"><div class="flow-num block">3b</div><div class="flow-text"><strong>不合格：</strong>リクエストが拒否され、ユーザーに通知され、必要に応じてSARが生成される</div></div>
+        </div>
+
+        <h2 id="deployment">実世界の展開</h2>
+        <p>香港を拠点とするステーブルコイン発行者（機密保護のため名前は非公開）は、2025年第2四半期にFidesOriginを統合し、その後香港金融管理局のライセンス申請について<strong>原則的承認</strong>を受けました。主な成果：</p>
+
+        <div class="info-box purple">
+          <h4>展開成果</h4>
+          <p><strong>監査効率：</strong>香港金融管理局の監査人は、Subgraphにクエリすることですべてのコンプライアンス判断を独立して検証でき、監査プロセスを推定6週間から10日間に短縮しました。</p>
+          <p><strong>自動レポート：</strong>香港金融管理局への月次コンプライアンスレポートは、Subgraphデータから自動生成されるようになり、手動のスプレッドシート作成を排除しました。</p>
+          <p><strong>ゼロ偽陰性：</strong>8か月の運用中、システムは制裁対象アドレスを含む取引の100%を正しく識別およびブロックしました（OFAC更新に対するテストで検証済み）。</p>
+          <p><strong>規制信頼：</strong>FidesOriginのコントラクトのオープンソースで監査可能な性質により、香港金融管理局の監査人は、コンプライアンスロジックが発行者によって秘密裏に変更されないという確信を持つことができました。</p>
+        </div>
+
+        <h2 id="conclusion">結論</h2>
+        <p>香港のステーブルコインフレームワークは、規制機関がブロックチェーンテクノロジーと建設的にどのように関わることができるかのモデルです。要件は明確であり、基準は高く、コンプライアンスへの道は技術的に実行可能です。</p>
+        <p>FidesOriginは、このコンプライアンスアーキテクチャを現実のものとするインフラストラクチャ層を提供します。準備認証からリアルタイムAMLスクリーニング、不変の監査証跡まで、すべての香港金融管理局の要件は、具体的なオンチェーン実装にマッピングされます。</p>
+        <p>ステーブルコイン発行者にとって、選択はコンプライアンスするかどうかではありません——規制の方向性は明確です。選択は<em>どのように</em>コンプライアンスするかです：不透明性とベンダーロックインをもたらすクローズドソースのSaaSツールを使用するか、透明性、監査可能性、および規制信頼を提供するオープンソースのオンチェーンインフラストラクチャを使用するか。</p>
+        <p>私たちはFidesOriginを後者のために構築しました。</p>
+
+        <div style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="font-size:0.85rem;color:var(--fio-text-3);"><strong>関連記事：</strong> <a href="/jp/blog/evolution-from-chainalysis.html">暗号リスク管理の進化</a> &middot; <a href="/jp/vs-chainalysis-elliptic.html">競合比較</a></p>
+        </div>
+      </article>
+
+      <aside>
+        <div class="toc reveal">
+          <h4>目次</h4>
+          <a href="#hkma">香港金融管理局フレームワーク</a>
+          <a href="#requirements">4つの柱</a>
+          <a href="#reserve">準備資産</a>
+          <a href="#redemption">償還権</a>
+          <a href="#aml">AML / CFT</a>
+          <a href="#disclosure">開示</a>
+          <a href="#flows">エンドツーエンドフロー</a>
+          <a href="#deployment">実世界の展開</a>
+          <a href="#conclusion">結論</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">FidesOriginで香港金融管理局対応を実現</h2>
+      <p class="cta-desc">コンプライアンスアーキテクチャレビューを予約してください。ステーブルコイン発行計画を香港金融管理局の要件にマッピングし、技術実装を示します。</p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">レビューを予約</a>
+        <a href="/jp/vs-chainalysis-elliptic.html" class="btn-secondary">比較を見る</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px"><span>FidesOrigin</span></div>
+        <p class="footer-desc">トークナイゼーション資産とDeFiのためのオンチェーンコンプライアンスプロトコル。</p>
+      </div>
+      <div class="footer-col">
+        <h4>製品</h4>
+        <a href="/jp/">リスクレーダー</a>
+        <a href="/jp/">ポリシーエンジン</a>
+        <a href="/jp/">監査シールド</a>
+        <a href="/jp/address-check.html">アドレスチェック</a>
+        <a href="/jp/pricing.html">料金</a>
+      </div>
+      <div class="footer-col">
+        <h4>開発者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/jp/docs/">ドキュメント</a>
+        <a href="/jp/docs/api">APIリファレンス</a>
+        <a href="/jp/changelog.html">変更履歴</a>
+      </div>
+      <div class="footer-col">
+        <h4>会社</h4>
+        <a href="/jp/about.html">会社概要</a>
+        <a href="/jp/case-studies.html">ケーススタディ</a>
+        <a href="mailto:contact@fidesorigin.com">お問い合わせ</a>
+        <a href="/jp/privacy.html">プライバシー</a>
+        <a href="/jp/terms.html">利用規約</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>香港 &middot; シンガポール &middot; サンフランシスコ</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } }); }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => { if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); } else { nav.classList.remove('nav-scrolled'); } }, { passive: true });
+function closeMobileMenu() { document.getElementById('mobileMenu').classList.remove('active'); }
+</script>
+</body>
+</html>

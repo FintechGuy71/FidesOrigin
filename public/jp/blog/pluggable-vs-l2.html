@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>プラガブル合規モジュール vs. 専用 L2 — なぜモジュラ性を選んだか — FidesOrigin</title>
+  <meta name="description" content="なぜ FidesOrigin は専用 L2 の構築ではなくプラガブル合規モジュールを選んだのか。モジュラ性の利点：エコシステムロックインなし、1週間でデプロイ、10分の1のコスト。">
+  <meta property="og:title" content="プラガブル合規モジュール vs. 専用 L2 — なぜモジュラ性を選んだか">
+  <meta property="og:description" content="なぜ FidesOrigin は専用 L2 の構築ではなくプラガブル合規モジュールを選んだのか。エコシステムロックインなし、1週間でデプロイ、10分の1のコスト。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://fidesorigin.com/jp/blog/pluggable-vs-l2.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/jp/blog/pluggable-vs-l2.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/pluggable-vs-l2.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/pluggable-vs-l2.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/pluggable-vs-l2.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/pluggable-vs-l2.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="icon" href="../../brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="../../brand/logo-dark-icon.png">
+  <style>
+    .blog-hero { position: relative; padding: 160px 0 40px; overflow: hidden; }
+    .blog-hero .glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; }
+    .blog-hero .glow-1 { width: 400px; height: 400px; background: var(--accent); top: -100px; right: -100px; }
+    .blog-hero-content { position: relative; z-index: 1; }
+    .blog-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 700; line-height: 1.1; letter-spacing: -0.03em; }
+    .blog-hero .display span { background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hr-fade { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); margin: 0 auto; max-width: 800px; }
+    .article { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
+    .article p { margin-bottom: 1.5rem; }
+    .article h2 { color: var(--text); font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+    .article h3 { color: var(--text); font-size: 1.125rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; letter-spacing: -0.01em; }
+    .article ul { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+    .article ul li { margin-bottom: 0.5rem; }
+    .article a { color: var(--accent); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+    .article blockquote { border-left: 2px solid var(--accent); padding-left: 1.25rem; margin: 1.5rem 0; color: var(--text); font-weight: 500; }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article em { color: var(--accent); font-style: italic; }
+    .article .callout { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    .article .callout p:last-child { margin-bottom: 0; }
+    .blog-code-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin: 1.5rem 0; }
+    .blog-code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; background: var(--bg-elevated); border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .blog-code-body { padding: 1rem; overflow-x: auto; }
+    .blog-code-body pre { font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.7; color: var(--text-secondary); margin: 0; }
+    .tk-keyword { color: #c586c0; } .tk-type { color: #4ec9b0; } .tk-func { color: #dcdcaa; } .tk-comment { color: #6a9955; } .tk-string { color: #ce9178; } .tk-number { color: #b5cea8; }
+    .blog-cta { text-align: center; padding: 80px 40px; }
+    .blog-cta .btn-primary { background: var(--accent); color: var(--bg); box-shadow: none; }
+    .blog-cta .btn-primary:hover { background: var(--gold); transform: translateY(-1px); }
+    .related-reading { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin: 2rem 0; }
+    .related-reading h4 { color: var(--text); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+    .related-reading a { display: block; color: var(--text-secondary); padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+    .related-reading a:last-child { border-bottom: none; }
+    .related-reading a:hover { color: var(--accent); }
+    .comparison-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    .comparison-table th, .comparison-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .comparison-table th { color: var(--text); font-weight: 600; background: var(--bg-card); }
+    .comparison-table td { color: var(--text-secondary); }
+    .comparison-table tr:hover td { background: var(--bg-card); }
+    @media (max-width: 640px) { .blog-hero { padding: 120px 0 30px; } .blog-code-body pre { white-space: pre-wrap; word-break: break-all; } .comparison-table { font-size: 0.8rem; } .comparison-table th, .comparison-table td { padding: 0.5rem; } }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "BlogPosting", "headline": "プラガブル合規モジュール vs. 専用 L2 — なぜモジュラ性を選んだか", "description": "なぜ FidesOrigin は専用 L2 の構築ではなくプラガブル合規モジュールを選んだのか。モジュラ性の利点：エコシステムロックインなし、1週間でデプロイ、10分の1のコスト。", "author": { "@type": "Organization", "name": "FidesOrigin Team" }, "publisher": { "@type": "Organization", "name": "FidesOrigin" }, "datePublished": "2026-08-05", "url": "https://fidesorigin.com/jp/blog/pluggable-vs-l2.html" }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">コンテンツへ移動</a>
+  <nav class="nav" aria-label="メインナビゲーション">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo"><img src="../../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">FidesOrigin</a>
+      <div class="nav-left"><a href="/#features">機能</a><a href="/#how-it-works">仕組み</a><a href="/#security">セキュリティ</a><a href="/docs/">ドキュメント</a></div>
+      <div class="nav-actions">
+        <div class="lang-dropdown"><button id="langToggleBtn" aria-label="言語">日本語<svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button><div id="langMenu"><a href="../../blog/pluggable-vs-l2.html">English</a><a href="../../cn/blog/pluggable-vs-l2.html">简体中文</a><a href="../../tw/blog/pluggable-vs-l2.html">繁體中文</a><a href="pluggable-vs-l2.html">日本語</a></div></div>
+        <div class="nav-divider"></div>
+        <div class="wallet-connect-wrap"><button class="wallet-btn" id="wallet-btn" aria-label="接続"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>接続</button><div class="wallet-connected" id="wallet-connected"><div class="wallet-info"><span class="wallet-address" id="wallet-address"></span><span class="wallet-network-badge" id="wallet-network">Sepolia</span></div><button class="wallet-disconnect" id="wallet-disconnect" aria-label="切断">切断</button></div></div>
+        <a href="/#contact" class="nav-cta">はじめる</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="メニューの切り替え" aria-expanded="false"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="メニューを閉じる"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+    <a href="/#features">機能</a><a href="/#how-it-works">仕組み</a><a href="/#security">セキュリティ</a><a href="/docs/">ドキュメント</a>
+    <div class="lang-row"><a href="../../blog/pluggable-vs-l2.html">EN</a><a href="../../cn/blog/pluggable-vs-l2.html">CN</a><a href="../../tw/blog/pluggable-vs-l2.html">TW</a><a href="pluggable-vs-l2.html">JP</a></div>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected"><span id="mobile-wallet-address"></span><button id="mobile-wallet-disconnect" aria-label="切断">切断</button></div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="接続"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>接続</button>
+  </div>
+  <main id="main-content">
+    <section class="blog-hero">
+      <div class="glow glow-1"></div>
+      <div class="container blog-hero-content">
+        <div class="reveal">
+          <p class="micro">ブログ — アーキテクチャ — 2026年8月</p>
+          <h1 class="display">プラガブル合規モジュール<br><span>vs. 専用 L2</span></h1>
+          <p class="lead" style="max-width: 650px; margin-top: 20px;">なぜ独自のチェーンを構築しなかったのか——そしてなぜあなたもそうすべきではないのか。オンチェーンコンプライアンスインフラにおけるモジュラ性の事例。</p>
+        </div>
+      </div>
+    </section>
+    <div class="hr-fade"></div>
+    <article class="article container" style="max-width: 720px; padding-top: 60px; padding-bottom: 60px;">
+      <p>2025年初頭、私たちは根本的なアーキテクチャ上の決断に直面しました。FidesOrigin は注目を集めつつありました。ステーブルコイン発行体が統合について質問していました。問題は：<em>どうやってデプロイするか？</em></p>
+      <p>私たちの前に2つの道がありました。パスA：専用の Layer 2 ブロックチェーン——すべてのトランザクションがネイティブにスクリーニングされる「コンプライアンスチェーン」を構築する。パスB：既存のチェーン上に<em>プラガブルスマートコントラクトモジュール</em>としてデプロイする——Ethereum、Base、Polygon——どのトークンコントラクトも継承できます。</p>
+      <p>私たちはパスBを選びました。以下に、その理由と、なぜこれがオンチェーンコンプライアンスにとって唯一正しい選択であると信じているのかを説明します。</p>
+      <h2>L2 の誘惑</h2>
+      <p>専用 L2 アプローチは魅力的です。フルスタックを制御できます。チェーンをコンプライアンス専用に設計できます。すべてのトランザクションがデフォルトでスクリーニングされます。独自のコンセンサス、独自のガストークン、独自のバリデータセットを持ちます。要塞を構築しているような感覚です——完全で、突破不可能で、目的に特化しています。</p>
+      <p>いくつかのプロジェクトがこの道を歩みました。プレスリリースとトークンセールとともに「初のコンプライアンス特化 L2」を発表しています。ピッチは説得力があります：「私たちのチェーン上で構築すれば、コンプライアンスは自動的です。統合は不要。チェックを見逃すリスクはありません。」</p>
+      <p>しかし、問題があります。コンプライアンス L2 は、自身のチェーンと<em>自身のチェーンのみ</em>のコンプライアンスを解決します。Ethereum メインネット上で構築しているステーブルコイン発行体は使用できません。Base 上の DeFi プロトコルは使用できません。Polygon 上の RWA トークナイゼーションプラットフォームは使用できません。コンプライアンス L2 は孤島です——そして孤島は建設が高価で、住むのが孤独です。</p>
+      <h2>モジュラ性の論理</h2>
+      <p>プラガブルモジュールアプローチはこう言います：<em>新しいチェーンを構築するな。すべてのチェーンで動くコントラクトを構築しろ。</em> FidesOrigin は、アップグレード可能なスマートコントラクトのセットとしてデプロイされます——RiskRegistry、ComplianceEngine、PolicyEngine、Guard——任意の ERC20 または ERC721 コントラクトが私たちのインターフェースを継承することで統合できます。</p>
+      <p>以下が比較です：</p>
+      <table class="comparison-table">
+        <thead><tr><th>次元</th><th>専用 L2</th><th>プラガブルモジュール</th></tr></thead>
+        <tbody>
+          <tr><td><strong>エコシステム依存</strong></td><td>ブリッジ、DEX、ウォレット、オラクルのブートストラップが必要</td><td>なし——ユーザーのいる任意の EVM チェーンで動作</td></tr>
+          <tr><td><strong>デプロイ時間</strong></td><td>6-12ヶ月（チェーン起動 + エコシステム）</td><td>1-2週間（コントラクト統合）</td></tr>
+          <tr><td><strong>運用コスト</strong></td><td>年間50万-200万ドル（バリデータ、インフラ、セキュリティ）</td><td>年間約5万ドル（オラクル + 監視）</td></tr>
+          <tr><td><strong>ユーザーフリクション</strong></td><td>資産のブリッジ、新しいウォレット、新しいガストークン</td><td>ゼロ——ユーザーは既存のトークンと同じように操作</td></tr>
+          <tr><td><strong>マルチチェーン対応</strong></td><td>追加のブリッジが必要</td><td>任意のチェーンに同じコントラクトをデプロイ</td></tr>
+          <tr><td><strong>カスタマイズ性</strong></td><td>ワンサイズフィットオールのチェーンルール</td><td>コントラクトごと、顧客ごとの設定</td></tr>
+          <tr><td><strong>アップグレードパス</strong></td><td>ハードフォークまたはチェーンマイグレーション</td><td>UUPS プロキシ——48時間タイムロック、ダウンタイムなし</td></tr>
+          <tr><td><strong>相互運用性</strong></td><td>L2 エコシステムに限定</td><td>任意の DeFi プロトコルと合成可能</td></tr>
+        </tbody>
+      </table>
+      <p>数字は明確です。専用 L2 は運用コストが10-40倍高く、デプロイに20倍の時間がかかり、到達可能な市場はわずかです。唯一の利点はコントロールです——そしてブロックチェーンにおいて、コントロールはしばしば資産ではなく負債です。</p>
+      <h2>なぜエコシステム依存が L2 コンプライアンスを殺すのか</h2>
+      <p>エコシステムの問題について詳しく説明しましょう。これは L2 アプローチで最も過小評価されているコストです。</p>
+      <p>ステーブルコイン発行体があなたのコンプライアンス L2 でローンチしたいと考えています。素晴らしい。しかし、彼らのユーザーは Ethereum メインネット上で USDC を保有しています。あなたの L2 でステーブルコインを使用するには、以下が必要です：</p>
+      <ul>
+        <li>Ethereum からあなたの L2 へ USDC をブリッジ（ブリッジ手数料を支払い、確認を待つ）</li>
+        <li>あなたの L2 用のウォレットを設定（新しい RPC、新しいチェーン ID、新しいブロックエクスプローラー）</li>
+        <li>あなたのガストークンを取得（別のスワップ、別の手数料、別の学習曲線）</li>
+        <li>あなたのブリッジを信頼（独自のセキュリティ想定とハッキングの歴史がある）</li>
+        <li>あなたの L2 がダウンした場合、資金がアクセスできないことを受け入れる</li>
+      </ul>
+      <p>各ステップがコンバージョンファネルです。各ステップで、ユーザーは脱落します。ステーブルコイン発行体はこのワークフローを見て、<strong>50-80%のユーザーロス率</strong>を見ています——誰かが最初のトランザクションを行う前に。彼らはコンプライアンスと非コンプライアンスの間で選んでいるのではありません。あなたのコンプライアンス孤島と、ユーザーがすでにいる Ethereum に留まることの間で選んでいるのです。</p>
+      <p>モジュールアプローチは、この摩擦を完全に排除します。ステーブルコインは Ethereum に残ります。コンプライアンスモジュールは Ethereum 上のコントラクトです。ユーザーは以前と全く同じようにステーブルコインとやり取りします——同じウォレット、同じガストークン、同じ DEX、同じすべて。コンプライアンスチェックは <code>_update</code> フックで透過的に行われます。トランザクションがブロックされない限り、ユーザーはそれが存在することすら知りません。</p>
+      <p>これは、<em>ユーザーにあなたのところに来てもらう</em>ことと<em>ユーザーがすでにいる場所に行く</em>ことの違いです。後者が常に勝ちます。</p>
+      <h2>ホットプラガブルアーキテクチャ：仕組み</h2>
+      <p>プラガブルモジュールの技術的実装は、3つのコアパターンに基づいています：UUPS アップグレード可能性、独立したストラテジーコントラクト、および継承可能なコンプライアンスインターフェースです。</p>
+      <h3>UUPS プロキシパターン</h3>
+      <p>すべての FidesOrigin コントラクトは UUPS（Universal Upgradeable Proxy Standard）パターンを使用します。これは、コントラクトアドレスが変更されないが、実装ロジックをアップグレードできることを意味します。新しいバージョンの ComplianceEngine——改善されたリスクスコアリングや新しいポリシータイプを含む——をリリースする際、新しい実装をデプロイし、48時間タイムロックでアップグレードを提案し、実行します。コントラクトアドレスは同じままです。すべての統合トークンは自動的に新しいロジックを取得します。マイグレーションは不要です。ダウンタイムはありません。</p>
+      <div class="blog-code-block">
+        <div class="blog-code-header"><span>FidesCompliance.sol — UUPS アップグレード認可</span><span>Solidity 0.8.20</span></div>
+        <div class="blog-code-body">
+<pre><span class="tk-comment">/**
+ * @notice UUPS アップグレード認可 — ADMIN_ROLE のみがアップグレードを実行可能
+ * @dev アップグレードタイムロックチェックを追加（48時間遅延）
+ */
+</span><span class="tk-keyword">function</span> <span class="tk-func">_authorizeUpgrade</span>(<span class="tk-keyword">address</span> newImplementation)
+    <span class="tk-keyword">internal override onlyRole</span>(ADMIN_ROLE)
+{
+    <span class="tk-keyword">bytes32</span> proposalId = implementationToProposal[newImplementation];
+    <span class="tk-func">require</span>(proposalId != <span class="tk-keyword">bytes32</span>(<span class="tk-number">0</span>), <span class="tk-string">"No upgrade proposal"</span>);
+    <span class="tk-keyword">uint256</span> executeAfter = upgradeProposals[proposalId];
+    <span class="tk-func">require</span>(executeAfter != <span class="tk-number">0</span>, <span class="tk-string">"No upgrade proposal"</span>);
+    <span class="tk-func">require</span>(block.timestamp >= executeAfter, <span class="tk-string">"Upgrade timelock active"</span>);
+    <span class="tk-comment">// 提案記録のクリーンアップ</span>
+    <span class="tk-keyword">delete</span> upgradeProposals[proposalId];
+    <span class="tk-keyword">delete</span> implementationToProposal[newImplementation];
+    <span class="tk-keyword">emit</span> <span class="tk-type">UpgradeExecuted</span>(proposalId, newImplementation);
+}</pre>
+        </div>
+      </div>
+      <p>48時間タイムロックは譲歩できません。統合プロトコルに新しい実装をレビューし、独自のテストを実行し、アップグレードを受け入れるかどうかを決定する時間を与えます。同意しない場合は、実装をフォークし、プロキシを独自のバージョンに向けることができます。モジュラ性は双方向に機能します——私たちがデフォルトを提供しますが、顧客が自身の運命を掌握します。</p>
+      <h3>独立したストラテジーコントラクト</h3>
+      <p>PolicyEngine コントラクトは、プラガブルストラテジーコントラクトに特定のルール評価を委譲します。各ストラテジーは <code>IAssetCompliance</code> インターフェースを実装し、独立して交換できます。顧客は、KYC 検証用のストラテジー、取引限度用のストラテジー、地理制限用のストラテジーを持つことがあります。コアコンプライアンスロジックに触れることなく、ストラテジーを追加、削除、または交換できます。</p>
+      <div class="blog-code-block">
+        <div class="blog-code-header"><span>PolicyEngine — ストラテジーパターン</span><span>Solidity 0.8.20</span></div>
+        <div class="blog-code-body">
+<pre><span class="tk-keyword">interface</span> <span class="tk-type">IAssetCompliance</span> {
+    <span class="tk-keyword">enum</span> <span class="tk-type">Decision</span> { <span class="tk-type">ALLOW</span>, <span class="tk-type">WARN</span>, <span class="tk-type">BLOCK</span>, <span class="tk-type">HOLD</span> }
+    <span class="tk-keyword">function</span> <span class="tk-func">checkTransfer</span>(<span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to, <span class="tk-keyword">uint256</span> amount, <span class="tk-keyword">address</span> token) <span class="tk-keyword">external view returns</span> (<span class="tk-type">Decision</span>, <span class="tk-keyword">string memory</span>);
+}
+<span class="tk-comment">// 顧客が独自のストラテジーをデプロイ</span>
+<span class="tk-keyword">contract</span> <span class="tk-type">CustomKYCTransferLimit</span> <span class="tk-keyword">is</span> <span class="tk-type">IAssetCompliance</span> {
+    <span class="tk-keyword">uint256</span> <span class="tk-keyword">public</span> dailyLimit = <span class="tk-number">100000</span> * <span class="tk-number">1e18</span>;
+    <span class="tk-keyword">mapping</span>(<span class="tk-keyword">address</span> => <span class="tk-keyword">uint256</span>) <span class="tk-keyword">public</span> dailyTransferred;
+    <span class="tk-keyword">function</span> <span class="tk-func">checkTransfer</span>(<span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to, <span class="tk-keyword">uint256</span> amount, <span class="tk-keyword">address</span> token) <span class="tk-keyword">external view returns</span> (<span class="tk-type">Decision</span>, <span class="tk-keyword">string memory</span>) {
+        <span class="tk-keyword">if</span> (dailyTransferred[from] + amount > dailyLimit) {
+            <span class="tk-keyword">return</span> (<span class="tk-type">Decision.BLOCK</span>, <span class="tk-string">"Daily limit exceeded"</span>);
+        }
+        <span class="tk-keyword">return</span> (<span class="tk-type">Decision.ALLOW</span>, <span class="tk-string">""</span>);
+    }
+}</pre>
+        </div>
+      </div>
+      <h3>継承可能なコンプライアンスインターフェース</h3>
+      <p>任意のトークンの統合ポイントは <code>IFidesCompliance</code> インターフェースです。ステーブルコインコントラクトはこのインターフェースを継承し、転送フックで <code>evaluateTransaction()</code> を呼び出します。このインターフェースは意図的に最小限です——3つの関数、クリーンな抽象化——そのため、統合には最小限のコード変更のみが必要です。</p>
+      <div class="blog-code-block">
+        <div class="blog-code-header"><span>CompliantStableCoin.sol — 統合例</span><span>Solidity 0.8.20</span></div>
+        <div class="blog-code-body">
+<pre><span class="tk-keyword">contract</span> <span class="tk-type">CompliantStableCoin</span> <span class="tk-keyword">is</span> <span class="tk-type">ERC20</span>, <span class="tk-type">IFidesCompliance</span> {
+    <span class="tk-type">IFidesCompliance</span> <span class="tk-keyword">public</span> fides;
+    <span class="tk-keyword">function</span> <span class="tk-func">_update</span>(<span class="tk-keyword">address</span> from, <span class="tk-keyword">address</span> to, <span class="tk-keyword">uint256</span> amount) <span class="tk-keyword">internal override</span> {
+        <span class="tk-keyword">if</span> (from != <span class="tk-keyword">address</span>(<span class="tk-number">0</span>)) {  <span class="tk-comment">// ミントをスキップ</span>
+            (<span class="tk-keyword">bool</span> allowed, <span class="tk-keyword">uint256</span> risk) = fides.<span class="tk-func">evaluateTransaction</span>(from, to, amount, <span class="tk-keyword">address</span>(<span class="tk-keyword">this</span>), <span class="tk-number">0</span>);
+            <span class="tk-keyword">if</span> (!allowed) <span class="tk-keyword">revert</span> <span class="tk-type">ComplianceViolation</span>(from, to, risk);
+        }
+        <span class="tk-keyword">super</span>.<span class="tk-func">_update</span>(from, to, amount);
+    }
+}</pre>
+        </div>
+      </div>
+      <p>これが統合のすべてです。開発者は1時間以内に既存の ERC20 に FidesOrigin コンプライアンスを追加できます。ブリッジは不要です。新しいチェーンは不要です。新しいガストークンは不要です。インターフェースをインポートし、フックを追加し、デプロイするだけです。</p>
+      <h2>実際の顧客デプロイ</h2>
+      <p>モジュラ性の論理は理論的なものではありません。3つの異なる顧客プロファイルでデプロイしました。それぞれ異なる要件とタイムラインを持っています。</p>
+      <h3>顧客A：KYC + 限度額ステーブルコイン</h3>
+      <p>ヨーロッパの電子マネー発行体は、基本的なコンプライアンスを備えたユーロ建てステーブルコインのローンチを希望していました：すべての保有者の KYC、毎日の転送限度額、地理制限（制裁対象国への取引不可）。機関顧客がそれを求めていたため、Ethereum メインネット上でローンチしました。</p>
+      <p>タイムライン：<strong>2日</strong>初回通話から本番デプロイまで。</p>
+      <p>Ethereum 上に FidesCompliance コントラクトをデプロイし、KYC ホワイトリストを持つ RiskRegistry を設定し、転送限度額を持つ PolicyEngine を設定しました（小売は毎日1万ユーロ、機関は毎日100万ユーロ）。ステーブルコインコントラクトは12行の Solidity で私たちのインターフェースを統合しました。法務チームが設定をレビューしました。監査人がコントラクトを検証しました。木曜日の午後に稼働しました。</p>
+      <p>コスト：デプロイガスで約3,000ドル（Ethereum メインネット、2026年4月）。継続的：オラクル更新と監視のため毎月2,000ドル。</p>
+      <p>L2 アプローチでは以下が必要でした：ブリッジの構築または提携、ユーザーに資金移動を説得、流動性のブートストラップ、6-12ヶ月の待機。ステーブルコインは2027年ではなく2026年にローンチします。市場機会は失われます。</p>
+      <h3>顧客B：制裁 + ジオフェンシング RWA プラットフォーム</h3>
+      <p>不動産やプライベートエクイティなどの実世界資産トークンをローンチするトークナイゼーションプラットフォームは、包括的な制裁スクリーニングに加えて地理的コンプライアンスが必要でした。ユーザーはグローバルに分布しています——米国、EU、シンガポール、UAE——それぞれの司法管轄区に異なる要件があります。</p>
+      <p>タイムライン：<strong>1週間</strong>要件定義から本番まで。</p>
+      <p>3つのチェーンに同時にデプロイしました：Ethereum（プライマリ）、Base（コスト効率の高い小売）、Polygon（機関）。各デプロイは同じコアコントラクトを使用しますが、異なる PolicyEngine 設定を使用します：米国の投資家は完全な OFAC + FinCEN スクリーニングを受け、EU の投資家は EU 制裁 + MiCA 取引報告を受け、シンガポールの投資家は MAS ガイドライン + ジオフェンシングを受けます。RWA トークンコントラクトはすべての3つのチェーンで同じインターフェースを継承します。</p>
+      <p>重要な洞察：モジュラ性により、コードをフォークすることなく<em>デプロイごとに</em>設定できます。同じコントラクト、異なるポリシー。3つのチェーン、1つのコードベース。専用 L2 では、（a）全員に対して単一のポリシー、または（b）3つの別々の L2 を実行する必要があります。</p>
+      <h3>顧客C：フルカスタム DeFi プロトコル</h3>
+      <p>コンプライアントなレンディングマーケットを構築する DeFi プロトコルは、標準モジュールを超えたいと考えていました。必要なもの：担保タイプに基づく動的リスクスコアリング、借り手の評判履歴、リアルタイムの市場状況。独自のオンチェーンアイデンティティシステムも統合したいと考えていました。</p>
+      <p>タイムライン：<strong>3週間</strong>SDK アクセスから本番まで。</p>
+      <p>SDK——完全なコントラクトソース、テストスイート、デプロイスクリプト——および拡張ポイントのドキュメントを提供しました。彼らのエンジニアリングチームは、レンディングロジック用のカスタム PolicyEngine ストラテジー、ID システム用のカスタム Oracle アダプター、リアルタイム市場リスク評価用のカスタム Guard モジュールを構築しました。Base（低ガス、高速ファイナリティ）にデプロイし、基本層の制裁スクリーニングとして RiskRegistry と統合しました。</p>
+      <p>SDK アプローチは、モジュラ性があるからこそ可能です。専用 L2 では、「カスタム」は（a）L2 チームにチェーンアップグレードを依頼し数週間待つ、または（b）チェーン全体をフォークすることを意味します。どちらも週次リリースの DeFi プロトコルにとって実行可能ではありません。</p>
+      <h2>コストの現実</h2>
+      <p>お金について話しましょう。ここが L2 の幻想が崩壊する場所です。</p>
+      <p>専用 L2 を実行することは<em>高価</em>です。以下は、中規模のコンプライアンス L2 の現実的なコスト内訳です：</p>
+      <ul>
+        <li><strong>バリデータインフラ：</strong>10-20のバリデータノード、各月2,000-5,000ドル = 年間24万-120万ドル</li>
+        <li><strong>シーケンサー / プロポーザー：</strong>高可用性インフラ、年間5万-10万ドル</li>
+        <li><strong>データ可用性：</strong>Ethereum L1 への投稿（ロールアップの場合）またはデータ可用性委員会 = 年間10万-50万ドル</li>
+        <li><strong>ブリッジセキュリティ：</strong>マルチシグ、監視、保険 = 年間10万-30万ドル</li>
+        <li><strong>エンジニアリングチーム：</strong>チェーンを維持する3-5名のプロトコルエンジニア = 年間60万-150万ドル</li>
+        <li><strong>法務 / コンプライアンス：</strong>チェーンの運営は規制の複雑さを増す = 年間20万-50万ドル</li>
+      </ul>
+      <p><strong>合計：年間130万-410万ドル</strong>——これは最初の有料顧客を獲得する前です。</p>
+      <p>対照的に、FidesOrigin のモジュールデプロイのコストは：</p>
+      <ul>
+        <li><strong>コントラクトデプロイ：</strong>ワンタイムのガス料金（チェーンあたり約3,000-10,000ドル）</li>
+        <li><strong>オラクルインフラ：</strong>年間3万-5万ドル</li>
+        <li><strong>監視とアラート：</strong>年間1.5万-3万ドル</li>
+        <li><strong>エンジニアリング：</strong>メンテナンスとアップグレード用に1-2名のエンジニア = 年間20万-40万ドル</li>
+      </ul>
+      <p><strong>合計：年間約25万-50万ドル</strong>——L2 アプローチよりおおよそ<strong>10分の1</strong>のコストで、顧客獲得の摩擦はほぼゼロです。</p>
+      <p>経済性は圧倒的です。モジュールアプローチはコスト、時間、リーチのすべてで桁違いに勝ちます。専用 L2 が意味を持つのは、ゼロからエコシステム全体を構築する場合のみです——それでも、チェーンをコントロールする増分価値に対して年間100万ドル以上の燃費を正当化する必要があります。</p>
+      <h2>なぜモジュラ性が未来なのか</h2>
+      <p>ブロックチェーン業界はモジュラ性に向かっています。Ethereum のロールアップ中心のロードマップ、Celestia のデータ可用性レイヤー、EigenLayer のリステーキング——トレンドは明確です。モノリシックチェーンは、組み合わせて機能する専門化されたレイヤーに道を譲っています。FidesOrigin のプラガブルコンプライアンスモジュールも、この同じアーキテクチャシフトの一部です。</p>
+      <p>私たちは独自のチェーンを必要としません。なぜなら<em>チェーンはすでに存在する</em>からです。Ethereum は5,000億ドル以上の TVL、数千の dApp、DeFi で最も深い流動性を持っています。Base はサブセントのガスと Coinbase のディストリビューションを持っています。Polygon はエンタープライズパートナーシップと規制の明確さを持っています。これらは、私たちが複製する必要があるエコシステムではありません。私たちが<em>サービスを提供する</em>エコシステムです。</p>
+      <p>コンプライアンスプロトコルの仕事はチェーンになることではありません。<em>すべてのチェーン</em>をコンプライアントにすることです。それは、独自の島を構築する理由だったコンプライアンスを、すでに構築している場所に差し込めるモジュールに変えることです。</p>
+      <p>これは長期的に勝つアーキテクチャです。安いからではありません（そうですが）。デプロイが速いからでもありません（そうですが）。なぜなら、技術導入がどのように機能するかについての基本的な真実を尊重しているからです：<em>人々は新しいプラットフォームにインフラのために移動しません。彼らは、すでにいる場所に来るインフラを採用します。</em></p>
+      <p>FidesOrigin は、あなたに私たちのチェーン上で構築するよう求めません。すでに使用しているチェーン上のコントラクトに3行のコードを追加するよう求めます。それがモジュラ性の約束です——そして私たちが L2 の道を決して考慮しなかった理由です。</p>
+      <div class="related-reading">
+        <h4>関連記事</h4>
+        <a href="guard-pre-transaction.html">トランザクション前ガード — オンチェーンリスク管理の新基準</a>
+        <a href="gnn-address-profiling.html">グラフニューラルネットワークによるオンチェーンアドレスプロファイリング</a>
+        <a href="why-on-chain-compliance.html">なぜオンチェーンか：APIベースコンプライアンスの終焉</a>
+      </div>
+    </article>
+    <div class="hr-fade"></div>
+    <section class="blog-cta">
+      <div class="container" style="max-width: 600px;">
+        <h2 class="h2" style="margin-bottom: 16px;">1週間でデプロイ、1年ではなく</h2>
+        <p class="lead" style="margin-bottom: 32px;">FidesOrigin のプラガブルコンプライアンスモジュールは、数日で任意の EVM チェーンにデプロイされます。ブリッジなし。新しいチェーンなし。エコシステムのブートストラップなし。コンプライアンスだけを、あなたのユーザーがすでにいる場所に。</p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <a href="/" class="btn btn-primary">FidesOrigin を探索<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg></a>
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary">デモを依頼</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><a href="/" class="nav-logo"><img src="../../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">FidesOrigin</a><p>金融の未来のためのプログラマブルなオンチェーンコンプライアンス。</p></div>
+        <div class="footer-col"><h4>製品</h4><a href="/#features">機能</a><a href="/#how-it-works">仕組み</a><a href="/#security">セキュリティ</a><a href="/admin/">ダッシュボード</a></div>
+        <div class="footer-col"><h4>開発者</h4><a href="/docs/" target="_blank" rel="noopener">ドキュメント</a><a href="/docs/api.html" target="_blank" rel="noopener">API リファレンス</a><a href="/docs/sdk.html" target="_blank" rel="noopener">SDK</a><a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a></div>
+        <div class="footer-col"><h4>会社</h4><a href="mailto:contact@fidesorigin.com">お問い合わせ</a><a href="/blog/">ブログ</a><a href="/privacy.html">プライバシー</a><a href="/terms.html">利用規約</a></div>
+      </div>
+      <div class="footer-bottom"><p>&copy; 2026 FidesOrigin. All rights reserved.</p><p>オンチェーン金融の世界のために心を込めて構築。</p></div>
+    </div>
+  </footer>
+  <script src="../../wallet-connect.js"></script>
+  <script>
+    function toggleMobileMenu() { var menu = document.getElementById('mobileMenu'); var isActive = menu.classList.toggle('active'); document.body.style.overflow = isActive ? 'hidden' : ''; var btn = document.querySelector('.nav-mobile-btn'); if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false'); }
+    document.addEventListener('DOMContentLoaded', function() { var mobileBtn = document.querySelector('.nav-mobile-btn'); if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu); var closeBtn = document.querySelector('.mobile-menu-close'); if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu); document.querySelectorAll('#mobileMenu a').forEach(function(link) { link.addEventListener('click', toggleMobileMenu); }); });
+    function toggleLangMenu(e) { e.stopPropagation(); var menu = document.getElementById('langMenu'); menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('DOMContentLoaded', function() { var langBtn = document.getElementById('langToggleBtn'); if (langBtn) langBtn.addEventListener('click', toggleLangMenu); });
+    document.addEventListener('click', function() { var menu = document.getElementById('langMenu'); if (menu) menu.style.display = 'none'; });
+    (function() { var observer = new IntersectionObserver(function(entries) { entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('visible'); } }); }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }); document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); }); })();
+    (function() { var btn = document.createElement('button'); btn.className = 'scroll-top'; btn.innerHTML = '&uarr;'; btn.setAttribute('aria-label', 'トップへ戻る'); document.body.appendChild(btn); window.addEventListener('scroll', function() { btn.classList.toggle('visible', window.scrollY > 400); }); btn.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); }); })();
+  </script>
+</body>
+</html>

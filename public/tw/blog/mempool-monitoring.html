@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>即時記憶體池監控實現零確認風險攔截 —— FidesOrigin</title>
+<meta name="description" content="FidesOrigin如何監控記憶體池以在確認前攔截風險交易。架構、延遲基準測試，以及與Flashbots的整合。"/>
+<meta property="og:title" content="即時記憶體池監控實現零確認風險攔截"/>
+<meta property="og:description" content="以亞100毫秒記憶體池監控在確認前攔截風險交易。"/>
+<meta property="og:type" content="article"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta property="og:url" content="https://fidesorigin.com/tw/blog/mempool-monitoring.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="即時記憶體池監控實現零確認風險攔截"/>
+<meta name="twitter:description" content="以亞100毫秒記憶體池監控在確認前攔截風險交易。"/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/tw/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/mempool-monitoring.html"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"即時記憶體池監控實現零確認風險攔截","author":{"@type":"Organization","name":"FidesOrigin"},"publisher":{"@type":"Organization","name":"FidesOrigin","logo":{"@type":"ImageObject","url":"https://fidesorigin.com/brand/logo-dark-icon.png"}},"datePublished":"2026-08-06","url":"https://fidesorigin.com/tw/blog/mempool-monitoring.html"}</script>
+<style>
+  :root {
+    --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320;
+    --fio-surface-3:#181b28; --fio-elevated:#1e2230; --fio-border:#252a3a; --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a;
+    --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .container { max-width:860px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+  .container-wide { max-width:1200px; margin:0 auto; padding:0 24px; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
+
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  .hero { position:relative; overflow:hidden; min-height:55vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-inner { position:relative; z-index:2; padding:80px 0 50px; width:100%; text-align:center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-accent-dim); border:1px solid rgba(155,142,216,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-accent); margin-bottom:24px; }
+  .hero-title { font-family:var(--font-display); font-size:clamp(1.8rem,4.5vw,3.2rem); font-weight:500; line-height:1.1; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:16px; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(0.95rem,1.3vw,1.1rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 24px; }
+  .hero-meta { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+
+  .section { padding:80px 0; }
+  @media(min-width:768px){ .section { padding:100px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+
+  .article-body { font-size:1.05rem; line-height:1.8; color:var(--fio-text-2); }
+  .article-body h2 { font-family:var(--font-display); font-size:clamp(1.4rem,3vw,1.9rem); font-weight:500; color:var(--fio-text); margin:56px 0 20px; letter-spacing:-0.02em; }
+  .article-body h3 { font-family:var(--font-display); font-size:clamp(1.1rem,2vw,1.35rem); font-weight:500; color:var(--fio-text); margin:36px 0 14px; }
+  .article-body p { margin-bottom:20px; }
+  .article-body strong { color:var(--fio-text); font-weight:600; }
+  .article-body ul { margin-bottom:20px; padding-left:24px; }
+  .article-body li { margin-bottom:8px; }
+  .article-body a { color:var(--fio-accent); text-decoration:underline; text-underline-offset:3px; }
+  .article-body a:hover { color:var(--fio-gold); }
+  .article-body code { font-family:var(--font-mono); font-size:0.88em; background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; color:var(--fio-gold); }
+
+  .code-block { background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:14px; overflow:hidden; margin:28px 0; }
+  .code-header { display:flex; align-items:center; gap:8px; padding:12px 16px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); }
+  .code-header .dot { width:10px; height:10px; border-radius:50%; }
+  .code-header .dot.r { background:#ff5f57; } .code-header .dot.y { background:#febc2e; } .code-header .dot.g { background:#28c840; }
+  .code-header .title { font-size:0.7rem; color:var(--fio-text-3); margin-left:8px; font-family:var(--font-mono); }
+  .code-body { padding:20px 24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.75; overflow-x:auto; color:var(--fio-text-2); }
+  .code-body .kw { color:#c678dd; } .code-body .fn { color:#61afef; } .code-body .str { color:#98c379; }
+  .code-body .num { color:#d19a66; } .code-body .cm { color:#5c6370; font-style:italic; }
+  .code-body .ty { color:#e5c07b; }
+
+  .perf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:32px 0; }
+  @media(max-width:640px){ .perf-grid { grid-template-columns:1fr; } }
+  .perf-card { padding:28px 24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; text-align:center; }
+  .perf-card .num { font-family:var(--font-mono); font-size:2rem; font-weight:700; color:var(--fio-gold); line-height:1; margin-bottom:8px; }
+  .perf-card .label { font-size:0.78rem; color:var(--fio-text-3); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; }
+  .perf-card .desc { font-size:0.85rem; color:var(--fio-text-2); margin-top:6px; }
+
+  .info-box { padding:24px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:28px 0; }
+  .info-box.purple { border-color:rgba(155,142,216,0.15); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
+  .info-box h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; }
+  .info-box p { font-size:0.92rem; color:var(--fio-text-2); line-height:1.7; margin:0; }
+
+  .diagram { padding:32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; margin:28px 0; }
+  .diagram-title { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:20px; text-align:center; }
+  .flow-row { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .flow-box { padding:12px 20px; background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:10px; font-size:0.82rem; font-family:var(--font-mono); text-align:center; }
+  .flow-box.highlight { background:var(--fio-accent-dim); color:var(--fio-accent); border-color:rgba(155,142,216,0.15); }
+  .flow-box.warn { background:rgba(251,142,142,0.06); color:var(--fio-danger); border-color:rgba(251,142,142,0.1); }
+  .flow-box.ok { background:rgba(92,230,138,0.06); color:var(--fio-success); border-color:rgba(92,230,138,0.1); }
+  .flow-arrow { color:var(--fio-text-4); font-size:1.2rem; }
+  @media(max-width:640px){ .flow-row { flex-direction:column; } .flow-arrow { transform:rotate(90deg); } }
+
+  .cta-banner { padding:80px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:500; color:var(--fio-text); margin-bottom:14px; }
+  .cta-desc { font-size:1rem; color:var(--fio-text-2); margin-bottom:28px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+
+  .reveal { opacity:0; transform:translateY(30px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+  .reveal-delay-3 { transition-delay:0.35s; }
+
+  .toc { position:sticky; top:80px; padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; margin-bottom:32px; }
+  .toc h4 { font-family:var(--font-display); font-size:0.85rem; font-weight:500; color:var(--fio-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em; }
+  .toc a { display:block; font-size:0.8rem; color:var(--fio-text-3); padding:6px 0; transition:color 0.2s; border-bottom:1px solid rgba(255,255,255,0.02); }
+  .toc a:hover { color:var(--fio-accent); }
+  .toc a:last-child { border-bottom:none; }
+  @media(max-width:1024px){ .toc { position:static; } }
+
+  .article-layout { display:grid; grid-template-columns:1fr 260px; gap:48px; }
+  @media(max-width:1024px){ .article-layout { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/tw/" onclick="closeMobileMenu()">首頁</a>
+  <a href="/tw/architecture.html" onclick="closeMobileMenu()">架構</a>
+  <a href="/tw/blog/" onclick="closeMobileMenu()">部落格</a>
+  <a href="/tw/pricing.html" onclick="closeMobileMenu()">定價</a>
+  <a href="mailto:contact@fidesorigin.com" class="btn-primary" style="display:inline-block;margin-top:16px;text-align:center">申請演示</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/tw/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/tw/">首頁</a>
+      <a href="/tw/architecture.html">架構</a>
+      <a href="/tw/blog/">部落格</a>
+      <a href="/tw/pricing.html">定價</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">申請演示</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">技術深度解析</div>
+      <h1 class="hero-title anim-fade-up anim-d2">
+        即時記憶體池監控實現<br>
+        <span class="hero-title-accent">零確認風險攔截</span>
+      </h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">
+        FidesOrigin如何監控記憶體池，在單一區塊確認之前就阻止風險交易——以及為什麼傳統的事後確認分析為時已晚。
+      </p>
+      <div class="hero-meta anim-fade-up anim-d3">FidesOrigin 工程 &middot; 2026年8月 &middot; 10分鐘閱讀</div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="article-layout">
+      <article class="article-body reveal">
+
+        <h2 id="what-is-mempool">什麼是記憶體池？</h2>
+        <p>在交易被納入區塊並提交到區塊鏈之前，它暫時存放在一個稱為<strong>記憶體池</strong>（memory pool）的暫存區中。每個全節點都維護著自己的記憶體池，這是一個等待被開採的待處理交易動態緩衝區。</p>
+        <p>當使用者廣播一筆交易時，它會透過點對點網路傳播，並進入數千個節點的記憶體池中。礦工從本地記憶體池中選擇交易納入下一個區塊，通常優先選擇Gas費最高的交易。在該區塊被開採之前，交易是「未確認」的——它存在於網路的意識中，但不在其永久記錄中。</p>
+        <p>這種未確認狀態既是特性也是漏洞。它是特性，因為它實現了快速傳播和費用市場動態。它是漏洞，因為<strong>記憶體池中的交易仍然可以執行</strong>——如果它的目的地是受制裁地址、釣魚合約或已知漏洞，等待區塊確認意味著損害已經造成。</p>
+
+        <h2 id="problem">零確認問題</h2>
+        <p>傳統加密合規遵循一個簡單的工作流程：</p>
+        <ol>
+          <li>交易被廣播到網路</li>
+          <li>交易被納入區塊（以太坊上12秒，比特幣上約10分鐘）</li>
+          <li>交易收到1-3次確認</li>
+          <li>風險平台針對資料庫查詢交易哈希</li>
+          <li>合規團隊審查警報</li>
+          <li>採取行動（如果有的話）</li>
+        </ol>
+        <p>到第6步時，資金已經轉移。合規團隊正在記錄犯罪，而非預防犯罪。對於Base或Polygon等高速鏈，從廣播到最終確定的整個序列可能不到3秒。人工介入的合規無法跟上。</p>
+        <p>這就是<strong>零確認缺口</strong>：傳統工具在交易廣播到區塊納入之間的窗口期是盲目的，手動介入是不可能的。FidesOrigin透過將決策點從<em>確認後</em>移到<em>納入前</em>來彌補這個缺口。</p>
+
+        <div class="info-box purple">
+          <h4>關鍵洞察</h4>
+          <p>在以太坊上，一筆標準的ERC-20轉帳在約12秒內確認。但交易在廣播後<strong>200-500毫秒</strong>內就在記憶體池中可見。這200毫秒的窗口就是FidesOrigin評估和攔截所需的全部時間。</p>
+        </div>
+
+        <h2 id="architecture">MempoolWatcher架構</h2>
+        <p>FidesOrigin <code>MempoolWatcher</code>是一個即時串流管道，透過WebSocket連接到全節點，攝取待處理交易，並在它們到達區塊之前根據風險註冊表進行評估。</p>
+
+        <div class="diagram">
+          <div class="diagram-title">MempoolWatcher 資料流</div>
+          <div class="flow-row">
+            <div class="flow-box">全節點<br><span style="font-size:0.7rem;color:var(--fio-text-3)">WebSocket</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box highlight">MempoolWatcher<br><span style="font-size:0.7rem;color:var(--fio-text-3)">解析器</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box highlight">地址匹配<br><span style="font-size:0.7rem;color:var(--fio-text-3)">過濾器</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box highlight">風險評分<br><span style="font-size:0.7rem;color:var(--fio-text-3)">GNN + ML</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box ok">警報 / 攔截<br><span style="font-size:0.7rem;color:var(--fio-text-3)">&lt;100毫秒</span></div>
+          </div>
+        </div>
+
+        <h3>1. 全節點WebSocket連接</h3>
+        <p>Watcher透過WebSocket維護與每個支援網路上地理分佈的全節點的持久連接。我們使用<code>eth_subscribe</code>搭配<code>newPendingTransactions</code>主題，接收進入記憶體池的交易哈希串流。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">WebSocket Subscription (TypeScript)</span>
+          </div>
+          <div class="code-body">
+<span class="cm">// Connect to Ethereum full node via WebSocket</span>
+<span class="kw">const</span> ws = <span class="kw">new</span> <span class="ty">WebSocket</span>(<span class="str">"wss://eth-mainnet.g.alchemy.com/v2/..."</span>);
+
+ws.<span class="fn">on</span>(<span class="str">"open"</span>, () => {
+  ws.<span class="fn">send</span>(<span class="ty">JSON</span>.<span class="fn">stringify</span>({
+    jsonrpc: <span class="str">"2.0"</span>,
+    id: 1,
+    method: <span class="str">"eth_subscribe"</span>,
+    params: [<span class="str">"newPendingTransactions"</span>]
+  }));
+});
+
+ws.<span class="fn">on</span>(<span class="str">"message"</span>, <span class="kw">async</span> (data) => {
+  <span class="kw">const</span> { params: { result: txHash } } = <span class="ty">JSON</span>.<span class="fn">parse</span>(data);
+  <span class="cm">// txHash is a pending transaction — evaluate immediately</span>
+  <span class="kw">await</span> <span class="fn">evaluateTransaction</span>(txHash);
+});
+          </div>
+        </div>
+
+        <h3>2. 交易解析與解碼</h3>
+        <p>每個待處理交易哈希立即透過<code>eth_getTransactionByHash</code>獲取，以檢索完整交易物件：發送者、接收者、價值、資料負載和Gas參數。對於ERC-20轉帳，輸入資料被解碼以提取實際的代幣接收者和轉帳金額。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Transaction Decoding</span>
+          </div>
+          <div class="code-body">
+<span class="cm">// Decode ERC-20 transfer from input data</span>
+<span class="kw">const</span> iface = <span class="kw">new</span> <span class="ty">ethers</span>.<span class="ty">Interface</span>(ERC20_ABI);
+<span class="kw">const</span> decoded = iface.<span class="fn">parseTransaction</span>({ data: tx.input });
+
+<span class="kw">if</span> (decoded?.name === <span class="str">"transfer"</span>) {
+  <span class="kw">const</span> [to, amount] = decoded.args;
+  <span class="cm">// 'to' is the actual recipient, not necessarily tx.to</span>
+  <span class="kw">await</span> <span class="fn">screenAddress</span>(to, {
+    sender: tx.from,
+    amount: amount.<span class="fn">toString</span>(),
+    token: tx.to, <span class="cm">// token contract address</span>
+    network: <span class="str">"ethereum"</span>
+  });
+}
+          </div>
+        </div>
+
+        <h3>3. 地址匹配與風險評分</h3>
+        <p>一旦提取發送者和接收者地址，就會透過兩階段流程對照FidesOrigin風險註冊表進行檢查：</p>
+        <ul>
+          <li><strong>第一階段——精確匹配：</strong>地址對照受制裁、釣魚和已知漏洞地址的熱點清單進行檢查。這是O(1)雜湊映射查詢，耗時&lt;1毫秒。</li>
+          <li><strong>第二階段——GNN評分：</strong>對於不在熱點清單上的地址，圖神經網路評估地址的關係圖譜（交易鄰居、時間模式、交易對手風險）。這產生0-100的風險評分。</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Risk Evaluation Pipeline</span>
+          </div>
+          <div class="code-body">
+<span class="kw">async function</span> <span class="fn">evaluateTransaction</span>(txHash: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">RiskResult</span>&gt; {
+  <span class="kw">const</span> tx = <span class="kw">await</span> provider.<span class="fn">getTransaction</span>(txHash);
+  <span class="kw">const</span> { from, decodedTo, value } = <span class="fn">parseTransaction</span>(tx);
+
+  <span class="cm">// Phase 1: Exact match against hotlist</span>
+  <span class="kw">const</span> hotlistHit = <span class="kw">await</span> riskRegistry.<span class="fn">isSanctioned</span>(decodedTo);
+  <span class="kw">if</span> (hotlistHit) {
+    <span class="kw">return</span> { action: <span class="str">"BLOCK"</span>, reason: <span class="str">"SANCTIONED_ADDRESS"</span>, latencyMs: <span class="num">12</span> };
+  }
+
+  <span class="cm">// Phase 2: GNN relationship scoring</span>
+  <span class="kw">const</span> score = <span class="kw">await</span> gnnModel.<span class="fn">scoreAddress</span>(decodedTo, {
+    depth: <span class="num">2</span>, <span class="cm">// 2-hop neighborhood</span>
+    timeWindow: <span class="str">"24h"</span>,
+    minTxCount: <span class="num">3</span>
+  });
+
+  <span class="kw">if</span> (score.value > <span class="num">85</span>) {
+    <span class="kw">return</span> { action: <span class="str">"QUARANTINE"</span>, reason: <span class="str">"HIGH_RISK_GNN"</span>, score, latencyMs: <span class="num">67</span> };
+  }
+
+  <span class="kw">return</span> { action: <span class="str">"PASS"</span>, score, latencyMs: <span class="num">67</span> };
+}
+          </div>
+        </div>
+
+        <h3>4. 警報與鏈上攔截</h3>
+        <p>對於超過風險閾值的交易，存在兩條回應路徑：</p>
+        <ul>
+          <li><strong>警報模式：</strong>交易被標記，並透過Webhook、PagerDuty或Slack發送警報。交易繼續進行但被記錄以供審查。</li>
+          <li><strong>攔截器模式：</strong>對於整合協議（例如CompliantStablecoin），觸發風控守衛模組。如果協議支援預檢，交易在智能合約層面被攔截，無法執行。</li>
+        </ul>
+
+        <h2 id="flashbots">與Flashbots的關係</h2>
+        <p>一個常見問題：記憶體池監控與Flashbots和MEV（最大可提取價值）有何關係？</p>
+
+        <div class="info-box">
+          <h4>Flashbots vs FidesOrigin MempoolWatcher</h4>
+          <p><strong>Flashbots</strong>監控記憶體池以<em>提取價值</em>——識別套利機會、三明治攻擊和清算利潤。其目標是經濟性的：在其他人之前捕獲MEV。</p>
+          <p><strong>FidesOrigin MempoolWatcher</strong>監控記憶體池以<em>防止傷害</em>——識別受制裁地址、釣魚合約和可疑模式。其目標是保護性的：在壞交易確認前阻止它們。</p>
+        </div>
+
+        <p>兩者不是競爭對手。實際上，它們是<strong>互補的</strong>：</p>
+        <ul>
+          <li>Flashbots保護<em>協議經濟完整性</em>（無搶先交易、公平排序）</li>
+          <li>FidesOrigin保護<em>協議監管完整性</em>（無受制裁地址、合規流）</li>
+        </ul>
+        <p>Flashbots的私人記憶體池（Flashbots Protect）甚至可以增強FidesOrigin的有效性：如果協議將交易路由通過Flashbots Protect，FidesOrigin仍然可以監控公共記憶體池中的公共交易，同時協議自身的交易繞過公共MEV提取。</p>
+
+        <h2 id="performance">效能基準測試</h2>
+        <p>延遲是記憶體池監控的關鍵指標。需要500毫秒評估交易的系統可能會錯過納入前的窗口，尤其是在高吞吐量鏈上。</p>
+
+        <div class="perf-grid reveal">
+          <div class="perf-card">
+            <div class="num">&lt;100毫秒</div>
+            <div class="label">端到端延遲</div>
+            <div class="desc">從記憶體池檢測到風險決策</div>
+          </div>
+          <div class="perf-card">
+            <div class="num">&lt;0.1%</div>
+            <div class="label">誤報率</div>
+            <div class="desc">針對1000萬+筆交易驗證</div>
+          </div>
+          <div class="perf-card">
+            <div class="num">6+</div>
+            <div class="label">覆蓋網路</div>
+            <div class="desc">Ethereum、Base、Polygon、Arbitrum、Optimism、BSC</div>
+          </div>
+        </div>
+
+        <p>以太坊主網延遲細分（從WebSocket訊息接收到風險決策測量）：</p>
+        <ul>
+          <li><strong>交易獲取：</strong>25-40毫秒（RPC往返）</li>
+          <li><strong>輸入解碼：</strong>1-3毫秒（本地ABI解析）</li>
+          <li><strong>熱點清單查詢：</strong>&lt;1毫秒（記憶體內雜湊集合）</li>
+          <li><strong>GNN評分：</strong>35-55毫秒（快取嵌入+推理）</li>
+          <li><strong>決策與警報：</strong>2-5毫秒</li>
+          <li><strong>總P99：</strong>97毫秒</li>
+        </ul>
+        <p>在Base和Polygon等更快的鏈上，區塊時間為2-3秒，100毫秒評估窗口僅佔確認總時間的3-5%，為攔截留下充足的餘量。</p>
+
+        <h2 id="limitations">局限性與權衡</h2>
+        <p>記憶體池監控很強大，但並非萬能。我們相信透明地討論其邊界：</p>
+        <ul>
+          <li><strong>私人記憶體池：</strong>透過Flashbots Protect或私人RPC（例如Taichi Network）發送的交易不會出現在公共記憶體池中。這些需要協議級整合（風控守衛模組）而非記憶體池監控。</li>
+          <li><strong>網路傳播差異：</strong>交易可能在到達某些節點之前先到達其他節點。Watcher必須連接到多個地理分佈的節點以最小化遺漏率。</li>
+          <li><strong>費用替換（RBF）：</strong>使用者可以用更高費用的版本替換待處理交易，可能改變接收者。Watcher追蹤交易nonce以檢測替換。</li>
+          <li><strong>延遲底線：</strong>RPC往返施加了延遲的物理底線。端到端亞50毫秒需要共置基礎設施，這在我們的企業級方案中可用。</li>
+        </ul>
+
+        <h2 id="conclusion">結論</h2>
+        <p>記憶體池是執行前風險控制的最後前沿。交易在記憶體池中花費的每一秒都是可以被評估、評分——以及如有必要——被阻止的一秒。</p>
+        <p>FidesOrigin的MempoolWatcher彌補了傳統事後分析無法解決的零確認缺口。結合鏈上風控守衛模組，它提供雙層防禦：在記憶體池中捕獲它，如果失敗，在合約中阻止它。</p>
+        <p>對於穩定幣發行方、DeFi協議和任何鏈上機構來說，這不是錦上添花。這是記錄違規的合規與預防違規的合規之間的區別。</p>
+
+        <div style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="font-size:0.85rem;color:var(--fio-text-3);"><strong>下一篇：</strong> <a href="/tw/blog/evolution-from-chainalysis.html">加密風控的演進 —— 從Chainalysis到FidesOrigin</a></p>
+        </div>
+
+      </article>
+
+      <aside>
+        <div class="toc reveal">
+          <h4>目錄</h4>
+          <a href="#what-is-mempool">什麼是記憶體池？</a>
+          <a href="#problem">零確認問題</a>
+          <a href="#architecture">MempoolWatcher架構</a>
+          <a href="#flashbots">與Flashbots的關係</a>
+          <a href="#performance">效能基準測試</a>
+          <a href="#limitations">局限性與權衡</a>
+          <a href="#conclusion">結論</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">以零確認防護建構</h2>
+      <p class="cta-desc">將MempoolWatcher整合到您的協議中。亞100毫秒檢測，6+網路，開源SDK。</p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">申請存取</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary">查看GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">面向代幣化資產和DeFi的鏈上合規協議。</p>
+      </div>
+      <div class="footer-col">
+        <h4>產品</h4>
+        <a href="/tw/">風險雷達</a>
+        <a href="/tw/">策略引擎</a>
+        <a href="/tw/">審計盾</a>
+        <a href="/tw/address-check.html">地址檢查</a>
+        <a href="/tw/pricing.html">定價</a>
+      </div>
+      <div class="footer-col">
+        <h4>開發者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/tw/docs/">文件</a>
+        <a href="/tw/docs/api">API參考</a>
+        <a href="/tw/changelog.html">更新日誌</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="/tw/about.html">關於</a>
+        <a href="/tw/case-studies.html">案例研究</a>
+        <a href="mailto:contact@fidesorigin.com">聯繫</a>
+        <a href="/tw/privacy.html">隱私</a>
+        <a href="/tw/terms.html">條款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT授權條款。</span>
+      <span>香港 &middot; 新加坡 &middot; 舊金山</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+</script>
+
+</body>
+</html>

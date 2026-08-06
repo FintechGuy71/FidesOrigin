@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>グラフニューラルネットワークによるオンチェーンアドレスプロファイリング — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin がグラフニューラルネットワークを使用してオンチェーンアドレス関係を分析し、制裁回避パターンを特定し、リアルタイムでリスクをスコアリングする方法。">
+  <meta property="og:title" content="グラフニューラルネットワークによるオンチェーンアドレスプロファイリング">
+  <meta property="og:description" content="FidesOrigin が GNN を使用してオンチェーンアドレス関係を分析し、リアルタイムでリスクをスコアリングする方法。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://fidesorigin.com/jp/blog/gnn-address-profiling.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/jp/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/gnn-address-profiling.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="icon" href="../../brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="../../brand/logo-dark-icon.png">
+  <style>
+    .blog-hero {
+      position: relative;
+      padding: 160px 0 40px;
+      overflow: hidden;
+    }
+    .blog-hero .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .blog-hero .glow-1 {
+      width: 400px; height: 400px;
+      background: var(--accent);
+      top: -100px; right: -100px;
+    }
+    .blog-hero-content {
+      position: relative;
+      z-index: 1;
+    }
+    .blog-hero .display {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .blog-hero .display span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hr-fade {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      margin: 0 auto;
+      max-width: 800px;
+    }
+    .article {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+    .article p { margin-bottom: 1.5rem; }
+    .article h2 {
+      color: var(--text);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .article h3 {
+      color: var(--text);
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+    .article ul { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+    .article ul li { margin-bottom: 0.5rem; }
+    .article a { color: var(--accent); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+    .article blockquote {
+      border-left: 2px solid var(--accent);
+      padding-left: 1.25rem;
+      margin: 1.5rem 0;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article em { color: var(--accent); font-style: italic; }
+    .article .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .article .callout p:last-child { margin-bottom: 0; }
+    .blog-code-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .blog-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .blog-code-body {
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    .blog-code-body pre {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .tk-keyword { color: #c586c0; }
+    .tk-type { color: #4ec9b0; }
+    .tk-func { color: #dcdcaa; }
+    .tk-comment { color: #6a9955; }
+    .tk-string { color: #ce9178; }
+    .tk-number { color: #b5cea8; }
+    .blog-cta {
+      text-align: center;
+      padding: 80px 40px;
+    }
+    .blog-cta .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: none;
+    }
+    .blog-cta .btn-primary:hover {
+      background: var(--gold);
+      transform: translateY(-1px);
+    }
+    .related-reading {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    .related-reading h4 {
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .related-reading a {
+      display: block;
+      color: var(--text-secondary);
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .related-reading a:last-child { border-bottom: none; }
+    .related-reading a:hover { color: var(--accent); }
+    @media (max-width: 640px) {
+      .blog-hero { padding: 120px 0 30px; }
+      .blog-code-body pre { white-space: pre-wrap; word-break: break-all; }
+    }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "グラフニューラルネットワークによるオンチェーンアドレスプロファイリング",
+    "description": "FidesOrigin がグラフニューラルネットワークを使用してオンチェーンアドレス関係を分析し、制裁回避パターンを特定し、リアルタイムでリスクをスコアリングする方法。",
+    "author": { "@type": "Organization", "name": "FidesOrigin Team" },
+    "publisher": { "@type": "Organization", "name": "FidesOrigin" },
+    "datePublished": "2026-08-05",
+    "url": "https://fidesorigin.com/jp/blog/gnn-address-profiling.html"
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">コンテンツへ移動</a>
+
+  <nav class="nav" aria-label="メインナビゲーション">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="../../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/#features">機能</a>
+        <a href="/#how-it-works">仕組み</a>
+        <a href="/#security">セキュリティ</a>
+        <a href="/docs/">ドキュメント</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="言語">日本語<svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div id="langMenu">
+            <a href="../../blog/gnn-address-profiling.html">English</a>
+            <a href="../../cn/blog/gnn-address-profiling.html">简体中文</a>
+            <a href="../../tw/blog/gnn-address-profiling.html">繁體中文</a>
+            <a href="gnn-address-profiling.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="wallet-connect-wrap">
+          <button class="wallet-btn" id="wallet-btn" aria-label="接続"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>接続</button>
+          <div class="wallet-connected" id="wallet-connected">
+            <div class="wallet-info"><span class="wallet-address" id="wallet-address"></span><span class="wallet-network-badge" id="wallet-network">Sepolia</span></div>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="切断">切断</button>
+          </div>
+        </div>
+        <a href="/#contact" class="nav-cta">はじめる</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="メニューの切り替え" aria-expanded="false"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="メニューを閉じる"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+    <a href="/#features">機能</a>
+    <a href="/#how-it-works">仕組み</a>
+    <a href="/#security">セキュリティ</a>
+    <a href="/docs/">ドキュメント</a>
+    <div class="lang-row">
+      <a href="../../blog/gnn-address-profiling.html">EN</a>
+      <a href="../../cn/blog/gnn-address-profiling.html">CN</a>
+      <a href="../../tw/blog/gnn-address-profiling.html">TW</a>
+      <a href="gnn-address-profiling.html">JP</a>
+    </div>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected"><span id="mobile-wallet-address"></span><button id="mobile-wallet-disconnect" aria-label="切断">切断</button></div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="接続"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>接続</button>
+  </div>
+
+  <main id="main-content">
+    <section class="blog-hero">
+      <div class="glow glow-1"></div>
+      <div class="container blog-hero-content">
+        <div class="reveal">
+          <p class="micro">ブログ — AI/ML — 2026年8月</p>
+          <h1 class="display">グラフニューラルネットワーク<br><span>によるオンチェーンアドレスプロファイリング</span></h1>
+          <p class="lead" style="max-width: 650px; margin-top: 20px;">なぜ一度に1つのアドレスしか見ないのは、1つの建物を研究して都市を理解しようとするようなものなのか。FidesOrigin の GNN エンジンは、グラフ全体を見ています。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <article class="article container" style="max-width: 720px; padding-top: 60px; padding-bottom: 60px;">
+
+      <p>2026年1月、あるウォレットアドレスが当社の監視システムにリスクスコア34で出現しました——80ポイントの隔離閾値を大きく下回るスコアです。表向きは問題ありませんでした。このアドレスには直接的な制裁ヒットはなく、通常の取引履歴があり、明らかなレッドフラグもありませんでした。従来のルールベースのシステムなら通過していたでしょう。</p>
+
+      <p>しかし、当社のグラフニューラルネットワーク（GNN）エンジンはそれをフラグ付けしました。理由？このアドレスは既知のミキシングサービスから2ホップの距離にあり、24時間以内に同じソースから資金提供された4つの中間ウォレットを介して接続されていました。GNN はアドレスそのものだけでなく——その<em>近隣</em>を見ていました。そしてその近隣は、連座で罪があると判定されました。</p>
+
+      <p>3日後、そのアドレスは OFAC SDN リストに掲載されました。当社の従来のルールエンジンは、公式更新まで完全に見落としていました。GNN は早期に捕捉していました。</p>
+
+      <p>これが関係ベースのリスク分析の力です。そして、単一アドレスのプロファイリングがオンチェーンコンプライアンスにとって根本的に不十分である理由です。</p>
+
+      <h2>単一アドレス分析の限界</h2>
+
+      <p>従来のチェーン分析——現在のほとんどのコンプライアンス API を支えるもの——は次のように動作します：アドレスから特徴を抽出（残高、取引数、年齢、既知の関連）、分類器に入力し、リスクスコアを取得します。本質的には表形式の機械学習問題です。各アドレスはスプレッドシートの1行です。モデルは行間の接続を決して見ません。</p>
+
+      <p>このアプローチにはブロックチェーン上で3つの致命的な弱点があります：</p>
+
+      <p><strong>1. 敵対者はグラフ構造を意図的に悪用する。</strong> 洗練された攻撃者は1つのウォレットを使いません。50個使います。中間アドレスを通じて資金を剥離します。プライバシープール、クロスチェーンブリッジ、DeFi プロトコルをマネーロンダリング層として使用します。各個別のアドレスは無害に見えます。<em>パターン</em>がシグナルです。表形式のモデルはこれに対して盲目です。</p>
+
+      <p><strong>2. 新しいアドレスには履歴がない。</strong> 新しく作成されたウォレットは取引ゼロ、残高ゼロ、特徴ゼロです。表形式のモデルには何も扱えません。しかし、GNN は接続からリスクを推論できます：誰が資金提供したのか？誰と取引しているのか？どのサブグラフに属しているのか？グラフは、取引履歴が隠しているものを明らかにします。</p>
+
+      <p><strong>3. リスクは文脈に依存し、固有ではない。</strong> 制裁対象エンティティから資金を受け取るアドレスはリスクがあります。同じアドレスが合法的な取引所から資金を受け取る場合はリスクではありません。リスクは<em>関係</em>の属性であり、アドレス自体だけではありません。グラフなしでは計算できません。</p>
+
+      <p>Chainalysis と Elliptic は巨大なラベル付きアドレスデータベースを構築しました。彼らのモデルは高度です。しかし、本質的には依然として表形式的です：「アドレスXに属性Yがあるため、リスクはZ」。グラフは後付けの考慮事項——可視化ツールであり、計算モデルではありません。</p>
+
+      <p>私たちはこれを覆しました。FidesOrigin では、グラフがモデルそのものです。</p>
+
+      <h2>オンチェーングラフ：ノード、エッジ、特徴</h2>
+
+      <p>GNN がアドレスプロファイリングにどのように機能するかを理解するために、私たちが操作しているグラフを定義しましょう。</p>
+
+      <p><strong>ノード</strong>はウォレットアドレスとスマートコントラクトです。各ノードは固有の属性を捉える特徴ベクトルを持っています：取引数、平均取引値、最初の取引からの経過時間、残高履歴の分散、コントラクトインタラクションの多様性など。オンチェーンデータから各ノードあたり約40の特徴を抽出しています。</p>
+
+      <p><strong>エッジ</strong>は取引を表します。アドレスAからアドレスBへのエッジは、AがBに資金を送ったことを意味します。エッジは取引価値、頻度、時間的近接性で重み付けされます。同じペア間の複数の取引は、複合的な重みを持つ単一のエッジに集約されます。現在、Ethereum、Base、Polygon で約23億のエッジを追跡しています。</p>
+
+      <p><strong>ノードラベル</strong>は複数のソースから得られます：OFAC 制裁リスト、取引所のホット/コールドウォレット指定、既知の DeFi プロトコルコントラクト、フィッシング詐欺データベース、および当社独自の手動調査。ラベル付けされたノードの割合は非常に小さく——通常0.01%未満です。課題は、これらのラベルをグラフを通じて未ラベルのノードに伝播させることです。</p>
+
+      <div class="callout">
+        <p><strong>グラフの規模：</strong>当社の本番グラフには現在約1.8億のノードと約23億のエッジが含まれており、Ethereum メインネット、Base、Polygon からリアルタイムで更新されています。完全なグラフは単一の GPU には大きすぎるため、サブグラフサンプリングとミニバッチ学習を使用しています。</p>
+      </div>
+
+      <h2>グラフからリスクスコアへ：GNN の仕組み</h2>
+
+      <p>グラフニューラルネットワークは、シンプルだが強力なアイデアに基づいて動作します：ノードの表現は、自身の特徴<em>と</em>隣接ノードの表現の関数であるべきです。情報はグラフを通じて伝播し、ネットワークの各レイヤーでモデルは近隣をさらに遠くまで見ることができます。</p>
+
+      <p>私たちは、<strong>GAT</strong>（グラフアテンションネットワーク）にインスパイアされたアテンションメカニズムを備えた<strong>GraphSAGE</strong>（グラフサンプリングとアグリゲーション）アーキテクチャを使用しています。この組み合わせが当社のユースケースに適する理由は以下の通りです：</p>
+
+      <p><strong>GraphSAGE</strong>は帰納学習のために設計されています——学習中に見たことがないノードの埋め込みを生成できます。これは、毎秒新しいアドレスが作成されるオンチェーンコンプライアンスにとって重要です。新しいウォレットが出現するたびにモデルを再学習することはできません。GraphSAGE のサンプリングアプローチにより、ローカル近隣のみを使用して新しいノードの埋め込みをオンデマンドで計算できます。</p>
+
+      <p><strong>アテンションメカニズム</strong>（GAT から）は、どの隣接ノードが最も重要かをモデルが学習できるようにします。すべての接続が等しいわけではありません。ランダムなアドレスからの10ドルの送金はノイズです。既知の取引所からの50万ドルの送金はシグナルです。アテンションウェイトは、手作りのルールなしにデータから自動的に学習されます。</p>
+
+      <p>フォワードパスは次のように動作します。各ノードについて、固定数の隣接ノードをサンプリングします（当社はホップあたり25の隣接ノードで2ホップを使用）。学習されたアグリゲーション関数を使用して隣接ノードの特徴をアグリゲートします——当社の場合、アテンションメカニズムからの学習重み付き平均です。次に、アグリゲートされた隣接ノードの表現をノード自身の特徴と連結し、非線形変換を通します。これをLレイヤー（当社はL=3）繰り返すと、Lホップの近隣情報をエンコードしたノード埋め込みが得られます。</p>
+
+      <div class="blog-code-block">
+        <div class="blog-code-header">
+          <span>GNN フォワードパス（簡略版）</span>
+          <span>Python / PyTorch Geometric</span>
+        </div>
+        <div class="blog-code-body">
+<pre><span class="tk-keyword">import</span> torch
+<span class="tk-keyword">import</span> torch.nn.functional <span class="tk-keyword">as</span> F
+<span class="tk-keyword">from</span> torch_geometric.nn <span class="tk-keyword">import</span> SAGEConv, GATConv
+
+<span class="tk-keyword">class</span> <span class="tk-type">RiskGNN</span>(torch.nn.Module):
+    <span class="tk-keyword">def</span> <span class="tk-func">__init__</span>(<span class="tk-keyword">self</span>, in_channels, hidden_channels, out_channels):
+        <span class="tk-keyword">super</span>().<span class="tk-func">__init__</span>()
+        <span class="tk-keyword">self</span>.conv1 = <span class="tk-type">SAGEConv</span>(in_channels, hidden_channels)
+        <span class="tk-keyword">self</span>.conv2 = <span class="tk-type">GATConv</span>(hidden_channels, hidden_channels, heads=<span class="tk-number">4</span>, concat=<span class="tk-keyword">False</span>)
+        <span class="tk-keyword">self</span>.conv3 = <span class="tk-type">SAGEConv</span>(hidden_channels, out_channels)
+        <span class="tk-keyword">self</span>.classifier = torch.nn.Linear(out_channels, <span class="tk-number">3</span>)  <span class="tk-comment"># ALLOW, WARN, BLOCK</span>
+
+    <span class="tk-keyword">def</span> <span class="tk-func">forward</span>(<span class="tk-keyword">self</span>, x, edge_index, edge_attr):
+        <span class="tk-comment"># Layer 1: SAGE aggregation, 1-hop neighbors</span>
+        x = <span class="tk-keyword">self</span>.conv1(x, edge_index)
+        x = F.<span class="tk-func">relu</span>(x)
+        x = F.<span class="tk-func">dropout</span>(x, p=<span class="tk-number">0.3</span>, training=<span class="tk-keyword">self</span>.training)
+
+        <span class="tk-comment"># Layer 2: GAT with attention, 2-hop neighbors</span>
+        x = <span class="tk-keyword">self</span>.conv2(x, edge_index, edge_attr)
+        x = F.<span class="tk-func">elu</span>(x)
+        x = F.<span class="tk-func">dropout</span>(x, p=<span class="tk-number">0.3</span>, training=<span class="tk-keyword">self</span>.training)
+
+        <span class="tk-comment"># Layer 3: SAGE aggregation, 3-hop neighbors</span>
+        x = <span class="tk-keyword">self</span>.conv3(x, edge_index)
+
+        <span class="tk-comment"># Risk classification</span>
+        <span class="tk-keyword">return</span> <span class="tk-keyword">self</span>.<span class="tk-func">classifier</span>(x)</pre>
+        </div>
+      </div>
+
+      <p>出力は3値分類（ALLOW、WARN、BLOCK）に加えて、0から100までの連続的なリスクスコアです。リスクスコアは、保留検証セット上で温度スケーリングを使用してキャリブレーションされた softmax を使用して logits から導出されます——スコアが確率的に意味のあるものであることを確認します。</p>
+
+      <h2>3つの GNN 駆動検出パターン</h2>
+
+      <p>GNN はリスクスコアを生成するだけでなく、表形式の方法では不可能な特定の検出機能を実現します。</p>
+
+      <h3>1. コミュニティ発見：ミキシングネットワークのマッピング</h3>
+
+      <p>ミキシングサービスとタンブラーは、オンチェーンコンプライアンスのアキレス腱です。多くのソースからのインプットを集約し、多くのアウトプットに再分配することで、資金の流れを意図的に難読化します。単一アドレスの観点からは、ミキサーのアウトプットアドレスは「合法的」なサービスから資金を受け取ったように見えます。グラフの観点からは、特定のトポロジカルシグネチャを持つ密に接続されたクラスターのノードです。</p>
+
+      <p>当社の GNN はこれらのシグネチャを認識することを学習します：異常に高い入次数と出次数、他のミキサー関連アドレスへの短い平均パス長、時間的クラスタリング（狭い時間枠内の多くの関連取引）、および価値の均質性（入出金額の類似性）。モデルはミキサーの名前を知る必要はありません。グラフ構造から<em>パターン</em>を学習します。</p>
+
+      <p>本番環境では、これにより14個の既知のデータベースにない未知のミキシングサービスを特定できました。その1つは、検出される前に4,000万ドル以上の取引量を処理していました。</p>
+
+      <h3>2. 異常検出：シビル攻撃の検出</h3>
+
+      <p>オンチェーンの文脈でのシビル攻撃は、多くの偽名アイデンティティ（ウォレット）を作成してプロトコルを操作することを含みます——エアドロップファーミング、ガバナンス操作、またはウォッシュトレードのために。各個別のウォレットは正常に見えます。しかし、GNN は作成パターンを見ます：同じソースから資金提供された数十のウォレット、類似した取引パターン、互いにやり取りしない（明らかなクラスタリングを避けるため）、しかし狭い時間枠内に共通の DeFi プロトコルを介してすべて接続されています。</p>
+
+      <p>GNN はすべてのノードの埋め込みを計算します。次に、これらの埋め込みに DBSCAN クラスタリングを実行します。通常のユーザーは分散した低密度クラスターを形成します。シビルネットワークは、合法的なユーザーから明確に分離された、密な高密度クラスターを形成します。クラスタリングは教師なしです——ラベル付きのシビルデータは必要ありません。グラフ構造がシグナルです。</p>
+
+      <p>2026年3月にエアドロップキャンペーンを標的とした3,200ウォレットのシビルファームを検出しました。このファームは単純なヒューリスティックを回避するように設計されていました（各ウォレットはピーリングチェーンを介して「独自」の資金源を持っていました）。GNN は埋め込み空間で共通の構造的シグネチャを捉えました。</p>
+
+      <h3>3. リスク伝播：感染がどのように広がるか</h3>
+
+      <p>おそらく最も強力な GNN の能力は<em>リスク伝播</em>です。新しいアドレスが OFAC SDN リストに追加されると、GNN はそのアドレスだけでなく、その3ホップ近隣内のすべてのノードのリスクスコアを再計算します。以前は低リスクだったアドレスが、現在は制裁対象エンティティに直接または間接的に接続されているため、リスクが高まる可能性があります。</p>
+
+      <p>これは単純な推移的閉包ではありません。GNN はリスクが<em>どのように</em>伝播するかを学習します：制裁対象アドレスからの1,000万ドルの送金は高リスクです。中間取引所を介して3ホップ離れた50ドルの送金は低リスクです。GAT レイヤーのアテンションウェイトは、学習データからこれらの微妙な伝播ルールを学習します。</p>
+
+      <p>OFAC が2026年4月に制裁リストを更新したとき、当社のシステムは5分以内に210万のアドレスのリスクスコアを再計算しました。そのうち、847のアドレスが隔離閾値を超え、リスクレジストリで自動的にフラグ付けされました。ルールベースのシステムは、直接リストされた23のアドレスのみを捉えていたでしょう。</p>
+
+      <h2>リアルタイム特徴エンジニアリングパイプライン</h2>
+
+      <p>モデルの質は、それに供給するデータパイプラインの質によって決まります。当社のパイプラインは継続的ループで動作します：</p>
+
+      <p><strong>データ取り込み：</strong>複数の RPC プロバイダーから Ethereum、Base、Polygon の WebSocket フィードを購読します。新しい取引は Kafka でバッファリングされ、ブロック番号でパーティション分割されます。ピーク時には毎秒約15,000の取引を処理します。</p>
+
+      <p><strong>グラフ構築：</strong>すべての新しい取引がリアルタイムでグラフを更新します。分散キーバリューストア（ScyllaDB）で隣接リストを持つグラフを維持しています。エッジの重みは挿入時に計算されます：送信者の履歴平均で正規化された価値、時間減衰係数、トークンタイプ（リスク目的ではステーブルコインがミームコインより重み付けされます）。</p>
+
+      <p><strong>GNN 推論：</strong>5分ごとにバッチ推論ジョブをトリガーします。前回の実行以降に変更されたすべてのノード（新しい取引、更新されたラベル、または手動注釈）とその3ホップ近隣を特定します。GPU クラスターで実行されている本番 GNN モデルを使用して、このサブグラフの埋め込みを計算します。平均推論時間：500,000ノードのバッチで約90秒。</p>
+
+      <p><strong>ラベル生成：</strong>GNN はリスクスコアと分類を出力します。後処理ルールを適用します：BLOCK 分類で信頼度>0.95のアドレスは即時アクションのためにフラグ付けされます。WARN 分類で信頼度>0.8のアドレスは人間のレビューのためにキューに入れられます。それ以外のすべては、スコアとともにリスクデータベースに格納されます。</p>
+
+      <p><strong>オラクルプッシュ：</strong>更新されたリスクスコアは Merkle ツリーにフォーマットされ、オンチェーンオラクルコントラクトにプッシュされます。次に、オラクルは RiskRegistry を更新し、ガードとコンプライアンスエンジンが新しいスコアを使用できるようにします。取引取り込みからオンチェーン利用可能になるまでの総レイテンシ：<strong>&lt;7分</strong>。</p>
+
+      <div class="blog-code-block">
+        <div class="blog-code-header">
+          <span>パイプライン設定</span>
+          <span>YAML</span>
+        </div>
+        <div class="blog-code-body">
+<pre><span class="tk-type">pipeline</span>:
+  <span class="tk-type">ingestion</span>:
+    <span class="tk-type">sources</span>: [ethereum, base, polygon]
+    <span class="tk-type">throughput</span>: <span class="tk-number">15000</span> tx/s
+    <span class="tk-type">buffer</span>: kafka
+  <span class="tk-type">graph</span>:
+    <span class="tk-type">store</span>: scylladb
+    <span class="tk-type">update_mode</span>: incremental
+    <span class="tk-type">edge_ttl</span>: <span class="tk-number">90</span>d
+  <span class="tk-type">gnn</span>:
+    <span class="tk-type">model</span>: graphsage_gat_v3
+    <span class="tk-type">inference_interval</span>: <span class="tk-number">5</span>m
+    <span class="tk-type">batch_size</span>: <span class="tk-number">500000</span>
+    <span class="tk-type">gpu_cluster</span>: <span class="tk-number">4</span>x A100
+    <span class="tk-type">hops</span>: <span class="tk-number">3</span>
+    <span class="tk-type">neighbors_per_hop</span>: <span class="tk-number">25</span>
+  <span class="tk-type">oracle</span>:
+    <span class="tk-type">push_interval</span>: <span class="tk-number">5</span>m
+    <span class="tk-type">merkle_tree_depth</span>: <span class="tk-number">20</span>
+    <span class="tk-type">max_latency</span>: <span class="tk-number">7</span>m</pre>
+        </div>
+      </div>
+
+      <h2>パフォーマンスと精度</h2>
+
+      <p>数字について話しましょう。GNN は本番環境で8ヶ月間実行されています。重要な指標は以下の通りです：</p>
+
+      <p><strong>制裁アドレスの特定：</strong>50,000のアドレスのホールドアウトテストセット（1,200の既知の制裁対象アドレスを含む）で、GNN は制裁対象アドレスの特定において<strong>96.3%の適合率と94.7%の再現率</strong>を達成しました。誤検出率は0.8%——99.2%の非制裁対象アドレスが正しくクリーンとして分類されました。これは、同じデータセットで89.1%の適合率と82.4%の再現率を達成した以前の表形式 XGBoost モデルに対して大幅な改善です。</p>
+
+      <p><strong>ミキサー検出：</strong>手動でキュレーションされた8,500のミキサー関連アドレスデータセットで、GNN は91.2%の F1 スコアを達成しました。重要な利点は<em>未知</em>のミキサーを検出する能力です——トレーニングラベルに存在しないアドレス。ここで GNN の帰納能力が輝きます。構造パターンを認識することで、新しいミキサーに一般化します。</p>
+
+      <p><strong>推論レイテンシ：</strong>単一アドレスクエリ（ガード統合の一般的なケース）では、GPU での埋め込み計算に約12ミリ秒、CPU フォールバックで約45ミリ秒かかります。バッチ推論（500,000ノード）では、完全なパイプラインが約90秒で完了します。5分の更新間隔により、オンチェーンリスクデータは5分以上古くなることはありません。</p>
+
+      <p><strong>学習：</strong>完全なグラフで半教師あり学習を使用して毎月モデルを再学習します。モデルはラベル付きノード（制裁、取引所、既知の不良行為者）で学習され、グラフ構造を使用して未ラベルのノードにラベルを伝播します。4x A100 GPU での学習には約6時間かかります。</p>
+
+      <h2>なぜこれがコンプライアンスに重要か</h2>
+
+      <p>オンチェーン金融の規制環境は厳しくなっています。EU の MiCA フレームワークは「疑わしいパターンを検出できる取引監視システム」を要求しています。香港のステーブルコインライセンス制度は「継続的な顧客取引の監視」を義務付けています。米国財務省は、コンプライアンスプログラムが制裁違反を防ぐために「合理的に設計」されていなければならないことを明確にしています——そして「知らなかった」は弁護になりません。</p>
+
+      <p>静的なリストに対してアドレスをチェックするだけのコンプライアンスシステムは「合理的に設計」されていません。チェックリストです。規制当局はこれを知っています。彼らは<em>行動</em>分析、<em>パターン</em>検出、<em>関係</em>マッピングを求めています。GNN はまさにこれを提供します——そして規制当局が独立して検証できる監査証跡の形で。</p>
+
+      <p>すべての GNN 推論結果は記録されます：入力特徴、サンプリングされたグラフ近隣、モデルバージョン、出力スコア、タイムスタンプ。これは不透明な決定を下すブラックボックス AI ではありません。ニューラルネットワークを使用して計算される、透明で再現可能なリスク評価です。</p>
+
+      <p>さらに重要なことに、GNN は<em>プロアクティブ</em>なコンプライアンスを可能にします。制裁リストの更新に反応するのではなく（これは実際の活動より数日から数週間遅れることがあります）、GNN は公式リストに掲載される前にリスクパターンを特定します。1月にフラグ付けしたアドレス——ミキサーから2ホップ、疑わしいウォレット作成パターンで接続——は3日後に OFAC リストに掲載されました。GNN に水晶球はありません。グラフがあります。</p>
+
+      <p>ステーブルコイン発行体、DeFi プロトコル、RWA プラットフォームにとって、これはトラブルを回避するだけでなく——トラブルより<em>先回り</em>するコンプライアンスレイヤーを意味します。そして、規制措置が存亡に関わる可能性のある業界で、先回りすることだけが安全な場所です。</p>
+
+      <div class="related-reading">
+        <h4>関連記事</h4>
+        <a href="guard-pre-transaction.html">トランザクション前ガード — オンチェーンリスク管理の新基準</a>
+        <a href="pluggable-vs-l2.html">プラガブル合規モジュール vs. 専用 L2</a>
+        <a href="why-on-chain-compliance.html">なぜオンチェーンか：APIベースコンプライアンスの終焉</a>
+      </div>
+    </article>
+
+    <div class="hr-fade"></div>
+
+    <section class="blog-cta">
+      <div class="container" style="max-width: 600px;">
+        <h2 class="h2" style="margin-bottom: 16px;">すべてのアドレスの背後にあるグラフを見る</h2>
+        <p class="lead" style="margin-bottom: 32px;">FidesOrigin の GNN 駆動リスクエンジンは、リアルタイムで1.8億以上のノードと23億以上のエッジを処理します。プロトコルに関係認識型コンプライアンスを追加しましょう。</p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <a href="/" class="btn btn-primary">
+            FidesOrigin を探索
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
+          </a>
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary">デモを依頼</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="../../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>金融の未来のためのプログラマブルなオンチェーンコンプライアンス。</p>
+        </div>
+        <div class="footer-col">
+          <h4>製品</h4>
+          <a href="/#features">機能</a>
+          <a href="/#how-it-works">仕組み</a>
+          <a href="/#security">セキュリティ</a>
+          <a href="/admin/">ダッシュボード</a>
+        </div>
+        <div class="footer-col">
+          <h4>開発者</h4>
+          <a href="/docs/" target="_blank" rel="noopener">ドキュメント</a>
+          <a href="/docs/api.html" target="_blank" rel="noopener">API リファレンス</a>
+          <a href="/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>会社</h4>
+          <a href="mailto:contact@fidesorigin.com">お問い合わせ</a>
+          <a href="/blog/">ブログ</a>
+          <a href="/privacy.html">プライバシー</a>
+          <a href="/terms.html">利用規約</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>オンチェーン金融の世界のために心を込めて構築。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../wallet-connect.js"></script>
+  <script>
+    function toggleMobileMenu() {
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var mobileBtn = document.querySelector('.nav-mobile-btn');
+      if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu);
+      document.querySelectorAll('#mobileMenu a').forEach(function(link) {
+        link.addEventListener('click', toggleMobileMenu);
+      });
+    });
+    function toggleLangMenu(e) {
+      e.stopPropagation();
+      var menu = document.getElementById('langMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.addEventListener('click', toggleLangMenu);
+    });
+    document.addEventListener('click', function() {
+      var menu = document.getElementById('langMenu');
+      if (menu) menu.style.display = 'none';
+    });
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+    (function() {
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '&uarr;';
+      btn.setAttribute('aria-label', 'トップへ戻る');
+      document.body.appendChild(btn);
+      window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      });
+      btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+  </script>
+</body>
+</html>

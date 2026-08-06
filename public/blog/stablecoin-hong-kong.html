@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>Stablecoin Compliance in Practice — Hong Kong License Requirements &amp; Technical Implementation</title>
+<meta name="description" content="How FidesOrigin meets HKMA stablecoin licensing requirements. Technical implementation of reserve audits, AML screening, redemption controls, and regulatory reporting."/>
+<meta property="og:title" content="Stablecoin Compliance in Practice — Hong Kong License Requirements"/>
+<meta property="og:description" content="Technical implementation of HKMA stablecoin compliance. Reserve audits, AML, redemption, and reporting."/>
+<meta property="og:type" content="article"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta property="og:url" content="https://fidesorigin.com/blog/stablecoin-hong-kong.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Stablecoin Compliance in Practice — Hong Kong"/>
+<meta name="twitter:description" content="Technical implementation of HKMA stablecoin compliance requirements."/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/blog/stablecoin-hong-kong.html"/>
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/stablecoin-hong-kong.html"/>
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/stablecoin-hong-kong.html"/>
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/stablecoin-hong-kong.html"/>
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/stablecoin-hong-kong.html"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Stablecoin Compliance in Practice — Hong Kong License Requirements & Technical Implementation","author":{"@type":"Organization","name":"FidesOrigin"},"publisher":{"@type":"Organization","name":"FidesOrigin","logo":{"@type":"ImageObject","url":"https://fidesorigin.com/brand/logo-dark-icon.png"}},"datePublished":"2026-08-06","url":"https://fidesorigin.com/blog/stablecoin-hong-kong.html"}</script>
+<style>
+  :root {
+    --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320;
+    --fio-border:#252a3a; --fio-border-light:#2e3448; --fio-text:#f0f1f5; --fio-text-2:#9a9fad;
+    --fio-text-3:#5e6478; --fio-text-4:#3a4055; --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a;
+    --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-success:#5ce68a; --fio-warn:#fcd34d;
+    --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .container { max-width:860px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+  .container-wide { max-width:1200px; margin:0 auto; padding:0 24px; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
+
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  .hero { position:relative; overflow:hidden; min-height:55vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-inner { position:relative; z-index:2; padding:80px 0 50px; width:100%; text-align:center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-accent-dim); border:1px solid rgba(155,142,216,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-accent); margin-bottom:24px; }
+  .hero-title { font-family:var(--font-display); font-size:clamp(1.7rem,4.2vw,3rem); font-weight:500; line-height:1.1; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:16px; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(0.95rem,1.3vw,1.1rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 24px; }
+  .hero-meta { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+
+  .section { padding:80px 0; }
+  @media(min-width:768px){ .section { padding:100px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+
+  .article-body { font-size:1.05rem; line-height:1.8; color:var(--fio-text-2); }
+  .article-body h2 { font-family:var(--font-display); font-size:clamp(1.4rem,3vw,1.9rem); font-weight:500; color:var(--fio-text); margin:56px 0 20px; letter-spacing:-0.02em; }
+  .article-body h3 { font-family:var(--font-display); font-size:clamp(1.1rem,2vw,1.35rem); font-weight:500; color:var(--fio-text); margin:36px 0 14px; }
+  .article-body p { margin-bottom:20px; }
+  .article-body strong { color:var(--fio-text); font-weight:600; }
+  .article-body ul { margin-bottom:20px; padding-left:24px; }
+  .article-body li { margin-bottom:8px; }
+  .article-body a { color:var(--fio-accent); text-decoration:underline; text-underline-offset:3px; }
+  .article-body a:hover { color:var(--fio-gold); }
+  .article-body code { font-family:var(--font-mono); font-size:0.88em; background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; color:var(--fio-gold); }
+
+  .code-block { background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:14px; overflow:hidden; margin:28px 0; }
+  .code-header { display:flex; align-items:center; gap:8px; padding:12px 16px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); }
+  .code-header .dot { width:10px; height:10px; border-radius:50%; }
+  .code-header .dot.r { background:#ff5f57; } .code-header .dot.y { background:#febc2e; } .code-header .dot.g { background:#28c840; }
+  .code-header .title { font-size:0.7rem; color:var(--fio-text-3); margin-left:8px; font-family:var(--font-mono); }
+  .code-body { padding:20px 24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.75; overflow-x:auto; color:var(--fio-text-2); }
+  .code-body .kw { color:#c678dd; } .code-body .fn { color:#61afef; } .code-body .str { color:#98c379; }
+  .code-body .num { color:#d19a66; } .code-body .cm { color:#5c6370; font-style:italic; }
+
+  .info-box { padding:24px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:28px 0; }
+  .info-box.purple { border-color:rgba(155,142,216,0.15); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
+  .info-box.gold { border-color:rgba(212,184,122,0.15); background:linear-gradient(180deg,rgba(212,184,122,0.03) 0%,var(--fio-surface) 60%); }
+  .info-box h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; }
+  .info-box p { font-size:0.92rem; color:var(--fio-text-2); line-height:1.7; margin:0; }
+
+  .cta-banner { padding:80px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:500; color:var(--fio-text); margin-bottom:14px; }
+  .cta-desc { font-size:1rem; color:var(--fio-text-2); margin-bottom:28px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+
+  .reveal { opacity:0; transform:translateY(30px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+
+  .toc { position:sticky; top:80px; padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; margin-bottom:32px; }
+  .toc h4 { font-family:var(--font-display); font-size:0.85rem; font-weight:500; color:var(--fio-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em; }
+  .toc a { display:block; font-size:0.8rem; color:var(--fio-text-3); padding:6px 0; transition:color 0.2s; border-bottom:1px solid rgba(255,255,255,0.02); }
+  .toc a:hover { color:var(--fio-accent); }
+  .toc a:last-child { border-bottom:none; }
+  @media(max-width:1024px){ .toc { position:static; } }
+
+  .article-layout { display:grid; grid-template-columns:1fr 260px; gap:48px; }
+  @media(max-width:1024px){ .article-layout { grid-template-columns:1fr; } }
+
+  .req-grid { display:grid; gap:16px; grid-template-columns:repeat(2,1fr); margin:28px 0; }
+  @media(max-width:640px){ .req-grid { grid-template-columns:1fr; } }
+  .req-card { padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; }
+  .req-card h5 { font-family:var(--font-display); font-size:0.95rem; font-weight:500; color:var(--fio-text); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .req-card p { font-size:0.85rem; color:var(--fio-text-2); line-height:1.6; margin:0; }
+  .req-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.85rem; }
+
+  .flow-diagram { padding:28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:24px 0; }
+  .flow-diagram h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:20px; text-align:center; }
+  .flow-step { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .flow-step:last-child { margin-bottom:0; }
+  .flow-num { width:32px; height:32px; border-radius:8px; background:var(--fio-accent-dim); color:var(--fio-accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.75rem; font-weight:600; flex-shrink:0; }
+  .flow-num.ok { background:rgba(92,230,138,0.1); color:var(--fio-success); }
+  .flow-num.block { background:rgba(251,142,142,0.1); color:var(--fio-danger); }
+  .flow-text { font-size:0.88rem; color:var(--fio-text-2); }
+  .flow-arrow-v { text-align:center; color:var(--fio-text-4); font-size:1.2rem; margin:4px 0 4px 10px; }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/" onclick="closeMobileMenu()">Home</a>
+  <a href="/architecture.html" onclick="closeMobileMenu()">Architecture</a>
+  <a href="/blog/" onclick="closeMobileMenu()">Blog</a>
+  <a href="/pricing.html" onclick="closeMobileMenu()">Pricing</a>
+  <a href="mailto:contact@fidesorigin.com" class="btn-primary" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/architecture.html">Architecture</a>
+      <a href="/blog/">Blog</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">Request Demo</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">Regulatory Deep Dive</div>
+      <h1 class="hero-title anim-fade-up anim-d2">
+        Stablecoin Compliance in Practice<br>
+        <span class="hero-title-accent">HKMA License Requirements &amp; Technical Implementation</span>
+      </h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">
+        A technical guide to meeting Hong Kong's stablecoin licensing requirements with FidesOrigin. From reserve audits to redemption controls, implemented on-chain.
+      </p>
+      <div class="hero-meta anim-fade-up anim-d3">FidesOrigin Compliance &middot; August 2026 &middot; 15 min read</div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="article-layout">
+      <article class="article-body reveal">
+
+        <h2 id="hkma">The HKMA Stablecoin Framework</h2>
+        <p>In December 2024, the Hong Kong Monetary Authority (HKMA) published its long-awaited stablecoin regulatory framework, establishing a licensing regime for stablecoin issuers operating in or targeting Hong Kong residents. The framework is among the most comprehensive globally, covering reserve management, redemption rights, AML/CFT compliance, and public disclosure.</p>
+        <p>For issuers, the challenge is not just understanding the rules &mdash; it's implementing them in a way that satisfies both regulators and the technical constraints of blockchain infrastructure. This article explains how FidesOrigin maps each HKMA requirement to a concrete on-chain implementation.</p>
+
+        <div class="info-box gold">
+          <h4>HKMA Key Requirements at a Glance</h4>
+          <p>The HKMA framework (as outlined in the December 2024 consultation conclusion) requires licensed stablecoin issuers to: (1) maintain reserves fully backing the stablecoin value; (2) provide redemption at par within one business day; (3) implement robust AML/CFT controls; (4) make prescribed disclosures; and (5) submit to ongoing supervision and audit.</p>
+        </div>
+
+        <h2 id="requirements">The Four Pillars of HKMA Compliance</h2>
+        <p>HKMA's requirements can be grouped into four pillars. Each pillar has both a regulatory intent and a technical implementation path.</p>
+
+        <div class="req-grid reveal">
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:var(--fio-accent-dim);color:var(--fio-accent);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></span> Reserve Assets</h5>
+            <p>Full backing with high-quality liquid assets. Segregated custody. Daily valuation. Public attestation.</p>
+          </div>
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:var(--fio-gold-dim);color:var(--fio-gold);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> Redemption Rights</h5>
+            <p>Redeem at par value within T+1. No arbitrary restrictions. Automated compliance checks on redemption requests.</p>
+          </div>
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:rgba(92,230,138,0.1);color:var(--fio-success);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span> AML / CFT</h5>
+            <p>Real-time transaction monitoring. Address screening. Suspicious activity reporting. Travel Rule compliance.</p>
+          </div>
+          <div class="req-card">
+            <h5><span class="req-icon" style="background:rgba(122,184,240,0.1);color:var(--fio-info);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span> Disclosure</h5>
+            <p>White paper with full terms. Reserve composition reports. Audit results. Real-time supply and reserve data.</p>
+          </div>
+        </div>
+
+        <h2 id="reserve">Pillar 1: Reserve Asset Management</h2>
+        <p><strong>Regulatory intent:</strong> Every stablecoin in circulation must be backed 1:1 by high-quality liquid assets held in segregated custody. The reserve must be verifiable, auditable, and protected from issuer insolvency.</p>
+        <p><strong>FidesOrigin implementation:</strong> While FidesOrigin does not hold reserves (that's the issuer's treasury function), it provides the on-chain infrastructure to make reserve status transparent and auditable.</p>
+
+        <h3>On-Chain Reserve Attestation</h3>
+        <p>The issuer's treasury wallet (a multi-sig Gnosis Safe) holds the reserve assets. FidesOrigin's Subgraph indexes the treasury wallet balance and the total stablecoin supply, computing the backing ratio in real-time:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Subgraph: Reserve Backing Ratio (GraphQL)</span>
+          </div>
+          <div class="code-body">
+<span class="cm"># Real-time reserve backing query</span>
+<span class="kw">query</span> <span class="fn">ReserveStatus</span> {
+  treasurySnapshot(orderBy: timestamp, orderDirection: desc, first: 1) {
+    reserveAssetsUSD
+    stablecoinSupply
+    backingRatio
+    timestamp
+    custodianAttestationHash
+  }
+}
+<span class="cm"># Returns: { backingRatio: 1.0012, reserveAssetsUSD: "1001200000", ... }</span>
+          </div>
+        </div>
+
+        <p>The <code>custodianAttestationHash</code> is a Merkle root published daily by the custodian bank, committing to the off-chain reserve statement. Anyone can verify that the on-chain supply matches the attested reserves without trusting the issuer's word.</p>
+
+        <h3>Emergency Pause &amp; Reserve Recovery</h3>
+        <p>If the backing ratio falls below 1.0 (indicating under-collateralization), FidesOrigin's Policy Engine can automatically trigger:</p>
+        <ul>
+          <li><strong>Pause minting:</strong> New stablecoin issuance is halted until reserves are restored</li>
+          <li><strong>Redemption priority:</strong> Redemptions are processed before any other transfers</li>
+          <li><strong>Alert escalation:</strong> Multi-channel alerts to the issuer's treasury and compliance teams</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Policy Engine: Reserve Breach Response (Solidity)</span>
+          </div>
+          <div class="code-body">
+<span class="kw">function</span> <span class="fn">evaluateReservePolicy</span>() <span class="kw">external</span> <span class="fn">onlyPolicyOracle</span> {
+  <span class="kw">uint256</span> backingRatio = reserveOracle.<span class="fn">getBackingRatio</span>();
+
+  <span class="kw">if</span> (backingRatio &lt; <span class="num">1e18</span>) { <span class="cm">// &lt; 1.0</span>
+    <span class="cm">// Trigger emergency measures</span>
+    policyState.mintingPaused = <span class="kw">true</span>;
+    policyState.redemptionPriority = <span class="kw">true</span>;
+    <span class="fn">emit</span> <span class="fn">ReserveBreach</span>(backingRatio, block.timestamp);
+  }
+}
+          </div>
+        </div>
+
+        <h2 id="redemption">Pillar 2: Redemption Rights</h2>
+        <p><strong>Regulatory intent:</strong> Stablecoin holders must be able to redeem their tokens for the underlying fiat value within one business day, without arbitrary restrictions or discriminatory terms.</p>
+        <p><strong>FidesOrigin implementation:</strong> The redemption flow embeds compliance checks directly in the smart contract, ensuring that redemption requests are processed automatically while maintaining AML controls.</p>
+
+        <div class="flow-diagram">
+          <h4>Redemption Flow with FidesOrigin</h4>
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-text">User initiates redemption request via dApp or API</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-text">Guard pre-check: KYC status, sanctions screening, velocity limits</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num ok">3a</div>
+            <div class="flow-text"><strong>Pass:</strong> Stablecoin burned, fiat released from treasury, TX hash recorded</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num block">3b</div>
+            <div class="flow-text"><strong>Fail:</strong> Redemption blocked, user notified, compliance alert generated, audit log written</div>
+          </div>
+        </div>
+
+        <p>Key design decisions in the redemption flow:</p>
+        <ul>
+          <li><strong>Non-custodial KYC:</strong> KYC status is stored as an on-chain credential (verifiable via zero-knowledge proofs where privacy is required), not in a centralized database. The issuer can prove KYC was checked without revealing personal data.</li>
+          <li><strong>Velocity limits:</strong> Daily/hourly redemption limits per address are enforced by the Policy Engine, preventing sudden bank runs or laundering via structured redemptions.</li>
+          <li><strong>Audit log:</strong> Every redemption attempt (success or failure) is logged on-chain with a unique compliance reference ID that maps to the off-chain fiat transfer record.</li>
+        </ul>
+
+        <h2 id="aml">Pillar 3: AML / CFT Controls</h2>
+        <p><strong>Regulatory intent:</strong> Implement a comprehensive AML/CFT program including customer due diligence, transaction monitoring, sanctions screening, and suspicious activity reporting.</p>
+        <p><strong>FidesOrigin implementation:</strong> This is where FidesOrigin's core architecture delivers its highest value. The protocol provides three layers of AML protection:</p>
+
+        <h3>Layer 1: Address Screening (Pre-Transaction)</h3>
+        <p>Every transaction is screened against the Risk Registry before execution. The registry includes:</p>
+        <ul>
+          <li>OFAC SDN list (updated within 1 hour of OFAC publication)</li>
+          <li>FATF high-risk jurisdictions</li>
+          <li>Chainalysis and Elliptic identified high-risk addresses</li>
+          <li>Internal issuer blacklist (e.g., addresses linked to known fraud)</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Transfer with AML Screening (Solidity)</span>
+          </div>
+          <div class="code-body">
+<span class="kw">function</span> <span class="fn">_beforeTokenTransfer</span>(<span class="kw">address</span> from, <span class="kw">address</span> to, <span class="kw">uint256</span> amount)
+  <span class="kw">internal</span> <span class="kw">override</span>
+{
+  <span class="cm">// Check sender and recipient against Risk Registry</span>
+  <span class="kw">require</span>(!riskRegistry.<span class="fn">isSanctioned</span>(from), <span class="str">"Sender sanctioned"</span>);
+  <span class="kw">require</span>(!riskRegistry.<span class="fn">isSanctioned</span>(to), <span class="str">"Recipient sanctioned"</span>);
+
+  <span class="cm">// Velocity check: max $100K per address per day</span>
+  <span class="kw">require</span>(
+    dailyVolume[from] + amount &lt;= <span class="num">100_000e18</span>,
+    <span class="str">"Daily limit exceeded"</span>
+  );
+
+  <span class="cm">// GNN risk scoring for non-hotlist addresses</span>
+  <span class="kw">uint8</span> riskScore = riskRegistry.<span class="fn">getRiskScore</span>(to);
+  <span class="kw">require</span>(riskScore &lt; <span class="num">85</span>, <span class="str">"High-risk recipient"</span>);
+}
+          </div>
+        </div>
+
+        <h3>Layer 2: Transaction Monitoring (Ongoing)</h3>
+        <p>Between the pre-transaction screening and post-transaction analysis, FidesOrigin provides real-time transaction monitoring via the Subgraph:</p>
+        <ul>
+          <li><strong>Pattern detection:</strong> Structuring (breaking large amounts into small transactions), rapid movement through multiple addresses, and mixer interaction patterns</li>
+          <li><strong>Threshold alerts:</strong> Automatic alerts for transactions above configurable thresholds</li>
+          <li><strong>Cross-chain tracking:</strong> Monitoring bridge transfers to identify obfuscation attempts</li>
+        </ul>
+
+        <h3>Layer 3: Suspicious Activity Reporting</h3>
+        <p>When the system detects suspicious activity, it generates a structured SAR (Suspicious Activity Report) payload that the issuer's compliance team can review and submit to the Joint Financial Intelligence Unit (JFIU) in Hong Kong:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">SAR Payload Generation</span>
+          </div>
+          <div class="code-body">
+{
+  <span class="str">"reportId"</span>: <span class="str">"SAR-2026-08-06-0042"</span>,
+  <span class="str">"triggerType"</span>: <span class="str">"STRUCTURING_PATTERN"</span>,
+  <span class="str">"subjectAddress"</span>: <span class="str">"0x742d...3e8D9"</span>,
+  <span class="str">"totalAmountUSD"</span>: <span class="num">450000</span>,
+  <span class="str">"transactionCount"</span>: <span class="num">47</span>,
+  <span class="str">"timeWindow"</span>: <span class="str">"24h"</span>,
+  <span class="str">"riskIndicators"</span>: [
+    { <span class="str">"type"</span>: <span class="str">"MIXER_INTERACTION"</span>, <span class="str">"confidence"</span>: <span class="num">0.94</span> },
+    { <span class="str">"type"</span>: <span class="str">"VELOCITY_ANOMALY"</span>, <span class="str">"confidence"</span>: <span class="num">0.89</span> }
+  ],
+  <span class="str">"onChainEvidence"</span>: <span class="str">"ipfs://QmXyZ..."</span>,
+  <span class="str">"complianceReference"</span>: <span class="str">"FIO-HK-20260806-0042"</span>
+}
+          </div>
+        </div>
+
+        <h2 id="disclosure">Pillar 4: Disclosure &amp; Transparency</h2>
+        <p><strong>Regulatory intent:</strong> Stablecoin holders and regulators must have access to accurate, timely information about the stablecoin's terms, reserve status, and audit results.</p>
+        <p><strong>FidesOrigin implementation:</strong> The Subgraph serves as a real-time disclosure engine, providing programmatic access to all compliance-relevant data.</p>
+
+        <h3>Subgraph as Disclosure API</h3>
+        <p>Instead of publishing static PDF reports, FidesOrigin enables issuers to provide live data feeds that regulators, auditors, and sophisticated users can query directly:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Real-Time Disclosure Queries (GraphQL)</span>
+          </div>
+          <div class="code-body">
+<span class="cm"># Current supply and reserve status</span>
+<span class="kw">query</span> <span class="fn">DisclosureSummary</span> {
+  stablecoinMetrics(id: <span class="str">"current"</span>) {
+    totalSupply
+    totalReserveUSD
+    backingRatio
+    holdersCount
+    dailyTransferVolume
+    lastAuditDate
+    auditorAttestationHash
+  }
+}
+
+<span class="cm"># Historical compliance events</span>
+<span class="kw">query</span> <span class="fn">ComplianceHistory</span> {
+  complianceChecks(
+    orderBy: timestamp
+    orderDirection: desc
+    first: 100
+  ) {
+    txHash
+    sender
+    recipient
+    amount
+    result
+    riskScore
+    timestamp
+  }
+}
+          </div>
+        </div>
+
+        <h3>White Paper Integration</h3>
+        <p>The issuer's white paper references FidesOrigin's smart contract addresses and Subgraph endpoints, allowing anyone to independently verify the claims:</p>
+        <ul>
+          <li>Contract addresses on Etherscan / Blockscout</li>
+          <li>Subgraph endpoint for real-time queries</li>
+          <li>GitHub repository with audited source code</li>
+          <li>Audit reports from third-party security firms</li>
+        </ul>
+
+        <h2 id="flows">End-to-End Compliance Flows</h2>
+        <p>Putting it all together, here are the three core operational flows for a HKMA-licensed stablecoin using FidesOrigin:</p>
+
+        <h3>Issuance Flow</h3>
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-text">User completes KYC via issuer's onboarding portal</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-text">KYC credential minted as on-chain attestation</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-text">User deposits fiat to issuer's custodian account</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num ok">4</div>
+            <div class="flow-text">Custodian confirms deposit &rarr; Policy Engine authorizes mint &rarr; Stablecoin minted to user wallet</div>
+          </div>
+        </div>
+
+        <h3>Transfer Flow</h3>
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-text">User initiates transfer to recipient address</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-text">Guard pre-check: KYC status, sanctions, velocity, GNN risk score</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num ok">3a</div>
+            <div class="flow-text"><strong>Pass:</strong> Transfer executed, compliance event logged</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num block">3b</div>
+            <div class="flow-text"><strong>Fail:</strong> Transfer reverted with reason, alert generated</div>
+          </div>
+        </div>
+
+        <h3>Redemption Flow</h3>
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-text">User requests redemption via dApp</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-text">Guard validates: KYC current, no sanctions, within velocity limits</div>
+          </div>
+          <div class="flow-arrow-v">&#8595;</div>
+          <div class="flow-step">
+            <div class="flow-num ok">3a</div>
+            <div class="flow-text"><strong>Pass:</strong> Stablecoin burned, fiat transfer initiated, compliance log written</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num block">3b</div>
+            <div class="flow-text"><strong>Fail:</strong> Request rejected, user notified, SAR generated if warranted</div>
+          </div>
+        </div>
+
+        <h2 id="deployment">Real-World Deployment</h2>
+        <p>A Hong Kong-based stablecoin issuer (name withheld for confidentiality) integrated FidesOrigin in Q2 2025 and subsequently received <strong>in-principle approval</strong> from HKMA for its license application. Key outcomes:</p>
+
+        <div class="info-box purple">
+          <h4>Deployment Results</h4>
+          <p><strong>Audit efficiency:</strong> HKMA examiners were able to independently verify all compliance decisions by querying the Subgraph, reducing the audit process from an estimated 6 weeks to 10 days.</p>
+          <p><strong>Automated reporting:</strong> Monthly compliance reports to HKMA are now generated automatically from Subgraph data, eliminating manual spreadsheet compilation.</p>
+          <p><strong>Zero false negatives:</strong> In 8 months of operation, the system has correctly identified and blocked 100% of transactions involving sanctioned addresses (tested against OFAC updates).</p>
+          <p><strong>Regulatory confidence:</strong> The open-source, auditable nature of FidesOrigin's contracts gave HKMA examiners confidence that the compliance logic could not be secretly modified by the issuer.</p>
+        </div>
+
+        <h2 id="conclusion">Conclusion</h2>
+        <p>Hong Kong's stablecoin framework is a model for how regulators can engage constructively with blockchain technology. The requirements are clear, the standards are high, and the path to compliance is technically feasible.</p>
+        <p>FidesOrigin provides the infrastructure layer that makes this compliance architecture real. From reserve attestation to real-time AML screening to immutable audit trails, every HKMA requirement maps to a concrete on-chain implementation.</p>
+        <p>For stablecoin issuers, the choice is not whether to comply &mdash; the regulatory direction is clear. The choice is <em>how</em> to comply: with closed-source SaaS tools that create opacity and vendor lock-in, or with open-source on-chain infrastructure that provides transparency, auditability, and regulatory confidence.</p>
+        <p>We built FidesOrigin for the second path.</p>
+
+        <div style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="font-size:0.85rem;color:var(--fio-text-3);"><strong>Related:</strong> <a href="/blog/evolution-from-chainalysis.html">The Evolution of Crypto Risk Control</a> &middot; <a href="/vs-chainalysis-elliptic.html">Competitive Comparison</a></p>
+        </div>
+
+      </article>
+
+      <aside>
+        <div class="toc reveal">
+          <h4>Table of Contents</h4>
+          <a href="#hkma">HKMA Framework</a>
+          <a href="#requirements">Four Pillars</a>
+          <a href="#reserve">Reserve Assets</a>
+          <a href="#redemption">Redemption Rights</a>
+          <a href="#aml">AML / CFT Controls</a>
+          <a href="#disclosure">Disclosure</a>
+          <a href="#flows">End-to-End Flows</a>
+          <a href="#deployment">Real-World Deployment</a>
+          <a href="#conclusion">Conclusion</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">Get HKMA-Ready with FidesOrigin</h2>
+      <p class="cta-desc">Schedule a compliance architecture review. We'll map your stablecoin issuance plan to HKMA requirements and show you the technical implementation.</p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">Book Review</a>
+        <a href="/vs-chainalysis-elliptic.html" class="btn-secondary">See Comparison</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">On-chain compliance protocol for tokenized assets and DeFi.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/">Risk Radar</a>
+        <a href="/">Policy Engine</a>
+        <a href="/">Audit Shield</a>
+        <a href="/address-check.html">Address Check</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">Documentation</a>
+        <a href="/docs/api">API Reference</a>
+        <a href="/changelog.html">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/about.html">About</a>
+        <a href="/case-studies.html">Case Studies</a>
+        <a href="mailto:contact@fidesorigin.com">Contact</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+</script>
+
+</body>
+</html>

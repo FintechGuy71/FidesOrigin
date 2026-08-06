@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>技術架構 — FidesOrigin</title>
+<meta name="description" content="FidesOrigin V2.1 技術架構：風控守衛交易前引擎、模組化合規堆疊、多鏈部署。"/>
+<meta property="og:title" content="技術架構 — FidesOrigin"/>
+<meta property="og:description" content="FidesOrigin V2.1：風控守衛交易前引擎、模組化合規、多鏈部署。"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/tw/architecture.html"/>
+<style>
+  :root {
+    --fio-ink:#05060a;
+    --fio-ink-soft:#080a10;
+    --fio-surface:#0c0e18;
+    --fio-surface-2:#111320;
+    --fio-surface-3:#181b28;
+    --fio-elevated:#1e2230;
+    --fio-border:#252a3a;
+    --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5;
+    --fio-text-2:#9a9fad;
+    --fio-text-3:#5e6478;
+    --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8;
+    --fio-accent-dim:#9b8ed81a;
+    --fio-accent-glow:#9b8ed80a;
+    --fio-gold:#d4b87a;
+    --fio-gold-dim:#d4b87a1a;
+    --fio-gold-glow:#d4b87a10;
+    --fio-steel:#7b9ab8;
+    --fio-success:#5ce68a;
+    --fio-warn:#fcd34d;
+    --fio-danger:#fb8e8e;
+    --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--fio-ink);color:var(--fio-text);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+  @media(max-width:768px){.container{padding:0 16px}}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 6px var(--fio-gold)}50%{opacity:0.5;box-shadow:0 0 16px var(--fio-gold)}}
+  @keyframes flow{0%{stroke-dashoffset:20}100%{stroke-dashoffset:0}}
+  .anim-fade-up{animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both}
+  .anim-d1{animation-delay:0.1s}.anim-d2{animation-delay:0.2s}.anim-d3{animation-delay:0.35s}.anim-d4{animation-delay:0.5s}
+
+  .nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(5,6,10,0.85);backdrop-filter:blur(20px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,0.03);transition:all 0.3s}
+  .nav-scrolled{background:rgba(5,6,10,0.95);border-bottom-color:rgba(255,255,255,0.06)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1200px;margin:0 auto;padding:0 24px}
+  .nav-logo{display:flex;align-items:center;gap:10px}
+  .nav-logo img{height:28px;width:auto;border-radius:6px}
+  .nav-logo-text{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--fio-text);letter-spacing:-0.025em}
+  .nav-links{display:none;align-items:center;gap:32px}
+  .nav-links a{font-size:0.8125rem;color:var(--fio-text-2);transition:all 0.2s;position:relative;font-weight:450}
+  .nav-links a:hover{color:var(--fio-text)}
+  .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--fio-gold);transition:width 0.25s ease;border-radius:1px}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{font-size:0.8125rem;font-weight:600;color:var(--fio-ink);padding:8px 20px;border-radius:8px;transition:all 0.25s;background:var(--fio-gold)}
+  .nav-cta:hover{background:#e0c88a;transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,184,122,0.25)}
+  .nav-cta-outline{font-size:0.8125rem;font-weight:500;color:var(--fio-gold);padding:7px 18px;border:1px solid rgba(212,184,122,0.2);border-radius:8px;transition:all 0.25s;background:rgba(212,184,122,0.04)}
+  .nav-cta-outline:hover{background:rgba(212,184,122,0.1);border-color:rgba(212,184,122,0.35)}
+  .nav-mobile-btn{display:flex;width:40px;height:40px;align-items:center;justify-content:center;color:var(--fio-text-2);background:none;border:none;cursor:pointer}
+  @media(min-width:900px){.nav-links{display:flex}.nav-mobile-btn{display:none}}
+
+  .mobile-menu{display:none;position:fixed;inset:0;z-index:999;background:rgba(5,6,10,0.97);backdrop-filter:blur(20px);padding:80px 24px 24px}
+  .mobile-menu.active{display:block}
+  .mobile-menu a{display:block;padding:16px 0;font-size:1.1rem;color:var(--fio-text);border-bottom:1px solid rgba(255,255,255,0.04)}
+  .mobile-menu-close{position:absolute;top:16px;right:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--fio-text-2);background:none;border:none;cursor:pointer;font-size:1.5rem}
+  .mobile-menu .lang-row{display:flex;gap:16px;margin-top:16px}
+  .mobile-menu .lang-row a{font-size:0.9rem;color:var(--fio-text-3);border:none;padding:8px 0}
+
+  .hero{position:relative;overflow:hidden;padding:140px 0 80px;background:var(--fio-ink)}
+  .hero-bg-glow{position:absolute;inset:0;pointer-events:none}
+  .hero-bg-glow::before{content:'';position:absolute;top:-30%;left:20%;width:70vw;height:70vw;background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%)}
+  .hero-bg-glow::after{content:'';position:absolute;bottom:-20%;right:10%;width:50vw;height:50vw;background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%)}
+  .hero-inner{position:relative;z-index:2;text-align:center;max-width:800px;margin:0 auto}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;background:var(--fio-gold-dim);border:1px solid rgba(212,184,122,0.15);border-radius:100px;font-size:0.75rem;font-family:var(--font-mono);color:var(--fio-gold);margin-bottom:28px}
+  .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--fio-gold);animation:pulse-dot 2s infinite}
+  .hero-title{font-family:var(--font-display);font-size:clamp(2.4rem,5.5vw,4rem);font-weight:500;line-height:1.05;letter-spacing:-0.025em;color:var(--fio-text);margin-bottom:20px}
+  .hero-title-accent{background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-subtitle{font-size:clamp(1.05rem,1.4vw,1.2rem);line-height:1.7;color:var(--fio-text-2);max-width:600px;margin:0 auto 36px}
+
+  .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:var(--fio-gold);color:var(--fio-ink);font-size:0.875rem;font-weight:600;border-radius:10px;border:none;cursor:pointer;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);box-shadow:0 0 32px rgba(212,184,122,0.2)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(212,184,122,0.4)}
+  .btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:transparent;color:var(--fio-text);font-size:0.875rem;font-weight:500;border-radius:10px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.25s}
+  .btn-secondary:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.2)}
+
+  .section{padding:100px 0;position:relative}
+  @media(min-width:768px){.section{padding:130px 0}}
+  .section-alt{background:var(--fio-ink-soft)}
+  .section-header{text-align:center;max-width:640px;margin:0 auto 72px}
+  .section-eyebrow{display:inline-block;font-family:var(--font-mono);font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--fio-text-3);margin-bottom:16px;padding:4px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:6px}
+  .section-title{font-family:var(--font-display);font-size:clamp(1.8rem,3.8vw,2.8rem);font-weight:500;line-height:1.1;letter-spacing:-0.02em;color:var(--fio-text);margin-bottom:18px}
+  .section-desc{font-size:1.05rem;line-height:1.7;color:var(--fio-text-2);max-width:560px;margin:0 auto}
+
+  .arch-diagram{max-width:900px;margin:0 auto;padding:40px 20px;position:relative}
+  .arch-col{display:flex;flex-direction:column;align-items:center;gap:0;position:relative}
+  .arch-node{position:relative;padding:16px 20px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:12px;text-align:center;min-width:200px;max-width:260px;z-index:2;transition:all 0.3s}
+  .arch-node:hover{border-color:var(--fio-border-light);transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.3)}
+  .arch-node.guard{background:linear-gradient(180deg,rgba(155,142,216,0.08) 0%,var(--fio-surface) 60%);border-color:rgba(155,142,216,0.25)}
+  .arch-node.vault{background:linear-gradient(180deg,rgba(251,142,142,0.06) 0%,var(--fio-surface) 60%);border-color:rgba(251,142,142,0.2)}
+  .arch-node.core{background:linear-gradient(180deg,rgba(212,184,122,0.08) 0%,var(--fio-surface) 60%);border-color:rgba(212,184,122,0.2)}
+  .arch-node.sub{background:linear-gradient(180deg,rgba(122,184,240,0.06) 0%,var(--fio-surface) 60%);border-color:rgba(122,184,240,0.2)}
+  .arch-node-label{font-family:var(--font-mono);font-size:0.68rem;color:var(--fio-text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+  .arch-node-title{font-family:var(--font-display);font-size:0.95rem;font-weight:600;color:var(--fio-text);margin-bottom:4px}
+  .arch-node-desc{font-size:0.78rem;color:var(--fio-text-3);line-height:1.4}
+  .arch-node-badge{position:absolute;top:-8px;right:-8px;padding:3px 10px;background:var(--fio-accent-dim);color:var(--fio-accent);font-size:0.65rem;font-family:var(--font-mono);font-weight:600;border-radius:100px;border:1px solid rgba(155,142,216,0.2)}
+
+  .arch-vline{width:2px;height:32px;background:linear-gradient(180deg,var(--fio-border-light),var(--fio-accent));position:relative;z-index:1}
+  .arch-vline.danger{background:linear-gradient(180deg,var(--fio-border-light),var(--fio-danger))}
+  .arch-vline.success{background:linear-gradient(180deg,var(--fio-border-light),var(--fio-success))}
+  .arch-vline.info{background:linear-gradient(180deg,var(--fio-border-light),var(--fio-info))}
+  .arch-arrow-down{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--fio-accent)}
+  .arch-arrow-down.danger{border-top-color:var(--fio-danger)}
+  .arch-arrow-down.success{border-top-color:var(--fio-success)}
+
+  .arch-branch{display:flex;justify-content:center;gap:60px;margin:0;position:relative}
+  .arch-branch::before{content:'';position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:2px;height:16px;background:var(--fio-border-light)}
+  .arch-branch::after{content:'';position:absolute;top:0;left:calc(50% - 1px);width:calc(50% + 30px);height:2px;background:linear-gradient(90deg,var(--fio-border-light),var(--fio-border-light));border-radius:1px}
+  .arch-branch-left,.arch-branch-right{display:flex;flex-direction:column;align-items:center;gap:0}
+  .arch-branch-left::before,.arch-branch-right::before{content:'';width:2px;height:16px;background:var(--fio-border-light)}
+  .arch-label-pass,.arch-label-fail{font-family:var(--font-mono);font-size:0.7rem;padding:3px 10px;border-radius:100px;margin-bottom:8px}
+  .arch-label-pass{background:rgba(92,230,138,0.08);color:var(--fio-success);border:1px solid rgba(92,230,138,0.15)}
+  .arch-label-fail{background:rgba(251,142,142,0.08);color:var(--fio-danger);border:1px solid rgba(251,142,142,0.15)}
+
+  .arch-merge{display:flex;justify-content:center;gap:80px;margin-top:0;position:relative}
+  .arch-merge::before{content:'';position:absolute;top:-16px;left:20%;right:20%;height:2px;background:var(--fio-border-light)}
+  .arch-merge-col{display:flex;flex-direction:column;align-items:center;gap:0}
+  .arch-merge-col::before{content:'';width:2px;height:16px;background:var(--fio-border-light)}
+
+  .arch-user{text-align:center;margin-bottom:16px}
+  .arch-user-icon{width:48px;height:48px;border-radius:50%;background:var(--fio-accent-dim);border:1px solid rgba(155,142,216,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--fio-accent)}
+  .arch-user-text{font-family:var(--font-mono);font-size:0.78rem;color:var(--fio-text-3)}
+
+  .arch-event{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:var(--font-mono);font-size:0.68rem;color:var(--fio-text-3)}
+  .arch-event-dot{width:6px;height:6px;border-radius:50%;background:var(--fio-accent);animation:pulse-dot 2s infinite}
+
+  .comp-grid{display:grid;gap:20px;grid-template-columns:repeat(1,1fr)}
+  @media(min-width:640px){.comp-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:1024px){.comp-grid{grid-template-columns:repeat(3,1fr)}}
+  .comp-card{position:relative;padding:32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:16px;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);overflow:hidden}
+  .comp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(155,142,216,0.2),transparent);opacity:0;transition:opacity 0.4s}
+  .comp-card:hover::before{opacity:1}
+  .comp-card:hover{border-color:var(--fio-border-light);transform:translateY(-4px);box-shadow:0 24px 48px rgba(0,0,0,0.35)}
+  .comp-card.core{border-color:rgba(212,184,122,0.12);background:linear-gradient(180deg,rgba(212,184,122,0.03) 0%,var(--fio-surface) 50%)}
+  .comp-num{font-family:var(--font-mono);font-size:0.65rem;color:var(--fio-text-4);letter-spacing:0.05em;margin-bottom:12px}
+  .comp-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:1.1rem}
+  .comp-icon.purple{background:var(--fio-accent-dim);color:var(--fio-accent)}
+  .comp-icon.gold{background:var(--fio-gold-dim);color:var(--fio-gold)}
+  .comp-icon.green{background:rgba(92,230,138,0.06);color:var(--fio-success)}
+  .comp-icon.blue{background:rgba(122,184,240,0.06);color:var(--fio-info)}
+  .comp-icon.red{background:rgba(251,142,142,0.06);color:var(--fio-danger)}
+  .comp-card h3{font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:var(--fio-text);margin-bottom:6px}
+  .comp-card p{font-size:0.88rem;line-height:1.65;color:var(--fio-text-2);margin-bottom:14px}
+  .comp-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .comp-tag{font-size:0.68rem;font-family:var(--font-mono);padding:4px 10px;background:rgba(155,142,216,0.05);color:var(--fio-text-3);border:1px solid rgba(255,255,255,0.05);border-radius:5px}
+  .comp-tag.gold{background:var(--fio-gold-dim);color:var(--fio-gold);border-color:rgba(212,184,122,0.1)}
+  .comp-tag.green{background:rgba(92,230,138,0.06);color:var(--fio-success);border-color:rgba(92,230,138,0.08)}
+
+  .code-wrap{background:var(--fio-ink-soft);border:1px solid var(--fio-border);border-radius:16px;overflow:hidden;margin:24px 0}
+  .code-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--fio-border)}
+  .code-tabs{display:flex;gap:4px}
+  .code-tab{padding:6px 14px;border-radius:6px;font-size:0.75rem;font-family:var(--font-mono);color:var(--fio-text-3);cursor:pointer;border:none;background:none;transition:all 0.2s}
+  .code-tab.active{background:rgba(255,255,255,0.04);color:var(--fio-text)}
+  .code-body{padding:24px;font-family:var(--font-mono);font-size:0.78rem;line-height:1.75;overflow-x:auto}
+  .code-body .kw{color:#c678dd}
+  .code-body .fn{color:#61afef}
+  .code-body .str{color:#98c379}
+  .code-body .num{color:#d19a66}
+  .code-body .cm{color:#5c6370;font-style:italic}
+  .code-body .ty{color:#e5c07b}
+
+  .sec-grid{display:grid;gap:16px;grid-template-columns:repeat(1,1fr)}
+  @media(min-width:480px){.sec-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:900px){.sec-grid{grid-template-columns:repeat(3,1fr)}}
+  .sec-item{padding:28px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;transition:all 0.3s}
+  .sec-item:hover{border-color:rgba(212,184,122,0.15);background:rgba(212,184,122,0.02)}
+  .sec-icon{width:40px;height:40px;margin-bottom:14px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .sec-item h4{font-size:0.95rem;font-weight:600;color:var(--fio-text);margin-bottom:6px}
+  .sec-item p{font-size:0.8rem;color:var(--fio-text-3);line-height:1.55}
+
+  .deploy-grid{display:grid;gap:16px;grid-template-columns:repeat(2,1fr)}
+  @media(min-width:768px){.deploy-grid{grid-template-columns:repeat(4,1fr)}}
+  .deploy-card{padding:28px 20px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:14px;text-align:center;transition:all 0.3s}
+  .deploy-card:hover{border-color:var(--fio-border-light);transform:translateY(-3px)}
+  .deploy-card.active{border-color:rgba(92,230,138,0.2);background:linear-gradient(180deg,rgba(92,230,138,0.03) 0%,var(--fio-surface) 50%)}
+  .deploy-card.planned{border-color:rgba(212,184,122,0.1);background:linear-gradient(180deg,rgba(212,184,122,0.02) 0%,var(--fio-surface) 50%)}
+  .deploy-icon{width:40px;height:40px;margin:0 auto 12px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+  .deploy-card h4{font-size:0.95rem;font-weight:600;color:var(--fio-text);margin-bottom:4px}
+  .deploy-card p{font-size:0.75rem;color:var(--fio-text-3);font-family:var(--font-mono)}
+  .deploy-status{display:inline-block;margin-top:10px;padding:3px 10px;border-radius:100px;font-size:0.65rem;font-weight:600;font-family:var(--font-mono)}
+  .deploy-status.live{background:rgba(92,230,138,0.1);color:var(--fio-success)}
+  .deploy-status.planned{background:rgba(212,184,122,0.1);color:var(--fio-gold)}
+
+  .addr-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:24px}
+  .addr-table th{text-align:left;padding:14px 16px;color:var(--fio-text);font-weight:600;border-bottom:1px solid var(--fio-border);background:var(--fio-surface-2);font-family:var(--font-display)}
+  .addr-table td{padding:14px 16px;color:var(--fio-text-2);border-bottom:1px solid var(--fio-border)}
+  .addr-table tr:last-child td{border-bottom:none}
+  .addr-table tr:hover td{background:var(--fio-surface-2)}
+  .addr-mono{font-family:var(--font-mono);font-size:0.82rem;color:var(--fio-accent)}
+  .addr-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:600;font-family:var(--font-mono);margin-left:8px}
+  .addr-badge.verified{background:rgba(92,230,138,0.1);color:var(--fio-success)}
+
+  .cta-banner{padding:100px 0;position:relative;overflow:hidden;background:var(--fio-ink-soft)}
+  .cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%)}
+  .cta-inner{position:relative;z-index:1;text-align:center;max-width:600px;margin:0 auto}
+  .cta-title{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:500;color:var(--fio-text);margin-bottom:16px}
+  .cta-desc{font-size:1.05rem;color:var(--fio-text-2);margin-bottom:32px;line-height:1.7}
+  .cta-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+  .footer{background:var(--fio-ink);border-top:1px solid rgba(255,255,255,0.04);padding:64px 0 32px}
+  .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:48px;margin-bottom:48px}
+  @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:32px}}
+  @media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
+  .footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .footer-brand img{height:26px;width:auto;border-radius:6px}
+  .footer-brand span{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--fio-text)}
+  .footer-desc{font-size:0.85rem;color:var(--fio-text-3);line-height:1.6;max-width:280px}
+  .footer-col h4{font-size:0.8rem;font-weight:600;color:var(--fio-text);margin-bottom:16px;text-transform:uppercase;letter-spacing:0.08em}
+  .footer-col a{display:block;color:var(--fio-text-3);font-size:0.85rem;padding:5px 0;transition:color 0.2s}
+  .footer-col a:hover{color:var(--fio-text-2)}
+  .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,0.04);font-size:0.75rem;color:var(--fio-text-4);font-family:var(--font-mono)}
+  @media(max-width:640px){.footer-bottom{flex-direction:column;gap:8px;text-align:center}}
+
+  .reveal{opacity:0;transform:translateY(40px);transition:all 0.8s cubic-bezier(0.16,1,0.3,1)}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  .reveal-delay-1{transition-delay:0.1s}.reveal-delay-2{transition-delay:0.2s}.reveal-delay-3{transition-delay:0.35s}
+
+  @media(max-width:640px){
+    .arch-branch{flex-direction:column;gap:24px;align-items:center}
+    .arch-branch::after{display:none}
+    .arch-branch-left::before,.arch-branch-right::before{display:none}
+    .arch-merge{flex-direction:column;gap:24px;align-items:center}
+    .arch-merge::before{display:none}
+    .arch-merge-col::before{display:none}
+    .arch-node{min-width:160px;max-width:220px}
+    .arch-diagram{padding:20px 8px}
+  }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/index.html#products" onclick="closeMobileMenu()">產品</a>
+  <a href="/architecture.html" onclick="closeMobileMenu()">架構</a>
+  <a href="/index.html#use-cases" onclick="closeMobileMenu()">應用場景</a>
+  <a href="/index.html#security" onclick="closeMobileMenu()">安全</a>
+  <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" onclick="closeMobileMenu()">GitHub</a>
+  <a href="/docs/" onclick="closeMobileMenu()">文件</a>
+  <div class="lang-row">
+    <a href="/">EN</a>
+    <a href="/cn/">CN</a>
+    <a href="/tw/">TW</a>
+    <a href="/jp/">JP</a>
+  </div>
+  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">申請演示</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/index.html#products">產品</a>
+      <a href="/architecture.html">架構</a>
+      <a href="/index.html#use-cases">應用場景</a>
+      <a href="/index.html#security">安全</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">申請演示</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="開啟選單">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner anim-fade-up">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        <span>V2.1 — 風控守衛交易前引擎</span>
+      </div>
+      <h1 class="hero-title">
+        技術<br>
+        <span class="hero-title-accent">架構</span>
+      </h1>
+      <p class="hero-subtitle">
+        模組化的多鏈合規協議，具備鏈上執行、風控守衛交易前篩查和不可竄改審計追蹤。每個決策都是確定性的、可審計的且符合監管要求。
+      </p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          查看原始碼
+        </a>
+        <a href="#contracts" class="btn-secondary">部署地址</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="diagram">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">系統流程</div>
+      <h2 class="section-title">交易生命週期</h2>
+      <p class="section-desc">從使用者意圖到鏈上執行——每一步都是可見、可驗證且不可逆的。</p>
+    </div>
+
+    <div class="arch-diagram reveal reveal-delay-1">
+      <div class="arch-user">
+        <div class="arch-user-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="arch-user-text">使用者發起轉帳</div>
+      </div>
+      <div class="arch-vline" style="margin:0 auto;height:28px"></div>
+
+      <div class="arch-col">
+        <div class="arch-node core">
+          <div class="arch-node-label">ERC-20 合規代幣</div>
+          <div class="arch-node-title">CompliantToken.transfer()</div>
+          <div class="arch-node-desc">覆蓋標準 ERC-20 以注入合規鉤子</div>
+        </div>
+      </div>
+      <div class="arch-vline" style="margin:0 auto;height:28px"></div>
+
+      <div class="arch-col">
+        <div class="arch-node guard">
+          <span class="arch-node-badge">V2.1 NEW</span>
+          <div class="arch-node-label">風控守衛預檢</div>
+          <div class="arch-node-title">previewTransaction()</div>
+          <div class="arch-node-desc">執行前模擬交易結果；飛行前捕獲高風險模式</div>
+        </div>
+      </div>
+
+      <div class="arch-branch" style="margin-top:24px">
+        <div class="arch-branch-left">
+          <div class="arch-label-pass">&#10003; 通過</div>
+          <div class="arch-vline success" style="height:24px"></div>
+          <div class="arch-node" style="min-width:180px">
+            <div class="arch-node-label">風險登記</div>
+            <div class="arch-node-title">RiskRegistry</div>
+            <div class="arch-node-desc">地址風險畫像查詢</div>
+          </div>
+        </div>
+        <div class="arch-branch-right">
+          <div class="arch-label-fail">&#10007; 阻止</div>
+          <div class="arch-vline danger" style="height:24px"></div>
+          <div class="arch-node vault">
+            <div class="arch-node-label">隔離</div>
+            <div class="arch-node-title">QuarantineVault</div>
+            <div class="arch-node-desc">高風險資金隔離待審</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;margin-top:24px">
+        <div class="arch-vline" style="height:28px"></div>
+      </div>
+      <div class="arch-col">
+        <div class="arch-node core">
+          <div class="arch-node-label">合規決策</div>
+          <div class="arch-node-title">ComplianceEngine.checkTransfer()</div>
+          <div class="arch-node-desc">評估策略引擎規則 + 風險登記分數</div>
+        </div>
+      </div>
+
+      <div class="arch-branch" style="margin-top:24px">
+        <div class="arch-branch-left">
+          <div class="arch-label-pass">&#10003; 執行</div>
+          <div class="arch-vline success" style="height:24px"></div>
+          <div class="arch-node" style="min-width:180px">
+            <div class="arch-node-label">鏈上操作</div>
+            <div class="arch-node-title">轉帳已執行</div>
+            <div class="arch-node-desc">標準 ERC-20 轉帳完成</div>
+          </div>
+        </div>
+        <div class="arch-branch-right">
+          <div class="arch-label-fail">&#10007; 隔離</div>
+          <div class="arch-vline danger" style="height:24px"></div>
+          <div class="arch-node vault">
+            <div class="arch-node-label">持有與隔離</div>
+            <div class="arch-node-title">資金已持有</div>
+            <div class="arch-node-desc">在隔離金庫中託管待審</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;margin-top:24px">
+        <div class="arch-vline info" style="height:28px"></div>
+      </div>
+      <div class="arch-col">
+        <div class="arch-node sub">
+          <div class="arch-node-label">事件索引</div>
+          <div class="arch-node-title">Subgraph (The Graph)</div>
+          <div class="arch-node-desc">所有合規決策已索引用於審計和報告</div>
+          <div class="arch-event"><span class="arch-event-dot"></span>ComplianceCheck 事件已索引</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="components">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">核心元件</div>
+      <h2 class="section-title">九個合約。一套合規堆疊。</h2>
+      <p class="section-desc">每個模組都可透過 UUPS 代理獨立升級。只組合你需要的。</p>
+    </div>
+
+    <div class="comp-grid">
+      <div class="comp-card core reveal reveal-delay-1">
+        <div class="comp-num">01 / CORE</div>
+        <div class="comp-icon gold">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>FidesCompliance (V2.1)</h3>
+        <p>核心合規引擎，具備風控守衛交易前篩查。透過 Fides 特定的規則評估和審計日誌擴展基礎合規功能。</p>
+        <div class="comp-tags">
+          <span class="comp-tag gold">UUPS 可升級</span>
+          <span class="comp-tag">風控守衛整合</span>
+          <span class="comp-tag">規則引擎</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-2">
+        <div class="comp-num">02 / DATA</div>
+        <div class="comp-icon purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <h3>RiskRegistry</h3>
+        <p>鏈上地址風險畫像儲存。透過基於角色的存取控制管理制裁名單、風險層級和 CDD 標籤。</p>
+        <div class="comp-tags">
+          <span class="comp-tag">制裁名單</span>
+          <span class="comp-tag">風險層級</span>
+          <span class="comp-tag">基於角色的 ACL</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-3">
+        <div class="comp-num">03 / CONFIG</div>
+        <div class="comp-icon blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+        </div>
+        <h3>PolicyEngine</h3>
+        <p>每個發行方和錢包的可配置規則。支援交易限額、地理圍欄、速度檢查和多重簽名要求。</p>
+        <div class="comp-tags">
+          <span class="comp-tag">每發行方規則</span>
+          <span class="comp-tag">交易限額</span>
+          <span class="comp-tag">地理圍欄</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-1">
+        <div class="comp-num">04 / CHECK</div>
+        <div class="comp-icon green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3>ComplianceEngine</h3>
+        <p>交易級合規檢查器。呼叫 RiskRegistry 和 PolicyEngine 以生成確定性的通過/失敗/隔離決策。</p>
+        <div class="comp-tags">
+          <span class="comp-tag green">確定性</span>
+          <span class="comp-tag green">重入安全</span>
+          <span class="comp-tag green">緊急暫停</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-2">
+        <div class="comp-num">05 / GUARD</div>
+        <div class="comp-icon purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3>GuardedComplianceEngine</h3>
+        <p>V2.1 風控守衛整合層。透過 previewTransaction() 包裝 ComplianceEngine，用於飛行前模擬而不改變狀態。</p>
+        <div class="comp-tags">
+          <span class="comp-tag gold">V2.1 NEW</span>
+          <span class="comp-tag">飛行前模擬</span>
+          <span class="comp-tag">零狀態變更</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-3">
+        <div class="comp-num">06 / VAULT</div>
+        <div class="comp-icon red">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h3>QuarantineVault</h3>
+        <p>被阻止交易的隔離資金託管。僅可透過多重簽名或時間鎖治理由授權審核員釋放。</p>
+        <div class="comp-tags">
+          <span class="comp-tag">隔離儲存</span>
+          <span class="comp-tag">時間鎖釋放</span>
+          <span class="comp-tag">多重簽名</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-1">
+        <div class="comp-num">07 / TOKEN</div>
+        <div class="comp-icon gold">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h3>CompliantStableCoin</h3>
+        <p>內建合規鉤子的 ERC-20 穩定幣。每次轉帳在代幣轉移前都通過 ComplianceEngine 執行。</p>
+        <div class="comp-tags">
+          <span class="comp-tag gold">ERC-20</span>
+          <span class="comp-tag gold">香港金管局就緒</span>
+          <span class="comp-tag gold">鑄造/銷毀 ACL</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-2">
+        <div class="comp-num">08 / WATCH</div>
+        <div class="comp-icon blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        </div>
+        <h3>MempoolWatcher</h3>
+        <p>用於零確認風險檢測的鏈下記憶體池監視器。透過預言機將即時風險訊號輸入 RiskRegistry。</p>
+        <div class="comp-tags">
+          <span class="comp-tag">即時</span>
+          <span class="comp-tag">零確認</span>
+          <span class="comp-tag">預言機推送</span>
+        </div>
+      </div>
+
+      <div class="comp-card reveal reveal-delay-3">
+        <div class="comp-num">09 / INDEX</div>
+        <div class="comp-icon purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+        </div>
+        <h3>Subgraph</h3>
+        <p>The Graph 驅動的事件索引器。為審計報告、交易歷史和合規儀表板提供 GraphQL API。</p>
+        <div class="comp-tags">
+          <span class="comp-tag">GraphQL</span>
+          <span class="comp-tag">The Graph</span>
+          <span class="comp-tag">審計 API</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="dataflow">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">深入解析</div>
+      <h2 class="section-title">工作原理</h2>
+      <p class="section-desc">逐步解析：當使用者點擊"轉帳"時會發生什麼。</p>
+    </div>
+
+    <div style="max-width:800px;margin:0 auto">
+      <div style="display:flex;gap:24px;padding:36px 0;border-bottom:1px solid rgba(255,255,255,0.04)" class="reveal">
+        <div style="flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1rem;font-weight:600;background:var(--fio-accent-dim);color:var(--fio-accent);border:1px solid rgba(155,142,216,0.12)">01</div>
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:8px">轉帳鉤子觸發</h3>
+          <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7">使用者呼叫 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">CompliantStableCoin.transfer(to, amount)</code>。代幣的覆蓋轉帳函數在任何餘額變更發生前注入合規檢查。</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:24px;padding:36px 0;border-bottom:1px solid rgba(255,255,255,0.04)" class="reveal reveal-delay-1">
+        <div style="flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1rem;font-weight:600;background:var(--fio-gold-dim);color:var(--fio-gold);border:1px solid rgba(212,184,122,0.12)">02</div>
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:8px">風控守衛預檢 (V2.1)</h3>
+          <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7">在狀態變更之前，<code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">GuardedComplianceEngine.previewTransaction()</code> 使用 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">staticcall</code> 模擬完整的合規流水線——無 Gas 成本，無狀態變更。</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:24px;padding:36px 0;border-bottom:1px solid rgba(255,255,255,0.04)" class="reveal reveal-delay-2">
+        <div style="flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1rem;font-weight:600;background:rgba(92,230,138,0.06);color:var(--fio-success);border:1px solid rgba(92,230,138,0.1)">03</div>
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:8px">風險與策略評估</h3>
+          <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7"><code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">ComplianceEngine.checkTransfer()</code> 為發送方和接收方查詢 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">RiskRegistry.getRiskProfile()</code>，然後針對 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">PolicyEngine</code> 規則進行評估。</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:24px;padding:36px 0;border-bottom:1px solid rgba(255,255,255,0.04)" class="reveal reveal-delay-3">
+        <div style="flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1rem;font-weight:600;background:rgba(122,184,240,0.06);color:var(--fio-info);border:1px solid rgba(122,184,240,0.1)">04</div>
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:8px">執行或隔離</h3>
+          <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7">如果風險分數 &lt; 閾值：轉帳正常執行。如果分數 &ge; 閾值：資金被路由到 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">QuarantineVault</code> 並發出 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">FundsHeld</code> 事件。</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:24px;padding:36px 0" class="reveal">
+        <div style="flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1rem;font-weight:600;background:var(--fio-accent-dim);color:var(--fio-accent);border:1px solid rgba(155,142,216,0.12)">05</div>
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:8px">不可竄改審計追蹤</h3>
+          <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7">每個決策都會發出帶有交易雜湊、風險分數、策略 ID 和時間戳的 <code style="font-family:var(--font-mono);background:var(--fio-surface-2);padding:2px 6px;border-radius:4px;color:var(--fio-accent);font-size:0.85em">ComplianceCheck</code> 事件。Subgraph 索引這些事件用於監管就緒報告。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="code">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">程式碼</div>
+      <h2 class="section-title">整合範例</h2>
+      <p class="section-desc">面向開發者的生產就緒程式碼片段。</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:40px">
+      <div class="reveal">
+        <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:12px">風控守衛交易前檢查</h3>
+        <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7;margin-bottom:16px">在執行前預覽任何交易。零 Gas，零狀態變更——完美的錢包 UX。</p>
+        <div class="code-wrap">
+          <div class="code-header">
+            <div class="code-tabs">
+              <button class="code-tab active">Solidity</button>
+              <button class="code-tab">TypeScript</button>
+            </div>
+            <span style="font-size:0.7rem;color:var(--fio-text-3);font-family:var(--font-mono)">FidesCompliance V2.1</span>
+          </div>
+          <div class="code-body">
+<span class="cm">// SPDX-License-Identifier: MIT</span>
+<span class="kw">pragma solidity</span> <span class="str">^0.8.20</span>;
+
+<span class="kw">import</span> <span class="str">"@fidesorigin/contracts/FidesCompliance.sol"</span>;
+
+<span class="kw">contract</span> <span class="ty">MyWallet</span> {
+    <span class="ty">FidesCompliance</span> <span class="kw">public</span> fides;
+
+    <span class="kw">constructor</span>(<span class="ty">address</span> _fides) {
+        fides = <span class="ty">FidesCompliance</span>(_fides);
+    }
+
+    <span class="cm">// Pre-flight check before any token transfer</span>
+    <span class="kw">function</span> <span class="fn">safeTransfer</span>(
+        <span class="ty">address</span> token,
+        <span class="ty">address</span> to,
+        <span class="ty">uint256</span> amount
+    ) <span class="kw">external</span> <span class="kw">returns</span> (<span class="ty">bool</span>) {
+        <span class="cm">// Step 1: Guard preview (staticcall, no state change)</span>
+        <span class="ty">ComplianceResult</span> <span class="kw">memory</span> preview = fides.<span class="fn">previewTransaction</span>({
+            sender: <span class="kw">msg</span>.sender,
+            recipient: to,
+            amount: amount,
+            token: token
+        });
+
+        <span class="cm">// Step 2: If high risk, abort before any state change</span>
+        <span class="kw">require</span>(preview.riskLevel &lt; <span class="num">3</span>, <span class="str">"High risk: transfer blocked"</span>);
+
+        <span class="cm">// Step 3: Execute actual transfer</span>
+        <span class="kw">return</span> <span class="ty">IERC20</span>(token).<span class="fn">transfer</span>(to, amount);
+    }
+}
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-1">
+        <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:500;color:var(--fio-text);margin-bottom:12px">配置發行方策略</h3>
+        <p style="font-size:0.92rem;color:var(--fio-text-2);line-height:1.7;margin-bottom:16px">設定每發行方規則：每日限額、白名單法域、所需 KYC 層級。</p>
+        <div class="code-wrap">
+          <div class="code-header">
+            <div class="code-tabs">
+              <button class="code-tab active">Solidity</button>
+              <button class="code-tab">TypeScript</button>
+            </div>
+            <span style="font-size:0.7rem;color:var(--fio-text-3);font-family:var(--font-mono)">PolicyEngine</span>
+          </div>
+          <div class="code-body">
+<span class="cm">// SPDX-License-Identifier: MIT</span>
+<span class="kw">pragma solidity</span> <span class="str">^0.8.20</span>;
+
+<span class="kw">import</span> <span class="str">"@fidesorigin/contracts/PolicyEngine.sol"</span>;
+
+<span class="kw">contract</span> <span class="ty">StablecoinIssuer</span> {
+    <span class="ty">PolicyEngine</span> <span class="kw">public</span> policy;
+
+    <span class="kw">function</span> <span class="fn">setupPolicy</span>() <span class="kw">external</span> {
+        <span class="cm">// Define issuer-wide compliance policy</span>
+        <span class="ty">IssuerPolicy</span> <span class="kw">memory</span> issuerPolicy = <span class="ty">IssuerPolicy</span>({
+            maxTxAmount: <span class="num">1_000_000</span> * <span class="num">1e6</span>,  <span class="cm">// $1M USDC per tx</span>
+            dailyLimit: <span class="num">10_000_000</span> * <span class="num">1e6</span>,   <span class="cm">// $10M daily</span>
+            minKycTier: <span class="num">2</span>,                    <span class="cm">// Tier 2 KYC required</span>
+            allowedJurisdictions: [<span class="str">"HK"</span>, <span class="str">"SG"</span>, <span class="str">"US"</span>],
+            requireMultisig: <span class="kw">true</span>,
+            autoQuarantine: <span class="kw">true</span>              <span class="cm">// Auto-quarantine on policy breach</span>
+        });
+
+        policy.<span class="fn">setIssuerPolicy</span>(<span class="kw">address</span>(<span class="kw">this</span>), issuerPolicy);
+    }
+
+    <span class="cm">// Set per-wallet override (e.g., institutional whitelist)</span>
+    <span class="kw">function</span> <span class="fn">whitelistInstitution</span>(
+        <span class="ty">address</span> wallet,
+        <span class="ty">uint256</span> customLimit
+    ) <span class="kw">external</span> <span class="kw">onlyOwner</span> {
+
+        policy.<span class="fn">setWalletPolicy</span>(wallet, <span class="ty">WalletPolicy</span>({
+            customTxLimit: customLimit,
+            bypassGeoCheck: <span class="kw">true</span>,
+            expiry: <span class="kw">block</span>.timestamp + <span class="num">365 days</span>
+        }));
+    }
+}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="security">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">安全</div>
+      <h2 class="section-title">縱深防禦</h2>
+      <p class="section-desc">多層獨立安全層。無單點故障。</p>
+    </div>
+
+    <div class="sec-grid">
+      <div class="sec-item reveal reveal-delay-1">
+        <div class="sec-icon" style="background:var(--fio-accent-dim);color:var(--fio-accent)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v16h16"/><path d="M4 14l4-4 4 4 8-8"/></svg>
+        </div>
+        <h4>UUPS 代理升級</h4>
+        <p>OpenZeppelin UUPS 模式，實現與實現的分離。每次升級透過 <code style="font-family:var(--font-mono);font-size:0.75em;color:var(--fio-accent)">@openzeppelin/upgrades-core</code> 驗證儲存布局。</p>
+      </div>
+      <div class="sec-item reveal reveal-delay-2">
+        <div class="sec-icon" style="background:var(--fio-gold-dim);color:var(--fio-gold)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h4>2/3 Gnosis Safe 多重簽名</h4>
+        <p>所有管理功能都需要 3 個簽名中的 2 個。沒有單個密鑰可以單方面暫停、升級或修改風險畫像。</p>
+      </div>
+      <div class="sec-item reveal reveal-delay-3">
+        <div class="sec-icon" style="background:rgba(251,142,142,0.06);color:var(--fio-danger)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 9v6m4-6v6m5-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h4>緊急暫停</h4>
+        <p>守護者角色可以在 &lt;1 個區塊內暫停所有轉帳。暫停狀態發出全域事件；Subgraph 立即停止新交易。</p>
+      </div>
+      <div class="sec-item reveal reveal-delay-1">
+        <div class="sec-icon" style="background:rgba(92,230,138,0.06);color:var(--fio-success)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h4>48 小時時間鎖</h4>
+        <p>所有升級和參數變更交易在執行前需排隊 48 小時。社群可以審查和反應。</p>
+      </div>
+      <div class="sec-item reveal reveal-delay-2">
+        <div class="sec-icon" style="background:rgba(122,184,240,0.06);color:var(--fio-info)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h4>不可竄改審計日誌</h4>
+        <p>每個 <code style="font-family:var(--font-mono);font-size:0.75em;color:var(--fio-accent)">ComplianceCheck</code>、<code style="font-family:var(--font-mono);font-size:0.75em;color:var(--fio-accent)">FundsHeld</code> 和 <code style="font-family:var(--font-mono);font-size:0.75em;color:var(--fio-accent)">FundsReleased</code> 事件都永久記錄在鏈上，附帶交易雜湊、時間戳和操作者地址。</p>
+      </div>
+      <div class="sec-item reveal reveal-delay-3">
+        <div class="sec-icon" style="background:var(--fio-accent-dim);color:var(--fio-accent)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h4>重入保護</h4>
+        <p>所有狀態變更函數使用 OpenZeppelin <code style="font-family:var(--font-mono);font-size:0.75em;color:var(--fio-accent)">ReentrancyGuard</code>。合規檢查在任何外部呼叫之前完成。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="deployment">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">部署</div>
+      <h2 class="section-title">多鏈，同一協議</h2>
+      <p class="section-desc">相同的合約。相同的安全模型。不同的鏈。</p>
+    </div>
+
+    <div class="deploy-grid reveal">
+      <div class="deploy-card active">
+        <div class="deploy-icon" style="background:rgba(155,142,216,0.08);color:var(--fio-accent)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <h4>以太坊</h4>
+        <p>Sepolia &middot; Mainnet</p>
+        <span class="deploy-status live">&#9679; 已上線</span>
+      </div>
+      <div class="deploy-card active">
+        <div class="deploy-icon" style="background:rgba(92,230,138,0.08);color:var(--fio-success)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h4>Base</h4>
+        <p>Base Sepolia &middot; Base Mainnet</p>
+        <span class="deploy-status live">&#9679; 已上線</span>
+      </div>
+      <div class="deploy-card active">
+        <div class="deploy-icon" style="background:rgba(122,184,240,0.08);color:var(--fio-info)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 2 22 22 22 12 2"/></svg>
+        </div>
+        <h4>Polygon</h4>
+        <p>Amoy &middot; Mainnet</p>
+        <span class="deploy-status live">&#9679; 已上線</span>
+      </div>
+      <div class="deploy-card planned">
+        <div class="deploy-icon" style="background:rgba(212,184,122,0.08);color:var(--fio-gold)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h4>Arbitrum / Optimism</h4>
+        <p>L2 擴容方案</p>
+        <span class="deploy-status planned">&#9716; 計畫 Q4</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="contracts">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">已驗證合約</div>
+      <h2 class="section-title">Sepolia 測試網部署</h2>
+      <p class="section-desc">已在 Etherscan 上驗證。原始碼完全公開。</p>
+    </div>
+
+    <div class="reveal" style="overflow-x:auto">
+      <table class="addr-table">
+        <thead>
+          <tr>
+            <th>合約</th>
+            <th>地址</th>
+            <th>版本</th>
+            <th>已驗證</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>FidesCompliance</strong> <span style="font-size:0.75rem;color:var(--fio-text-3)">(Proxy)</span></td>
+            <td class="addr-mono">0x05497600618071C34CB3Fdb8A9E159e9589DEC79<span class="addr-badge verified">已驗證</span></td>
+            <td>V2.1</td>
+            <td style="color:var(--fio-success);font-size:0.8rem">&#10003; Etherscan</td>
+          </tr>
+          <tr>
+            <td><strong>CompliantStableCoin</strong> <span style="font-size:0.75rem;color:var(--fio-text-3)">(Proxy)</span></td>
+            <td class="addr-mono">0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A<span class="addr-badge verified">已驗證</span></td>
+            <td>V1.0</td>
+            <td style="color:var(--fio-success);font-size:0.8rem">&#10003; Etherscan</td>
+          </tr>
+          <tr>
+            <td>RiskRegistry <span style="font-size:0.75rem;color:var(--fio-text-3)">(Proxy)</span></td>
+            <td class="addr-mono">0x...<span class="addr-badge" style="background:var(--fio-gold-dim);color:var(--fio-gold)">待定</span></td>
+            <td>V1.0</td>
+            <td style="color:var(--fio-text-3);font-size:0.8rem">待定</td>
+          </tr>
+          <tr>
+            <td>PolicyEngine <span style="font-size:0.75rem;color:var(--fio-text-3)">(Proxy)</span></td>
+            <td class="addr-mono">0x...<span class="addr-badge" style="background:var(--fio-gold-dim);color:var(--fio-gold)">待定</span></td>
+            <td>V1.0</td>
+            <td style="color:var(--fio-text-3);font-size:0.8rem">待定</td>
+          </tr>
+          <tr>
+            <td>QuarantineVault <span style="font-size:0.75rem;color:var(--fio-text-3)">(Proxy)</span></td>
+            <td class="addr-mono">0x...<span class="addr-badge" style="background:var(--fio-gold-dim);color:var(--fio-gold)">待定</span></td>
+            <td>V1.0</td>
+            <td style="color:var(--fio-text-3);font-size:0.8rem">待定</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:32px;text-align:center" class="reveal">
+      <a href="https://sepolia.etherscan.io/address/0x05497600618071C34CB3Fdb8A9E159e9589DEC79" target="_blank" rel="noopener" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+        Sepolia Etherscan 上查看
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">準備好整合了嗎？</h2>
+      <p class="cta-desc">完整的原始碼、SDK 和文件已可用。數分鐘內開始建構合規的鏈上金融。</p>
+      <div class="cta-ctas">
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub 倉庫
+        </a>
+        <a href="/docs/" class="btn-secondary">文件</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">面向代幣化資產和 DeFi 的鏈上合規協議。</p>
+      </div>
+      <div class="footer-col">
+        <h4>產品</h4>
+        <a href="/index.html#products">風險雷達</a>
+        <a href="/index.html#products">策略引擎</a>
+        <a href="/index.html#products">審計盾牌</a>
+        <a href="/address-check.html">地址檢查</a>
+        <a href="/index.html#pricing">定價</a>
+      </div>
+      <div class="footer-col">
+        <h4>開發者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">文件</a>
+        <a href="/architecture.html">架構</a>
+        <a href="/docs/api">API 參考</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="/about.html">關於</a>
+        <a href="mailto:contact@fidesorigin.com">聯繫我們</a>
+        <a href="/privacy.html">隱私政策</a>
+        <a href="/terms.html">服務條款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>香港 &middot; 新加坡 &middot; 舊金山</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('nav-scrolled', window.scrollY > 60);
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    if (href === '#') return;
+    const target = document.querySelector(href);
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+});
+</script>
+
+</body>
+</html>

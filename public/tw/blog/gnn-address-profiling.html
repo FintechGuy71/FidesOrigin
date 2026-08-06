@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>圖神經網路用於鏈上地址畫像 — FidesOrigin</title>
+  <meta name="description" content="FidesOrigin 如何使用圖神經網路分析鏈上地址關係，識別制裁規避模式，並即時評分風險。">
+  <meta property="og:title" content="圖神經網路用於鏈上地址畫像">
+  <meta property="og:description" content="FidesOrigin 如何使用圖神經網路分析鏈上地址關係並即時評分風險。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://fidesorigin.com/tw/blog/gnn-address-profiling.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/tw/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/gnn-address-profiling.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/gnn-address-profiling.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="icon" href="../../brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="../../brand/logo-dark-icon.png">
+  <style>
+    .blog-hero {
+      position: relative;
+      padding: 160px 0 40px;
+      overflow: hidden;
+    }
+    .blog-hero .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .blog-hero .glow-1 {
+      width: 400px; height: 400px;
+      background: var(--accent);
+      top: -100px; right: -100px;
+    }
+    .blog-hero-content {
+      position: relative;
+      z-index: 1;
+    }
+    .blog-hero .display {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .blog-hero .display span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hr-fade {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      margin: 0 auto;
+      max-width: 800px;
+    }
+    .article {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+    .article p { margin-bottom: 1.5rem; }
+    .article h2 {
+      color: var(--text);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .article h3 {
+      color: var(--text);
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+    .article ul { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+    .article ul li { margin-bottom: 0.5rem; }
+    .article a { color: var(--accent); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+    .article blockquote {
+      border-left: 2px solid var(--accent);
+      padding-left: 1.25rem;
+      margin: 1.5rem 0;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article em { color: var(--accent); font-style: italic; }
+    .article .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .article .callout p:last-child { margin-bottom: 0; }
+    .blog-code-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .blog-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .blog-code-body {
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    .blog-code-body pre {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .tk-keyword { color: #c586c0; }
+    .tk-type { color: #4ec9b0; }
+    .tk-func { color: #dcdcaa; }
+    .tk-comment { color: #6a9955; }
+    .tk-string { color: #ce9178; }
+    .tk-number { color: #b5cea8; }
+    .blog-cta {
+      text-align: center;
+      padding: 80px 40px;
+    }
+    .blog-cta .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: none;
+    }
+    .blog-cta .btn-primary:hover {
+      background: var(--gold);
+      transform: translateY(-1px);
+    }
+    .related-reading {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    .related-reading h4 {
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .related-reading a {
+      display: block;
+      color: var(--text-secondary);
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .related-reading a:last-child { border-bottom: none; }
+    .related-reading a:hover { color: var(--accent); }
+    @media (max-width: 640px) {
+      .blog-hero { padding: 120px 0 30px; }
+      .blog-code-body pre { white-space: pre-wrap; word-break: break-all; }
+    }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "圖神經網路用於鏈上地址畫像",
+    "description": "FidesOrigin 如何使用圖神經網路分析鏈上地址關係，識別制裁規避模式，並即時評分風險。",
+    "author": { "@type": "Organization", "name": "FidesOrigin Team" },
+    "publisher": { "@type": "Organization", "name": "FidesOrigin" },
+    "datePublished": "2026-08-05",
+    "url": "https://fidesorigin.com/tw/blog/gnn-address-profiling.html"
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">跳轉到內容</a>
+
+  <nav class="nav" aria-label="主導航">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="../../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/#features">功能</a>
+        <a href="/#how-it-works">運作方式</a>
+        <a href="/#security">安全</a>
+        <a href="/docs/">文件</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="語言">繁體中文<svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div id="langMenu">
+            <a href="../../blog/gnn-address-profiling.html">English</a>
+            <a href="../../cn/blog/gnn-address-profiling.html">简体中文</a>
+            <a href="gnn-address-profiling.html">繁體中文</a>
+            <a href="../../jp/blog/gnn-address-profiling.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="wallet-connect-wrap">
+          <button class="wallet-btn" id="wallet-btn" aria-label="連線"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>連線</button>
+          <div class="wallet-connected" id="wallet-connected">
+            <div class="wallet-info"><span class="wallet-address" id="wallet-address"></span><span class="wallet-network-badge" id="wallet-network">Sepolia</span></div>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="中斷">中斷</button>
+          </div>
+        </div>
+        <a href="/#contact" class="nav-cta">開始使用</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="切換選單" aria-expanded="false"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" aria-label="關閉選單"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+    <a href="/#features">功能</a>
+    <a href="/#how-it-works">運作方式</a>
+    <a href="/#security">安全</a>
+    <a href="/docs/">文件</a>
+    <div class="lang-row">
+      <a href="../../blog/gnn-address-profiling.html">EN</a>
+      <a href="../../cn/blog/gnn-address-profiling.html">CN</a>
+      <a href="gnn-address-profiling.html">TW</a>
+      <a href="../../jp/blog/gnn-address-profiling.html">JP</a>
+    </div>
+    <div class="mobile-wallet-area" id="mobile-wallet-connected"><span id="mobile-wallet-address"></span><button id="mobile-wallet-disconnect" aria-label="中斷">中斷</button></div>
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="連線"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>連線</button>
+  </div>
+
+  <main id="main-content">
+    <section class="blog-hero">
+      <div class="glow glow-1"></div>
+      <div class="container blog-hero-content">
+        <div class="reveal">
+          <p class="micro">部落格 — AI/ML — 2026年8月</p>
+          <h1 class="display">圖神經網路<br><span>用於鏈上地址畫像</span></h1>
+          <p class="lead" style="max-width: 650px; margin-top: 20px;">為什麼一次只看一個地址就像試圖透過研究一棟建築來理解一座城市。FidesOrigin 的圖神經網路引擎看到的是整個圖。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="hr-fade"></div>
+
+    <article class="article container" style="max-width: 720px; padding-top: 60px; padding-bottom: 60px;">
+
+      <p>2026年1月，一個錢包地址出現在我們的監控系統中，風險評分為34——遠低於80分的隔離閾值。從紙面上看，它沒問題。該地址沒有直接受到制裁打擊，交易歷史正常，沒有明顯的危險信號。傳統的基於規則的系統會放行它。</p>
+
+      <p>但我們的圖神經網路引擎還是標記了它。原因？這個地址距離一個已知的混幣服務只有兩跳，透過四個中間錢包連接，這四個錢包都在同一個24小時視窗內建立，並且來自同一資金來源。圖神經網路不僅看到了這個地址——它看到了它的<em>鄰里</em>。而這個鄰里因為關聯而被判定有罪。</p>
+
+      <p>三天後，該地址出現在 OFAC SDN 名單上。我們傳統的規則引擎在官方更新前完全錯過了它。圖神經網路提前捕獲了它。</p>
+
+      <p>這就是基於關係的風險分析的力量。也是為什麼單地址畫像在鏈上合規方面根本不足的原因。</p>
+
+      <h2>單地址分析的侷限</h2>
+
+      <p>傳統的鏈分析——為當今大多數合規 API 提供動力的那種——工作方式如下：從一個地址提取特徵（餘額、交易數量、年齡、已知關聯），輸入分類器，獲得風險評分。本質上是一個表格機器學習問題。每個地址都是電子表格中的一行。模型永遠看不到行之間的連接。</p>
+
+      <p>這種方法在區塊鏈上有三個致命弱點：</p>
+
+      <p><strong>1. 對手故意利用圖結構。</strong> 複雜的攻擊者不會使用一個錢包。他們使用五十個。他們透過中間地址剝離資金。他們使用隱私池、跨鏈橋和 DeFi 協定作為洗錢層。每個單獨的地址看起來都是無辜的。<em>模式</em>才是訊號。表格模型對此視而不見。</p>
+
+      <p><strong>2. 新地址沒有歷史。</strong> 新建立的錢包有零筆交易、零餘額和零特徵。表格模型無從下手。但圖神經網路可以從其連接推斷風險：誰資助了它？它與誰交易？它屬於哪個子圖？圖揭示了交易歷史所隱藏的資訊。</p>
+
+      <p><strong>3. 風險是上下文相關的，不是固有的。</strong> 從受制裁實體接收資金的地址是有風險的。從合法交易所接收資金的同一地址則不是。風險是<em>關係</em>的屬性，而不僅僅是地址本身。沒有圖就無法計算它。</p>
+
+      <p>Chainalysis 和 Elliptic 已經建立了龐大的標記地址資料庫。他們的模型很複雜。但它們本質上仍然是表格化的：「地址X具有屬性Y，因此風險為Z。」圖是事後考慮——一種視覺化工具，而不是計算模型。</p>
+
+      <p>我們顛覆了這一點。在 FidesOrigin 中，圖就是模型。</p>
+
+      <h2>鏈上圖：節點、邊和特徵</h2>
+
+      <p>要了解圖神經網路如何用於地址畫像，我們先來定義我們正在操作的圖。</p>
+
+      <p><strong>節點</strong>是錢包地址和智慧合約。每個節點都有一個特徵向量，捕獲其固有屬性：交易數量、平均交易價值、首次交易以來的時間、餘額歷史方差、合約互動多樣性等。我們從鏈上資料中提取每個節點約40個特徵。</p>
+
+      <p><strong>邊</strong>代表交易。從地址A到地址B的邊表示A向B發送了資金。邊按交易價值、頻率和時間接近度加權。同一對之間的多筆交易被聚合為具有複合權重的單一邊。我們目前在以太坊、Base 和 Polygon 上追蹤約23億條邊。</p>
+
+      <p><strong>節點標籤</strong>來自多個來源：OFAC 制裁名單、交易所熱/冷錢包標識、已知 DeFi 協定合約、釣魚詐騙資料庫以及我們自己的手動調查。只有極小比例的節點被標記——通常不到0.01%。挑戰在於將這些標籤透過圖傳播到未標記節點。</p>
+
+      <div class="callout">
+        <p><strong>圖的規模：</strong>我們的生產圖目前包含約1.8億個節點和約23億條邊，從以太坊主網、Base 和 Polygon 即時更新。完整圖對於單個 GPU 來說太大，因此我們使用子圖採樣和小批量訓練。</p>
+      </div>
+
+      <h2>從圖到風險評分：圖神經網路的工作原理</h2>
+
+      <p>圖神經網路基於一個簡單但強大的理念運作：節點的表示應該是其自身特徵<em>和</em>其鄰居表示的函數。資訊透過圖傳播，一次一跳，網路的每一層允許模型看到鄰域更遠的地方。</p>
+
+      <p>我們使用受<strong>GAT</strong>（圖注意力網路）啟發的注意力機制的<strong>GraphSAGE</strong>（圖採樣與聚合）架構。以下是這種組合適用於我們的用例的原因：</p>
+
+      <p><strong>GraphSAGE</strong>專為歸納學習而設計——它可以為訓練期間從未見過的節點生成嵌入。這對於鏈上合規至關重要，因為新地址每秒都在建立。我們無法每次出現新錢包時都重新訓練模型。GraphSAGE 的採樣方法讓我們能夠使用僅本地鄰域即時計算新節點的嵌入。</p>
+
+      <p><strong>注意力機制</strong>（來自 GAT）讓模型學習哪些鄰居最重要。並非所有連接都平等。來自隨機地址的10美元轉帳是噪音。來自已知交易所的50萬美元轉帳是訊號。注意力權重自動從資料中學習，無需手工規則。</p>
+
+      <p>前向傳播的工作方式如下。對於每個節點，我們採樣固定數量的鄰居（我們使用每跳25個鄰居的2跳）。我們使用學習的聚合函式聚合鄰居特徵——在我們的情況下，來自注意力機制的學習加權平均。然後我們將聚合的鄰居表示與節點自身的特徵連接起來，並透過非線性變換傳遞。對L層重複此操作（我們使用L=3），你就有一個編碼L跳鄰域資訊的節點嵌入。</p>
+
+      <div class="blog-code-block">
+        <div class="blog-code-header">
+          <span>圖神經網路前向傳播（簡化版）</span>
+          <span>Python / PyTorch Geometric</span>
+        </div>
+        <div class="blog-code-body">
+<pre><span class="tk-keyword">import</span> torch
+<span class="tk-keyword">import</span> torch.nn.functional <span class="tk-keyword">as</span> F
+<span class="tk-keyword">from</span> torch_geometric.nn <span class="tk-keyword">import</span> SAGEConv, GATConv
+
+<span class="tk-keyword">class</span> <span class="tk-type">RiskGNN</span>(torch.nn.Module):
+    <span class="tk-keyword">def</span> <span class="tk-func">__init__</span>(<span class="tk-keyword">self</span>, in_channels, hidden_channels, out_channels):
+        <span class="tk-keyword">super</span>().<span class="tk-func">__init__</span>()
+        <span class="tk-keyword">self</span>.conv1 = <span class="tk-type">SAGEConv</span>(in_channels, hidden_channels)
+        <span class="tk-keyword">self</span>.conv2 = <span class="tk-type">GATConv</span>(hidden_channels, hidden_channels, heads=<span class="tk-number">4</span>, concat=<span class="tk-keyword">False</span>)
+        <span class="tk-keyword">self</span>.conv3 = <span class="tk-type">SAGEConv</span>(hidden_channels, out_channels)
+        <span class="tk-keyword">self</span>.classifier = torch.nn.Linear(out_channels, <span class="tk-number">3</span>)  <span class="tk-comment"># ALLOW, WARN, BLOCK</span>
+
+    <span class="tk-keyword">def</span> <span class="tk-func">forward</span>(<span class="tk-keyword">self</span>, x, edge_index, edge_attr):
+        <span class="tk-comment"># Layer 1: SAGE aggregation, 1-hop neighbors</span>
+        x = <span class="tk-keyword">self</span>.conv1(x, edge_index)
+        x = F.<span class="tk-func">relu</span>(x)
+        x = F.<span class="tk-func">dropout</span>(x, p=<span class="tk-number">0.3</span>, training=<span class="tk-keyword">self</span>.training)
+
+        <span class="tk-comment"># Layer 2: GAT with attention, 2-hop neighbors</span>
+        x = <span class="tk-keyword">self</span>.conv2(x, edge_index, edge_attr)
+        x = F.<span class="tk-func">elu</span>(x)
+        x = F.<span class="tk-func">dropout</span>(x, p=<span class="tk-number">0.3</span>, training=<span class="tk-keyword">self</span>.training)
+
+        <span class="tk-comment"># Layer 3: SAGE aggregation, 3-hop neighbors</span>
+        x = <span class="tk-keyword">self</span>.conv3(x, edge_index)
+
+        <span class="tk-comment"># Risk classification</span>
+        <span class="tk-keyword">return</span> <span class="tk-keyword">self</span>.<span class="tk-func">classifier</span>(x)</pre>
+        </div>
+      </div>
+
+      <p>輸出是三分類（允許、警告、攔截）加上0到100的連續風險評分。風險評分使用校準的 softmax 從 logits 導出——我們在保留驗證集上使用溫度縮放來確保評分在概率上有意義。</p>
+
+      <h2>三種圖神經網路驅動的檢測模式</h2>
+
+      <p>圖神經網路不僅僅產生風險評分。它使表格方法無法實現的特定檢測能力成為可能。</p>
+
+      <h3>1. 社群發現：映射混幣網路</h3>
+
+      <p>混幣服務和 tumbler 是鏈上合規的阿基里斯之踵。它們透過聚合來自多個來源的輸入並將其重新分配到多個輸出，故意混淆資金流動。從單地址角度來看，混幣輸出地址看起來是從「合法」服務接收資金。從圖角度來看，它是一個具有特定拓撲特徵的密集連接叢集中的節點。</p>
+
+      <p>我們的圖神經網路學會識別這些特徵：異常高的入度和出度、與其他混幣相關地址之間的短平均路徑長度、時間聚類（狹窄時間視窗內的許多相關交易）和價值同質性（進出金額相似）。模型不需要知道混幣器的名稱。它從圖結構中學習<em>模式</em>。</p>
+
+      <p>在生產環境中，這使我們能夠識別出14個任何公共資料庫中都沒有的未知混幣服務。其中之一在被檢測到之前已處理了超過4000萬美元的交易量。</p>
+
+      <h3>2. 異常檢測：發現女巫攻擊</h3>
+
+      <p>鏈上背景下的女巫攻擊涉及建立許多化名身份（錢包）來操縱協定——用於空投農場、治理操縱或洗盤交易。每個單獨的錢包看起來正常。但圖神經網路看到了建立模式：數十個來自同一來源的錢包，具有相似的交易模式，從不相互互動（以避免明顯的聚類），但都在狹窄的時間視窗內透過共同的 DeFi 協定連接。</p>
+
+      <p>圖神經網路計算所有節點的嵌入。然後我們對這些嵌入執行 DBSCAN 聚類。正常使用者形成分散的、低密度的叢集。女巫網路形成緊密的、高密度的叢集，與合法使用者明顯分離。聚類是無監督的——我們不需要標記的女巫資料。圖結構就是訊號。</p>
+
+      <p>我們在2026年3月檢測到一個針對空投活動的3200個錢包的女巫農場。該農場旨在規避簡單啟發式規則（每個錢包都有「獨特」的資金來源，透過剝離鏈）。圖神經網路在嵌入空間中捕獲了共同的結構特徵。</p>
+
+      <h3>3. 風險傳播：傳染如何擴散</h3>
+
+      <p>也許圖神經網路最強大的能力是<em>風險傳播</em>。當一個新地址被新增到 OFAC SDN 名單時，圖神經網路不僅僅標記該地址。它為3跳鄰域內的每個節點重新計算風險評分。以前低風險的地址可能因為現在直接或間接連接到受制裁實體而升級為高風險。</p>
+
+      <p>這不是簡單的傳遞閉包。圖神經網路學習風險<em>如何</em>傳播：來自受制裁地址的1000萬美元轉帳是高風險。透過中間交易所三跳之外的50美元轉帳風險較低。GAT 層中的注意力權重從訓練資料中學習這些細微的傳播規則。</p>
+
+      <p>當 OFAC 在2026年4月更新制裁名單時，我們的系統在5分鐘內為210萬個地址重新計算了風險評分。其中，847個地址跨越了隔離閾值，並自動在風險註冊表中被標記。基於規則的系統只會捕獲直接列出的地址——23個。</p>
+
+      <h2>即時特徵工程管道</h2>
+
+      <p>模型的好壞取決於供給它的資料管道。我們的管道在連續迴圈中執行：</p>
+
+      <p><strong>資料攝取：</strong>我們透過 WebSocket 訂閱來自多個 RPC 提供商的以太坊、Base 和 Polygon 的即時資料。新交易透過 Kafka 緩衝，按區塊號分割。我們在高峰期每秒處理約15,000筆交易。</p>
+
+      <p><strong>圖建構：</strong>每筆新交易都會即時更新圖。我們在分散式鍵值儲存（ScyllaDB）中維護圖，每個節點都有鄰接表。邊權重在插入時計算：按發送者歷史平均值歸一化的價值、時間衰減因子和代幣型別（穩定幣比 meme 幣的風險權重更高）。</p>
+
+      <p><strong>圖神經網路推理：</strong>每5分鐘，我們觸發批量推理作業。我們識別自上次執行以來所有已更改的節點（新交易、更新標籤或手動註釋）及其3跳鄰域。我們使用在 GPU 叢集上執行的生產圖神經網路模型計算該子圖的嵌入。平均推理時間：50萬個節點的批次約90秒。</p>
+
+      <p><strong>標籤生成：</strong>圖神經網路輸出風險評分和分類。我們應用後處理規則：攔截分類且置信度>0.95的地址被標記為立即行動。警告分類且置信度>0.8的地址排隊等待人工審查。其他所有內容都與其評分一起儲存在風險資料庫中。</p>
+
+      <p><strong>預言機推送：</strong>更新的風險評分被格式化為 Merkle 樹並推送到鏈上預言機合約。然後預言機更新 RiskRegistry，使新評分可用於守衛和合規引擎。從交易攝取到鏈上可用的總延遲：<strong>&lt;7分鐘</strong>。</p>
+
+      <div class="blog-code-block">
+        <div class="blog-code-header">
+          <span>管道配置</span>
+          <span>YAML</span>
+        </div>
+        <div class="blog-code-body">
+<pre><span class="tk-type">pipeline</span>:
+  <span class="tk-type">ingestion</span>:
+    <span class="tk-type">sources</span>: [ethereum, base, polygon]
+    <span class="tk-type">throughput</span>: <span class="tk-number">15000</span> tx/s
+    <span class="tk-type">buffer</span>: kafka
+  <span class="tk-type">graph</span>:
+    <span class="tk-type">store</span>: scylladb
+    <span class="tk-type">update_mode</span>: incremental
+    <span class="tk-type">edge_ttl</span>: <span class="tk-number">90</span>d
+  <span class="tk-type">gnn</span>:
+    <span class="tk-type">model</span>: graphsage_gat_v3
+    <span class="tk-type">inference_interval</span>: <span class="tk-number">5</span>m
+    <span class="tk-type">batch_size</span>: <span class="tk-number">500000</span>
+    <span class="tk-type">gpu_cluster</span>: <span class="tk-number">4</span>x A100
+    <span class="tk-type">hops</span>: <span class="tk-number">3</span>
+    <span class="tk-type">neighbors_per_hop</span>: <span class="tk-number">25</span>
+  <span class="tk-type">oracle</span>:
+    <span class="tk-type">push_interval</span>: <span class="tk-number">5</span>m
+    <span class="tk-type">merkle_tree_depth</span>: <span class="tk-number">20</span>
+    <span class="tk-type">max_latency</span>: <span class="tk-number">7</span>m</pre>
+        </div>
+      </div>
+
+      <h2>效能與準確性</h2>
+
+      <p>讓我們談談數字。我們已經在生產環境中執行圖神經網路8個月了。以下是最重要的指標：</p>
+
+      <p><strong>制裁地址識別：</strong>在50,000個地址的保留測試集上（包括1,200個已知制裁地址），圖神經網路在識別制裁地址方面達到了<strong>96.3%的精確率和94.7%的召回率</strong>。誤報率為0.8%——意味著99.2%的非制裁地址被正確分類為乾淨。這顯著優於我們之前的表格 XGBoost 模型，後者在同一資料集上達到了89.1%的精確率和82.4%的召回率。</p>
+
+      <p><strong>混幣器檢測：</strong>在手動整理的8,500個混幣相關地址資料集上，圖神經網路達到了91.2%的 F1 分數。關鍵優勢在於檢測<em>未知</em>混幣器——訓練標籤中不存在的地址。在這裡，圖神經網路的歸納能力大放異彩。它透過識別結構模式而不是記憶地址來推廣到新的混幣器。</p>
+
+      <p><strong>推理延遲：</strong>對於單地址查詢（我們守衛整合的常見情況），GPU 上的嵌入計算約需12毫秒，CPU 回退約需45毫秒。對於批量推理（50萬個節點），完整管道約需90秒完成。5分鐘的更新間隔意味著鏈上風險資料永遠不會超過5分鐘的陳舊度。</p>
+
+      <p><strong>訓練：</strong>我們每月在完整圖上使用半監督學習重新訓練模型。模型在標記節點（制裁、交易所、已知不良行為者）上訓練，並使用圖結構將標籤傳播到未標記節點。在4個 A100 GPU 上訓練約需6小時。</p>
+
+      <h2>為什麼這對合規很重要</h2>
+
+      <p>鏈上金融的監管格局正在硬化。歐盟的 MiCA 框架要求「能夠檢測可疑模式的交易監控系統」。香港的穩定幣許可制度要求「持續監控客戶交易」。美國財政部明確表示，合規計畫必須「合理設計」以防止制裁違規——而「我們不知道」不是辯護理由。</p>
+
+      <p>僅針對靜態列表檢查地址的合規系統不是「合理設計」的。它是一個打勾清單。監管機構知道這一點。他們要求<em>行為</em>分析、<em>模式</em>檢測、<em>關係</em>映射。圖神經網路正好提供了這些——而且是以監管機構可以獨立驗證的審計追蹤形式。</p>
+
+      <p>每個圖神經網路推理結果都被記錄：輸入特徵、採樣的圖鄰域、模型版本、輸出評分和時間戳。這不是做出不透明決策的黑盒 AI。它是一個透明的、可復現的風險評估，碰巧使用神經網路進行計算。</p>
+
+      <p>更重要的是，圖神經網路實現了<em>主動</em>合規。與其對制裁名單更新做出反應（這可能比實際活動滯後數天或數週），圖神經網路在它們出現在官方名單之前就識別出風險模式。我們在1月份標記的地址——距離混幣器兩跳，透過可疑的錢包建立模式連接——三天後出現在 OFAC 名單上。圖神經網路沒有水晶球。它有圖。</p>
+
+      <p>對於穩定幣發行方、DeFi 協定和 RWA 平台，這意味著一個不僅讓你免於麻煩——而且讓你<em>領先</em>於麻煩的合規層。在一個監管行動可能關乎存亡的行業中，領先是唯一安全的地方。</p>
+
+      <div class="related-reading">
+        <h4>延伸閱讀</h4>
+        <a href="guard-pre-transaction.html">事前風控守衛 — 鏈上風險控制的新標準</a>
+        <a href="pluggable-vs-l2.html">可插拔合規模組 vs. 專用 L2</a>
+        <a href="why-on-chain-compliance.html">為什麼上鏈：API 合規的終結</a>
+      </div>
+    </article>
+
+    <div class="hr-fade"></div>
+
+    <section class="blog-cta">
+      <div class="container" style="max-width: 600px;">
+        <h2 class="h2" style="margin-bottom: 16px;">看到每個地址背後的圖</h2>
+        <p class="lead" style="margin-bottom: 32px;">FidesOrigin 的圖神經網路驅動風險引擎即時處理1.8億+節點和23億+邊。為您的協定新增關係感知合規。</p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <a href="/" class="btn btn-primary">
+            探索 FidesOrigin
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5-5-5-5"/></svg>
+          </a>
+          <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary">申請演示</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="../../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+            FidesOrigin
+          </a>
+          <p>面向金融未來的可程式化鏈上合規協定。</p>
+        </div>
+        <div class="footer-col">
+          <h4>產品</h4>
+          <a href="/#features">功能</a>
+          <a href="/#how-it-works">運作方式</a>
+          <a href="/#security">安全</a>
+          <a href="/admin/">儀表板</a>
+        </div>
+        <div class="footer-col">
+          <h4>開發者</h4>
+          <a href="/docs/" target="_blank" rel="noopener">文件</a>
+          <a href="/docs/api.html" target="_blank" rel="noopener">API 參考</a>
+          <a href="/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>公司</h4>
+          <a href="mailto:contact@fidesorigin.com">聯絡我們</a>
+          <a href="/blog/">部落格</a>
+          <a href="/privacy.html">隱私政策</a>
+          <a href="/terms.html">服務條款</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. 保留所有權利。</p>
+        <p>為鏈上金融世界用心打造。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../wallet-connect.js"></script>
+  <script>
+    function toggleMobileMenu() {
+      var menu = document.getElementById('mobileMenu');
+      var isActive = menu.classList.toggle('active');
+      document.body.style.overflow = isActive ? 'hidden' : '';
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var mobileBtn = document.querySelector('.nav-mobile-btn');
+      if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+      var closeBtn = document.querySelector('.mobile-menu-close');
+      if (closeBtn) closeBtn.addEventListener('click', toggleMobileMenu);
+      document.querySelectorAll('#mobileMenu a').forEach(function(link) {
+        link.addEventListener('click', toggleMobileMenu);
+      });
+    });
+    function toggleLangMenu(e) {
+      e.stopPropagation();
+      var menu = document.getElementById('langMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.addEventListener('click', toggleLangMenu);
+    });
+    document.addEventListener('click', function() {
+      var menu = document.getElementById('langMenu');
+      if (menu) menu.style.display = 'none';
+    });
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+    (function() {
+      var btn = document.createElement('button');
+      btn.className = 'scroll-top';
+      btn.innerHTML = '&uarr;';
+      btn.setAttribute('aria-label', '回到頂部');
+      document.body.appendChild(btn);
+      window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      });
+      btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+  </script>
+</body>
+</html>

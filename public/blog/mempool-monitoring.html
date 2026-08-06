@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"/>
+<title>Real-Time Mempool Monitoring for Zero-Confirmation Risk Interception — FidesOrigin</title>
+<meta name="description" content="How FidesOrigin monitors the mempool to intercept risky transactions before they are confirmed. Architecture, latency benchmarks, and integration with Flashbots."/>
+<meta property="og:title" content="Real-Time Mempool Monitoring for Zero-Confirmation Risk Interception"/>
+<meta property="og:description" content="Intercept risky transactions before confirmation with sub-100ms mempool monitoring."/>
+<meta property="og:type" content="article"/>
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<meta property="og:url" content="https://fidesorigin.com/blog/mempool-monitoring.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Real-Time Mempool Monitoring for Zero-Confirmation Risk Interception"/>
+<meta name="twitter:description" content="Intercept risky transactions before confirmation with sub-100ms mempool monitoring."/>
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png"/>
+<link rel="canonical" href="https://fidesorigin.com/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/mempool-monitoring.html"/>
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/mempool-monitoring.html"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Real-Time Mempool Monitoring for Zero-Confirmation Risk Interception","author":{"@type":"Organization","name":"FidesOrigin"},"publisher":{"@type":"Organization","name":"FidesOrigin","logo":{"@type":"ImageObject","url":"https://fidesorigin.com/brand/logo-dark-icon.png"}},"datePublished":"2026-08-06","url":"https://fidesorigin.com/blog/mempool-monitoring.html"}</script>
+<style>
+  :root {
+    --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320;
+    --fio-surface-3:#181b28; --fio-elevated:#1e2230; --fio-border:#252a3a; --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a;
+    --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .container { max-width:860px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+  .container-wide { max-width:1200px; margin:0 auto; padding:0 24px; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
+
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  .hero { position:relative; overflow:hidden; min-height:55vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-inner { position:relative; z-index:2; padding:80px 0 50px; width:100%; text-align:center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-accent-dim); border:1px solid rgba(155,142,216,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-accent); margin-bottom:24px; }
+  .hero-title { font-family:var(--font-display); font-size:clamp(1.8rem,4.5vw,3.2rem); font-weight:500; line-height:1.1; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:16px; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(0.95rem,1.3vw,1.1rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 24px; }
+  .hero-meta { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+
+  .section { padding:80px 0; }
+  @media(min-width:768px){ .section { padding:100px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+
+  .article-body { font-size:1.05rem; line-height:1.8; color:var(--fio-text-2); }
+  .article-body h2 { font-family:var(--font-display); font-size:clamp(1.4rem,3vw,1.9rem); font-weight:500; color:var(--fio-text); margin:56px 0 20px; letter-spacing:-0.02em; }
+  .article-body h3 { font-family:var(--font-display); font-size:clamp(1.1rem,2vw,1.35rem); font-weight:500; color:var(--fio-text); margin:36px 0 14px; }
+  .article-body p { margin-bottom:20px; }
+  .article-body strong { color:var(--fio-text); font-weight:600; }
+  .article-body ul { margin-bottom:20px; padding-left:24px; }
+  .article-body li { margin-bottom:8px; }
+  .article-body a { color:var(--fio-accent); text-decoration:underline; text-underline-offset:3px; }
+  .article-body a:hover { color:var(--fio-gold); }
+  .article-body code { font-family:var(--font-mono); font-size:0.88em; background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; color:var(--fio-gold); }
+
+  .code-block { background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:14px; overflow:hidden; margin:28px 0; }
+  .code-header { display:flex; align-items:center; gap:8px; padding:12px 16px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); }
+  .code-header .dot { width:10px; height:10px; border-radius:50%; }
+  .code-header .dot.r { background:#ff5f57; } .code-header .dot.y { background:#febc2e; } .code-header .dot.g { background:#28c840; }
+  .code-header .title { font-size:0.7rem; color:var(--fio-text-3); margin-left:8px; font-family:var(--font-mono); }
+  .code-body { padding:20px 24px; font-family:var(--font-mono); font-size:0.78rem; line-height:1.75; overflow-x:auto; color:var(--fio-text-2); }
+  .code-body .kw { color:#c678dd; } .code-body .fn { color:#61afef; } .code-body .str { color:#98c379; }
+  .code-body .num { color:#d19a66; } .code-body .cm { color:#5c6370; font-style:italic; }
+  .code-body .ty { color:#e5c07b; }
+
+  .perf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:32px 0; }
+  @media(max-width:640px){ .perf-grid { grid-template-columns:1fr; } }
+  .perf-card { padding:28px 24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; text-align:center; }
+  .perf-card .num { font-family:var(--font-mono); font-size:2rem; font-weight:700; color:var(--fio-gold); line-height:1; margin-bottom:8px; }
+  .perf-card .label { font-size:0.78rem; color:var(--fio-text-3); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; }
+  .perf-card .desc { font-size:0.85rem; color:var(--fio-text-2); margin-top:6px; }
+
+  .info-box { padding:24px 28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:28px 0; }
+  .info-box.purple { border-color:rgba(155,142,216,0.15); background:linear-gradient(180deg,rgba(155,142,216,0.03) 0%,var(--fio-surface) 60%); }
+  .info-box h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; }
+  .info-box p { font-size:0.92rem; color:var(--fio-text-2); line-height:1.7; margin:0; }
+
+  .diagram { padding:32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; margin:28px 0; }
+  .diagram-title { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:20px; text-align:center; }
+  .flow-row { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .flow-box { padding:12px 20px; background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:10px; font-size:0.82rem; font-family:var(--font-mono); text-align:center; }
+  .flow-box.highlight { background:var(--fio-accent-dim); color:var(--fio-accent); border-color:rgba(155,142,216,0.15); }
+  .flow-box.warn { background:rgba(251,142,142,0.06); color:var(--fio-danger); border-color:rgba(251,142,142,0.1); }
+  .flow-box.ok { background:rgba(92,230,138,0.06); color:var(--fio-success); border-color:rgba(92,230,138,0.1); }
+  .flow-arrow { color:var(--fio-text-4); font-size:1.2rem; }
+  @media(max-width:640px){ .flow-row { flex-direction:column; } .flow-arrow { transform:rotate(90deg); } }
+
+  .cta-banner { padding:80px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:500; color:var(--fio-text); margin-bottom:14px; }
+  .cta-desc { font-size:1rem; color:var(--fio-text-2); margin-bottom:28px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+
+  .reveal { opacity:0; transform:translateY(30px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+  .reveal-delay-3 { transition-delay:0.35s; }
+
+  .toc { position:sticky; top:80px; padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; margin-bottom:32px; }
+  .toc h4 { font-family:var(--font-display); font-size:0.85rem; font-weight:500; color:var(--fio-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em; }
+  .toc a { display:block; font-size:0.8rem; color:var(--fio-text-3); padding:6px 0; transition:color 0.2s; border-bottom:1px solid rgba(255,255,255,0.02); }
+  .toc a:hover { color:var(--fio-accent); }
+  .toc a:last-child { border-bottom:none; }
+  @media(max-width:1024px){ .toc { position:static; } }
+
+  .article-layout { display:grid; grid-template-columns:1fr 260px; gap:48px; }
+  @media(max-width:1024px){ .article-layout { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/" onclick="closeMobileMenu()">Home</a>
+  <a href="/architecture.html" onclick="closeMobileMenu()">Architecture</a>
+  <a href="/blog/" onclick="closeMobileMenu()">Blog</a>
+  <a href="/pricing.html" onclick="closeMobileMenu()">Pricing</a>
+  <a href="mailto:contact@fidesorigin.com" class="btn-primary" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
+</div>
+
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/architecture.html">Architecture</a>
+      <a href="/blog/">Blog</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">Request Demo</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">Technical Deep Dive</div>
+      <h1 class="hero-title anim-fade-up anim-d2">
+        Real-Time Mempool Monitoring for<br>
+        <span class="hero-title-accent">Zero-Confirmation Risk Interception</span>
+      </h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">
+        How FidesOrigin watches the mempool to stop risky transactions before a single block confirmation &mdash; and why traditional post-confirmation analysis is too late.
+      </p>
+      <div class="hero-meta anim-fade-up anim-d3">FidesOrigin Engineering &middot; August 2026 &middot; 10 min read</div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="article-layout">
+      <article class="article-body reveal">
+
+        <h2 id="what-is-mempool">What Is the Mempool?</h2>
+        <p>Before a transaction is included in a block and committed to the blockchain, it sits in a temporary holding area called the <strong>mempool</strong> (memory pool). Every full node maintains its own mempool, a dynamic buffer of pending transactions waiting to be mined.</p>
+        <p>When a user broadcasts a transaction, it propagates across the peer-to-peer network and lands in the mempools of thousands of nodes. Miners select transactions from their local mempool to include in the next block, typically prioritizing those with the highest gas fees. Until that block is mined, the transaction is "unconfirmed" &mdash; it exists in the network's consciousness but not in its permanent record.</p>
+        <p>This unconfirmed state is both a feature and a vulnerability. It's a feature because it enables rapid propagation and fee-market dynamics. It's a vulnerability because <strong>a transaction in the mempool can still be executed</strong> &mdash; and if it's destined for a sanctioned address, a phishing contract, or a known exploit, waiting for block confirmation means the damage is already done.</p>
+
+        <h2 id="problem">The Zero-Confirmation Problem</h2>
+        <p>Traditional crypto compliance follows a simple workflow:</p>
+        <ol>
+          <li>Transaction is broadcast to the network</li>
+          <li>Transaction is included in a block (12 seconds on Ethereum, ~10 minutes on Bitcoin)</li>
+          <li>Transaction receives 1&ndash;3 confirmations</li>
+          <li>Risk platform queries the transaction hash against its database</li>
+          <li>Compliance team reviews the alert</li>
+          <li>Action is taken (if any)</li>
+        </ol>
+        <p>By step 6, the funds have already moved. The compliance team is documenting a crime, not preventing one. For high-speed chains like Base or Polygon, the entire sequence from broadcast to finality can take under 3 seconds. Human-in-the-loop compliance cannot keep up.</p>
+        <p>This is the <strong>zero-confirmation gap</strong>: the window between transaction broadcast and block inclusion where traditional tools are blind and manual intervention is impossible. FidesOrigin closes this gap by moving the decision point from <em>after</em> confirmation to <em>before</em> inclusion.</p>
+
+        <div class="info-box purple">
+          <h4>Key Insight</h4>
+          <p>On Ethereum, a standard ERC-20 transfer is confirmed in ~12 seconds. But the transaction is visible in the mempool within <strong>200&ndash;500ms</strong> of broadcast. That 200ms window is all FidesOrigin needs to evaluate and intercept.</p>
+        </div>
+
+        <h2 id="architecture">MempoolWatcher Architecture</h2>
+        <p>The FidesOrigin <code>MempoolWatcher</code> is a real-time streaming pipeline that connects to full nodes via WebSocket, ingests pending transactions, and evaluates them against the Risk Registry before they reach a block.</p>
+
+        <div class="diagram">
+          <div class="diagram-title">MempoolWatcher Data Flow</div>
+          <div class="flow-row">
+            <div class="flow-box">Full Node<br><span style="font-size:0.7rem;color:var(--fio-text-3)">WebSocket</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box highlight">MempoolWatcher<br><span style="font-size:0.7rem;color:var(--fio-text-3)">Parser</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box highlight">Address Match<br><span style="font-size:0.7rem;color:var(--fio-text-3)">Filter</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box highlight">Risk Score<br><span style="font-size:0.7rem;color:var(--fio-text-3)">GNN + ML</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box ok">Alert / Intercept<br><span style="font-size:0.7rem;color:var(--fio-text-3)">&lt;100ms</span></div>
+          </div>
+        </div>
+
+        <h3>1. Full-Node WebSocket Connection</h3>
+        <p>The Watcher maintains persistent WebSocket connections to geographically distributed full nodes on each supported network. We use <code>eth_subscribe</code> with the <code>newPendingTransactions</code> topic to receive a stream of transaction hashes as they enter the mempool.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">WebSocket Subscription (TypeScript)</span>
+          </div>
+          <div class="code-body">
+<span class="cm">// Connect to Ethereum full node via WebSocket</span>
+<span class="kw">const</span> ws = <span class="kw">new</span> <span class="ty">WebSocket</span>(<span class="str">"wss://eth-mainnet.g.alchemy.com/v2/..."</span>);
+
+ws.<span class="fn">on</span>(<span class="str">"open"</span>, () => {
+  ws.<span class="fn">send</span>(<span class="ty">JSON</span>.<span class="fn">stringify</span>({
+    jsonrpc: <span class="str">"2.0"</span>,
+    id: 1,
+    method: <span class="str">"eth_subscribe"</span>,
+    params: [<span class="str">"newPendingTransactions"</span>]
+  }));
+});
+
+ws.<span class="fn">on</span>(<span class="str">"message"</span>, <span class="kw">async</span> (data) => {
+  <span class="kw">const</span> { params: { result: txHash } } = <span class="ty">JSON</span>.<span class="fn">parse</span>(data);
+  <span class="cm">// txHash is a pending transaction &mdash; evaluate immediately</span>
+  <span class="kw">await</span> <span class="fn">evaluateTransaction</span>(txHash);
+});
+          </div>
+        </div>
+
+        <h3>2. Transaction Parsing & Decoding</h3>
+        <p>Each pending transaction hash is immediately fetched via <code>eth_getTransactionByHash</code> to retrieve the full transaction object: sender, recipient, value, data payload, and gas parameters. For ERC-20 transfers, the input data is decoded to extract the actual token recipient and transfer amount.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Transaction Decoding</span>
+          </div>
+          <div class="code-body">
+<span class="cm">// Decode ERC-20 transfer from input data</span>
+<span class="kw">const</span> iface = <span class="kw">new</span> <span class="ty">ethers</span>.<span class="ty">Interface</span>(ERC20_ABI);
+<span class="kw">const</span> decoded = iface.<span class="fn">parseTransaction</span>({ data: tx.input });
+
+<span class="kw">if</span> (decoded?.name === <span class="str">"transfer"</span>) {
+  <span class="kw">const</span> [to, amount] = decoded.args;
+  <span class="cm">// 'to' is the actual recipient, not necessarily tx.to</span>
+  <span class="kw">await</span> <span class="fn">screenAddress</span>(to, {
+    sender: tx.from,
+    amount: amount.<span class="fn">toString</span>(),
+    token: tx.to, <span class="cm">// token contract address</span>
+    network: <span class="str">"ethereum"</span>
+  });
+}
+          </div>
+        </div>
+
+        <h3>3. Address Matching & Risk Scoring</h3>
+        <p>Once the sender and recipient addresses are extracted, they are checked against the FidesOrigin Risk Registry in a two-phase process:</p>
+        <ul>
+          <li><strong>Phase 1 &mdash; Exact Match:</strong> Addresses are checked against the hotlist of sanctioned, phishing, and known-exploit addresses. This is an O(1) hashmap lookup taking &lt;1ms.</li>
+          <li><strong>Phase 2 &mdash; GNN Scoring:</strong> For addresses not on the hotlist, a Graph Neural Network evaluates the address's relationship graph (transaction neighbors, temporal patterns, counterparty risk). This produces a risk score from 0&ndash;100.</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">Risk Evaluation Pipeline</span>
+          </div>
+          <div class="code-body">
+<span class="kw">async function</span> <span class="fn">evaluateTransaction</span>(txHash: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">RiskResult</span>&gt; {
+  <span class="kw">const</span> tx = <span class="kw">await</span> provider.<span class="fn">getTransaction</span>(txHash);
+  <span class="kw">const</span> { from, decodedTo, value } = <span class="fn">parseTransaction</span>(tx);
+
+  <span class="cm">// Phase 1: Exact match against hotlist</span>
+  <span class="kw">const</span> hotlistHit = <span class="kw">await</span> riskRegistry.<span class="fn">isSanctioned</span>(decodedTo);
+  <span class="kw">if</span> (hotlistHit) {
+    <span class="kw">return</span> { action: <span class="str">"BLOCK"</span>, reason: <span class="str">"SANCTIONED_ADDRESS"</span>, latencyMs: <span class="num">12</span> };
+  }
+
+  <span class="cm">// Phase 2: GNN relationship scoring</span>
+  <span class="kw">const</span> score = <span class="kw">await</span> gnnModel.<span class="fn">scoreAddress</span>(decodedTo, {
+    depth: <span class="num">2</span>, <span class="cm">// 2-hop neighborhood</span>
+    timeWindow: <span class="str">"24h"</span>,
+    minTxCount: <span class="num">3</span>
+  });
+
+  <span class="kw">if</span> (score.value > <span class="num">85</span>) {
+    <span class="kw">return</span> { action: <span class="str">"QUARANTINE"</span>, reason: <span class="str">"HIGH_RISK_GNN"</span>, score, latencyMs: <span class="num">67</span> };
+  }
+
+  <span class="kw">return</span> { action: <span class="str">"PASS"</span>, score, latencyMs: <span class="num">67</span> };
+}
+          </div>
+        </div>
+
+        <h3>4. Alerting & On-Chain Interception</h3>
+        <p>For transactions that pass the risk threshold, two response paths exist:</p>
+        <ul>
+          <li><strong>Alert Mode:</strong> The transaction is flagged and an alert is sent via Webhook, PagerDuty, or Slack. The transaction proceeds but is logged for review.</li>
+          <li><strong>Interceptor Mode:</strong> For integrated protocols (e.g., CompliantStablecoin), the Guard module is triggered. If the protocol supports pre-flight checks, the transaction is blocked at the smart contract level before it can execute.</li>
+        </ul>
+
+        <h2 id="flashbots">Relationship to Flashbots</h2>
+        <p>A common question: how does mempool monitoring relate to Flashbots and MEV (Maximal Extractable Value)?</p>
+
+        <div class="info-box">
+          <h4>Flashbots vs FidesOrigin MempoolWatcher</h4>
+          <p><strong>Flashbots</strong> watches the mempool to <em>extract value</em> &mdash; identifying arbitrage opportunities, sandwich attacks, and liquidation profits. Its goal is economic: capture MEV before others do.</p>
+          <p><strong>FidesOrigin MempoolWatcher</strong> watches the mempool to <em>prevent harm</em> &mdash; identifying sanctioned addresses, phishing contracts, and suspicious patterns. Its goal is protective: stop bad transactions before they confirm.</p>
+        </div>
+
+        <p>The two are not competitors. In fact, they are <strong>complementary</strong>:</p>
+        <ul>
+          <li>Flashbots protects <em>protocol economic integrity</em> (no front-running, fair ordering)</li>
+          <li>FidesOrigin protects <em>protocol regulatory integrity</em> (no sanctioned addresses, compliant flows)</li>
+        </ul>
+        <p>Flashbots' private mempool (Flashbots Protect) can even enhance FidesOrigin's effectiveness: if a protocol routes transactions through Flashbots Protect, FidesOrigin can still monitor the mempool for public transactions while the protocol's own transactions bypass public MEV extraction.</p>
+
+        <h2 id="performance">Performance Benchmarks</h2>
+        <p>Latency is the critical metric for mempool monitoring. A system that takes 500ms to evaluate a transaction may miss the window before inclusion, especially on high-throughput chains.</p>
+
+        <div class="perf-grid reveal">
+          <div class="perf-card">
+            <div class="num">&lt;100ms</div>
+            <div class="label">End-to-End Latency</div>
+            <div class="desc">From mempool detection to risk decision</div>
+          </div>
+          <div class="perf-card">
+            <div class="num">&lt;0.1%</div>
+            <div class="label">False Positive Rate</div>
+            <div class="desc">Validated against 10M+ transactions</div>
+          </div>
+          <div class="perf-card">
+            <div class="num">6+</div>
+            <div class="label">Networks Covered</div>
+            <div class="desc">Ethereum, Base, Polygon, Arbitrum, Optimism, BSC</div>
+          </div>
+        </div>
+
+        <p>Latency breakdown on Ethereum mainnet (measured from WebSocket message receipt to risk decision):</p>
+        <ul>
+          <li><strong>Transaction fetch:</strong> 25&ndash;40ms (RPC round-trip)</li>
+          <li><strong>Input decoding:</strong> 1&ndash;3ms (local ABI parsing)</li>
+          <li><strong>Hotlist lookup:</strong> &lt;1ms (in-memory hash set)</li>
+          <li><strong>GNN scoring:</strong> 35&ndash;55ms (cached embeddings + inference)</li>
+          <li><strong>Decision &amp; alert:</strong> 2&ndash;5ms</li>
+          <li><strong>Total p99:</strong> 97ms</li>
+        </ul>
+        <p>On faster chains like Base and Polygon, where block times are 2&ndash;3 seconds, the 100ms evaluation window represents only 3&ndash;5% of the total time to confirmation, leaving ample headroom for interception.</p>
+
+        <h2 id="limitations">Limitations & Trade-offs</h2>
+        <p>Mempool monitoring is powerful but not universal. We believe in transparent discussion of its boundaries:</p>
+        <ul>
+          <li><strong>Private mempools:</strong> Transactions sent via Flashbots Protect or private RPCs (e.g., Taichi Network) do not appear in the public mempool. These require protocol-level integration (Guard module) rather than mempool watching.</li>
+          <li><strong>Network propagation variance:</strong> A transaction may reach some nodes before others. The Watcher must connect to multiple geographically distributed nodes to minimize miss rates.</li>
+          <li><strong>Replace-by-Fee (RBF):</strong> A user can replace a pending transaction with a higher-fee version, potentially changing the recipient. The Watcher tracks transaction nonces to detect replacements.</li>
+          <li><strong>Latency floor:</strong> RPC round-trips impose a physical floor on latency. Sub-50ms end-to-end requires co-located infrastructure, which is available in our Enterprise tier.</li>
+        </ul>
+
+        <h2 id="conclusion">Conclusion</h2>
+        <p>The mempool is the last frontier of pre-execution risk control. Every second a transaction spends in the mempool is a second during which it can be evaluated, scored, and &mdash; if necessary &mdash; stopped.</p>
+        <p>FidesOrigin's MempoolWatcher closes the zero-confirmation gap that traditional post-hoc analytics cannot address. Combined with the on-chain Guard module, it provides a two-layer defense: catch it in the mempool, and if that fails, stop it in the contract.</p>
+        <p>For stablecoin issuers, DeFi protocols, and any institution building on-chain, this is not a nice-to-have. It's the difference between compliance that documents breaches and compliance that prevents them.</p>
+
+        <div style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="font-size:0.85rem;color:var(--fio-text-3);"><strong>Next:</strong> <a href="/blog/evolution-from-chainalysis.html">The Evolution of Crypto Risk Control &mdash; From Chainalysis to FidesOrigin</a></p>
+        </div>
+
+      </article>
+
+      <aside>
+        <div class="toc reveal">
+          <h4>Table of Contents</h4>
+          <a href="#what-is-mempool">What Is the Mempool?</a>
+          <a href="#problem">The Zero-Confirmation Problem</a>
+          <a href="#architecture">MempoolWatcher Architecture</a>
+          <a href="#flashbots">Relationship to Flashbots</a>
+          <a href="#performance">Performance Benchmarks</a>
+          <a href="#limitations">Limitations &amp; Trade-offs</a>
+          <a href="#conclusion">Conclusion</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">Build with Zero-Confirmation Protection</h2>
+      <p class="cta-desc">Integrate MempoolWatcher into your protocol. Sub-100ms detection, 6+ networks, open-source SDK.</p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">Request Access</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" class="btn-secondary">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">On-chain compliance protocol for tokenized assets and DeFi.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/">Risk Radar</a>
+        <a href="/">Policy Engine</a>
+        <a href="/">Audit Shield</a>
+        <a href="/address-check.html">Address Check</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">Documentation</a>
+        <a href="/docs/api">API Reference</a>
+        <a href="/changelog.html">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/about.html">About</a>
+        <a href="/case-studies.html">Case Studies</a>
+        <a href="mailto:contact@fidesorigin.com">Contact</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+}, { passive: true });
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+</script>
+
+</body>
+</html>
