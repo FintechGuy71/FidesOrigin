@@ -4,6 +4,13 @@ compatibility_date = "2026-08-03"
 
 workers_dev = false
 
+# 静态站点直出：public/ 目录内容经由 Workers 静态资源提供，
+# 不再代理 Vercel（规避 Vercel 部署队列故障）。
+[assets]
+# 指向仓库根目录的 public/（CI 在 cloudflare-workers 目录下运行 wrangler）
+directory = "../public"
+binding = "ASSETS"
+
 routes = [
   { pattern = "fidesorigin.com/*", zone_name = "fidesorigin.com" },
   { pattern = "www.fidesorigin.com/*", zone_name = "fidesorigin.com" }
