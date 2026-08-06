@@ -3,6 +3,10 @@ name: Deploy to Vercel
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
@@ -10,10 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pure static upload of repo-root public/ via Build Output API v3.
+      # No install / no build steps at all: the site is pre-built static HTML,
+      # and postinstall (turbo build) hangs Vercel server-side builds.
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install -g vercel@latest
+          vercel link --yes --project fidesorigin-demo --scope fintechguy71s-projects --token="$VERCEL_TOKEN"
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static
+          cp -r public/. .vercel/output/static/
+          printf '{"version":3}' > .vercel/output/config.json
+          vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
