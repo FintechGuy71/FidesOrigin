@@ -1,5 +1,6 @@
 {
   "buildCommand": "echo 'Static files only - skipping build'",
+  "installCommand": "echo 'static site - no install needed'",
   "outputDirectory": "public",
   "headers": [
     {
