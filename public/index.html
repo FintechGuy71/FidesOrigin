@@ -480,18 +480,19 @@
               <span class="hero-code-title">Guard Pre-Check</span>
             </div>
             <div class="hero-code-body">
-<span class="cm">// Guard pre-transaction screening</span>
+<span class="cm">// Guard pre-transaction screening — Sepolia Testnet</span>
 <span class="kw">import</span> { FidesGuard } <span class="kw">from</span> <span class="str">'@fidesorigin/guard'</span>;
 
+<span class="cm">// FidesCompliance V2.1 on Sepolia: 0x05497600618071C34CB3Fdb8A9E159e9589DEC79</span>
 <span class="kw">const</span> guard = <span class="kw">await</span> FidesGuard.<span class="fn">connect</span>({
-  network: <span class="str">"ethereum"</span>,
+  network: <span class="str">"sepolia"</span>,
   policy: <span class="str">"stablecoin-hkma-v2"</span>
 });
 
 <span class="cm">// previewTransaction — intercept before broadcast</span>
 <span class="kw">const</span> result = <span class="kw">await</span> guard.<span class="fn">previewTransaction</span>({
-  from: <span class="str">"0x742d..."</span>,
-  to: <span class="str">"0x9a3f..."</span>,
+  from: <span class="str">"0x5F6Ae278e7a62E64F9F467a91B693f372b84a374"</span>,
+  to: <span class="str">"0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc"</span>,
   value: <span class="str">"500000000000000000"</span>,
   data: <span class="str">"0x..."</span>
 });

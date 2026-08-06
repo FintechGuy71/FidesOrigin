@@ -1,342 +1,936 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <link rel="preload" href="/styles.css" as="style">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
-  <meta name="theme-color" content="#0a0a0a">
-  <title>Pricing — FidesOrigin | On-Chain Compliance Infrastructure</title>
-  <meta name="description" content="Transparent pricing for on-chain compliance infrastructure. Start free, scale as you grow. Built for stablecoin issuers, RWA platforms, and DeFi protocols.">
-  <meta name="author" content="FidesOrigin">
-  <meta property="og:title" content="Pricing — FidesOrigin | On-Chain Compliance Infrastructure">
-  <meta property="og:description" content="Transparent pricing for on-chain compliance infrastructure. Start free, scale as you grow.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://fidesorigin.com/pricing.html">
-  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
-  <meta name="twitter:site" content="@fidesorigin">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
-  <link rel="canonical" href="https://fidesorigin.com/pricing.html">
-  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/pricing.html">
-  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/pricing.html">
-  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/pricing.html">
-  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/pricing.html">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="icon" href="/brand/logo-dark-icon.png">
-  <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
-  <style>
-    .pricing-hero { padding: 140px 0 60px; text-align: center; }
-    .pricing-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      margin-top: 48px;
-    }
-    .pricing-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 40px 32px;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-    .pricing-card:hover { border-color: var(--border-light); transform: translateY(-4px); }
-    .pricing-card.featured {
-      border-color: var(--accent);
-      background: linear-gradient(180deg, var(--bg-card) 0%, rgba(201,169,110,0.03) 100%);
-    }
-    .pricing-card.featured::before {
-      content: 'Most Popular';
-      position: absolute;
-      top: -1px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent);
-      color: var(--bg);
-      padding: 4px 16px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    }
-    .pricing-name { font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; }
-    .pricing-desc { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 24px; }
-    .pricing-price { font-size: 3rem; font-weight: 800; letter-spacing: -0.03em; }
-    .pricing-price span { font-size: 1rem; font-weight: 400; color: var(--text-muted); }
-    .pricing-features { list-style: none; padding: 0; margin: 32px 0; }
-    .pricing-features li {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .pricing-features li:last-child { border-bottom: none; }
-    .pricing-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
-    .pricing-features .missing { color: var(--text-muted); }
-    .pricing-features .missing svg { color: var(--text-muted); }
-    .pricing-cta { width: 100%; text-align: center; justify-content: center; }
-    .pricing-note {
-      text-align: center;
-      margin-top: 48px;
-      padding: 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-    }
-    .pricing-note p { color: var(--text-secondary); font-size: 0.875rem; margin: 0; }
-    .pricing-note a { color: var(--accent); }
-    .compare-table-wrap { overflow-x: auto; margin-top: 48px; }
-    .compare-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    .compare-table th {
-      text-align: left;
-      padding: 16px;
-      color: var(--text);
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-    .compare-table td {
-      padding: 14px 16px;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
-    }
-    .compare-table tr:hover td { background: var(--bg-elevated); }
-    .compare-table .check { color: var(--success); }
-    .compare-table .dash { color: var(--text-muted); }
-    @media (max-width: 900px) {
-      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
-    }
-  </style>
-  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation()">
+<meta name="theme-color" content="#05060a">
+<title>Pricing — FidesOrigin | Per-Transaction Compliance Infrastructure</title>
+<meta name="description" content="Pay per transaction, not per year. FidesOrigin's on-chain compliance starts at 10&cent; per transaction with no annual commitment. Scale from startup to enterprise.">
+<meta name="author" content="FidesOrigin">
+<meta property="og:title" content="Pricing — FidesOrigin | Per-Transaction Compliance Infrastructure">
+<meta property="og:description" content="Pay per transaction, not per year. On-chain compliance from 10&cent; per transaction. No annual commitment.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fidesorigin.com/pricing.html">
+<meta property="og:image" content="https://fidesorigin.com/assets/og-image.png">
+<meta name="twitter:site" content="@fidesorigin">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fidesorigin.com/assets/og-image.png">
+<link rel="canonical" href="https://fidesorigin.com/pricing.html">
+<link rel="alternate" hreflang="en" href="https://fidesorigin.com/pricing.html">
+<link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/pricing.html">
+<link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/pricing.html">
+<link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/pricing.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="/brand/logo-dark-icon.png">
+<link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"FidesOrigin Pricing","url":"https://fidesorigin.com/pricing.html","description":"Per-transaction pricing for on-chain compliance infrastructure"}</script>
+<style>
+  :root {
+    --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18; --fio-surface-2:#111320;
+    --fio-surface-3:#181b28; --fio-elevated:#1e2230; --fio-border:#252a3a; --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-accent-glow:#9b8ed80a;
+    --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-gold-glow:#d4b87a10;
+    --fio-steel:#7b9ab8; --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body { margin:0; padding:0; }
+  body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  img { max-width:100%; display:block; }
+  .container { max-width:1200px; margin:0 auto; padding:0 24px; }
+  @media(max-width:768px){ .container { padding:0 16px; } }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; box-shadow:0 0 6px var(--fio-gold); } 50%{ opacity:0.5; box-shadow:0 0 16px var(--fio-gold); } }
+  .anim-fade-up { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-fade-scale { animation:fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; }
+  .anim-d3 { animation-delay:0.35s; } .anim-d4 { animation-delay:0.5s; }
+  .anim-d5 { animation-delay:0.65s; } .anim-d6 { animation-delay:0.8s; }
+
+  /* ─── Navigation ───────────────────────────────────────────── */
+  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
+  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo img { height:28px; width:auto; }
+  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
+  .nav-links { display:none; align-items:center; gap:32px; }
+  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
+  .nav-links a:hover { color:var(--fio-text); }
+  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
+  .nav-links a:hover::after { width:100%; }
+  .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); }
+  .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
+  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
+  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
+  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
+
+  .lang-switch { display:flex; align-items:center; gap:4px; font-size:0.75rem; font-family:var(--font-mono); }
+  .lang-switch a { padding:5px 10px; border-radius:6px; color:var(--fio-text-3); transition:all 0.2s; }
+  .lang-switch a:hover { color:var(--fio-text); background:rgba(255,255,255,0.04); }
+  .lang-switch a.active { color:var(--fio-gold); background:var(--fio-gold-dim); }
+
+  /* ─── Hero ─────────────────────────────────────────────────── */
+  .hero { position:relative; overflow:hidden; min-height:70vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
+  .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
+  .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
+  .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
+  .hero-inner { position:relative; z-index:2; padding:100px 0 60px; width:100%; text-align:center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 18px; background:var(--fio-gold-dim); border:1px solid rgba(212,184,122,0.15); border-radius:100px; font-size:0.75rem; font-family:var(--font-mono); color:var(--fio-gold); margin-bottom:32px; }
+  .hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--fio-gold); animation:pulse-dot 2s infinite; }
+  .hero-title { font-family:var(--font-display); font-size:clamp(2.2rem,5vw,3.8rem); font-weight:500; line-height:1.05; letter-spacing:-0.025em; color:var(--fio-text); margin-bottom:20px; }
+  .hero-title-accent { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-subtitle { font-size:clamp(1rem,1.4vw,1.15rem); line-height:1.7; color:var(--fio-text-2); max-width:640px; margin:0 auto 36px; }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; }
+  .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
+  .btn-sm { padding:10px 20px; font-size:0.8125rem; }
+
+  /* ─── Section Base ─────────────────────────────────────────── */
+  .section { padding:100px 0; }
+  @media(min-width:768px){ .section { padding:130px 0; } }
+  .section-alt { background:var(--fio-ink-soft); }
+  .section-header { text-align:center; max-width:640px; margin:0 auto 72px; }
+  .section-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-text-3); margin-bottom:16px; padding:4px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; }
+  .section-title { font-family:var(--font-display); font-size:clamp(1.8rem,3.8vw,2.8rem); font-weight:500; line-height:1.1; letter-spacing:-0.02em; color:var(--fio-text); margin-bottom:18px; }
+  .section-desc { font-size:1.05rem; line-height:1.7; color:var(--fio-text-2); max-width:560px; margin:0 auto; }
+
+  .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:0.1s; }
+  .reveal-delay-2 { transition-delay:0.2s; }
+  .reveal-delay-3 { transition-delay:0.35s; }
+  .reveal-delay-4 { transition-delay:0.5s; }
+
+  /* ─── Pricing Cards ────────────────────────────────────────── */
+  .pricing-grid { display:grid; gap:24px; grid-template-columns:1fr; max-width:400px; margin:0 auto; }
+  @media(min-width:900px){ .pricing-grid { grid-template-columns:repeat(3,1fr); max-width:none; } }
+  .pricing-card { position:relative; padding:40px 32px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); overflow:hidden; display:flex; flex-direction:column; }
+  .pricing-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent); opacity:0; transition:opacity 0.4s; }
+  .pricing-card:hover::before { opacity:1; }
+  .pricing-card:hover { border-color:var(--fio-border-light); transform:translateY(-5px); box-shadow:0 32px 64px rgba(0,0,0,0.4); }
+  .pricing-card.featured {
+    border-color:rgba(155,142,216,0.25);
+    background:linear-gradient(180deg,rgba(155,142,216,0.04) 0%,var(--fio-surface) 50%);
+    box-shadow:0 0 60px -12px rgba(155,142,216,0.08);
+    transform:translateY(-8px);
+  }
+  .pricing-card.featured:hover { transform:translateY(-12px); box-shadow:0 40px 80px rgba(0,0,0,0.5), 0 0 80px -12px rgba(155,142,216,0.12); }
+  .pricing-badge {
+    position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+    background:var(--fio-accent); color:var(--fio-ink);
+    padding:5px 20px; font-size:0.65rem; font-weight:600; font-family:var(--font-mono);
+    text-transform:uppercase; letter-spacing:0.08em;
+    border-radius:0 0 8px 8px;
+  }
+  .pricing-tier { font-family:var(--font-display); font-size:1.3rem; font-weight:600; color:var(--fio-text); margin-bottom:4px; }
+  .pricing-target { font-size:0.78rem; color:var(--fio-text-3); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:20px; }
+  .pricing-rate { font-family:var(--font-mono); font-size:3rem; font-weight:700; color:var(--fio-gold); line-height:1; margin-bottom:4px; }
+  .pricing-rate span { font-size:1rem; font-weight:400; color:var(--fio-text-3); }
+  .pricing-subrate { font-size:0.8rem; color:var(--fio-text-3); margin-bottom:24px; }
+  .pricing-divider { height:1px; background:linear-gradient(90deg,transparent,var(--fio-border),transparent); margin:0 0 24px; }
+  .pricing-features { list-style:none; padding:0; margin:0 0 32px; flex:1; }
+  .pricing-features li {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 0; font-size:0.85rem; color:var(--fio-text-2);
+    border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  .pricing-features li:last-child { border-bottom:none; }
+  .pricing-features svg { width:16px; height:16px; color:var(--fio-success); flex-shrink:0; }
+  .pricing-features .missing { color:var(--fio-text-4); }
+  .pricing-features .missing svg { color:var(--fio-text-4); }
+  .pricing-cta { width:100%; text-align:center; justify-content:center; }
+
+  .pricing-note {
+    text-align:center; margin-top:48px;
+    padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px;
+  }
+  .pricing-note p { color:var(--fio-text-2); font-size:0.875rem; margin:0; }
+  .pricing-note a { color:var(--fio-gold); }
+  .pricing-note a:hover { text-decoration:underline; }
+
+  /* ─── ROI Calculator ───────────────────────────────────────── */
+  .roi-section { background:var(--fio-ink-soft); }
+  .roi-grid { display:grid; gap:48px; grid-template-columns:1fr; align-items:start; }
+  @media(min-width:1024px){ .roi-grid { grid-template-columns:1.1fr 0.9fr; gap:64px; } }
+
+  .calc-panel {
+    padding:36px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px;
+  }
+  .calc-panel h3 {
+    font-family:var(--font-display); font-size:1.15rem; font-weight:600; color:var(--fio-text);
+    margin-bottom:28px; display:flex; align-items:center; gap:10px;
+  }
+  .calc-panel h3 svg { color:var(--fio-gold); }
+
+  .calc-row { margin-bottom:28px; }
+  .calc-row:last-child { margin-bottom:0; }
+  .calc-label {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:0.82rem; color:var(--fio-text-2); margin-bottom:10px;
+  }
+  .calc-label span { font-family:var(--font-mono); font-size:0.78rem; color:var(--fio-gold); }
+  .calc-slider {
+    -webkit-appearance:none; appearance:none; width:100%; height:6px;
+    background:var(--fio-elevated); border-radius:3px; outline:none;
+    border:1px solid var(--fio-border);
+  }
+  .calc-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; appearance:none; width:20px; height:20px;
+    background:var(--fio-gold); border-radius:50%; cursor:pointer;
+    box-shadow:0 0 12px rgba(212,184,122,0.4); border:2px solid var(--fio-ink);
+    transition:transform 0.15s;
+  }
+  .calc-slider::-webkit-slider-thumb:hover { transform:scale(1.15); }
+  .calc-slider::-moz-range-thumb {
+    width:20px; height:20px; background:var(--fio-gold); border-radius:50%; cursor:pointer;
+    box-shadow:0 0 12px rgba(212,184,122,0.4); border:2px solid var(--fio-ink);
+  }
+
+  .calc-value-display {
+    font-family:var(--font-mono); font-size:1.4rem; font-weight:700; color:var(--fio-gold);
+    text-align:right; min-width:80px;
+  }
+
+  .result-panel {
+    padding:36px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px;
+    position:relative; overflow:hidden;
+  }
+  .result-panel::before {
+    content:''; position:absolute; top:0; left:0; width:100%; height:3px;
+    background:linear-gradient(90deg,var(--fio-accent),var(--fio-gold));
+  }
+  .result-panel h3 {
+    font-family:var(--font-display); font-size:1.15rem; font-weight:600; color:var(--fio-text);
+    margin-bottom:24px;
+  }
+  .result-big {
+    font-family:var(--font-mono); font-size:2.4rem; font-weight:700; color:var(--fio-gold); line-height:1;
+    margin-bottom:4px;
+  }
+  .result-big-label { font-size:0.78rem; color:var(--fio-text-3); margin-bottom:24px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; }
+
+  .result-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.03);
+    font-size:0.85rem; color:var(--fio-text-2);
+  }
+  .result-row:last-child { border-bottom:none; }
+  .result-row .val { font-family:var(--font-mono); color:var(--fio-text); font-weight:600; }
+  .result-row .val.positive { color:var(--fio-success); }
+  .result-row .val.negative { color:var(--fio-danger); }
+
+  .result-bar-wrap { margin-top:20px; padding:16px; background:var(--fio-ink-soft); border-radius:12px; }
+  .result-bar-label { font-size:0.75rem; color:var(--fio-text-3); margin-bottom:10px; display:flex; justify-content:space-between; }
+  .result-bar-track { width:100%; height:8px; background:var(--fio-elevated); border-radius:4px; overflow:hidden; position:relative; }
+  .result-bar-fill { height:100%; background:linear-gradient(90deg,var(--fio-accent),var(--fio-gold)); border-radius:4px; transition:width 0.5s cubic-bezier(0.16,1,0.3,1); }
+  .result-bar-marker { position:absolute; top:-4px; width:2px; height:16px; background:var(--fio-danger); transition:left 0.5s cubic-bezier(0.16,1,0.3,1); }
+
+  /* ─── Pricing Model Explainer ──────────────────────────────── */
+  .model-grid { display:grid; gap:20px; }
+  @media(min-width:768px){ .model-grid { grid-template-columns:repeat(3,1fr); } }
+  .model-card {
+    padding:36px 28px; background:var(--fio-surface); border:1px solid var(--fio-border);
+    border-radius:18px; transition:all 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .model-card:hover { border-color:var(--fio-border-light); transform:translateY(-4px); }
+  .model-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+  .model-icon.purple { background:var(--fio-accent-dim); color:var(--fio-accent); border:1px solid rgba(155,142,216,0.12); }
+  .model-icon.gold { background:var(--fio-gold-dim); color:var(--fio-gold); border:1px solid rgba(212,184,122,0.12); }
+  .model-icon.green { background:rgba(92,230,138,0.06); color:var(--fio-success); border:1px solid rgba(92,230,138,0.1); }
+  .model-card h3 { font-family:var(--font-display); font-size:1.1rem; font-weight:500; color:var(--fio-text); margin-bottom:10px; }
+  .model-card p { font-size:0.88rem; line-height:1.7; color:var(--fio-text-2); margin:0; }
+  .model-card .highlight { color:var(--fio-gold); font-weight:600; }
+
+  /* ─── Testimonials ─────────────────────────────────────────── */
+  .testimonial-grid { display:grid; grid-template-columns:1fr; gap:24px; max-width:1200px; margin:0 auto; }
+  @media(min-width:1024px){ .testimonial-grid { grid-template-columns:repeat(3,1fr); } }
+  .testimonial-card { padding:40px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; position:relative; display:flex; flex-direction:column; justify-content:space-between; }
+  .testimonial-card::before { content:'"'; position:absolute; top:20px; left:30px; font-family:var(--font-display); font-size:4rem; color:var(--fio-text-4); line-height:1; }
+  .testimonial-text { font-size:0.95rem; line-height:1.7; color:var(--fio-text-2); font-style:italic; margin-bottom:28px; padding-left:20px; position:relative; z-index:1; }
+  .testimonial-author { display:flex; align-items:center; gap:14px; margin-top:auto; }
+  .testimonial-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.85rem; flex-shrink:0; }
+  .testimonial-avatar.anchor { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+  .testimonial-avatar.vault { background:linear-gradient(135deg,#06b6d4,#3b82f6); }
+  .testimonial-avatar.terra { background:linear-gradient(135deg,#f59e0b,#ef4444); }
+  .testimonial-info h4 { font-size:0.95rem; font-weight:600; color:var(--fio-text); }
+  .testimonial-info p { font-size:0.8rem; color:var(--fio-text-3); }
+
+  /* ─── FAQ ──────────────────────────────────────────────────── */
+  .faq-list { max-width:800px; margin:0 auto; }
+  .faq-item {
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    padding:24px 0;
+    cursor:pointer;
+    transition:background 0.2s;
+  }
+  .faq-item:hover { background:rgba(255,255,255,0.01); }
+  .faq-question {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:1rem; font-weight:500; color:var(--fio-text);
+    padding-right:8px;
+  }
+  .faq-question svg { width:18px; height:18px; color:var(--fio-text-3); transition:transform 0.3s; flex-shrink:0; margin-left:16px; }
+  .faq-item.active .faq-question svg { transform:rotate(180deg); color:var(--fio-gold); }
+  .faq-answer {
+    max-height:0; overflow:hidden; transition:max-height 0.4s cubic-bezier(0.16,1,0.3,1), padding 0.3s;
+    font-size:0.9rem; line-height:1.7; color:var(--fio-text-2);
+  }
+  .faq-item.active .faq-answer { max-height:300px; padding-top:14px; }
+  .faq-answer a { color:var(--fio-gold); }
+
+  /* ─── Comparison Table ─────────────────────────────────────── */
+  .compare-wrap { overflow-x:auto; margin-top:48px; }
+  .compare-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+  .compare-table thead th { padding:16px 20px; text-align:left; font-family:var(--font-display); font-weight:500; color:var(--fio-text); border-bottom:2px solid var(--fio-border); background:var(--fio-surface-2); }
+  .compare-table thead th:first-child { border-radius:12px 0 0 0; }
+  .compare-table thead th:last-child { border-radius:0 12px 0 0; }
+  .compare-table tbody td { padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--fio-text-2); vertical-align:top; }
+  .compare-table tbody tr:hover td { background:rgba(255,255,255,0.015); }
+  .compare-table .check { color:var(--fio-success); font-weight:700; }
+  .compare-table .dash { color:var(--fio-text-4); }
+  .compare-table .td-gold { color:var(--fio-gold); font-weight:600; }
+
+  /* ─── CTA Banner ───────────────────────────────────────────── */
+  .cta-banner { padding:100px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
+  .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
+  .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
+  .cta-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:500; color:var(--fio-text); margin-bottom:16px; }
+  .cta-desc { font-size:1.05rem; color:var(--fio-text-2); margin-bottom:32px; line-height:1.7; }
+  .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  /* ─── Footer ───────────────────────────────────────────────── */
+  .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
+  .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
+  @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+  @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
+  .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .footer-brand img { height:26px; width:auto; border-radius:6px; }
+  .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
+  .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
+  .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
+  .footer-col a:hover { color:var(--fio-text-2); }
+  .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
+  @media(max-width:640px){ .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
+
+  /* ─── Mobile Menu ──────────────────────────────────────────── */
+  .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
+  .mobile-menu.active { display:block; }
+  .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
+  .mobile-menu .lang-row { display:flex; gap:16px; margin-top:16px; }
+  .mobile-menu .lang-row a { font-size:0.9rem; color:var(--fio-text-3); border:none; padding:8px 0; }
+</style>
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to content</a>
 
-  <!-- Navigation -->
-  <nav class="nav" aria-label="Main navigation">
-    <div class="nav-inner">
-      <a href="/" class="nav-logo">
-        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
-        FidesOrigin
-      </a>
-      <div class="nav-left">
-        <a href="/">Home</a>
-        <a href="/#features">Features</a>
-        <a href="/use-cases/stablecoin-compliance.html">Use Cases</a>
-        <a href="/docs/">Docs</a>
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+  <a href="/" onclick="closeMobileMenu()">Home</a>
+  <a href="/#products" onclick="closeMobileMenu()">Products</a>
+  <a href="/#architecture" onclick="closeMobileMenu()">Architecture</a>
+  <a href="/pricing.html" onclick="closeMobileMenu()">Pricing</a>
+  <a href="/docs/" onclick="closeMobileMenu()">Documentation</a>
+  <div class="lang-row">
+    <a href="/pricing.html">EN</a>
+    <a href="/cn/pricing.html">CN</a>
+    <a href="/tw/pricing.html">TW</a>
+    <a href="/jp/pricing.html">JP</a>
+  </div>
+  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
+</div>
+
+<!-- Navigation -->
+<header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/architecture.html">Architecture</a>
+      <a href="/use-cases/stablecoin-compliance.html">Use Cases</a>
+      <a href="/docs/">Docs</a>
+      <div class="lang-switch">
+        <a href="/pricing.html" class="active">EN</a>
+        <a href="/cn/pricing.html">CN</a>
+        <a href="/tw/pricing.html">TW</a>
+        <a href="/jp/pricing.html">JP</a>
       </div>
-      <div class="nav-actions">
-        <div class="lang-dropdown">
-          <button id="langToggleBtn" aria-label="Language">
-            EN
-            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div id="langMenu">
-            <a href="/pricing.html">English</a>
-            <a href="/cn/pricing.html">简体中文</a>
-            <a href="/tw/pricing.html">繁體中文</a>
-            <a href="/jp/pricing.html">日本語</a>
-          </div>
-        </div>
-        <div class="nav-divider"></div>
-        <a href="/#contact" class="nav-cta">Get Started</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">Request Demo</a>
+    </nav>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- HERO                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade-up anim-d1">
+        <span class="hero-badge-dot"></span>
+        <span>Pay Per Transaction, Not Per Year</span>
       </div>
-      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
+      <h1 class="hero-title anim-fade-up anim-d2">
+        Compliance That Scales<br>
+        <span class="hero-title-accent">With Every Transaction</span>
+      </h1>
+      <p class="hero-subtitle anim-fade-up anim-d3">
+        Start at 10&cent; per transaction. No annual contracts, no hidden fees.
+        The only on-chain compliance infrastructure that costs less as you grow.
+      </p>
+      <div class="hero-ctas anim-fade-up anim-d4" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="#pricing-cards" class="btn-primary">
+          View Plans
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </a>
+        <a href="#roi-calculator" class="btn-secondary">
+          Try ROI Calculator
+        </a>
+      </div>
     </div>
-  </nav>
+  </div>
+</section>
 
-  <main id="main-content">
-    <!-- Hero -->
-    <section class="pricing-hero">
-      <div class="container">
-        <div class="reveal">
-          <p class="micro">Pricing</p>
-          <h1 class="display">Simple, transparent <span>pricing</span></h1>
-          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">Start free. Scale as you grow. No hidden fees, no long-term contracts.</p>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PRICING CARDS                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="pricing-cards" style="padding-top:60px;">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Pricing Plans</div>
+      <h2 class="section-title">Simple, Predictable, Per-Transaction</h2>
+      <p class="section-desc">Three tiers built for every stage of growth. Start free, upgrade when you need more.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="pricing-card reveal">
+        <div class="pricing-tier">Starter</div>
+        <div class="pricing-target">For Early-Stage Stablecoin Projects</div>
+        <div class="pricing-rate">10&cent;<span>/ transaction</span></div>
+        <div class="pricing-subrate">+ 0.05% of transaction value</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> First 10,000 tx/month free</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Basic risk scanning</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Ethereum + Base mainnet</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Email support (48h)</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> REST API access</li>
+          <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> AI-enhanced risk profiling</li>
+          <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Mempool monitoring</li>
+        </ul>
+        <a href="/docs/" class="btn btn-secondary pricing-cta">Start Free</a>
+      </div>
+
+      <!-- Professional (Featured) -->
+      <div class="pricing-card featured reveal reveal-delay-1">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-tier">Professional</div>
+        <div class="pricing-target">For Growing Institutions</div>
+        <div class="pricing-rate">25&cent;<span>/ transaction</span></div>
+        <div class="pricing-subrate">+ 0.02% of transaction value</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> First 50,000 tx/month free</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> AI-enhanced risk profiling</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Real-time Mempool monitoring</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> All 6+ networks supported</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Priority support (4h SLA)</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Custom policy templates</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> WebSocket real-time feed</li>
+        </ul>
+        <a href="mailto:contact@fidesorigin.com" class="btn btn-primary pricing-cta">Get Started — $2,999/mo</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card reveal reveal-delay-2">
+        <div class="pricing-tier">Enterprise</div>
+        <div class="pricing-target">For Large Financial Institutions</div>
+        <div class="pricing-rate">Custom</div>
+        <div class="pricing-subrate">Volume-based pricing</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited transaction volume</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Full Guard engine access</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Bespoke policy strategies</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Dedicated account manager</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 99.99% SLA guarantee</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> On-premise deployment option</li>
+          <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Custom contract development</li>
+        </ul>
+        <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary pricing-cta">Contact Sales</a>
+      </div>
+    </div>
+
+    <div class="pricing-note reveal">
+      <p>All plans include access to our <a href="/docs/sdk.html">SDK</a>, <a href="/docs/api.html">REST API</a>, and <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">open-source contracts</a>. Volume discounts apply automatically at 100K+ transactions/month. <a href="mailto:contact@fidesorigin.com">Talk to sales</a> for custom pricing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ROI CALCULATOR                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="section roi-section" id="roi-calculator">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">ROI Calculator</div>
+      <h2 class="section-title">See Your Savings in Real Time</h2>
+      <p class="section-desc">Compare Chainalysis annual subscription costs with FidesOrigin's per-transaction model.</p>
+    </div>
+    <div class="roi-grid">
+      <div class="calc-panel reveal">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12h8M12 8v8"/></svg>
+          Adjust Your Parameters
+        </h3>
+        <div class="calc-row">
+          <div class="calc-label">Monthly Transactions <span id="txVal">100,000</span></div>
+          <input type="range" class="calc-slider" id="txSlider" min="1000" max="2000000" step="1000" value="100000">
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Average Transaction Value <span id="avgVal">$1,000</span></div>
+          <input type="range" class="calc-slider" id="avgSlider" min="10" max="100000" step="10" value="1000">
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Current Annual Compliance Cost <span id="currentVal">$150,000</span></div>
+          <input type="range" class="calc-slider" id="currentSlider" min="10000" max="1000000" step="5000" value="150000">
         </div>
       </div>
-    </section>
-
-    <!-- Pricing Cards -->
-    <section class="section" style="padding-top: 0;">
-      <div class="container">
-        <div class="pricing-grid">
-          <!-- Starter -->
-          <div class="pricing-card reveal">
-            <div class="pricing-name">Starter</div>
-            <div class="pricing-desc">For developers and small projects</div>
-            <div class="pricing-price">$0<span>/month</span></div>
-            <ul class="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 1,000 API calls/month</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Sepolia testnet access</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Community support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Basic risk screening</li>
-              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Mainnet deployment</li>
-              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Custom policies</li>
-            </ul>
-            <a href="/docs/" class="btn btn-secondary pricing-cta">Start Free</a>
-          </div>
-
-          <!-- Growth (Featured) -->
-          <div class="pricing-card featured reveal">
-            <div class="pricing-name">Growth</div>
-            <div class="pricing-desc">For growing protocols and stablecoin issuers</div>
-            <div class="pricing-price">$499<span>/month</span></div>
-            <ul class="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 100,000 API calls/month</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Mainnet + testnet</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Priority email support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Custom risk policies</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Quarantine vault</li>
-              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Dedicated infrastructure</li>
-            </ul>
-            <a href="/contact.html" class="btn btn-primary pricing-cta">Get Started</a>
-          </div>
-
-          <!-- Enterprise -->
-          <div class="pricing-card reveal">
-            <div class="pricing-name">Enterprise</div>
-            <div class="pricing-desc">For institutions and large-scale deployments</div>
-            <div class="pricing-price">Custom</div>
-            <ul class="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited API calls</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Multi-chain deployment</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 24/7 dedicated support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> SLA guarantee (99.99%)</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Custom contract development</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> On-premise option</li>
-            </ul>
-            <a href="/contact.html" class="btn btn-secondary pricing-cta">Contact Sales</a>
-          </div>
+      <div class="result-panel reveal reveal-delay-2">
+        <h3>Your Estimated Savings</h3>
+        <div class="result-big" id="savingsDisplay">$0</div>
+        <div class="result-big-label">Annual Savings</div>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--fio-border),transparent);margin:20px 0;"></div>
+        <div class="result-row">
+          <span>Chainalysis (est. annual)</span>
+          <span class="val negative" id="chainalysisCost">$150,000</span>
         </div>
-
-        <div class="pricing-note reveal">
-          <p>All plans include access to our <a href="/docs/sdk.html">SDK</a>, <a href="/docs/api.html">REST API</a>, and <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">open-source contracts</a>. Need a custom solution? <a href="mailto:contact@fidesorigin.com">Let's talk</a>.</p>
+        <div class="result-row">
+          <span>FidesOrigin (per-tx model)</span>
+          <span class="val" id="fidesCost">$0</span>
+        </div>
+        <div class="result-row">
+          <span>Net Savings</span>
+          <span class="val positive" id="netSavings">$0</span>
+        </div>
+        <div class="result-row">
+          <span>ROI</span>
+          <span class="val positive" id="roiDisplay">0%</span>
+        </div>
+        <div class="result-bar-wrap">
+          <div class="result-bar-label">
+            <span>Cost Efficiency</span>
+            <span id="efficiencyLabel">0%</span>
+          </div>
+          <div class="result-bar-track">
+            <div class="result-bar-fill" id="efficiencyBar" style="width:0%"></div>
+            <div class="result-bar-marker" id="breakEvenMarker" style="left:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--fio-text-4);margin-top:6px;font-family:var(--font-mono);">
+            <span>FidesOrigin</span>
+            <span>Break-even</span>
+            <span>Chainalysis</span>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- Comparison Table -->
-    <section class="section bg-secondary">
-      <div class="container">
-        <div class="reveal section-intro">
-          <p class="micro">Compare</p>
-          <h2 class="h2 section-title">Feature comparison</h2>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- WHY PER-TRANSACTION                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Business Model</div>
+      <h2 class="section-title">Why Per-Transaction Beats Annual SaaS</h2>
+      <p class="section-desc">The compliance industry charges you whether you use the service or not. We believe infrastructure should cost less as you optimize.</p>
+    </div>
+    <div class="model-grid">
+      <div class="model-card reveal">
+        <div class="model-icon purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         </div>
-        <div class="compare-table-wrap reveal">
-          <table class="compare-table">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Starter</th>
-                <th>Growth</th>
-                <th>Enterprise</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>API Calls / Month</td><td>1,000</td><td>100,000</td><td>Unlimited</td></tr>
-              <tr><td>Networks</td><td>Sepolia</td><td>Mainnet + Testnet</td><td>Multi-chain</td></tr>
-              <tr><td>Risk Screening</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Quarantine Vault</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Custom Policies</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Subgraph Access</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Support</td><td>Community</td><td>Priority Email</td><td>24/7 Dedicated</td></tr>
-              <tr><td>SLA</td><td class="dash">—</td><td>99.9%</td><td>99.99%</td></tr>
-              <tr><td>Audit Reports</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Custom Development</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td></tr>
-            </tbody>
-          </table>
+        <h3>Pay for What You Use</h3>
+        <p>Annual SaaS subscriptions cost <span class="highlight">$50K&ndash;$500K</span> regardless of transaction volume. With per-transaction pricing, you only pay when transactions are screened. No usage, no bill.</p>
+      </div>
+      <div class="model-card reveal reveal-delay-1">
+        <div class="model-icon gold">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <h3>Economies of Scale</h3>
+        <p>As your transaction volume grows, your <span class="highlight">effective per-transaction cost drops</span>. Volume discounts kick in automatically at 100K+ transactions/month. The more you grow, the more you save.</p>
+      </div>
+      <div class="model-card reveal reveal-delay-2">
+        <div class="model-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3>Zero Hidden Fees</h3>
+        <p>No setup fees, no overage charges, no surprise invoices. The price you see is the price you pay: <span class="highlight">10&cent;&ndash;50&cent; per transaction</span> + a small percentage of value. Fully transparent.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- FEATURE COMPARISON                                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Compare</div>
+      <h2 class="section-title">Plan Comparison at a Glance</h2>
+    </div>
+    <div class="compare-wrap reveal">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:30%">Feature</th>
+            <th style="width:23%">Starter</th>
+            <th style="width:23%">Professional</th>
+            <th style="width:24%">Enterprise</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Pricing</strong></td><td>10&cent;/tx + 0.05%</td><td class="td-gold">25&cent;/tx + 0.02%</td><td>Custom</td></tr>
+          <tr><td><strong>Monthly Free Tier</strong></td><td>10,000 tx</td><td>50,000 tx</td><td>Unlimited</td></tr>
+          <tr><td><strong>Risk Scanning</strong></td><td class="check">&#10003; Basic</td><td class="check">&#10003; AI-Enhanced</td><td class="check">&#10003; Full Suite</td></tr>
+          <tr><td><strong>Networks</strong></td><td>Ethereum, Base</td><td>All 6+ networks</td><td>All + custom</td></tr>
+          <tr><td><strong>Mempool Monitoring</strong></td><td class="dash">&mdash;</td><td class="check">&#10003; Real-time</td><td class="check">&#10003; Real-time</td></tr>
+          <tr><td><strong>Guard Pre-Check</strong></td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003; Full Engine</td></tr>
+          <tr><td><strong>Custom Policies</strong></td><td class="dash">&mdash;</td><td class="check">&#10003; Templates</td><td class="check">&#10003; Bespoke</td></tr>
+          <tr><td><strong>API Access</strong></td><td>REST</td><td>REST + WebSocket</td><td>All + GraphQL</td></tr>
+          <tr><td><strong>Support</strong></td><td>Email (48h)</td><td>Priority (4h SLA)</td><td>Dedicated 24/7</td></tr>
+          <tr><td><strong>SLA</strong></td><td class="dash">&mdash;</td><td>99.9%</td><td>99.99%</td></tr>
+          <tr><td><strong>Audit Reports</strong></td><td class="dash">&mdash;</td><td class="check">&#10003; Monthly</td><td class="check">&#10003; On-demand</td></tr>
+          <tr><td><strong>On-Premise</strong></td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TESTIMONIALS                                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Trusted By</div>
+      <h2 class="section-title">What Our Partners Say</h2>
+    </div>
+    <div class="testimonial-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-text">
+          "FidesOrigin automated our entire compliance workflow. What used to take a 12-person team now runs fully on-chain. We reduced operational overhead by 80% while exceeding HKMA and MAS regulatory requirements."
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar anchor">MC</div>
+          <div class="testimonial-info">
+            <h4>Marcus Chen</h4>
+            <p>Chief Compliance Officer, Anchor Digital</p>
+          </div>
         </div>
       </div>
-    </section>
-  </main>
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-text">
+          "The TypeScript SDK was production-ready in two weeks. Their policy-as-code model let us embed compliance directly into our smart wallet flows &mdash; no off-chain black boxes, fully deterministic execution."
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar vault">AR</div>
+          <div class="testimonial-info">
+            <h4>Alex Rutherford</h4>
+            <p>CTO, VaultFlow</p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-text">
+          "Tokenizing real estate across three jurisdictions meant navigating a maze of local regulations. FidesOrigin's programmable compliance layer gave us a single, auditable framework that satisfied every regulator."
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar terra">PS</div>
+          <div class="testimonial-info">
+            <h4>Priya Sharma</h4>
+            <p>Founder &amp; CEO, TerraBlock</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-grid">
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- FAQ                                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">FAQ</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item reveal" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          How does the billing work?
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="faq-answer">
+          You are billed monthly based on actual transactions screened. Starter plan: 10&cent; per transaction after the first 10,000 free transactions each month, plus 0.05% of transaction value. Professional plan: 25&cent; per transaction after the first 50,000 free, plus 0.02% of value. Enterprise plans are custom-negotiated. No annual contracts required.
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-1" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          Which blockchains are supported?
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="faq-answer">
+          FidesOrigin currently supports Ethereum, Base, Polygon, Arbitrum, Optimism, and Avalanche C-Chain. Starter plans include Ethereum and Base mainnet. Professional and Enterprise plans unlock all supported networks. Custom chain integrations are available for Enterprise clients.
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-2" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          Can I create custom compliance policies?
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="faq-answer">
+          Yes. Professional plans include pre-built policy templates (KYC/AML, transaction limits, geo-fencing) that can be customized via our Policy Engine. Enterprise plans offer fully bespoke policy strategies developed with your compliance team and deployed as on-chain smart contract modules.
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-3" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          How is my data secured?
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="faq-answer">
+          All compliance decisions are recorded immutably on-chain with cryptographic proofs. No sensitive customer data is stored off-chain. Our smart contracts have undergone multi-round third-party security audits. Enterprise plans include optional on-premise deployment for organizations with strict data residency requirements.
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-4" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          What happens when I exceed my free tier?
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="faq-answer">
+          Transactions continue to be processed seamlessly. You are billed for the overage at your plan's per-transaction rate at the end of the billing cycle. We never block transactions due to billing. Volume discounts are applied automatically when you consistently exceed 100,000 transactions per month.
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-1" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          Can I switch plans at any time?
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="faq-answer">
+          Absolutely. You can upgrade or downgrade between Starter and Professional plans at any time. Changes take effect at the start of the next billing cycle. Enterprise contracts have custom terms negotiated with your account manager.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- CTA BANNER                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2 class="cta-title">Ready to Cut Compliance Costs by 60%?</h2>
+      <p class="cta-desc">
+        Join the growing number of stablecoin issuers and DeFi protocols
+        switching from annual SaaS subscriptions to per-transaction compliance.
+      </p>
+      <div class="cta-ctas">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">
+          Request Demo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+        </a>
+        <a href="/docs/" class="btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Read Docs
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
         <div class="footer-brand">
-          <a href="/" class="nav-logo">
-            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
-            FidesOrigin
-          </a>
-          <p>Programmable on-chain compliance for the future of finance.</p>
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
         </div>
-        <div class="footer-col">
-          <h4>Product</h4>
-          <a href="/#features">Features</a>
-          <a href="/pricing.html">Pricing</a>
-          <a href="/use-cases/stablecoin-compliance.html">Use Cases</a>
-          <a href="/admin/">Dashboard</a>
-        </div>
-        <div class="footer-col">
-          <h4>Developers</h4>
-          <a href="/docs/">Documentation</a>
-          <a href="/docs/api.html">API Reference</a>
-          <a href="/docs/sdk.html">SDK</a>
-          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
-        </div>
-        <div class="footer-col">
-          <h4>Company</h4>
-          <a href="mailto:contact@fidesorigin.com">Contact</a>
-          <a href="/blog/">Blog</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/terms.html">Terms</a>
-        </div>
+        <p class="footer-desc">Execution-grade on-chain compliance protocol for stablecoins, RWA tokenization, and institutional DeFi.</p>
       </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
-        <p>Built with &hearts; for the on-chain financial world.</p>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/#products">Risk Radar</a>
+        <a href="/#products">Guard Engine</a>
+        <a href="/#products">Policy Engine</a>
+        <a href="/#products">Audit Shield</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs/">Documentation</a>
+        <a href="/docs/api">API Reference</a>
+        <a href="/changelog.html">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/about.html">About</a>
+        <a href="/case-studies.html">Case Studies</a>
+        <a href="mailto:contact@fidesorigin.com">Contact</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
       </div>
     </div>
-  </footer>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT License.</span>
+      <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
+    </div>
+  </div>
+</footer>
 
-  <script src="/wallet-connect.js"></script>
-  <script>
-    // Mobile menu
-    (function() {
-      var menu = document.getElementById('mobileMenu');
-      var btn = document.querySelector('.nav-mobile-btn');
-      if (btn) btn.addEventListener('click', function() {
-        var active = menu.classList.toggle('active');
-        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
-      });
-    })();
-    // Language menu
-    (function() {
-      var btn = document.getElementById('langToggleBtn');
-      var menu = document.getElementById('langMenu');
-      if (btn) btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-      });
-      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
-    })();
-    // Scroll reveal
-    (function() {
-      var reveals = document.querySelectorAll('.reveal');
-      var observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
-        });
-      }, { threshold: 0.1 });
-      reveals.forEach(function(el) { observer.observe(el); });
-    })();
-  </script>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCRIPTS                                                        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<script>
+// ─── Scroll Reveal ──────────────────────────────────────────────
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ─── Nav Scroll Effect ──────────────────────────────────────────
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) { nav.classList.add('nav-scrolled'); }
+  else { nav.classList.remove('nav-scrolled'); }
+}, { passive: true });
+
+// ─── Mobile Menu ────────────────────────────────────────────────
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('active');
+}
+
+// ─── FAQ Accordion ──────────────────────────────────────────────
+function toggleFaq(item) {
+  const isActive = item.classList.contains('active');
+  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('active'));
+  if (!isActive) item.classList.add('active');
+}
+
+// ─── ROI Calculator ─────────────────────────────────────────────
+(function() {
+  const txSlider = document.getElementById('txSlider');
+  const avgSlider = document.getElementById('avgSlider');
+  const currentSlider = document.getElementById('currentSlider');
+  const txVal = document.getElementById('txVal');
+  const avgVal = document.getElementById('avgVal');
+  const currentVal = document.getElementById('currentVal');
+  const savingsDisplay = document.getElementById('savingsDisplay');
+  const chainalysisCost = document.getElementById('chainalysisCost');
+  const fidesCost = document.getElementById('fidesCost');
+  const netSavings = document.getElementById('netSavings');
+  const roiDisplay = document.getElementById('roiDisplay');
+  const efficiencyBar = document.getElementById('efficiencyBar');
+  const efficiencyLabel = document.getElementById('efficiencyLabel');
+  const breakEvenMarker = document.getElementById('breakEvenMarker');
+
+  function formatCurrency(n) {
+    if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+    return '$' + n.toFixed(0);
+  }
+
+  function formatNumber(n) {
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+    return n.toString();
+  }
+
+  function calculate() {
+    const monthlyTx = parseInt(txSlider.value, 10);
+    const avgValue = parseInt(avgSlider.value, 10);
+    const currentAnnual = parseInt(currentSlider.value, 10);
+
+    txVal.textContent = formatNumber(monthlyTx);
+    avgVal.textContent = formatCurrency(avgValue);
+    currentVal.textContent = formatCurrency(currentAnnual);
+
+    // FidesOrigin cost: Professional plan (25c per tx after 50k free, + 0.02% of value)
+    const freeTx = 50000;
+    const chargeableTx = Math.max(0, monthlyTx - freeTx);
+    const monthlyFidesTxCost = chargeableTx * 0.25;
+    const monthlyFidesPctCost = monthlyTx * avgValue * 0.0002;
+    const monthlyFidesTotal = monthlyFidesTxCost + monthlyFidesPctCost;
+    const annualFides = monthlyFidesTotal * 12;
+
+    // Chainalysis: use current annual cost
+    const annualChainalysis = currentAnnual;
+
+    const savings = annualChainalysis - annualFides;
+    const roi = annualFides > 0 ? ((savings / annualFides) * 100) : 0;
+
+    savingsDisplay.textContent = formatCurrency(Math.max(0, savings));
+    chainalysisCost.textContent = formatCurrency(annualChainalysis);
+    fidesCost.textContent = formatCurrency(annualFides);
+    netSavings.textContent = (savings >= 0 ? '+' : '') + formatCurrency(savings);
+    netSavings.className = 'val ' + (savings >= 0 ? 'positive' : 'negative');
+    roiDisplay.textContent = (roi >= 0 ? '+' : '') + roi.toFixed(0) + '%';
+    roiDisplay.className = 'val ' + (roi >= 0 ? 'positive' : 'negative');
+
+    // Efficiency bar: position of FidesOrigin cost relative to Chainalysis
+    const maxCost = Math.max(annualChainalysis, annualFides);
+    const efficiency = maxCost > 0 ? (1 - (annualFides / maxCost)) * 100 : 0;
+    efficiencyBar.style.width = Math.max(0, efficiency) + '%';
+    efficiencyLabel.textContent = efficiency.toFixed(0) + '% cheaper';
+
+    // Break-even marker
+    const breakEvenRatio = maxCost > 0 ? (annualChainalysis / maxCost) * 100 : 50;
+    breakEvenMarker.style.left = Math.min(100, Math.max(0, breakEvenRatio)) + '%';
+  }
+
+  txSlider.addEventListener('input', calculate);
+  avgSlider.addEventListener('input', calculate);
+  currentSlider.addEventListener('input', calculate);
+
+  // Initial calculation
+  calculate();
+})();
+</script>
+<script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </body>
 </html>
