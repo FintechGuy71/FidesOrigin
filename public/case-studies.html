@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
-  <meta name="theme-color" content="#05060a">
+  <meta name="theme-color" content="#0a0a0a">
   <title>Case Studies — FidesOrigin | On-Chain Compliance in Production</title>
-  <meta name="description" content="See how leading stablecoin issuers, RWA platforms, and institutional wallets use FidesOrigin for deterministic on-chain compliance.">
+  <meta name="description" content="See how leading stablecoin issuers, RWA platforms, and DeFi protocols use FidesOrigin for deterministic on-chain compliance.">
   <meta property="og:title" content="Case Studies — FidesOrigin">
   <meta property="og:description" content="See how leading protocols use FidesOrigin for on-chain compliance.">
   <meta property="og:type" content="website">
@@ -21,421 +21,187 @@
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/case-studies.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/brand/logo-dark-icon.png">
-  <style>
-    :root {
-      --fio-ink:#05060a; --fio-ink-soft:#080a10; --fio-surface:#0c0e18;
-      --fio-surface-2:#111320; --fio-surface-3:#181b28; --fio-elevated:#1e2230;
-      --fio-border:#252a3a; --fio-border-light:#2e3448;
-      --fio-text:#f0f1f5; --fio-text-2:#9a9fad; --fio-text-3:#5e6478; --fio-text-4:#3a4055;
-      --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-accent-glow:#9b8ed80a;
-      --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-gold-glow:#d4b87a10;
-      --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
-      --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      --font-mono:'Geist Mono','JetBrains Mono','SF Mono',monospace;
-    }
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
-    body { font-family:var(--font-sans); background:var(--fio-ink); color:var(--fio-text); line-height:1.6; overflow-x:hidden; }
-    a { color:inherit; text-decoration:none; }
-    img { max-width:100%; display:block; }
-    .container { max-width:1200px; margin:0 auto; padding:0 24px; }
-    @media(max-width:768px){ .container { padding:0 16px; } }
-
-    /* Nav */
-    .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.85); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); }
-    .nav-inner { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
-    .nav-logo { display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; justify-self:start; }
-    .nav-logo img { height:28px; width:auto; border-radius:6px; }
-    .nav-links { display:flex; align-items:center; gap:32px; justify-self:center; }
-    .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
-    .nav-links a:hover { color:var(--fio-text); }
-    .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
-    .nav-links a:hover::after { width:100%; }
-    .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); justify-self:end; }
-    .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
-    .nav-mobile-btn { display:none; background:none; border:none; color:var(--fio-text-2); cursor:pointer; padding:8px; }
-    @media(max-width:900px){ .nav-links { display:none; } .nav-cta { display:none; } .nav-mobile-btn { display:block; grid-column:3; justify-self:end; } }
-
-    /* Mobile Menu */
-    .mobile-menu { display:none; position:fixed; inset:0; z-index:999; background:rgba(5,6,10,0.97); backdrop-filter:blur(20px); padding:80px 24px 24px; }
-    .mobile-menu.active { display:block; }
-    .mobile-menu a { display:block; padding:16px 0; font-size:1.1rem; color:var(--fio-text); border-bottom:1px solid rgba(255,255,255,0.04); }
-    .mobile-menu-close { position:absolute; top:16px; right:24px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; font-size:1.5rem; }
-
-    /* Skip link */
-    .skip-link { position:absolute; top:-40px; left:0; padding:8px 16px; background:var(--fio-gold); color:var(--fio-ink); font-weight:600; font-size:0.875rem; z-index:9999; border-radius:0 0 6px 0; transition:top 0.2s; }
-    .skip-link:focus { top:0; }
-
-    /* Hero */
-    .cs-hero { position:relative; padding:160px 0 60px; text-align:center; overflow:hidden; }
-    .cs-hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(155,142,216,0.06) 0%,transparent 60%),radial-gradient(ellipse 50% 30% at 85% 40%,rgba(212,184,122,0.03) 0%,transparent 50%); }
-    .cs-hero .container { position:relative; z-index:1; }
-    .micro { font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-gold); margin-bottom:16px; }
-    .display { font-family:var(--font-display); font-size:clamp(2.2rem,5vw,3.8rem); font-weight:500; line-height:1.1; letter-spacing:-0.025em; color:var(--fio-text); }
-    .display span { background:linear-gradient(135deg,var(--fio-accent) 0%,var(--fio-gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .lead { font-size:1.1rem; color:var(--fio-text-2); max-width:600px; margin:20px auto 0; line-height:1.7; }
-
-    /* Section */
-    .section { padding:100px 0; position:relative; }
-    @media(min-width:768px){ .section { padding:130px 0; } }
-    .section-alt { background:var(--fio-ink-soft); }
-
-    /* Case Study Card */
-    .case-card { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; padding:48px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; margin-bottom:32px; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); position:relative; overflow:hidden; }
-    .case-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(155,142,216,0.15),transparent); opacity:0; transition:opacity 0.4s; }
-    .case-card:hover::before { opacity:1; }
-    .case-card:hover { border-color:var(--fio-border-light); transform:translateY(-3px); box-shadow:0 32px 64px rgba(0,0,0,0.35); }
-    .case-card.reverse { direction:rtl; }
-    .case-card.reverse > * { direction:ltr; }
-    .case-tag { display:inline-block; font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--fio-accent); padding:4px 12px; border-radius:4px; background:var(--fio-accent-dim); margin-bottom:16px; font-family:var(--font-mono); }
-    .case-tag.gold { color:var(--fio-gold); background:var(--fio-gold-dim); }
-    .case-tag.green { color:var(--fio-success); background:rgba(92,230,138,0.08); }
-    .case-card h3 { font-family:var(--font-display); font-size:1.35rem; font-weight:600; color:var(--fio-text); margin-bottom:12px; }
-    .case-card p { color:var(--fio-text-2); line-height:1.7; margin-bottom:16px; font-size:0.92rem; }
-    .case-card p:last-of-type { margin-bottom:0; }
-    .case-section-label { font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--fio-text-3); margin:20px 0 8px; font-family:var(--font-mono); }
-    .case-stats { display:flex; gap:32px; margin-top:24px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.04); }
-    .case-stat .num { font-family:var(--font-mono); font-size:1.5rem; font-weight:700; color:var(--fio-gold); line-height:1; }
-    .case-stat .label { font-size:0.75rem; color:var(--fio-text-3); margin-top:4px; }
-
-    /* Code block inside case */
-    .case-code { background:#0a0c14; border:1px solid var(--fio-border); border-radius:14px; overflow:hidden; }
-    .case-code-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--fio-border); }
-    .case-code-header span { font-size:0.75rem; color:var(--fio-text-3); font-family:var(--font-mono); }
-    .case-code pre { padding:20px; overflow-x:auto; font-family:var(--font-mono); font-size:0.78rem; line-height:1.7; color:var(--fio-text-2); margin:0; }
-    .case-code .kw { color:#c678dd; }
-    .case-code .fn { color:#61afef; }
-    .case-code .str { color:#98c379; }
-    .case-code .num { color:#d19a66; }
-    .case-code .cm { color:#5c6370; font-style:italic; }
-    .case-code .ty { color:#e5c07b; }
-
-    @media(max-width:900px){
-      .case-card { grid-template-columns:1fr; gap:32px; padding:32px; }
-      .case-card.reverse { direction:ltr; }
-      .case-stats { flex-wrap:wrap; gap:20px; }
-    }
-
-    /* Testimonials */
-    .section-header { text-align:center; max-width:640px; margin:0 auto 64px; }
-    .section-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.75rem; font-weight:500; text-transform:uppercase; letter-spacing:0.1em; color:var(--fio-text-3); margin-bottom:16px; padding:4px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; }
-    .section-title { font-family:var(--font-display); font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:500; line-height:1.15; letter-spacing:-0.02em; color:var(--fio-text); margin-bottom:16px; }
-    .testimonial-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1200px; margin:0 auto; }
-    .testimonial-card { padding:36px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:18px; position:relative; display:flex; flex-direction:column; justify-content:space-between; }
-    .testimonial-card::before { content:'"'; position:absolute; top:16px; left:24px; font-family:var(--font-display); font-size:4rem; color:var(--fio-text-4); line-height:1; }
-    .testimonial-text { font-size:0.92rem; line-height:1.7; color:var(--fio-text-2); font-style:italic; margin-bottom:28px; padding-left:16px; position:relative; z-index:1; }
-    .testimonial-author { display:flex; align-items:center; gap:14px; margin-top:auto; }
-    .testimonial-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.85rem; flex-shrink:0; }
-    .testimonial-avatar.c1 { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
-    .testimonial-avatar.c2 { background:linear-gradient(135deg,#06b6d4,#3b82f6); }
-    .testimonial-avatar.c3 { background:linear-gradient(135deg,#f59e0b,#ef4444); }
-    .testimonial-info h4 { font-size:0.95rem; font-weight:600; color:var(--fio-text); }
-    .testimonial-info p { font-size:0.8rem; color:var(--fio-text-3); }
-    @media(max-width:1024px){ .testimonial-grid { grid-template-columns:1fr; max-width:600px; } }
-
-    /* CTA */
-    .cta-banner { padding:100px 0; position:relative; overflow:hidden; background:var(--fio-ink-soft); }
-    .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(155,142,216,0.05) 0%,transparent 70%); }
-    .cta-inner { position:relative; z-index:1; text-align:center; max-width:600px; margin:0 auto; }
-    .cta-title { font-family:var(--font-display); font-size:clamp(1.6rem,3.5vw,2.4rem); font-weight:500; color:var(--fio-text); margin-bottom:16px; }
-    .cta-desc { font-size:1.05rem; color:var(--fio-text-2); margin-bottom:32px; line-height:1.7; }
-    .cta-ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
-    .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:var(--fio-gold); color:var(--fio-ink); font-size:0.875rem; font-weight:600; border-radius:10px; border:none; cursor:pointer; transition:all 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow:0 0 32px rgba(212,184,122,0.2); text-decoration:none; }
-    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(212,184,122,0.4); }
-    .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding:13px 28px; background:transparent; color:var(--fio-text); font-size:0.875rem; font-weight:500; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.25s; text-decoration:none; }
-    .btn-secondary:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.2); }
-
-    /* Footer */
-    .footer { background:var(--fio-ink); border-top:1px solid rgba(255,255,255,0.04); padding:64px 0 32px; }
-    .footer-grid { display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:48px; margin-bottom:48px; }
-    .footer-brand { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-    .footer-brand img { height:26px; width:auto; border-radius:5px; }
-    .footer-brand span { font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--fio-text); }
-    .footer-desc { font-size:0.85rem; color:var(--fio-text-3); line-height:1.6; max-width:280px; }
-    .footer-col h4 { font-size:0.8rem; font-weight:600; color:var(--fio-text); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
-    .footer-col a { display:block; color:var(--fio-text-3); font-size:0.85rem; padding:5px 0; transition:color 0.2s; }
-    .footer-col a:hover { color:var(--fio-text-2); }
-    .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.04); font-size:0.75rem; color:var(--fio-text-4); font-family:var(--font-mono); }
-    @media(max-width:768px){ .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } .footer-bottom { flex-direction:column; gap:8px; text-align:center; } }
-    @media(max-width:480px){ .footer-grid { grid-template-columns:1fr; } }
-
-    /* Reveal */
-    .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
-    .reveal.visible { opacity:1; transform:translateY(0); }
-    .reveal-delay-1 { transition-delay:0.1s; }
-    .reveal-delay-2 { transition-delay:0.2s; }
-    .reveal-delay-3 { transition-delay:0.35s; }
-
-    @media(prefers-reduced-motion:reduce){ .reveal { opacity:1; transform:none; transition:none; } }
-  </style>
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to content</a>
 
-  <!-- Mobile Menu -->
-  <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
-    <a href="/">Home</a>
-    <a href="/#features">Features</a>
-    <a href="/pricing.html">Pricing</a>
-    <a href="/docs/">Docs</a>
-    <a href="/about.html">About</a>
-    <a href="/case-studies.html">Case Studies</a>
-    <a href="mailto:contact@fidesorigin.com" class="btn-primary" style="display:inline-block;margin-top:16px;text-align:center">Get Started</a>
-  </div>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
   <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
-        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
         FidesOrigin
       </a>
-      <div class="nav-links">
+      <div class="nav-left">
         <a href="/">Home</a>
         <a href="/#features">Features</a>
         <a href="/pricing.html">Pricing</a>
         <a href="/docs/">Docs</a>
       </div>
-      <a href="mailto:contact@fidesorigin.com" class="nav-cta">Get Started</a>
-      <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Toggle menu">
+      <div class="nav-actions">
+        <a href="/contact.html" class="nav-cta">Get Started</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
   </nav>
 
   <main id="main-content">
-    <!-- Hero -->
-    <section class="cs-hero">
+    <section class="section" style="padding-top: 140px; text-align: center;">
       <div class="container">
         <div class="reveal">
           <p class="micro">Case Studies</p>
-          <h1 class="display">Compliance <span>in production</span></h1>
-          <p class="lead">See how leading stablecoin issuers, RWA platforms, and institutional wallets use FidesOrigin for deterministic on-chain compliance.</p>
+          <h1 class="display" style="font-size: clamp(2rem, 4.5vw, 3.2rem);">Compliance <span>in production</span></h1>
+          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">See how protocols are building with deterministic on-chain risk enforcement.</p>
         </div>
       </div>
     </section>
 
-    <!-- Case Studies -->
-    <section class="section" style="padding-top:0;">
+    <section class="section" style="padding-top: 0;">
       <div class="container">
-        <!-- Case 1: Stablecoin -->
-        <div class="case-card reveal">
+        <div class="case-study-card reveal">
           <div>
-            <span class="case-tag">Stablecoin</span>
-            <h3>Compliant Stablecoin Issuance</h3>
-            <p>A Hong Kong-based stablecoin issuer needed to meet HKMA regulatory requirements while maintaining real-time AML screening across all transactions.</p>
-
-            <div class="case-section-label">Challenge</div>
-            <p>Needed to satisfy HKMA's strict stablecoin licensing requirements including real-time AML screening, immutable audit trails, and 1:1 reserve attestations — all without introducing centralized infrastructure that would compromise the decentralized nature of the token.</p>
-
-            <div class="case-section-label">Solution</div>
-            <p>FidesOrigin Guard pre-check engine integrated with compliant stablecoin smart contracts. Every mint, burn, and transfer is screened pre-broadcast. Policy engine configured with HKMA-specific rules: accredited investor checks, transaction limits, and OFAC screening.</p>
-
-            <div class="case-section-label">Results</div>
-            <p>Passed HKMA regulatory review on first submission. Guard engine intercepted $2.3M in suspicious transaction volume before it ever hit the chain.</p>
-
-            <div class="case-stats">
-              <div class="case-stat">
-                <div class="num">96.3%</div>
-                <div class="label">Risk Identification</div>
+            <span class="case-study-tag">Stablecoin</span>
+            <h3>GlobalPay USD — MiCA-Compliant Stablecoin</h3>
+            <p>GlobalPay launched a EUR-backed stablecoin targeting the EU market. They needed real-time OFAC screening, MiCA reserve attestations, and automated KYC verification — all without introducing centralized infrastructure.</p>
+            <p>FidesOrigin's CompliantStableCoin base contract provided deterministic screening on every mint, burn, and transfer. The Policy Engine was configured with MiCA-specific rules: 1:1 reserve requirements, daily transaction limits, and accredited investor checks.</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">100%</div>
+                <div class="label">OFAC Coverage</div>
               </div>
-              <div class="case-stat">
-                <div class="num">&lt;0.1%</div>
-                <div class="label">False Positive Rate</div>
-              </div>
-              <div class="case-stat">
-                <div class="num">$2.3M</div>
-                <div class="label">Suspicious Tx Blocked</div>
-              </div>
-            </div>
-          </div>
-          <div class="case-code">
-            <div class="case-code-header">
-              <span>GuardConfig.sol</span>
-              <span>Solidity</span>
-            </div>
-            <pre><span class="cm">// HKMA-compliant Guard configuration</span>
-<span class="kw">function</span> <span class="fn">configureGuard</span>() <span class="kw">external</span> {
-    guard.<span class="fn">setPolicy</span>(<span class="str">"stablecoin-hkma-v2"</span>);
-    guard.<span class="fn">enableOfacScreening</span>(<span class="kw">true</span>);
-    guard.<span class="fn">setDailyLimit</span>(<span class="num">1_000_000</span> * <span class="num">1e6</span>);
-    guard.<span class="fn">requireAccredited</span>(<span class="kw">true</span>);
-}
-
-<span class="cm">// previewTransaction — intercept before broadcast</span>
-<span class="kw">function</span> <span class="fn">previewAndExecute</span>(
-    <span class="ty">Transaction</span> <span class="kw">calldata</span> tx
-) <span class="kw">external</span> <span class="kw">returns</span> (<span class="ty">Verdict</span>) {
-    <span class="ty">Verdict</span> v = guard.<span class="fn">preview</span>(tx);
-    <span class="kw">require</span>(v != <span class="ty">Verdict</span>.BLOCK, <span class="str">"Non-compliant"</span>);
-    <span class="kw">return</span> v;
-}</pre>
-          </div>
-        </div>
-
-        <!-- Case 2: RWA -->
-        <div class="case-card reverse reveal">
-          <div>
-            <span class="case-tag gold">RWA</span>
-            <h3>RWA Tokenization Platform</h3>
-            <p>An RWA issuance platform needed address-level compliance controls and investor qualification verification across multiple jurisdictions.</p>
-
-            <div class="case-section-label">Challenge</div>
-            <p>Each tokenized asset required different compliance rules per jurisdiction — US accredited investors for some, EU MiCA for others, and local KYC requirements. Needed a solution that could deploy jurisdiction-specific policies without rewriting core contracts.</p>
-
-            <div class="case-section-label">Solution</div>
-            <p>FidesOrigin's pluggable compliance module architecture with per-token policy assignment. KYC provider integration via oracle network. Each asset class gets its own policy module that can be hot-swapped without affecting other tokens.</p>
-
-            <div class="case-section-label">Results</div>
-            <p>Full integration completed in 3 days. Platform now supports 5+ jurisdictions with independent policy enforcement per token. Zero contract redeployments since launch.</p>
-
-            <div class="case-stats">
-              <div class="case-stat">
-                <div class="num">3 Days</div>
-                <div class="label">Integration Time</div>
-              </div>
-              <div class="case-stat">
-                <div class="num">5+</div>
-                <div class="label">Jurisdictions</div>
-              </div>
-              <div class="case-stat">
-                <div class="num">0</div>
-                <div class="label">Redeployments</div>
-              </div>
-            </div>
-          </div>
-          <div class="case-code">
-            <div class="case-code-header">
-              <span>MultiPolicy.sol</span>
-              <span>Solidity</span>
-            </div>
-            <pre><span class="cm">// Per-token jurisdiction policy</span>
-<span class="kw">function</span> <span class="fn">assignPolicy</span>(
-    <span class="kw">address</span> token,
-    <span class="kw">string</span> <span class="kw">calldata</span> jurisdiction,
-    <span class="ty">Policy</span> <span class="kw">calldata</span> policy
-) <span class="kw">external</span> {
-    policies[token][jurisdiction] = policy;
-    <span class="kw">emit</span> <span class="fn">PolicyAssigned</span>(token, jurisdiction);
-}
-
-<span class="cm">// KYC oracle verification</span>
-<span class="kw">function</span> <span class="fn">verifyInvestor</span>(
-    <span class="kw">address</span> investor,
-    <span class="kw">bytes32</span> merkleRoot
-) <span class="kw">external</span> <span class="kw">view</span> <span class="kw">returns</span> (<span class="kw">bool</span>) {
-    <span class="kw">return</span> kycOracle.<span class="fn">isVerified</span>(
-        investor, merkleRoot
-    );
-}</pre>
-          </div>
-        </div>
-
-        <!-- Case 3: Institutional Wallet -->
-        <div class="case-card reveal">
-          <div>
-            <span class="case-tag green">Smart Wallet</span>
-            <h3>Institutional-Grade Wallet</h3>
-            <p>A Web2 payment platform expanding into crypto needed to add institutional-level risk controls to their wallet product without rebuilding from scratch.</p>
-
-            <div class="case-section-label">Challenge</div>
-            <p>The platform's existing wallet infrastructure lacked any on-chain compliance layer. They needed to add real-time risk screening, sanctions checks, and transaction monitoring without disrupting the existing user experience or requiring months of engineering work.</p>
-
-            <div class="case-section-label">Solution</div>
-            <p>FidesOrigin Guard engine embedded directly into the wallet's transaction flow via SDK. Zero changes to existing smart contracts — Guard intercepts at the application layer before transactions are signed and broadcast.</p>
-
-            <div class="case-section-label">Results</div>
-            <p>Zero additional smart contract development required. Real-time risk interception with &lt;50ms latency. Full regulatory audit trail generated automatically for every screened transaction.</p>
-
-            <div class="case-stats">
-              <div class="case-stat">
-                <div class="num">Zero</div>
-                <div class="label">Extra Contract Dev</div>
-              </div>
-              <div class="case-stat">
+              <div class="case-study-stat">
                 <div class="num">&lt;50ms</div>
                 <div class="label">Screening Latency</div>
               </div>
-              <div class="case-stat">
-                <div class="num">100%</div>
-                <div class="label">Audit Coverage</div>
+              <div class="case-study-stat">
+                <div class="num">$2B+</div>
+                <div class="label">Protected Volume</div>
               </div>
             </div>
           </div>
-          <div class="case-code">
-            <div class="case-code-header">
-              <span>WalletIntegration.ts</span>
-              <span>TypeScript</span>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>PolicyConfig.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// MiCA-specific policy configuration</span>
+<span class="kw">function</span> <span class="func">configureMicaPolicies</span>() <span class="kw">external</span> {
+    policy.<span class="func">setReserveRatio</span>(<span class="num">10000</span>); <span class="comment">// 100%</span>
+    policy.<span class="func">setDailyLimit</span>(<span class="num">1_000_000</span> * <span class="num">1e6</span>);
+    policy.<span class="func">requireAccredited</span>(<span class="kw">true</span>);
+    policy.<span class="func">enableOfacScreening</span>(<span class="kw">true</span>);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reverse reveal">
+          <div>
+            <span class="case-study-tag">RWA</span>
+            <h3>RealT — Tokenized Real Estate Compliance</h3>
+            <p>RealT tokenizes real estate properties across multiple jurisdictions. Each property has different investor requirements: US accredited investors only for some, EU MiCA for others, and jurisdiction-specific KYC.</p>
+            <p>FidesOrigin's multi-policy support allowed RealT to assign different compliance rules per token. The Merkle-based risk registry enabled privacy-preserving verification without revealing investor data on-chain.</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">15</div>
+                <div class="label">Jurisdictions</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">0</div>
+                <div class="label">Data Leaks</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$50M</div>
+                <div class="label">Tokenized Assets</div>
+              </div>
             </div>
-            <pre><span class="cm">// Embedded Guard in wallet SDK</span>
-<span class="kw">import</span> { FidesGuard } <span class="kw">from</span> <span class="str">'@fidesorigin/guard'</span>;
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>MultiPolicy.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Per-token policy assignment</span>
+<span class="kw">function</span> <span class="func">assignPolicy</span>(
+    <span class="kw">address</span> token,
+    <span class="type">Policy</span> <span class="kw">calldata</span> policy
+) <span class="kw">external</span> {
+    policies[token] = policy;
+    <span class="kw">emit</span> <span class="func">PolicyAssigned</span>(token, policy.id);
+}</pre>
+          </div>
+        </div>
 
-<span class="kw">const</span> guard = <span class="kw">await</span> FidesGuard.<span class="fn">connect</span>({
-  apiKey: <span class="str">'fio_live_***'</span>,
-  policy: <span class="str">"institutional-wallet-v1"</span>
-});
-
-<span class="cm">// Intercept before user signs</span>
-<span class="kw">const</span> result = <span class="kw">await</span> guard.<span class="fn">previewTransaction</span>({
-  from: walletAddress,
-  to: recipient,
-  value: amount
-});
-
-<span class="cm">// Block non-compliant txs before signing</span>
-<span class="kw">if</span> (result.verdict === <span class="str">"BLOCK"</span>) {
-  <span class="fn">showRiskWarning</span>(result.reason);
-  <span class="kw">return</span>;
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">Smart Wallet</span>
+            <h3>SafeFlow — Account Abstraction with Compliance</h3>
+            <p>SafeFlow built an ERC-4337 smart wallet for institutional users. They needed every userOp screened before bundler submission — without adding latency or compromising the account abstraction flow.</p>
+            <p>By integrating FidesOrigin at the validation phase, SafeFlow screens all destination addresses and call data before the bundler ever sees the userOp. The integration added less than 10ms to validation time.</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">&lt;10ms</div>
+                <div class="label">Validation Overhead</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">50K+</div>
+                <div class="label">Wallets Protected</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">99.99%</div>
+                <div class="label">Uptime</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>SafeFlowValidation.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Validate before bundler acceptance</span>
+<span class="kw">function</span> <span class="func">validateUserOp</span>(
+    <span class="type">UserOperation</span> <span class="kw">calldata</span> userOp
+) <span class="kw">external</span> <span class="kw">override</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {
+    <span class="kw">require</span>(
+        fides.<span class="func">isCompliant</span>(userOp),
+        <span class="str">"Non-compliant userOp"</span>
+    );
+    <span class="kw">return</span> <span class="func">_validateSignature</span>(userOp);
 }</pre>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Testimonials -->
-    <section class="section section-alt">
+    <section class="section bg-secondary">
       <div class="container">
-        <div class="section-header reveal">
-          <p class="section-eyebrow">Trusted By</p>
-          <h2 class="section-title">What Our Partners Say</h2>
+        <div class="reveal section-intro">
+          <p class="micro">Testimonials</p>
+          <h2 class="h2 section-title">What builders say</h2>
         </div>
-        <div class="testimonial-grid">
-          <div class="testimonial-card reveal">
-            <div class="testimonial-text">
-              "FidesOrigin's Guard engine gave us the regulatory confidence we needed for our HKMA stablecoin license application. The pre-transaction screening is so fast our users don't even notice it's there — but the regulators certainly appreciate the audit trail."
-            </div>
+        <div class="features-grid" style="margin-top: 48px;">
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"FidesOrigin solved our biggest compliance headache. Before, we were screening via API calls that added 300ms latency and occasionally failed. Now every transaction is screened deterministically on-chain — our users don't even notice it's there."</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar c1">JL</div>
+              <div class="testimonial-avatar">AL</div>
               <div class="testimonial-info">
-                <h4>James Lin</h4>
-                <p>CTO, Hong Kong Stablecoin Issuer</p>
+                <h4>Alex L.</h4>
+                <p>CTO, GlobalPay USD</p>
               </div>
             </div>
           </div>
-          <div class="testimonial-card reveal reveal-delay-1">
-            <div class="testimonial-text">
-              "We tokenized real estate across three jurisdictions in under a month. FidesOrigin's pluggable policy modules meant we could configure US, EU, and Singapore rules without deploying separate contracts. The integration took literally three days."
-            </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"The Merkle-based privacy approach is exactly what we needed. We can prove compliance to regulators without exposing sensitive investor data on-chain. It's the first solution that actually understands both DeFi and privacy."</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar c2">SR</div>
+              <div class="testimonial-avatar">SM</div>
               <div class="testimonial-info">
-                <h4>Sarah Rodriguez</h4>
-                <p>Head of Product, RWA Platform</p>
+                <h4>Sarah M.</h4>
+                <p>Head of Compliance, RealT</p>
               </div>
             </div>
           </div>
-          <div class="testimonial-card reveal reveal-delay-2">
-            <div class="testimonial-text">
-              "We needed institutional-grade compliance for our crypto wallet but had zero smart contract engineering capacity. FidesOrigin's SDK let us add Guard screening in a single sprint — no contract changes, no audit delays, just production-ready compliance."
-            </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"Integrating compliance into ERC-4337 was supposed to be impossible. FidesOrigin proved it wasn't — we had it working in a weekend. The validation-phase hook means zero UX impact for our users."</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar c3">DK</div>
+              <div class="testimonial-avatar">DK</div>
               <div class="testimonial-info">
-                <h4>David Kim</h4>
-                <p>VP Engineering, Payment Platform</p>
+                <h4>David K.</h4>
+                <p>Lead Engineer, SafeFlow</p>
               </div>
             </div>
           </div>
@@ -443,15 +209,14 @@
       </div>
     </section>
 
-    <!-- CTA -->
-    <section class="cta-banner">
+    <section class="section">
       <div class="container">
-        <div class="cta-inner reveal">
-          <h2 class="cta-title">Ready to become our next case study?</h2>
-          <p class="cta-desc">Get in touch to discuss your compliance needs.</p>
-          <div class="cta-ctas">
-            <a href="mailto:contact@fidesorigin.com" class="btn-primary">Contact Sales</a>
-            <a href="/demo.html" class="btn-secondary">Try Demo</a>
+        <div class="cta-section reveal">
+          <h2 class="h1">Ready to become our next case study?</h2>
+          <p>Get in touch to discuss your compliance needs.</p>
+          <div class="cta-buttons">
+            <a href="/contact.html" class="btn btn-primary">Contact Sales</a>
+            <a href="/demo.html" class="btn btn-secondary">Try Demo</a>
           </div>
         </div>
       </div>
@@ -461,12 +226,12 @@
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
-        <div>
-          <div class="footer-brand">
-            <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24">
-            <span>FidesOrigin</span>
-          </div>
-          <p class="footer-desc">Execution-grade on-chain compliance protocol for stablecoins, RWA tokenization, and institutional DeFi.</p>
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+            FidesOrigin
+          </a>
+          <p>Programmable on-chain compliance for the future of finance.</p>
         </div>
         <div class="footer-col">
           <h4>Product</h4>
@@ -491,20 +256,20 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>&copy; 2026 FidesOrigin. All rights reserved.</span>
-        <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
       </div>
     </div>
   </footer>
 
+  <script src="/wallet-connect.js"></script>
   <script>
     (function() {
-      const reveals = document.querySelectorAll('.reveal');
-      const observer = new IntersectionObserver(function(entries) {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
           if (entry.isIntersecting) { entry.target.classList.add('visible'); }
         });
-      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      }, { threshold: 0.1 });
       reveals.forEach(function(el) { observer.observe(el); });
     })();
   </script>
