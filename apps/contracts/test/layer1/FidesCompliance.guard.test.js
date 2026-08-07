@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 
 describe("FidesCompliance Guard Integration", function () {
   let fidesCompliance, riskRegistry, policyEngine, vault, guard;
@@ -8,36 +8,54 @@ describe("FidesCompliance Guard Integration", function () {
   beforeEach(async function () {
     [admin, user1, user2, sanctioned] = await ethers.getSigners();
     
-    // Deploy dependencies
+    // Deploy RiskRegistry (UUPS upgradeable via proxy)
     const RiskRegistry = await ethers.getContractFactory("RiskRegistry");
-    riskRegistry = await RiskRegistry.deploy();
+    riskRegistry = await upgrades.deployProxy(RiskRegistry, [admin.address], {
+      initializer: 'initialize',
+      unsafeAllow: ['constructor']
+    });
     await riskRegistry.waitForDeployment();
     
+    // Deploy PolicyEngine (UUPS upgradeable via proxy)
     const PolicyEngine = await ethers.getContractFactory("PolicyEngine");
-    policyEngine = await PolicyEngine.deploy();
+    policyEngine = await upgrades.deployProxy(PolicyEngine, [admin.address, await riskRegistry.getAddress()], {
+      initializer: 'initialize',
+      unsafeAllow: ['constructor']
+    });
     await policyEngine.waitForDeployment();
     
+    // Deploy QuarantineVault
     const QuarantineVault = await ethers.getContractFactory("QuarantineVault");
     vault = await QuarantineVault.deploy();
     await vault.waitForDeployment();
     
-    // Deploy ComplianceEngine
+    // Deploy ComplianceEngine (UUPS upgradeable via proxy)
     const ComplianceEngine = await ethers.getContractFactory("ComplianceEngine");
-    const complianceEngine = await ComplianceEngine.deploy();
+    const complianceEngine = await upgrades.deployProxy(ComplianceEngine, [
+      await riskRegistry.getAddress(),
+      await policyEngine.getAddress()
+    ], {
+      initializer: 'initialize',
+      unsafeAllow: ['constructor']
+    });
     await complianceEngine.waitForDeployment();
     
-    // Deploy FidesCompliance (direct for testing)
+    // Deploy FidesCompliance via proxy (UUPS upgradeable)
     const FidesCompliance = await ethers.getContractFactory("FidesCompliance");
-    fidesCompliance = await FidesCompliance.deploy();
-    await fidesCompliance.waitForDeployment();
-    
-    // Initialize
-    await fidesCompliance.initialize(
+    fidesCompliance = await upgrades.deployProxy(FidesCompliance, [
       await complianceEngine.getAddress(),
       await riskRegistry.getAddress(),
       await policyEngine.getAddress(),
       await vault.getAddress()
-    );
+    ], {
+      initializer: 'initialize',
+      unsafeAllow: ['constructor']
+    });
+    await fidesCompliance.waitForDeployment();
+    
+    // Grant FidesCompliance OPERATOR_ROLE on ComplianceEngine
+    const CE_OPERATOR_ROLE = await complianceEngine.OPERATOR_ROLE();
+    await complianceEngine.connect(admin).grantRole(CE_OPERATOR_ROLE, await fidesCompliance.getAddress());
     
     // Deploy Guard
     const Guard = await ethers.getContractFactory("PreTransactionGuard");

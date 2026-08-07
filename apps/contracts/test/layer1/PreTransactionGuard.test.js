@@ -33,14 +33,28 @@ describe("PreTransactionGuard", function () {
   });
 
   it("should assess transaction", async () => {
-    const intent = { from: user1.address, to: user2.address, value: 0 };
+    const intent = {
+      from: user1.address,
+      to: user2.address,
+      value: 0,
+      token: ethers.ZeroAddress,
+      data: "0x",
+      chainId: (await ethers.provider.getNetwork()).chainId
+    };
     const r = await guard.assessTransaction(intent);
     expect(r.action).to.equal(0); // ALLOW
   });
 
   it("should block transaction to sanctioned address", async () => {
     await guard.connect(operator).updateSanctionedCache(user2.address, true);
-    const intent = { from: user1.address, to: user2.address, value: 0 };
+    const intent = {
+      from: user1.address,
+      to: user2.address,
+      value: 0,
+      token: ethers.ZeroAddress,
+      data: "0x",
+      chainId: (await ethers.provider.getNetwork()).chainId
+    };
     const r = await guard.assessTransaction(intent);
     expect(r.action).to.equal(2); // BLOCK
   });
