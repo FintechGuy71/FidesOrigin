@@ -10,9 +10,9 @@
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
   <title>Documentation — FidesOrigin</title>
-  <meta name="description" content="FidesOrigin documentation. Quick start, core concepts, architecture overview.">
+  <meta name="description" content="FidesOrigin V2.1 documentation. Quick start, core concepts, Guard integration, architecture overview.">
   <meta property="og:title" content="Documentation — FidesOrigin">
-  <meta property="og:description" content="FidesOrigin documentation. Quick start, core concepts, architecture overview.">
+  <meta property="og:description" content="FidesOrigin V2.1 documentation. Quick start, core concepts, Guard integration, architecture overview.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
   <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Documentation — FidesOrigin">
-  <meta name="twitter:description" content="FidesOrigin documentation. Quick start, core concepts, architecture overview.">
+  <meta name="twitter:description" content="FidesOrigin V2.1 documentation. Quick start, core concepts, Guard integration, architecture overview.">
   <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="canonical" href="https://fidesorigin.com/docs/">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/docs/">
@@ -33,11 +33,11 @@
   <link rel="stylesheet" href="../styles.css">
   <link rel="icon" href="/brand/logo-dark-icon.png">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"HowTo","name":"Integrate FidesOrigin SDK","description":"Step-by-step guide to integrating the FidesOrigin SDK for on-chain compliance screening.","totalTime":"PT30M","step":[
-  {"@type":"HowToStep","position":1,"name":"Install SDK","text":"Install the FidesOrigin SDK via npm to add it to your project.","code":"npm install @fidesorigin/sdk"},
-  {"@type":"HowToStep","position":2,"name":"Configure API key","text":"Initialize the SDK with your API key. You can generate an API key from the FidesOrigin admin dashboard.","code":"import { FidesOrigin } from '@fidesorigin/sdk';\nconst fides = new FidesOrigin({ apiKey: 'YOUR_API_KEY' });"},
-  {"@type":"HowToStep","position":3,"name":"Screen an address","text":"Use the SDK to screen a wallet address against on-chain risk profiles and sanctions lists.","code":"const result = await fides.screenAddress('0x...');\nconsole.log(result.riskLevel); // UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL"},
-  {"@type":"HowToStep","position":4,"name":"Handle results","text":"Implement logic to handle screening results. Block high-risk addresses, quarantine suspicious transfers, or log compliance events based on your policy.","code":"if (result.riskLevel === 'HIGH' || result.riskLevel === 'CRITICAL') {\n  throw new Error('Address blocked by compliance policy');\n}"}
+{"@context":"https://schema.org","@type":"HowTo","name":"Integrate FidesOrigin SDK V2.1","description":"Step-by-step guide to integrating the FidesOrigin SDK V2.1 for on-chain compliance screening with Guard support.","totalTime":"PT30M","step":[
+  {"@type":"HowToStep","position":1,"name":"Install SDK","text":"Install the FidesOrigin SDK via npm to add it to your project.","code":"npm install @fintechguy71/fidesorigin-sdk"},
+  {"@type":"HowToStep","position":2,"name":"Configure API key","text":"Initialize the SDK with your API key. You can generate an API key from the FidesOrigin admin dashboard.","code":"import { FidesOriginClient } from '@fintechguy71/fidesorigin-sdk';\nconst fides = new FidesOriginClient({ baseUrl: 'https://api.fidesorigin.com', apiKey: 'YOUR_API_KEY' });"},
+  {"@type":"HowToStep","position":3,"name":"Screen an address","text":"Use the SDK to screen a wallet address against on-chain risk profiles and sanctions lists.","code":"const result = await fides.checkRisk({ address: '0x...', chainId: 1 });\nconsole.log(result.risk_level); // low, medium, high, critical"},
+  {"@type":"HowToStep","position":4,"name":"Handle results","text":"Implement logic to handle screening results. Block high-risk addresses, quarantine suspicious transfers, or log compliance events based on your policy.","code":"if (result.risk_level === 'high' || result.risk_level === 'critical') {\n  throw new Error('Address blocked by compliance policy');\n}"}
 ]}
 </script>
   <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
@@ -56,6 +56,7 @@
         <a href="/#features">Features</a>
         <a href="/#how-it-works">How It Works</a>
         <a href="/#security">Security</a>
+        <a href="/demo.html">Demo</a>
         <a href="/docs/">Docs</a>
       </div>
       <div class="nav-actions">
@@ -88,6 +89,7 @@
     <a href="/#features">Features</a>
     <a href="/#how-it-works">How It Works</a>
     <a href="/#security">Security</a>
+    <a href="/demo.html">Demo</a>
     <a href="/docs/">Docs</a>
     <div class="lang-row">
       <a href="/docs/">EN</a>
@@ -106,6 +108,7 @@
         <li><a href="/docs/" class="active">Overview</a></li>
         <li><a href="/docs/api.html">API Reference</a></li>
         <li><a href="/docs/sdk.html">SDK</a></li>
+        <li><a href="/demo.html">Demo</a></li>
       </ul>
       <div class="docs-sidebar-title">Resources</div>
       <ul class="docs-nav-tree">
@@ -124,8 +127,8 @@
 
     <!-- Main Content -->
     <main class="docs-content">
-      <h1>Documentation</h1>
-      <p class="docs-lead">Everything you need to integrate on-chain compliance into your protocol.</p>
+      <h1>Documentation <span style="font-size:0.5em;color:var(--accent);vertical-align:middle;">V2.1</span></h1>
+      <p class="docs-lead">Everything you need to integrate on-chain compliance into your protocol. Now with Guard pre-transaction interception.</p>
 
       <div class="docs-cards">
         <a href="/docs/api.html" class="docs-card">
@@ -133,21 +136,21 @@
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
           <h3>API Reference</h3>
-          <p>REST API endpoints for address risk checks, rules management, and risk assessment.</p>
+          <p>REST API endpoints for address risk checks, rules management, batch screening, and real-time monitoring.</p>
         </a>
         <a href="/docs/sdk.html" class="docs-card">
           <div class="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           </div>
           <h3>SDK</h3>
-          <p>JavaScript SDK for wallet integration, address screening, and event subscriptions.</p>
+          <p>JavaScript SDK for wallet integration, address screening, Guard integration, and event subscriptions.</p>
         </a>
-        <a href="/blog/" class="docs-card" target="_blank" rel="noopener">
+        <a href="/demo.html" class="docs-card">
           <div class="docs-card-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <h3>Blog</h3>
-          <p>Deep dives into on-chain compliance, risk engines, and DeFi regulation.</p>
+          <h3>Demo</h3>
+          <p>Interactive demo on Sepolia testnet. Screen addresses, check risk scores, and see Guard in action.</p>
         </a>
         <a href="https://github.com/FintechGuy71/FidesOrigin" class="docs-card" target="_blank" rel="noopener">
           <div class="docs-card-icon">
@@ -166,8 +169,8 @@
           <span>cURL</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>curl https://api.fidesorigin.com/api/v1/addresses/0x... \
-  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+        <pre><code>curl https://api.fidesorigin.com/api/v1/address/0x.../risk \
+  -H "X-API-Key: YOUR_API_KEY"</code></pre>
       </div>
 
       <h3>2. Install SDK</h3>
@@ -176,13 +179,13 @@
           <span>Shell</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>npm install @fidesorigin/sdk</code></pre>
+        <pre><code>npm install @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
 
       <h3>3. Integrate in Solidity</h3>
       <div class="docs-code-block">
         <div class="docs-code-header">
-          <span>Solidity 0.8.26</span>
+          <span>Solidity 0.8.20</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
         <pre><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
@@ -199,17 +202,71 @@ contract MyToken is CompliantStableCoin {
           <p>Risk checks execute inside the transaction, not via external API calls. Deterministic, zero-latency, un-bypassable.</p>
         </div>
         <div class="docs-concept">
+          <h4>Pre-Transaction Guard</h4>
+          <p>V2.1 introduces Guard — zero-gas pre-transaction interception. Assess risk before a transaction is even submitted, with configurable block and warn thresholds.</p>
+        </div>
+        <div class="docs-concept">
           <h4>Risk Tiers</h4>
-          <p>Five levels: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. Each tier triggers different enforcement actions.</p>
+          <p>Five levels: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. Each tier triggers different enforcement actions in the ComplianceEngine and Guard.</p>
         </div>
         <div class="docs-concept">
           <h4>Policy Engine</h4>
-          <p>Configurable rules per asset: max transaction amount, daily limits, sanctioned address blocking, KYC requirements.</p>
+          <p>Configurable rules per asset: max transaction amount, daily limits, sanctioned address blocking, KYC requirements, cooldown periods.</p>
         </div>
         <div class="docs-concept">
           <h4>Quarantine Vault</h4>
           <p>Suspicious transfers are held in escrow until manual review or automated criteria are met.</p>
         </div>
+        <div class="docs-concept">
+          <h4>Compliance Rules</h4>
+          <p>Create, update, and manage programmable compliance rules via REST API. Priority-based evaluation with condition-action logic.</p>
+        </div>
+      </div>
+
+      <h2>Sepolia Testnet Contracts</h2>
+      <p>Interact with the protocol on Sepolia testnet (chainId: 11155111).</p>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Contract</th>
+              <th>Address</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>RiskRegistry (Proxy)</td>
+              <td><code>0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc</code></td>
+              <td>UUPS Proxy</td>
+            </tr>
+            <tr>
+              <td>PolicyEngine (Proxy)</td>
+              <td><code>0x87089F67A61F9643796AE154663A6a9F21196b38</code></td>
+              <td>UUPS Proxy</td>
+            </tr>
+            <tr>
+              <td>ComplianceEngine (Proxy)</td>
+              <td><code>0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC</code></td>
+              <td>UUPS Proxy</td>
+            </tr>
+            <tr>
+              <td>QuarantineVault</td>
+              <td><code>0xF7c5c4DdcB0F868a6c271334131728CecA313DFb</code></td>
+              <td>Direct Deploy</td>
+            </tr>
+            <tr>
+              <td>FidesCompliance</td>
+              <td><code>0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707</code></td>
+              <td>Direct Deploy</td>
+            </tr>
+            <tr>
+              <td>CompliantStableCoin (fUSD)</td>
+              <td><code>0xA058c5c0dD7791Ffc6A7EF14C01034d0f9F32a2B</code></td>
+              <td>Direct Deploy</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <h2>Architecture Overview</h2>
@@ -218,21 +275,28 @@ contract MyToken is CompliantStableCoin {
           <div class="docs-arch-icon">&#128279;</div>
           <div>
             <h4>RiskRegistryV2</h4>
-            <p>On-chain storage for 20,000+ risk profiles, sanctions lists, and entity tags.</p>
+            <p>On-chain storage for 20,000+ risk profiles, sanctions lists, and entity tags. UUPS upgradeable proxy at <code>0x7a41...52bc</code>.</p>
           </div>
         </div>
         <div class="docs-arch-item">
           <div class="docs-arch-icon">&#9881;&#65039;</div>
           <div>
             <h4>ComplianceEngine</h4>
-            <p>Policy evaluation, transfer hooks, and quarantine management.</p>
+            <p>Policy evaluation, transfer hooks, hold management, and quarantine orchestration.</p>
+          </div>
+        </div>
+        <div class="docs-arch-item">
+          <div class="docs-arch-icon">&#128737;&#65039;</div>
+          <div>
+            <h4>PreTransactionGuard (V2.1)</h4>
+            <p>Zero-gas pre-transaction risk assessment. Assess addresses and transactions before submission with configurable block/warn thresholds. Integrates with GuardedComplianceEngine.</p>
           </div>
         </div>
         <div class="docs-arch-item">
           <div class="docs-arch-icon">&#129689;</div>
           <div>
             <h4>CompliantStableCoin</h4>
-            <p>Example ERC20 with built-in compliance hooks. Inherit for your own token.</p>
+            <p>Example ERC20 with built-in compliance hooks. Inherit for your own token. Sepolia fUSD at <code>0xA058...2a2B</code>.</p>
           </div>
         </div>
         <div class="docs-arch-item">
@@ -262,6 +326,7 @@ contract MyToken is CompliantStableCoin {
           <a href="/#features">Features</a>
           <a href="/#how-it-works">How It Works</a>
           <a href="/#security">Security</a>
+          <a href="/demo.html">Demo</a>
           <a href="/admin/">Dashboard</a>
         </div>
         <div class="footer-col">

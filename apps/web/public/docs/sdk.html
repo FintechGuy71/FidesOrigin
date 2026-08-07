@@ -10,9 +10,9 @@
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
   <title>SDK — FidesOrigin</title>
-  <meta name="description" content="FidesOrigin JavaScript SDK. Install, configure, and integrate on-chain compliance.">
+  <meta name="description" content="FidesOrigin JavaScript SDK V2.1. Install, configure, and integrate on-chain compliance with Guard support.">
   <meta property="og:title" content="SDK Guide — FidesOrigin">
-  <meta property="og:description" content="FidesOrigin SDK integration guide. TypeScript, React, WebSocket clients.">
+  <meta property="og:description" content="FidesOrigin SDK V2.1 integration guide. TypeScript, React, WebSocket clients, and On-Chain SDK with Guard.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
   <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SDK Guide — FidesOrigin">
-  <meta name="twitter:description" content="FidesOrigin SDK integration guide. TypeScript, React, WebSocket clients.">
+  <meta name="twitter:description" content="FidesOrigin SDK V2.1 integration guide. TypeScript, React, WebSocket clients, and On-Chain SDK with Guard.">
   <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
   <link rel="canonical" href="https://fidesorigin.com/docs/sdk.html">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/docs/sdk.html">
@@ -48,6 +48,7 @@
         <a href="/#features">Features</a>
         <a href="/#how-it-works">How It Works</a>
         <a href="/#security">Security</a>
+        <a href="/demo.html">Demo</a>
         <a href="/docs/">Docs</a>
       </div>
       <div class="nav-actions">
@@ -80,6 +81,7 @@
     <a href="/#features">Features</a>
     <a href="/#how-it-works">How It Works</a>
     <a href="/#security">Security</a>
+    <a href="/demo.html">Demo</a>
     <a href="/docs/">Docs</a>
     <div class="lang-row">
       <a href="/docs/sdk.html">EN</a>
@@ -98,6 +100,7 @@
         <li><a href="/docs/">Overview</a></li>
         <li><a href="/docs/api.html">API Reference</a></li>
         <li><a href="/docs/sdk.html" class="active">SDK</a></li>
+        <li><a href="/demo.html">Demo</a></li>
       </ul>
       <div class="docs-sidebar-title">Resources</div>
       <ul class="docs-nav-tree">
@@ -116,40 +119,60 @@
 
     <!-- Main Content -->
     <main class="docs-content">
-      <h1>SDK</h1>
-      <p class="docs-lead">JavaScript SDK for wallet integration and on-chain compliance.</p>
+      <h1>SDK <span style="font-size:0.5em;color:var(--accent);vertical-align:middle;">v0.2.1</span></h1>
+      <p class="docs-lead">JavaScript SDK for wallet integration, on-chain compliance, and Guard pre-transaction interception.</p>
 
-      <h2>Installation</h2>
+      <h2>Packages</h2>
+      <div class="docs-cards" style="grid-template-columns:1fr 1fr;">
+        <a href="#rest-sdk" class="docs-card" style="text-decoration:none;color:inherit;">
+          <div class="docs-card-icon">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3>REST SDK</h3>
+          <p>API client, risk checks, rule management, WebSocket streaming.</p>
+        </a>
+        <a href="#on-chain-sdk" class="docs-card" style="text-decoration:none;color:inherit;">
+          <div class="docs-card-icon">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          <h3>On-Chain SDK</h3>
+          <p>Direct smart contract interaction, Guard integration, gas-free reads.</p>
+        </a>
+      </div>
+
+      <h2 id="rest-sdk">REST SDK Installation</h2>
       <div class="docs-code-block">
         <div class="docs-code-header">
           <span>npm</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>npm install @fidesorigin/sdk</code></pre>
+        <pre><code>npm install @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
       <div class="docs-code-block">
         <div class="docs-code-header">
           <span>yarn</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>yarn add @fidesorigin/sdk</code></pre>
+        <pre><code>yarn add @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
 
       <h2>Quick Start</h2>
 
-      <h3>Initialize SDK</h3>
+      <h3>Initialize Client</h3>
       <div class="docs-code-block">
         <div class="docs-code-header">
           <span>TypeScript</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>import { FidesOrigin } from '@fidesorigin/sdk';
+        <pre><code>import { FidesOriginClient } from '@fintechguy71/fidesorigin-sdk';
 
-const fides = new FidesOrigin({
+const fides = new FidesOriginClient({
+  baseUrl: 'https://api.fidesorigin.com',
   apiKey: 'YOUR_API_KEY',
-  network: 'sepolia' // or 'mainnet', 'base'
+  timeout: 30000
 });</code></pre>
       </div>
+      <p class="docs-note" style="color:var(--text-secondary);font-size:0.875rem;"><strong>Note:</strong> In browser environments, only public API keys (prefix <code>pk_</code>) are allowed. Secret keys are strictly blocked for security.</p>
 
       <h3>Check Address Risk</h3>
       <div class="docs-code-block">
@@ -157,24 +180,53 @@ const fides = new FidesOrigin({
           <span>TypeScript</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>const result = await fides.evaluateAddress('0x...');
+        <pre><code>const result = await fides.checkRisk({
+  address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+  chainId: 1  // or 'ethereum', 'sepolia', 11155111
+});
 
-console.log(result.riskTier); // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
-console.log(result.isSanctioned); // true or false</code></pre>
+console.log(result.risk_level);   // 'low' | 'medium' | 'high' | 'critical'
+console.log(result.risk_score);   // 0-100
+console.log(result.risk_factors); // Array of risk flags</code></pre>
       </div>
 
-      <h3>Subscribe to Events</h3>
+      <h3>Batch Risk Check</h3>
       <div class="docs-code-block">
         <div class="docs-code-header">
           <span>TypeScript</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>fides.on('RiskDetected', (event) => {
-  console.log('Risk detected:', event.address, event.riskTier);
+        <pre><code>const batch = await fides.batchCheckRisk({
+  addresses: [
+    '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+    '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+  ],
+  chainId: 1
 });
 
-fides.on('SanctionAdded', (event) => {
-  console.log('Sanction added:', event.address);
+console.log(batch.summary); // { total, highRisk, mediumRisk, lowRisk }</code></pre>
+      </div>
+
+      <h3>WebSocket Streaming</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>const ws = fides.createWebSocket({
+  autoReconnect: true,
+  reconnectInterval: 3000
+});
+
+await ws.connect();
+ws.subscribe(['risk.update', 'alert.new', 'rule.match']);
+
+ws.on('risk.update', (msg) => {
+  console.log('Risk updated:', msg.data.address, msg.data.risk);
+});
+
+ws.on('alert.new', (msg) => {
+  console.log('New alert:', msg.data);
 });</code></pre>
       </div>
 
@@ -190,32 +242,150 @@ fides.on('SanctionAdded', (event) => {
           </thead>
           <tbody>
             <tr>
-              <td><code>connect(provider)</code></td>
+              <td><code>checkRisk(input)</code></td>
+              <td>Promise&lt;RiskCheckResult&gt;</td>
+              <td>Single address risk assessment</td>
+            </tr>
+            <tr>
+              <td><code>batchCheckRisk(input)</code></td>
+              <td>Promise&lt;BatchRiskCheckResult&gt;</td>
+              <td>Batch address screening</td>
+            </tr>
+            <tr>
+              <td><code>getAddressRisk(address)</code></td>
+              <td>Promise&lt;AddressRisk&gt;</td>
+              <td>Latest risk snapshot for an address</td>
+            </tr>
+            <tr>
+              <td><code>getDashboardStats()</code></td>
+              <td>Promise&lt;DashboardStats&gt;</td>
+              <td>Global compliance statistics</td>
+            </tr>
+            <tr>
+              <td><code>listRules(options?)</code></td>
+              <td>Promise&lt;RuleListResponse&gt;</td>
+              <td>List compliance rules with pagination</td>
+            </tr>
+            <tr>
+              <td><code>createRule(req)</code></td>
+              <td>Promise&lt;Rule&gt;</td>
+              <td>Create a new compliance rule</td>
+            </tr>
+            <tr>
+              <td><code>updateRule(id, req)</code></td>
+              <td>Promise&lt;Rule&gt;</td>
+              <td>Update an existing rule</td>
+            </tr>
+            <tr>
+              <td><code>deleteRule(id)</code></td>
               <td>Promise&lt;void&gt;</td>
-              <td>Connect to Web3 provider</td>
+              <td>Delete a compliance rule</td>
             </tr>
             <tr>
-              <td><code>evaluateAddress(addr)</code></td>
-              <td>Promise&lt;RiskProfile&gt;</td>
-              <td>Get risk profile for address</td>
-            </tr>
-            <tr>
-              <td><code>evaluateTx(tx)</code></td>
-              <td>Promise&lt;TxResult&gt;</td>
-              <td>Pre-screen transaction</td>
-            </tr>
-            <tr>
-              <td><code>subscribe(event)</code></td>
-              <td>EventEmitter</td>
-              <td>Subscribe to on-chain events</td>
-            </tr>
-            <tr>
-              <td><code>disconnect()</code></td>
-              <td>void</td>
-              <td>Clean up connections</td>
+              <td><code>createWebSocket(config?)</code></td>
+              <td>FidesOriginWebSocket</td>
+              <td>Create a real-time WebSocket connection</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <h2 id="on-chain-sdk">On-Chain SDK</h2>
+      <p>For direct smart contract interaction, use the On-Chain SDK. All view functions are gas-free.</p>
+
+      <h3>Installation</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>npm</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>npm install @fidesorigin/on-chain-sdk</code></pre>
+      </div>
+
+      <h3>Initialize On-Chain SDK</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>import { FidesOriginSDK } from '@fidesorigin/on-chain-sdk';
+import { JsonRpcProvider } from 'ethers';
+
+const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+
+const addresses = {
+  complianceEngine: '0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC',
+  riskRegistry: '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc',
+  policyEngine: '0x87089F67A61F9643796AE154663A6a9F21196b38',
+  riskOracle: '0x...' // optional
+};
+
+const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
+      </div>
+
+      <h3 id="guard">Guard Integration (V2.1)</h3>
+      <p>Use the On-Chain SDK to interact with <strong>PreTransactionGuard</strong> and <strong>GuardedComplianceEngine</strong> for zero-gas pre-transaction risk assessment.</p>
+
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript — Guard Assessment</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>import { FidesOriginSDK, Decision } from '@fidesorigin/on-chain-sdk';
+
+// Validate a transfer through the compliance engine
+const validation = await sdk.validateTransfer(
+  '0xSender...',
+  '0xRecipient...',
+  1000000000000000000n, // 1 ETH in wei
+  '0xTokenAddress...'
+);
+
+if (validation.decision === Decision.BLOCK) {
+  console.warn('Transfer blocked:', validation.reason);
+} else if (validation.decision === Decision.FLAG) {
+  console.warn('Transfer flagged for review:', validation.reason);
+}
+
+// Quick check
+const canSend = await sdk.wouldTransferSucceed(
+  '0xSender...', '0xRecipient...', 1000000000000000000n, '0xTokenAddress...'
+);
+console.log('Would succeed:', canSend);</code></pre>
+      </div>
+
+      <h3>Risk Profile Queries (Gas-free)</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>const profile = await sdk.getRiskProfile('0x...');
+console.log(profile.riskScore, profile.tier, profile.isSanctioned);
+
+const sanctioned = await sdk.isSanctioned('0x...');
+const tier = await sdk.getRiskTier('0x...');
+const tags = await sdk.getTags('0x...');</code></pre>
+      </div>
+
+      <h3>Event Listeners</h3>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>TypeScript</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>// Listen for transfer validation events
+const unsubscribe = sdk.onTransferValidated((asset, from, to, amount, decision, reason) => {
+  console.log(`Transfer ${decision === Decision.ALLOW ? 'allowed' : 'blocked'}: ${reason}`);
+});
+
+// Listen for sanction additions
+const unsubSanction = sdk.onSanctionAdded((account, reason) => {
+  console.log('Sanction added:', account, reason);
+});
+
+// Cleanup
+sdk.removeAllListeners();</code></pre>
       </div>
 
       <h2>Solidity Integration</h2>
@@ -254,22 +424,90 @@ contract MyStableCoin is CompliantStableCoin {
           <span>TypeScript</span>
           <button class="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>interface RiskProfile {
+        <pre><code>interface RiskCheckResult {
   address: string;
-  riskScore: number;
-  riskTier: 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  isSanctioned: boolean;
-  tags: string[];
-  entityName: string;
-  lastUpdated: string;
+  chain: string;
+  risk_score: number;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  risk_factors: RiskFactor[];
+  scores?: RiskScore[];
+  addressType?: 'wallet' | 'contract' | 'exchange' | 'mixer' | 'unknown';
+  timestamp?: string;
+  relatedEntities?: Entity[];
+  transactionStats?: TransactionStats;
 }
 
-interface TxResult {
-  allowed: boolean;
-  riskScore: number;
-  riskTier: string;
-  quarantineRequired: boolean;
-  reason: string | null;
+interface RiskFactor {
+  name: string;
+  category: string;
+  severity: string;
+  description?: string;
+}
+
+interface RiskScore {
+  score: number;
+  level: string;
+  confidence: number;
+}
+
+interface Rule {
+  id: string;
+  name: string;
+  description?: string;
+  status: 'active' | 'inactive' | 'draft';
+  priority: number;
+  conditions: RuleCondition[];
+  actions: RuleAction[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface RuleCondition {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in';
+  value: unknown;
+}
+
+interface RuleAction {
+  type: 'flag' | 'block' | 'review' | 'allow';
+  params?: Record&lt;string, unknown&gt;;
+}
+
+// On-Chain SDK types
+enum Decision { ALLOW = 0, FLAG = 1, BLOCK = 2 }
+enum RiskTier { UNKNOWN = 0, LOW = 1, MEDIUM = 2, HIGH = 3, CRITICAL = 4 }
+
+interface TransferValidationResult {
+  wouldSucceed: boolean;
+  decision: Decision;
+  reason: string;
+}</code></pre>
+      </div>
+
+      <h2>React Hook</h2>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>React</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>import { useRiskCheck } from '@fintechguy71/fidesorigin-sdk/react';
+
+function RiskBadge({ address }: { address: string }) {
+  const { data, loading, error, refetch } = useRiskCheck({
+    options: { baseUrl: 'https://api.fidesorigin.com', apiKey: 'pk_...' },
+    pollInterval: 30000,
+    enabled: true
+  });
+
+  if (loading) return &lt;span&gt;Checking...&lt;/span&gt;;
+  if (error) return &lt;span&gt;Error: {error.message}&lt;/span&gt;;
+  if (!data) return null;
+
+  return (
+    &lt;span className={`risk-${data.risk.level}`}&gt;
+      {data.risk.level.toUpperCase()} ({data.risk.score})
+    &lt;/span&gt;
+  );
 }</code></pre>
       </div>
     </main>
@@ -291,6 +529,7 @@ interface TxResult {
           <a href="/#features">Features</a>
           <a href="/#how-it-works">How It Works</a>
           <a href="/#security">Security</a>
+          <a href="/demo.html">Demo</a>
           <a href="/admin/">Dashboard</a>
         </div>
         <div class="footer-col">
