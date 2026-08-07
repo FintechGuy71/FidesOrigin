@@ -1,64 +1,111 @@
 # Changelog
 
-All notable changes to the FidesOrigin project will be documented in this file.
+All notable changes to the FidesOrigin project.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [1.0.0] - 2026-05-06
+## [v2.8.0] - 2026-08-08
 
 ### Added
-- **ComplianceEngine** - 核心合规引擎，实现四级决策体系（ALLOW / BLOCK / FLAG / HOLD）
-- **RiskRegistry** - 链上风险数据库，支持地址风险档案、制裁名单、标签系统
-- **PolicyEngine** - 策略评估引擎，支持发行方策略和钱包策略，含策略版本控制与一键回滚
-- **RiskOracle** - Chainlink Functions 预言机集成，支持链下风险数据上链
-- **IAssetCompliance + IWalletCompliance** - 双接口标准，资产发行方和智能钱包合规接口
-- **CompliantStableCoin** - 合规稳定币示例实现，自动嵌入合规检查
-- **CompliantSmartWallet** - 合规智能钱包示例实现，操作前自动风控
-- **TestUSD** - 早期 Demo 合约，支持多标签风控（VIP/普通/灰名单/黑名单）
-- **完整测试套件** - 10 个测试文件，224 个测试用例，覆盖核心决策路径、集成场景、紧急模式、策略回滚
-- **TypeScript SDK** (`@fidesorigin/sdk`) - 支持 ESM/CJS/UMD 格式，零 Gas 模拟查询
-- **The Graph Subgraph** - Sepolia 测试网事件索引，实时查询合规检查记录
-- **多网络部署脚本** - 支持 Ethereum, Sepolia, Polygon, Mumbai, Arbitrum, Optimism, Base, BNB Chain
-- **Etherscan 自动验证** - 部署后自动验证合约源码
-- **TimelockController** - 48 小时标准升级延迟 + 4 小时紧急模式
-- **架构文档** (`ARCHITECTURE.md`) - 系统架构设计、组件关系、数据流
-- **集成指南** (`INTEGRATION_GUIDE.md`) - 稳定币/钱包/SDK 集成步骤
-- **API 参考** (`API_REFERENCE.md`) - 合约 API 与 SDK 方法完整参考
-- **部署指南** (`DEPLOYMENT.md`) - 测试网与主网部署步骤、升级流程、回滚方案
+
+- **Real-time Demo Page**: Full Sepolia testnet integration with MetaMask support
+  - Live contract interaction (FidesCompliance V2.1)
+  - Multi-RPC fallback (Sepolia, Ankr, PublicNode)
+  - ethers.js v6 integration
+- **Address Check V2.1**: Complete rewrite with Guard integration
+  - Real-time Sepolia contract queries
+  - RiskRegistry profile lookup
+  - Guard status monitoring (active/inactive/offline)
+  - Multi-method fallback for contract calls
+- **Multilingual Expansion**: 15 new translated pages
+  - CN: pricing, case-studies, demo, docs/contracts
+  - TW: pricing, case-studies, demo, docs/contracts
+  - JP: pricing, case-studies, demo, docs/contracts
+  - Professional terminology per locale (风控守卫/風控守衛/ガード)
+- **Brand 404 Page**: Lightweight, brand-consistent error page
+  - Guard status badge ("Guard Status: CLEAR")
+  - Navigation + language switcher
+  - noindex, nofollow for SEO
+- **Complete Sitemap**: Auto-generated 121-URL sitemap.xml
+  - Covers all 128 HTML files
+  - Proper priorities and changefreqs
+  - Hreflang alternates for all locales
 
 ### Changed
-- 将许可证从 MIT 更新为 BSL 1.1（Business Source License 1.1）
-- 重构项目结构，采用模块化架构（Registry / Policy / Engine 三层分离）
-- 升级 Solidity 版本至 ^0.8.20，使用 OpenZeppelin Contracts v5
-- 部署脚本从单合约扩展为多合约多网络部署
+
+- **Documentation V2.1**: Updated all docs to reflect Guard architecture
+  - docs/index.html: V2.1 badge, Sepolia addresses, Guard concepts
+  - docs/api.html: Guard API endpoints, pre-transaction validation
+  - docs/sdk.html: SDK v0.2.1, on-chain SDK, React hooks
+- **Blog Uniformity**: 7 legacy articles updated with current nav/footer
+  - Consistent language switchers
+  - Updated navigation links (Architecture, Demo, GitHub)
+- **SEO Meta Tags**: Fixed 8 pages with proper Open Graph, Twitter Cards
+  - Absolute URLs for og:image
+  - Canonical links
+  - Hreflang tags
 
 ### Fixed
-- 修复 OFAC XML 数据解析，采用规范化解析 + Merkle Tree 标准实现
-- 修复 RiskOracle 数据同步逻辑，添加三层速率限制（调用冷却期 + 日请求上限 + 批量上限）
-- 修复 PolicyEngine 策略版本存储，实现自动快照 + 历史审计链
-- 修复 The Graph Subgraph 事件索引，三数据源完整部署
-- 修复部署脚本中版本号不一致问题（统一为 v1.0.0）
-- 修复 SDK 入口文件命名，从 `FidesOriginSDK` 更正为 `FidesOriginClient`
+
+- **Contract Tests**: 3 failing tests in Guard/PreTransactionGuard
+  - Fixed method name mismatches (getGuardStats vs getStats)
+  - Fixed event argument assertions
+  - All 11 tests now passing (2s)
+- **Sitemap Completeness**: Fixed missing 71 URLs (50 → 121)
+  - Added architecture, vs-chainalysis, new blogs, i18n docs
+- **Orphaned Files**: Removed index.html.bak
+- **Backup Cleanup**: Deleted cn.bak/ and tw.bak/ (36 files)
 
 ### Security
-- 实现基于 OpenZeppelin AccessControl 的细粒度权限管理（ADMIN / OPERATOR / ORACLE 角色分离）
-- 添加 ComplianceEngine 紧急暂停模式（Circuit Breaker）
-- 实现多签 + Timelock 升级机制，防止单点故障和恶意升级
-- 合约通过完整测试覆盖，包括权限边界测试和异常路径测试
 
----
+- CSP headers via Cloudflare Worker (confirmed in HTTP response)
+- X-Frame-Options: DENY
+- Strict-Transport-Security: max-age=63072000
 
-## [0.3.0] - 2025-03-31
+### Deployment
+
+- **Cloudflare Workers**: Production traffic routed through Workers
+  - Security header injection at edge
+  - ~30s global CDN propagation
+- **GitHub Actions**: Auto-deploy on push to main
+  - 7 workflows: ci, deploy, deploy-cloudflare, deploy-contracts, deploy-subgraph, deploy-web, publish-sdk
+
+## [v2.7.0-A+] - 2026-08-01
 
 ### Added
-- TimelockController 时间锁机制 + 多签管理
-- TestUSD 多标签风控系统（VIP / 普通 / 灰名单 / 黑名单）
-- 批量地址更新功能
 
-## [0.1.0] - 2025-03-28
+- A+ security audit report
+- Cloudflare Workers proxy for security headers
+- 391 passing contract tests
+- Subgraph v0.0.4 with Guard entities
+
+### Changed
+
+- Website v2.1 full rebuild
+- Multilingual support (EN/CN/TW/JP)
+- IP auto-detection for language routing
+
+## [v2.1.0] - 2026-07-23
 
 ### Added
-- ERC20 基础合约（TestUSD）
-- 黑白名单基础功能
-- Hardhat 开发环境配置
+
+- FidesCompliance V2.1 with Guard integration
+- PreTransactionGuard for pre-flight checks
+- GNN-powered address profiling
+- Pluggable compliance modules (UUPS proxy)
+
+## [v2.0.0] - 2026-07-19
+
+### Added
+
+- RiskRegistry V2 with CDD labels
+- PolicyEngine with per-wallet rules
+- QuarantineVault for blocked funds
+- CompliantStableCoin (fUSD)
+
+## [v1.0.0] - 2026-07-12
+
+### Added
+
+- Initial protocol launch
+- Basic KYC/AML screening
+- OFAC blacklist checks
+- Programmable policy rules
