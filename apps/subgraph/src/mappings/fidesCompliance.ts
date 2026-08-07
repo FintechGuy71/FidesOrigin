@@ -7,6 +7,7 @@ import {
   RoleGrantedDetailed,
   RoleRevokedDetailed,
   WhitelistUpdated,
+  GuardCheck,
 } from '../../generated/FidesCompliance/FidesCompliance';
 import {
   FidesComplianceCheck,
@@ -23,6 +24,15 @@ const AUDIT_ROLE_GRANTED = 'ROLE_GRANTED';
 const AUDIT_ROLE_REVOKED = 'ROLE_REVOKED';
 const AUDIT_WHITELIST_ADDED = 'WHITELIST_ADDED';
 const AUDIT_WHITELIST_REMOVED = 'WHITELIST_REMOVED';
+
+export function handleGuardCheck(event: GuardCheck): void {
+  log.info('[handleGuardCheck] from={} to={} action={} riskScore={}', [
+    event.params.from.toHexString(),
+    event.params.to.toHexString(),
+    event.params.action.toString(),
+    event.params.riskScore.toString(),
+  ]);
+}
 
 export function handleTransactionChecked(event: TransactionChecked): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();

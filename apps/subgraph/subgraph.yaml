@@ -110,7 +110,7 @@ dataSources:
     network: sepolia
     source:
       abi: FidesCompliance
-      address: "0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594"
+      address: "0x05497600618071C34CB3Fdb8A9E159e9589DEC79"
       startBlock: 7800000
     mapping:
       kind: ethereum/events
@@ -127,11 +127,13 @@ dataSources:
         - name: FidesCompliance
           file: ./abis/FidesCompliance.json
       eventHandlers:
-        - event: TransactionChecked(indexed address,indexed address,uint256,address,bool,uint256,uint256,uint256)
+        - event: TransactionChecked(indexed address,indexed address,indexed uint256,address,bool,uint256,uint256,uint256)
           handler: handleTransactionChecked
-        - event: TransactionBlocked(indexed address,indexed address,uint256,address,string,uint256,uint256)
+        - event: GuardCheck(indexed address,indexed address,uint8,uint256)
+          handler: handleGuardCheck
+        - event: TransactionBlocked(indexed address,indexed address,indexed uint256,address,string,uint256,uint256)
           handler: handleTransactionBlocked
-        - event: TransactionQuarantined(indexed address,indexed address,uint256,address,bytes32,uint256,uint256)
+        - event: TransactionQuarantined(indexed address,indexed address,indexed uint256,address,bytes32,uint256,uint256)
           handler: handleTransactionQuarantined
         - event: EmergencyModeActivated(uint256,uint256)
           handler: handleEmergencyModeActivated
@@ -149,7 +151,7 @@ dataSources:
     network: sepolia
     source:
       abi: CompliantStableCoin
-      address: "0xb47a6520740a54B375e6F3B22bC316B4b02bFbCF"
+      address: "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A"
       startBlock: 7800000
     mapping:
       kind: ethereum/events
@@ -173,4 +175,31 @@ dataSources:
         - event: PolicyUpdated(indexed uint256,indexed uint256,bool,bool,bool,bool,uint256)
           handler: handlePolicyUpdated
       file: ./src/mappings/compliantStableCoin.ts
+  - kind: ethereum
+    name: QuarantineVault
+    network: sepolia
+    source:
+      abi: QuarantineVault
+      address: "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b"
+      startBlock: 7650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - QuarantineRecord
+        - QuarantineRelease
+      abis:
+        - name: QuarantineVault
+          file: ./abis/QuarantineVault.json
+      eventHandlers:
+        - event: FundsFrozen(indexed bytes32,indexed address,address,uint256,indexed address,uint256)
+          handler: handleFundsFrozen
+        - event: FundsQuarantined(indexed bytes32,indexed address,address,uint256,string,uint256)
+          handler: handleFundsQuarantined
+        - event: FundsReleased(indexed bytes32,indexed address,address,uint256,address,uint256)
+          handler: handleFundsReleased
+        - event: ClaimDelayUpdated(uint256,uint256)
+          handler: handleClaimDelayUpdated
+      file: ./src/mappings/quarantineVault.ts
 templates: []

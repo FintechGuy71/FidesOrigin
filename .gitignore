@@ -104,3 +104,4 @@ data-publisher/synced-addresses.json
 .vercel/
 .env.glm52
 *.env.*
+.env

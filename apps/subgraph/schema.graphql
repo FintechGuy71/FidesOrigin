@@ -244,6 +244,63 @@ type TokenPolicy @entity(immutable: false) {
   transactionHash: String!
 }
 
+# ========== Guard V2.1 ==========
+
+type GuardCheck @entity(immutable: false) {
+  id: ID!                              # txHash-logIndex
+  from: String! @index
+  to: String! @index
+  amount: BigInt!
+  riskScore: BigInt!
+  riskLevel: RiskTier!
+  reason: String!
+  passed: Boolean!
+  guardAddress: String!
+  timestamp: BigInt! @index
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type GuardBlocked @entity(immutable: false) {
+  id: ID!                              # txHash-logIndex
+  from: String! @index
+  to: String! @index
+  amount: BigInt!
+  riskScore: BigInt!
+  reason: String!
+  guardAddress: String!
+  timestamp: BigInt! @index
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+# ========== QuarantineVault ==========
+
+type QuarantineRecord @entity(immutable: false) {
+  id: ID!                              # quarantineId
+  owner: String! @index
+  asset: String! @index
+  amount: BigInt!
+  reason: String!
+  timestamp: BigInt! @index
+  blockNumber: BigInt!
+  transactionHash: String!
+  released: Boolean!
+  releasedAt: BigInt
+  expired: Boolean!
+  expiredAt: BigInt
+}
+
+type QuarantineRelease @entity(immutable: false) {
+  id: ID!                              # txHash-logIndex
+  quarantineId: String! @index
+  owner: String! @index
+  amount: BigInt!
+  timestamp: BigInt! @index
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
 # ========== FidesCompliance ==========
 
 type FidesComplianceCheck @entity(immutable: false) {
