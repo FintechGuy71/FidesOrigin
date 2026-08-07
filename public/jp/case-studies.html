@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>ケーススタディ — FidesOrigin | 実運用でのオンチェーンコンプライアンス</title>
+  <meta name="description" content="大手ステーブルコイン発行者、RWAプラットフォーム、DeFiプロトコルがFidesOriginを使用して決定論的なオンチェーンコンプライアンスを実現している方法をご覧ください。">
+  <meta property="og:title" content="ケーススタディ — FidesOrigin">
+  <meta property="og:description" content="大手プロトコルがオンチェーンコンプライアンスのためにFidesOriginを使用している方法をご覧ください。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/jp/case-studies.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://fidesorigin.com/jp/case-studies.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/case-studies.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/case-studies.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/case-studies.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/case-studies.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">コンテンツへ移動</a>
+
+  <nav class="nav" aria-label="メインナビゲーション">
+    <div class="nav-inner">
+      <a href="/ja/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/ja/">ホーム</a>
+        <a href="/ja/#features">機能</a>
+        <a href="/ja/pricing.html">料金</a>
+        <a href="/docs/">ドキュメント</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="言語">
+            日本語
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/case-studies.html">English</a>
+            <a href="/cn/case-studies.html">简体中文</a>
+            <a href="/tw/case-studies.html">繁體中文</a>
+            <a href="/jp/case-studies.html" class="active">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/ja/#contact" class="nav-cta">始める</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="メニューを切り替え" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <section class="section" style="padding-top: 140px; text-align: center;">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">ケーススタディ</p>
+          <h1 class="display" style="font-size: clamp(2rem, 4.5vw, 3.2rem);">実運用での<span>コンプライアンス</span></h1>
+          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">プロトコルが決定論的なオンチェーンリスク実施を構築している方法をご覧ください。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">ステーブルコイン</span>
+            <h3>GlobalPay USD — MiCA 対応ステーブルコイン</h3>
+            <p>GlobalPay は EU 市場向けにユーロ建てのステーブルコインをローンチしました。リアルタイムの OFAC スクリーニング、MiCA 準備金証明、自動化された KYC 検証が必要でした——かつ、中央集権的なインフラを導入することなく。</p>
+            <p>FidesOrigin の CompliantStableCoin ベースコントラクトは、すべての鋳造、焼却、転送時に決定論的なスクリーニングを提供します。ポリシーエンジンは MiCA 特有のルールで設定されています：1:1 の準備金要件、日次取引限度、適格投資家チェックです。</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">100%</div>
+                <div class="label">OFAC カバレッジ</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">&lt;50ms</div>
+                <div class="label">スクリーニング遅延</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$2B+</div>
+                <div class="label">保護取引量</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>PolicyConfig.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// MiCA-specific policy configuration</span>
+<span class="kw">function</span> <span class="func">configureMicaPolicies</span>() <span class="kw">external</span> {
+    policy.<span class="func">setReserveRatio</span>(<span class="num">10000</span>); <span class="comment">// 100%</span>
+    policy.<span class="func">setDailyLimit</span>(<span class="num">1_000_000</span> * <span class="num">1e6</span>);
+    policy.<span class="func">requireAccredited</span>(<span class="kw">true</span>);
+    policy.<span class="func">enableOfacScreening</span>(<span class="kw">true</span>);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reverse reveal">
+          <div>
+            <span class="case-study-tag">RWA</span>
+            <h3>RealT — トークン化不動産のコンプライアンス</h3>
+            <p>RealT は複数の司法管轄区で不動産をトークン化しています。各物件には異なる投資家要件があります：一部は米国適格投資家のみ、一部は EU MiCA 対応、その他は司法管轄区固有の KYC です。</p>
+            <p>FidesOrigin のマルチポリシー対応により、RealT はトークンごとに異なるコンプライアンスルールを割り当てることができます。マークルベースのリスクレジストリにより、投資家データをオンチェーンに露出することなくプライバシー保護検証が可能です。</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">15</div>
+                <div class="label">司法管轄区</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">0</div>
+                <div class="label">データ漏洩</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$50M</div>
+                <div class="label">トークン化資産</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>MultiPolicy.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Per-token policy assignment</span>
+<span class="kw">function</span> <span class="func">assignPolicy</span>(
+    <span class="kw">address</span> token,
+    <span class="type">Policy</span> <span class="kw">calldata</span> policy
+) <span class="kw">external</span> {
+    policies[token] = policy;
+    <span class="kw">emit</span> <span class="func">PolicyAssigned</span>(token, policy.id);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">スマートウォレット</span>
+            <h3>SafeFlow — コンプライアンス付きアカウント抽象化</h3>
+            <p>SafeFlow は機関投資家向けに ERC-4337 スマートウォレットを構築しました。バンドラー提出前にすべての userOp をスクリーニングする必要がありました——遅延を増やしたり、アカウント抽象化の流れを損なったりすることなく。</p>
+            <p>FidesOrigin を検証フェーズに統合することで、SafeFlow はバンドラーが userOp を認識する前にすべての宛先アドレスと呼び出しデータをスクリーニングします。統合による検証時間の増加は 10ms 未満です。</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">&lt;10ms</div>
+                <div class="label">検証オーバーヘッド</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">50K+</div>
+                <div class="label">保護ウォレット</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">99.99%</div>
+                <div class="label">稼働率</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>SafeFlowValidation.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Validate before bundler acceptance</span>
+<span class="kw">function</span> <span class="func">validateUserOp</span>(
+    <span class="type">UserOperation</span> <span class="kw">calldata</span> userOp
+) <span class="kw">external</span> <span class="kw">override</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {
+    <span class="kw">require</span>(
+        fides.<span class="func">isCompliant</span>(userOp),
+        <span class="str">"Non-compliant userOp"</span>
+    );
+    <span class="kw">return</span> <span class="func">_validateSignature</span>(userOp);
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section bg-secondary">
+      <div class="container">
+        <div class="reveal section-intro">
+          <p class="micro">お客様の声</p>
+          <h2 class="h2 section-title">開発者の声</h2>
+        </div>
+        <div class="features-grid" style="margin-top: 48px;">
+          <div class="testimonial reveal">
+            <p class="testimonial-text">「FidesOrigin は私たちの最大のコンプライアンスの悩みを解決してくれました。以前は API コールでスクリーニングしていましたが、300ms の遅延が発生し、時々失敗していました。今ではすべての取引がオンチェーンで決定論的にスクリーニングされています——ユーザーはそれが存在することすら気づきません。」</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">AL</div>
+              <div class="testimonial-info">
+                <h4>Alex L.</h4>
+                <p>CTO, GlobalPay USD</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">「マークルベースのプライバシーアプローチは、まさに私たちに必要なものでした。機密性の高い投資家データをオンチェーンに露出することなく、規制当局にコンプライアンスを証明できます。DeFi とプライバシーの両方を実際に理解している最初のソリューションです。」</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">SM</div>
+              <div class="testimonial-info">
+                <h4>Sarah M.</h4>
+                <p>Head of Compliance, RealT</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">「ERC-4337 へのコンプライアンス統合は不可能だとされていました。FidesOrigin はそれが可能であることを証明しました——週末に動作させることができました。検証フェーズのフックにより、ユーザーへの UX 影響はゼロです。」</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">DK</div>
+              <div class="testimonial-info">
+                <h4>David K.</h4>
+                <p>Lead Engineer, SafeFlow</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="cta-section reveal">
+          <h2 class="h1">次のケーススタディになりませんか？</h2>
+          <p>コンプライアンスのニーズについてお話ししましょう。</p>
+          <div class="cta-buttons">
+            <a href="/contact.html" class="btn btn-primary">営業に問い合わせ</a>
+            <a href="/demo.html" class="btn btn-secondary">デモを試す</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/ja/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+            FidesOrigin
+          </a>
+          <p>金融の未来のためのプログラマブルなオンチェーンコンプライアンス。</p>
+        </div>
+        <div class="footer-col">
+          <h4>製品</h4>
+          <a href="/ja/#features">機能</a>
+          <a href="/ja/pricing.html">料金</a>
+          <a href="/ja/security.html">セキュリティ</a>
+          <a href="/ja/case-studies.html">ケーススタディ</a>
+        </div>
+        <div class="footer-col">
+          <h4>開発者</h4>
+          <a href="/docs/">ドキュメント</a>
+          <a href="/docs/api.html">API リファレンス</a>
+          <a href="/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>会社</h4>
+          <a href="/contact.html">お問い合わせ</a>
+          <a href="/blog/">ブログ</a>
+          <a href="/ja/about.html">私たちについて</a>
+          <a href="/privacy.html">プライバシー</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script>
+    // Mobile menu
+    (function() {
+      var menu = document.getElementById('mobileMenu');
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.addEventListener('click', function() {
+        var active = menu.classList.toggle('active');
+        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+      });
+    })();
+    // Language menu
+    (function() {
+      var btn = document.getElementById('langToggleBtn');
+      var menu = document.getElementById('langMenu');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
+    })();
+    // Scroll reveal
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+  </script>
+</body>
+</html>

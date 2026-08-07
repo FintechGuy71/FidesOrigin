@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>案例研究 — FidesOrigin | 生产环境中的链上合规</title>
+  <meta name="description" content="了解领先的稳定币发行方、RWA平台和DeFi协议如何使用FidesOrigin实现确定性链上合规。">
+  <meta property="og:title" content="案例研究 — FidesOrigin">
+  <meta property="og:description" content="了解领先的协议如何使用FidesOrigin实现链上合规。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/cn/case-studies.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://fidesorigin.com/cn/case-studies.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/case-studies.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/case-studies.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/case-studies.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/case-studies.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">跳转到内容</a>
+
+  <nav class="nav" aria-label="主导航">
+    <div class="nav-inner">
+      <a href="/zh-CN/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+        FidesOrigin
+      </a>
+      <div class="nav-left">
+        <a href="/zh-CN/">首页</a>
+        <a href="/zh-CN/#features">功能</a>
+        <a href="/zh-CN/pricing.html">定价</a>
+        <a href="/docs/">文档</a>
+      </div>
+      <div class="nav-actions">
+        <div class="lang-dropdown">
+          <button id="langToggleBtn" aria-label="语言">
+            中文
+            <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="langMenu">
+            <a href="/case-studies.html">English</a>
+            <a href="/cn/case-studies.html" class="active">简体中文</a>
+            <a href="/tw/case-studies.html">繁體中文</a>
+            <a href="/jp/case-studies.html">日本語</a>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <a href="/zh-CN/#contact" class="nav-cta">开始使用</a>
+      </div>
+      <button class="nav-mobile-btn" aria-label="切换菜单" aria-expanded="false">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <section class="section" style="padding-top: 140px; text-align: center;">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">案例研究</p>
+          <h1 class="display" style="font-size: clamp(2rem, 4.5vw, 3.2rem);">生产环境中的<span>合规</span></h1>
+          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">了解协议如何基于确定性链上风险管控进行构建。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">稳定币</span>
+            <h3>GlobalPay USD — MiCA 合规稳定币</h3>
+            <p>GlobalPay 推出了一款面向欧盟市场的欧元背书的稳定币。他们需要实时 OFAC 筛查、MiCA 储备证明和自动化 KYC 验证——且不引入中心化基础设施。</p>
+            <p>FidesOrigin 的 CompliantStableCoin 基础合约在每次铸造、销毁和转账时提供确定性筛查。策略引擎配置了 MiCA 专用规则：1:1 储备要求、每日交易限额和合格投资者检查。</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">100%</div>
+                <div class="label">OFAC 覆盖率</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">&lt;50ms</div>
+                <div class="label">筛查延迟</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$2B+</div>
+                <div class="label">保护交易量</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>PolicyConfig.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// MiCA-specific policy configuration</span>
+<span class="kw">function</span> <span class="func">configureMicaPolicies</span>() <span class="kw">external</span> {
+    policy.<span class="func">setReserveRatio</span>(<span class="num">10000</span>); <span class="comment">// 100%</span>
+    policy.<span class="func">setDailyLimit</span>(<span class="num">1_000_000</span> * <span class="num">1e6</span>);
+    policy.<span class="func">requireAccredited</span>(<span class="kw">true</span>);
+    policy.<span class="func">enableOfacScreening</span>(<span class="kw">true</span>);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reverse reveal">
+          <div>
+            <span class="case-study-tag">RWA</span>
+            <h3>RealT — 代币化房地产合规</h3>
+            <p>RealT 在多个司法管辖区将房地产代币化。每处房产有不同的投资者要求：部分仅限美国合格投资者，部分需符合欧盟 MiCA，还有司法管辖区特定的 KYC。</p>
+            <p>FidesOrigin 的多策略支持允许 RealT 为每种代币分配不同的合规规则。基于默克尔树的风险注册表实现了隐私保护验证，无需在链上暴露投资者数据。</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">15</div>
+                <div class="label">司法管辖区</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">0</div>
+                <div class="label">数据泄露</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">$50M</div>
+                <div class="label">代币化资产</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>MultiPolicy.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Per-token policy assignment</span>
+<span class="kw">function</span> <span class="func">assignPolicy</span>(
+    <span class="kw">address</span> token,
+    <span class="type">Policy</span> <span class="kw">calldata</span> policy
+) <span class="kw">external</span> {
+    policies[token] = policy;
+    <span class="kw">emit</span> <span class="func">PolicyAssigned</span>(token, policy.id);
+}</pre>
+          </div>
+        </div>
+
+        <div class="case-study-card reveal">
+          <div>
+            <span class="case-study-tag">智能钱包</span>
+            <h3>SafeFlow — 具备合规功能的账户抽象</h3>
+            <p>SafeFlow 为机构用户构建了一个 ERC-4337 智能钱包。他们需要在 bundler 提交前对每个 userOp 进行筛查——且不增加延迟或影响账户抽象流程。</p>
+            <p>通过在验证阶段集成 FidesOrigin，SafeFlow 在 bundler 看到 userOp 之前筛查所有目标地址和调用数据。集成仅增加了不到 10ms 的验证时间。</p>
+            <div class="case-study-stats">
+              <div class="case-study-stat">
+                <div class="num">&lt;10ms</div>
+                <div class="label">验证开销</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">50K+</div>
+                <div class="label">受保护钱包</div>
+              </div>
+              <div class="case-study-stat">
+                <div class="num">99.99%</div>
+                <div class="label">正常运行时间</div>
+              </div>
+            </div>
+          </div>
+          <div class="uc-code">
+            <div class="uc-code-header"><span>SafeFlowValidation.sol</span><span>Solidity</span></div>
+            <pre><span class="comment">// Validate before bundler acceptance</span>
+<span class="kw">function</span> <span class="func">validateUserOp</span>(
+    <span class="type">UserOperation</span> <span class="kw">calldata</span> userOp
+) <span class="kw">external</span> <span class="kw">override</span> <span class="kw">returns</span> (<span class="kw">uint256</span>) {
+    <span class="kw">require</span>(
+        fides.<span class="func">isCompliant</span>(userOp),
+        <span class="str">"Non-compliant userOp"</span>
+    );
+    <span class="kw">return</span> <span class="func">_validateSignature</span>(userOp);
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section bg-secondary">
+      <div class="container">
+        <div class="reveal section-intro">
+          <p class="micro">评价</p>
+          <h2 class="h2 section-title">开发者评价</h2>
+        </div>
+        <div class="features-grid" style="margin-top: 48px;">
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"FidesOrigin 解决了我们最大的合规难题。以前我们通过 API 调用进行筛查，增加了 300ms 延迟且偶尔失败。现在每笔交易都在链上确定性筛查——用户甚至感受不到它的存在。"</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">AL</div>
+              <div class="testimonial-info">
+                <h4>Alex L.</h4>
+                <p>CTO, GlobalPay USD</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"基于默克尔树的隐私方案正是我们需要的。我们可以向监管机构证明合规性，而无需在链上暴露敏感投资者数据。这是第一个真正理解 DeFi 和隐私的解决方案。"</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">SM</div>
+              <div class="testimonial-info">
+                <h4>Sarah M.</h4>
+                <p>合规负责人, RealT</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial reveal">
+            <p class="testimonial-text">"将合规集成到 ERC-4337 本应是不可能的。FidesOrigin 证明了并非如此——我们在一个周末就搞定了。验证阶段的钩子意味着对用户零体验影响。"</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">DK</div>
+              <div class="testimonial-info">
+                <h4>David K.</h4>
+                <p>首席工程师, SafeFlow</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="cta-section reveal">
+          <h2 class="h1">准备好成为我们的下一个案例研究了吗？</h2>
+          <p>联系我们讨论您的合规需求。</p>
+          <div class="cta-buttons">
+            <a href="/contact.html" class="btn btn-primary">联系销售</a>
+            <a href="/demo.html" class="btn btn-secondary">试用演示</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/zh-CN/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
+            FidesOrigin
+          </a>
+          <p>为金融的未来提供可编程的链上合规。</p>
+        </div>
+        <div class="footer-col">
+          <h4>产品</h4>
+          <a href="/zh-CN/#features">功能</a>
+          <a href="/zh-CN/pricing.html">定价</a>
+          <a href="/zh-CN/security.html">安全</a>
+          <a href="/zh-CN/case-studies.html">案例研究</a>
+        </div>
+        <div class="footer-col">
+          <h4>开发者</h4>
+          <a href="/docs/">文档</a>
+          <a href="/docs/api.html">API 参考</a>
+          <a href="/docs/sdk.html">SDK</a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>公司</h4>
+          <a href="/contact.html">联系我们</a>
+          <a href="/blog/">博客</a>
+          <a href="/zh-CN/about.html">关于我们</a>
+          <a href="/privacy.html">隐私</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 FidesOrigin. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script>
+    // Mobile menu
+    (function() {
+      var menu = document.getElementById('mobileMenu');
+      var btn = document.querySelector('.nav-mobile-btn');
+      if (btn) btn.addEventListener('click', function() {
+        var active = menu.classList.toggle('active');
+        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+      });
+    })();
+    // Language menu
+    (function() {
+      var btn = document.getElementById('langToggleBtn');
+      var menu = document.getElementById('langMenu');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { if (menu) menu.style.display = 'none'; });
+    })();
+    // Scroll reveal
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+  </script>
+</body>
+</html>

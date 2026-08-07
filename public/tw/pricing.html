@@ -1,12 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <link rel="canonical" href="https://fidesorigin.com/zh-TW/pricing.html">
-  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/pricing.html">
-  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/pricing.html">
-  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/pricing.html">
-  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/pricing.html">
-  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/pricing.html">
+  <link rel="preload" href="/styles.css" as="style">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
@@ -15,18 +10,23 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
-  <title>Pricing — FidesOrigin | On-Chain Compliance Infrastructure</title>
-  <meta name="description" content="Transparent pricing for on-chain compliance infrastructure. Start free, scale as you grow. Built for stablecoin issuers, RWA platforms, and DeFi protocols.">
+  <title>定價 — FidesOrigin | 鏈上合規基礎設施</title>
+  <meta name="description" content="鏈上合規基礎設施的透明定價。免費開始，隨業務成長擴展。專為穩定幣發行方、RWA平台和DeFi協議打造。">
   <meta name="author" content="FidesOrigin">
-  <meta property="og:title" content="Pricing — FidesOrigin | On-Chain Compliance Infrastructure">
-  <meta property="og:description" content="Transparent pricing for on-chain compliance infrastructure. Start free, scale as you grow.">
+  <meta property="og:title" content="定價 — FidesOrigin | 鏈上合規基礎設施">
+  <meta property="og:description" content="鏈上合規基礎設施的透明定價。免費開始，隨業務成長擴展。">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://fidesorigin.com/pricing.html">
+  <meta property="og:url" content="https://fidesorigin.com/tw/pricing.html">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
-            <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="canonical" href="https://fidesorigin.com/tw/pricing.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/pricing.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/pricing.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/pricing.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/pricing.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
@@ -55,7 +55,7 @@
       background: linear-gradient(180deg, var(--bg-card) 0%, rgba(201,169,110,0.03) 100%);
     }
     .pricing-card.featured::before {
-      content: 'Most Popular';
+      content: '最受歡迎';
       position: absolute;
       top: -1px;
       left: 50%;
@@ -123,10 +123,10 @@
   <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to content</a>
+  <a href="#main-content" class="skip-link">跳轉到內容</a>
 
   <!-- Navigation -->
-  <nav class="nav" aria-label="Main navigation">
+  <nav class="nav" aria-label="主導航">
     <div class="nav-inner">
       <a href="/zh-TW/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
@@ -135,26 +135,26 @@
       <div class="nav-left">
         <a href="/zh-TW/">首頁</a>
         <a href="/zh-TW/#features">功能</a>
-        <a href="/use-cases/stablecoin-compliance.html">應用場景</a>
+        <a href="/zh-TW/use-cases/stablecoin-compliance.html">應用場景</a>
         <a href="/docs/">文件</a>
       </div>
       <div class="nav-actions">
         <div class="lang-dropdown">
-          <button id="langToggleBtn" aria-label="Language">
-            EN
+          <button id="langToggleBtn" aria-label="語言">
+            繁中
             <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div id="langMenu">
-            <a href="/zh-TW/pricing.html">English</a>
+            <a href="/pricing.html">English</a>
             <a href="/cn/pricing.html">简体中文</a>
-            <a href="/tw/pricing.html">繁體中文</a>
+            <a href="/tw/pricing.html" class="active">繁體中文</a>
             <a href="/jp/pricing.html">日本語</a>
           </div>
         </div>
         <div class="nav-divider"></div>
-        <a href="/#contact" class="nav-cta">開始使用</a>
+        <a href="/zh-TW/#contact" class="nav-cta">開始使用</a>
       </div>
-      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+      <button class="nav-mobile-btn" aria-label="切換選單" aria-expanded="false">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -166,8 +166,8 @@
       <div class="container">
         <div class="reveal">
           <p class="micro">定價</p>
-          <h1 class="display">Simple, transparent <span>定價</span></h1>
-          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">Start free. Scale as you grow. No hidden fees, no long-term contracts.</p>
+          <h1 class="display">簡單透明的<span>定價</span></h1>
+          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">免費開始。隨業務成長擴展。無隱藏費用，無長期合約。</p>
         </div>
       </div>
     </section>
@@ -178,55 +178,55 @@
         <div class="pricing-grid">
           <!-- Starter -->
           <div class="pricing-card reveal">
-            <div class="pricing-name">Starter</div>
-            <div class="pricing-desc">For developers and small projects</div>
-            <div class="pricing-price">$0<span>/month</span></div>
+            <div class="pricing-name">入門版</div>
+            <div class="pricing-desc">適合開發者和小型專案</div>
+            <div class="pricing-price">$0<span>/月</span></div>
             <ul class="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 1,000 API calls/month</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Sepolia testnet access</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Community support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Basic risk screening</li>
-              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Mainnet deployment</li>
-              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Custom policies</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 每月 1,000 次 API 呼叫</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Sepolia 測試網存取</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 社群支援</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 基礎風險篩查</li>
+              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> 主網部署</li>
+              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> 自訂策略</li>
             </ul>
             <a href="/docs/" class="btn btn-secondary pricing-cta">免費開始</a>
           </div>
 
           <!-- Growth (Featured) -->
           <div class="pricing-card featured reveal">
-            <div class="pricing-name">Growth</div>
-            <div class="pricing-desc">For growing protocols and stablecoin issuers</div>
-            <div class="pricing-price">$499<span>/month</span></div>
+            <div class="pricing-name">成長版</div>
+            <div class="pricing-desc">適合成長中的協議和穩定幣發行方</div>
+            <div class="pricing-price">$499<span>/月</span></div>
             <ul class="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 100,000 API calls/month</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Mainnet + testnet</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Priority email support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Custom risk policies</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Quarantine vault</li>
-              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Dedicated infrastructure</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 每月 100,000 次 API 呼叫</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 主網 + 測試網</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 優先郵件支援</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 自訂風險策略</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 隔離金庫</li>
+              <li class="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> 專屬基礎設施</li>
             </ul>
-            <a href="mailto:contact@fidesorigin.com" class="btn btn-primary pricing-cta">開始使用</a>
+            <a href="/contact.html" class="btn btn-primary pricing-cta">開始使用</a>
           </div>
 
           <!-- Enterprise -->
           <div class="pricing-card reveal">
-            <div class="pricing-name">Enterprise</div>
-            <div class="pricing-desc">For institutions and large-scale deployments</div>
-            <div class="pricing-price">Custom</div>
+            <div class="pricing-name">企業版</div>
+            <div class="pricing-desc">適合機構和大型部署</div>
+            <div class="pricing-price">定制</div>
             <ul class="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited API calls</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Multi-chain deployment</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 24/7 dedicated support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> SLA guarantee (99.99%)</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Custom contract development</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> On-premise option</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 無限 API 呼叫</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 多鏈部署</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 24/7 專屬支援</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> SLA 保障 (99.99%)</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 自訂合約開發</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 本地部署選項</li>
             </ul>
-            <a href="mailto:contact@fidesorigin.com" class="btn btn-secondary pricing-cta">聯繫銷售</a>
+            <a href="/contact.html" class="btn btn-secondary pricing-cta">聯繫銷售</a>
           </div>
         </div>
 
         <div class="pricing-note reveal">
-          <p>All plans include access to our <a href="/docs/sdk.html">SDK</a>, <a href="/docs/api.html">REST API</a>, and <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">open-source contracts</a>. Need a custom solution? <a href="mailto:contact@fidesorigin.com">Let's talk</a>.</p>
+          <p>所有方案均包含 <a href="/docs/sdk.html">SDK</a>、<a href="/docs/api.html">REST API</a> 和 <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">開源合約</a> 的存取權限。需要客製方案？<a href="mailto:contact@fidesorigin.com">聯繫我們</a>。</p>
         </div>
       </div>
     </section>
@@ -235,30 +235,30 @@
     <section class="section bg-secondary">
       <div class="container">
         <div class="reveal section-intro">
-          <p class="micro">Compare</p>
+          <p class="micro">比較</p>
           <h2 class="h2 section-title">功能比較</h2>
         </div>
         <div class="compare-table-wrap reveal">
           <table class="compare-table">
             <thead>
               <tr>
-                <th>Feature</th>
-                <th>Starter</th>
-                <th>Growth</th>
-                <th>Enterprise</th>
+                <th>功能</th>
+                <th>入門版</th>
+                <th>成長版</th>
+                <th>企業版</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>API Calls / Month</td><td>1,000</td><td>100,000</td><td>Unlimited</td></tr>
-              <tr><td>Networks</td><td>Sepolia</td><td>Mainnet + Testnet</td><td>Multi-chain</td></tr>
-              <tr><td>Risk Screening</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Quarantine Vault</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Custom Policies</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Subgraph Access</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Support</td><td>Community</td><td>Priority Email</td><td>24/7 Dedicated</td></tr>
+              <tr><td>每月 API 呼叫次數</td><td>1,000</td><td>100,000</td><td>無限</td></tr>
+              <tr><td>網路支援</td><td>Sepolia</td><td>主網 + 測試網</td><td>多鏈</td></tr>
+              <tr><td>風險篩查</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+              <tr><td>隔離金庫</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+              <tr><td>自訂策略</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+              <tr><td>子圖存取</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+              <tr><td>支援</td><td>社群</td><td>優先郵件</td><td>24/7 專屬</td></tr>
               <tr><td>SLA</td><td class="dash">—</td><td>99.9%</td><td>99.99%</td></tr>
-              <tr><td>Audit Reports</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
-              <tr><td>Custom Development</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td></tr>
+              <tr><td>審計報告</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+              <tr><td>客製開發</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td></tr>
             </tbody>
           </table>
         </div>
@@ -281,7 +281,7 @@
           <h4>產品</h4>
           <a href="/zh-TW/#features">功能</a>
           <a href="/zh-TW/pricing.html">定價</a>
-          <a href="/use-cases/stablecoin-compliance.html">應用場景</a>
+          <a href="/zh-TW/use-cases/stablecoin-compliance.html">應用場景</a>
           <a href="/admin/">控制台</a>
         </div>
         <div class="footer-col">
@@ -300,7 +300,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>&copy; 2026 FidesOrigin. 保留所有權利。</p>
         <p>Built with &hearts; for the on-chain financial world.</p>
       </div>
     </div>

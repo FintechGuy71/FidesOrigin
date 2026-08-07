@@ -1,12 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <link rel="canonical" href="https://fidesorigin.com/zh-CN/demo.html">
-  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/demo.html">
-  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/demo.html">
-  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/demo.html">
-  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/demo.html">
-  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/demo.html">
+  <link rel="preload" href="/styles.css" as="style">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
@@ -15,16 +10,21 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
-  <title>Interactive Demo — FidesOrigin | On-Chain Compliance Engine</title>
-  <meta name="description" content="Try FidesOrigin's on-chain compliance engine live on Sepolia testnet. Screen addresses, check risk scores, and see quarantine in action.">
-  <meta property="og:title" content="Interactive Demo — FidesOrigin">
-  <meta property="og:description" content="Try our on-chain compliance engine live on Sepolia testnet.">
+  <title>交互式演示 — FidesOrigin | 链上合规引擎</title>
+  <meta name="description" content="在 Sepolia 测试网上实时体验 FidesOrigin 的链上合规引擎。筛查地址、检查风险评分，查看隔离机制的实际运作。">
+  <meta property="og:title" content="交互式演示 — FidesOrigin">
+  <meta property="og:description" content="在 Sepolia 测试网上实时体验我们的链上合规引擎。">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://fidesorigin.com/demo.html">
+  <meta property="og:url" content="https://fidesorigin.com/cn/demo.html">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
-      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="canonical" href="https://fidesorigin.com/cn/demo.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/demo.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/demo.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/demo.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/demo.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
@@ -107,10 +107,10 @@
   <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to content</a>
+  <a href="#main-content" class="skip-link">跳转到内容</a>
 
   <!-- Navigation -->
-  <nav class="nav" aria-label="Main navigation">
+  <nav class="nav" aria-label="主导航">
     <div class="nav-inner">
       <a href="/zh-CN/" class="nav-logo">
         <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
@@ -124,18 +124,21 @@
       </div>
       <div class="nav-actions">
         <div class="lang-dropdown">
-          <button id="langToggleBtn" aria-label="Language">
-            EN
+          <button id="langToggleBtn" aria-label="语言">
+            中文
             <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div id="langMenu">
-            <a href="/zh-CN/demo.html">English</a>
+            <a href="/demo.html">English</a>
+            <a href="/cn/demo.html" class="active">简体中文</a>
+            <a href="/tw/demo.html">繁體中文</a>
+            <a href="/jp/demo.html">日本語</a>
           </div>
         </div>
         <div class="nav-divider"></div>
-        <a href="/#contact" class="nav-cta">开始使用</a>
+        <a href="/zh-CN/#contact" class="nav-cta">开始使用</a>
       </div>
-      <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+      <button class="nav-mobile-btn" aria-label="切换菜单" aria-expanded="false">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -147,8 +150,8 @@
       <div class="container">
         <div class="reveal">
           <p class="micro">演示</p>
-          <h1 class="display">Try it <span>实时演示</span></h1>
-          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">Interact with FidesOrigin's compliance engine on Sepolia testnet. No wallet required for basic checks.</p>
+          <h1 class="display">在线<span>体验</span></h1>
+          <p class="lead" style="max-width: 600px; margin: 20px auto 0;">在 Sepolia 测试网上与 FidesOrigin 的合规引擎交互。基础检查无需钱包。</p>
         </div>
       </div>
     </section>
@@ -157,27 +160,27 @@
     <section class="section" style="padding-top: 0;">
       <div class="container">
         <div class="demo-tabs reveal">
-          <button class="demo-tab active" data-tab="screen">Address Screening</button>
-          <button class="demo-tab" data-tab="risk">Risk Score</button>
-          <button class="demo-tab" data-tab="policy">Policy Check</button>
+          <button class="demo-tab active" data-tab="screen">地址筛查</button>
+          <button class="demo-tab" data-tab="risk">风险评分</button>
+          <button class="demo-tab" data-tab="policy">策略检查</button>
         </div>
 
         <div class="demo-grid">
           <!-- Address Screening -->
           <div class="demo-card reveal">
-            <h3>Screen an Address</h3>
-            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">Enter any Ethereum address to check its compliance status against our risk registry.</p>
+            <h3>筛查地址</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">输入任意以太坊地址，检查其针对我们风险注册表的合规状态。</p>
             <input type="text" class="demo-input" id="screenAddress" placeholder="0x..." value="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb">
-            <button class="demo-btn" id="screenBtn">Screen Address</button>
+            <button class="demo-btn" id="screenBtn">筛查地址</button>
             <div class="demo-result" id="screenResult"></div>
           </div>
 
           <!-- Risk Score -->
           <div class="demo-card reveal">
-            <h3>Check Risk Score</h3>
-            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">Get a detailed risk breakdown including sanctions, exposure, and transaction history.</p>
+            <h3>检查风险评分</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">获取详细的风险分解，包括制裁、暴露度和交易历史。</p>
             <input type="text" class="demo-input" id="riskAddress" placeholder="0x..." value="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb">
-            <button class="demo-btn" id="riskBtn">Check Risk</button>
+            <button class="demo-btn" id="riskBtn">检查风险</button>
             <div class="demo-result" id="riskResult"></div>
           </div>
         </div>
@@ -188,26 +191,26 @@
     <section class="section bg-secondary">
       <div class="container">
         <div class="reveal section-intro">
-          <p class="micro">How It Works</p>
-          <h2 class="h2 section-title">What happens under the hood</h2>
+          <p class="micro">工作原理</p>
+          <h2 class="h2 section-title">幕后发生了什么</h2>
         </div>
         <div class="steps">
           <div class="step reveal">
             <div class="step-number">1</div>
-            <h3>Address Submitted</h3>
-            <p>You submit an address via the demo interface or API call.</p>
+            <h3>提交地址</h3>
+            <p>您通过演示界面或 API 调用提交地址。</p>
           </div>
           <div class="step-arrow">→</div>
           <div class="step reveal">
             <div class="step-number">2</div>
-            <h3>Registry Lookup</h3>
-            <p>Our on-chain RiskRegistryV2 checks 20,000+ profiles in milliseconds.</p>
+            <h3>注册表查询</h3>
+            <p>我们的链上 RiskRegistryV2 在毫秒内检查 20,000+ 个档案。</p>
           </div>
           <div class="step-arrow">→</div>
           <div class="step reveal">
             <div class="step-number">3</div>
-            <h3>Policy Evaluation</h3>
-            <p>The PolicyEngine applies your configured rules to determine compliance.</p>
+            <h3>策略评估</h3>
+            <p>PolicyEngine 应用您配置的规则来确定合规性。</p>
           </div>
         </div>
       </div>
@@ -248,7 +251,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
+        <p>&copy; 2026 FidesOrigin. 保留所有权利。</p>
       </div>
     </div>
   </footer>
@@ -271,17 +274,17 @@
         var result = document.getElementById('screenResult');
         var address = document.getElementById('screenAddress').value;
         result.classList.add('show');
-        result.innerHTML = 'Checking...';
+        result.innerHTML = '检查中...';
         
         // Simulate check
         setTimeout(function() {
           var isSafe = Math.random() > 0.3;
           if (isSafe) {
             result.className = 'demo-result show safe';
-            result.innerHTML = '<span style="color: var(--success);">✓ COMPLIANT</span><br>Address: ' + address.slice(0, 20) + '...<br>Risk Score: LOW (12/100)<br>Sanctions: None<br>Last Updated: ' + new Date().toISOString().slice(0, 10);
+            result.innerHTML = '<span style="color: var(--success);">✓ 合规</span><br>地址: ' + address.slice(0, 20) + '...<br>风险评分: 低 (12/100)<br>制裁: 无<br>最后更新: ' + new Date().toISOString().slice(0, 10);
           } else {
             result.className = 'demo-result show danger';
-            result.innerHTML = '<span style="color: var(--danger);">✗ HIGH RISK</span><br>Address: ' + address.slice(0, 20) + '...<br>Risk Score: HIGH (87/100)<br>Flags: Sanctions List, Mixing<br>Action: BLOCKED';
+            result.innerHTML = '<span style="color: var(--danger);">✗ 高风险</span><br>地址: ' + address.slice(0, 20) + '...<br>风险评分: 高 (87/100)<br>标记: 制裁名单, 混币<br>操作: 已阻止';
           }
         }, 800);
       });
@@ -291,14 +294,14 @@
         var result = document.getElementById('riskResult');
         var address = document.getElementById('riskAddress').value;
         result.classList.add('show');
-        result.innerHTML = 'Analyzing...';
+        result.innerHTML = '分析中...';
         
         setTimeout(function() {
           var score = Math.floor(Math.random() * 100);
-          var tier = score < 30 ? 'LOW' : score < 70 ? 'MEDIUM' : 'HIGH';
+          var tier = score < 30 ? '低' : score < 70 ? '中' : '高';
           var color = score < 30 ? 'var(--success)' : score < 70 ? 'var(--warning)' : 'var(--danger)';
           result.className = 'demo-result show ' + (score < 30 ? 'safe' : score < 70 ? 'warning' : 'danger');
-          result.innerHTML = 'Risk Score: <span style="color: ' + color + '; font-weight: 600;">' + score + '/100 (' + tier + ')</span><br><br>Breakdown:<br>• Sanctions: ' + (score > 50 ? 'MATCH' : 'Clean') + '<br>• Exposure: ' + (score > 40 ? 'High' : 'Low') + '<br>• Age: ' + Math.floor(Math.random() * 1000) + ' days<br>• Transactions: ' + Math.floor(Math.random() * 10000);
+          result.innerHTML = '风险评分: <span style="color: ' + color + '; font-weight: 600;">' + score + '/100 (' + tier + ')</span><br><br>分解:<br>• 制裁: ' + (score > 50 ? '匹配' : '干净') + '<br>• 暴露度: ' + (score > 40 ? '高' : '低') + '<br>• 年龄: ' + Math.floor(Math.random() * 1000) + ' 天<br>• 交易数: ' + Math.floor(Math.random() * 10000);
         }, 1000);
       });
     })();

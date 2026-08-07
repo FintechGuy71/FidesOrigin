@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>デプロイ済みコントラクト — FidesOrigin</title>
+<meta name="description" content="FidesOrigin Sepolia テストネットのコントラクトアドレス。Etherscan で検証済み、ソースコードは完全に公開されています。"/>
+<link rel="canonical" href="https://fidesorigin.com/jp/docs/contracts.html"/>
+<style>
+  :root {
+    --fio-ink:#05060a;
+    --fio-ink-soft:#080a10;
+    --fio-surface:#0c0e18;
+    --fio-surface-2:#111320;
+    --fio-surface-3:#181b28;
+    --fio-elevated:#1e2230;
+    --fio-border:#252a3a;
+    --fio-border-light:#2e3448;
+    --fio-text:#f0f1f5;
+    --fio-text-2:#9a9fad;
+    --fio-text-3:#5e6478;
+    --fio-text-4:#3a4055;
+    --fio-accent:#9b8ed8;
+    --fio-accent-dim:#9b8ed81a;
+    --fio-gold:#d4b87a;
+    --fio-gold-dim:#d4b87a1a;
+    --fio-success:#5ce68a;
+    --fio-warn:#fcd34d;
+    --fio-info:#7ab8f0;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
+  }
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--fio-ink);color:var(--fio-text);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .container{max-width:1000px;margin:0 auto;padding:0 24px}
+  @media(max-width:768px){.container{padding:0 16px}}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  .anim-fade-up{animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both}
+
+  /* Nav */
+  .nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(5,6,10,0.85);backdrop-filter:blur(20px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,0.03)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;max-width:1000px;margin:0 auto;padding:0 24px}
+  .nav-logo{display:flex;align-items:center;gap:10px}
+  .nav-logo img{height:26px;width:auto;border-radius:6px}
+  .nav-logo-text{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--fio-text);letter-spacing:-0.025em}
+  .nav-back{font-size:0.8rem;color:var(--fio-text-3);display:flex;align-items:center;gap:6px;transition:color 0.2s}
+  .nav-back:hover{color:var(--fio-text)}
+
+  /* Hero */
+  .hero{padding:120px 0 60px;text-align:center}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:var(--fio-accent-dim);border:1px solid rgba(155,142,216,0.15);border-radius:100px;font-size:0.72rem;font-family:var(--font-mono);color:var(--fio-accent);margin-bottom:20px}
+  .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--fio-accent)}
+  .hero-title{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,2.6rem);font-weight:500;line-height:1.1;letter-spacing:-0.02em;color:var(--fio-text);margin-bottom:12px}
+  .hero-subtitle{font-size:1rem;color:var(--fio-text-2);max-width:520px;margin:0 auto}
+
+  /* Network selector */
+  .net-bar{display:flex;gap:12px;justify-content:center;margin:40px 0 32px;flex-wrap:wrap}
+  .net-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:100px;font-size:0.8rem;font-family:var(--font-mono);color:var(--fio-text-2);transition:all 0.25s;cursor:pointer}
+  .net-pill:hover{border-color:var(--fio-border-light)}
+  .net-pill.active{border-color:rgba(92,230,138,0.25);background:rgba(92,230,138,0.05);color:var(--fio-success)}
+  .net-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--fio-text-4)}
+  .net-pill.active .dot{background:var(--fio-success);box-shadow:0 0 8px var(--fio-success)}
+
+  /* Contract cards */
+  .contract-list{display:flex;flex-direction:column;gap:16px;margin-bottom:60px}
+  .contract-card{padding:28px 32px;background:var(--fio-surface);border:1px solid var(--fio-border);border-radius:16px;transition:all 0.3s}
+  .contract-card:hover{border-color:var(--fio-border-light)}
+  .contract-card.core{border-color:rgba(212,184,122,0.12);background:linear-gradient(180deg,rgba(212,184,122,0.03) 0%,var(--fio-surface) 50%)}
+  .contract-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+  .contract-name{font-family:var(--font-display);font-size:1.15rem;font-weight:600;color:var(--fio-text)}
+  .contract-version{display:inline-block;padding:3px 10px;border-radius:100px;font-size:0.65rem;font-weight:600;font-family:var(--font-mono);background:var(--fio-gold-dim);color:var(--fio-gold)}
+  .contract-version.v21{background:rgba(155,142,216,0.1);color:var(--fio-accent)}
+  .contract-desc{font-size:0.88rem;color:var(--fio-text-2);line-height:1.6;margin-bottom:20px;max-width:640px}
+
+  .addr-row{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--fio-ink-soft);border:1px solid var(--fio-border);border-radius:12px;margin-bottom:12px;flex-wrap:wrap}
+  .addr-label{font-size:0.7rem;font-family:var(--font-mono);color:var(--fio-text-3);text-transform:uppercase;letter-spacing:0.05em;min-width:80px}
+  .addr-value{font-family:var(--font-mono);font-size:0.85rem;color:var(--fio-accent);word-break:break-all;flex:1}
+  .addr-actions{display:flex;gap:8px;flex-shrink:0}
+  .addr-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--fio-surface-2);border:1px solid var(--fio-border);border-radius:8px;font-size:0.72rem;font-family:var(--font-mono);color:var(--fio-text-2);transition:all 0.2s;cursor:pointer}
+  .addr-btn:hover{background:var(--fio-surface-3);border-color:var(--fio-border-light);color:var(--fio-text)}
+  .addr-btn svg{flex-shrink:0}
+
+  .contract-meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;font-size:0.78rem;color:var(--fio-text-3)}
+  .contract-meta span{display:flex;align-items:center;gap:6px}
+  .contract-meta svg{flex-shrink:0}
+
+  /* Info banner */
+  .info-banner{padding:20px 24px;background:var(--fio-accent-dim);border:1px solid rgba(155,142,216,0.12);border-radius:14px;margin-bottom:40px;display:flex;align-items:center;gap:14px}
+  .info-banner-text{font-size:0.88rem;color:var(--fio-text-2);line-height:1.5}
+  .info-banner-text strong{color:var(--fio-text)}
+
+  /* Footer */
+  .footer{background:var(--fio-ink);border-top:1px solid rgba(255,255,255,0.04);padding:48px 0 32px;margin-top:80px}
+  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  .footer-brand{display:flex;align-items:center;gap:10px}
+  .footer-brand img{height:24px;width:auto;border-radius:5px}
+  .footer-brand span{font-family:var(--font-display);font-weight:600;font-size:0.95rem;color:var(--fio-text)}
+  .footer-links{display:flex;gap:24px}
+  .footer-links a{font-size:0.8rem;color:var(--fio-text-3);transition:color 0.2s}
+  .footer-links a:hover{color:var(--fio-text-2)}
+  .footer-copy{font-size:0.75rem;color:var(--fio-text-4);font-family:var(--font-mono)}
+
+  /* Toast */
+  .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--fio-success);color:var(--fio-ink);font-size:0.85rem;font-weight:600;border-radius:10px;box-shadow:0 8px 32px rgba(92,230,138,0.25);opacity:0;transform:translateY(20px);transition:all 0.3s;pointer-events:none;z-index:9999}
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  @media(max-width:640px){
+    .contract-header{flex-direction:column;align-items:flex-start}
+    .addr-row{flex-direction:column;align-items:flex-start}
+    .addr-actions{width:100%;justify-content:flex-end}
+    .footer-inner{flex-direction:column;text-align:center}
+    .footer-links{justify-content:center}
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="/ja/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="26" height="26">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <a href="/architecture.html" class="nav-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      アーキテクチャへ戻る
+    </a>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container anim-fade-up">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      <span>Sepolia テストネット &middot; チェーン ID 11155111</span>
+    </div>
+    <h1 class="hero-title">デプロイ済みコントラクト</h1>
+    <p class="hero-subtitle">
+      すべての FidesOrigin プロトコルコントラクトは Etherscan Sepolia で検証済みです。
+      ソースコード、ABI、デプロイメントレシートは完全に公開されています。
+    </p>
+  </div>
+</section>
+
+<!-- Network Selector -->
+<div class="container">
+  <div class="net-bar">
+    <span class="net-pill active">
+      <span class="dot"></span>
+      Ethereum Sepolia
+    </span>
+    <span class="net-pill" style="opacity:0.5;cursor:not-allowed">
+      <span class="dot" style="background:var(--fio-warn)"></span>
+      Base Sepolia (近日公開)
+    </span>
+    <span class="net-pill" style="opacity:0.5;cursor:not-allowed">
+      <span class="dot" style="background:var(--fio-warn)"></span>
+      Polygon Amoy (近日公開)
+    </span>
+  </div>
+
+  <div class="info-banner">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--fio-accent)" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <p class="info-banner-text">
+      <strong>Sepolia テストネット</strong> &mdash; これらは開発および統合テスト用のテストネットデプロイメントです。
+      これらのアドレスにメインネットの資金を送らないでください。
+    </p>
+  </div>
+
+  <!-- Contract List -->
+  <div class="contract-list">
+
+    <!-- FidesCompliance -->
+    <div class="contract-card core">
+      <div class="contract-header">
+        <div class="contract-name">FidesCompliance</div>
+        <span class="contract-version v21">V2.1</span>
+      </div>
+      <p class="contract-desc">
+        ガード（Guard）による取引前スクリーニングを備えたコアコンプライアンスエンジン。UUPS アップグレード可能プロキシ。
+        プロトコル内のすべてのコンプライアンスチェックの主要なエントリーポイントとして機能します。
+      </p>
+      <div class="addr-row">
+        <span class="addr-label">アドレス</span>
+        <span class="addr-value" id="addr-fides">0x05497600618071C34CB3Fdb8A9E159e9589DEC79</span>
+        <div class="addr-actions">
+          <button class="addr-btn" onclick="copyAddr('addr-fides')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            コピー
+          </button>
+          <a href="https://sepolia.etherscan.io/address/0x05497600618071C34CB3Fdb8A9E159e9589DEC79" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Etherscan
+          </a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/blob/main/apps/contracts/artifacts/contracts/FidesCompliance.sol/FidesCompliance.json" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            ABI
+          </a>
+        </div>
+      </div>
+      <div class="contract-meta">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          UUPS プロキシ
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          検証済み
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Guard V2.1
+        </span>
+      </div>
+    </div>
+
+    <!-- CompliantStableCoin -->
+    <div class="contract-card">
+      <div class="contract-header">
+        <div class="contract-name">CompliantStableCoin</div>
+        <span class="contract-version">V1.0</span>
+      </div>
+      <p class="contract-desc">
+        組み込みコンプライアンスフックを備えた ERC-20 対応ステーブルコイン。
+        すべての転送は、トークン移動前に自動的に ComplianceEngine を経由します。
+      </p>
+      <div class="addr-row">
+        <span class="addr-label">アドレス</span>
+        <span class="addr-value" id="addr-coin">0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A</span>
+        <div class="addr-actions">
+          <button class="addr-btn" onclick="copyAddr('addr-coin')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            コピー
+          </button>
+          <a href="https://sepolia.etherscan.io/address/0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Etherscan
+          </a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/blob/main/apps/contracts/artifacts/contracts/CompliantStableCoin.sol/CompliantStableCoin.json" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            ABI
+          </a>
+        </div>
+      </div>
+      <div class="contract-meta">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          ERC-20
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          検証済み
+        </span>
+      </div>
+    </div>
+
+    <!-- ComplianceEngine -->
+    <div class="contract-card">
+      <div class="contract-header">
+        <div class="contract-name">ComplianceEngine</div>
+        <span class="contract-version v21">V2.1</span>
+      </div>
+      <p class="contract-desc">
+        取引レベルのコンプライアンスチェッカー。RiskRegistry プロファイルと PolicyEngine ルールを評価し、
+リエントランシーセーフな実行で決定論的な合格/不合格/隔離判定を生成します。
+      </p>
+      <div class="addr-row">
+        <span class="addr-label">アドレス</span>
+        <span class="addr-value" id="addr-engine">0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC</span>
+        <div class="addr-actions">
+          <button class="addr-btn" onclick="copyAddr('addr-engine')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            コピー
+          </button>
+          <a href="https://sepolia.etherscan.io/address/0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Etherscan
+          </a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/blob/main/apps/contracts/artifacts/contracts/ComplianceEngine.sol/ComplianceEngine.json" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            ABI
+          </a>
+        </div>
+      </div>
+      <div class="contract-meta">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          検証済み
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          ReentrancyGuard
+        </span>
+      </div>
+    </div>
+
+    <!-- RiskRegistry -->
+    <div class="contract-card">
+      <div class="contract-header">
+        <div class="contract-name">RiskRegistry</div>
+        <span class="contract-version v21">V2.1</span>
+      </div>
+      <p class="contract-desc">
+        オンチェーンアドレスリスクプロファイルストレージ。制裁リスト、リスク層（低/中/高/クリティカル）、
+およびロールベースのアクセス制御を備えた CDD ラベルを管理します。
+      </p>
+      <div class="addr-row">
+        <span class="addr-label">アドレス</span>
+        <span class="addr-value" id="addr-risk">0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc</span>
+        <div class="addr-actions">
+          <button class="addr-btn" onclick="copyAddr('addr-risk')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            コピー
+          </button>
+          <a href="https://sepolia.etherscan.io/address/0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Etherscan
+          </a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/blob/main/apps/contracts/artifacts/contracts/RiskRegistry.sol/RiskRegistry.json" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            ABI
+          </a>
+        </div>
+      </div>
+      <div class="contract-meta">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          検証済み
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+          ロールベース ACL
+        </span>
+      </div>
+    </div>
+
+    <!-- PolicyEngine -->
+    <div class="contract-card">
+      <div class="contract-header">
+        <div class="contract-name">PolicyEngine</div>
+        <span class="contract-version v21">V2.1</span>
+      </div>
+      <p class="contract-desc">
+        発行者およびウォレットごとの設定可能なルール。取引限度、ジオフェンス、
+ベロシティチェック、マルチシグ要件をサポートし、ウォレットごとの上書き機能を備えています。
+      </p>
+      <div class="addr-row">
+        <span class="addr-label">アドレス</span>
+        <span class="addr-value" id="addr-policy">0x87089F67A61F9643796AE154663A6a9F21196b38</span>
+        <div class="addr-actions">
+          <button class="addr-btn" onclick="copyAddr('addr-policy')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            コピー
+          </button>
+          <a href="https://sepolia.etherscan.io/address/0x87089F67A61F9643796AE154663A6a9F21196b38" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Etherscan
+          </a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/blob/main/apps/contracts/artifacts/contracts/PolicyEngine.sol/PolicyEngine.json" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            ABI
+          </a>
+        </div>
+      </div>
+      <div class="contract-meta">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          検証済み
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          発行者ごとのルール
+        </span>
+      </div>
+    </div>
+
+    <!-- QuarantineVault -->
+    <div class="contract-card">
+      <div class="contract-header">
+        <div class="contract-name">QuarantineVault</div>
+        <span class="contract-version">V1.0</span>
+      </div>
+      <p class="contract-desc">
+        ブロックされた取引の隔離資金保管。権限付きレビュアーによる
+マルチシグまたはタイムロックガバナンスでのみ解放可能です。高リスク資金の流通を防止します。
+      </p>
+      <div class="addr-row">
+        <span class="addr-label">アドレス</span>
+        <span class="addr-value" id="addr-vault">0xF5593e26b2560b9fc71de729EA2D86F979dfd76b</span>
+        <div class="addr-actions">
+          <button class="addr-btn" onclick="copyAddr('addr-vault')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            コピー
+          </button>
+          <a href="https://sepolia.etherscan.io/address/0xF5593e26b2560b9fc71de729EA2D86F979dfd76b" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Etherscan
+          </a>
+          <a href="https://github.com/FintechGuy71/FidesOrigin/blob/main/apps/contracts/artifacts/contracts/QuarantineVault.sol/QuarantineVault.json" target="_blank" rel="noopener" class="addr-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            ABI
+          </a>
+        </div>
+      </div>
+      <div class="contract-meta">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          検証済み
+        </span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          マルチシグ解放
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Quick Reference Table -->
+  <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:500;color:var(--fio-text);margin:48px 0 20px">クイックリファレンス</h2>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--fio-border)">
+          <th style="text-align:left;padding:14px 16px;color:var(--fio-text);font-weight:600;font-family:var(--font-display);background:var(--fio-surface-2)">コントラクト</th>
+          <th style="text-align:left;padding:14px 16px;color:var(--fio-text);font-weight:600;font-family:var(--font-display);background:var(--fio-surface-2)">アドレス</th>
+          <th style="text-align:left;padding:14px 16px;color:var(--fio-text);font-weight:600;font-family:var(--font-display);background:var(--fio-surface-2)">バージョン</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--fio-border)">
+          <td style="padding:14px 16px;color:var(--fio-text-2)"><strong>FidesCompliance</strong></td>
+          <td style="padding:14px 16px;font-family:var(--font-mono);font-size:0.8rem;color:var(--fio-accent)">0x05497600618071C34CB3Fdb8A9E159e9589DEC79</td>
+          <td style="padding:14px 16px;color:var(--fio-accent);font-size:0.75rem;font-family:var(--font-mono)">V2.1</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--fio-border)">
+          <td style="padding:14px 16px;color:var(--fio-text-2)"><strong>CompliantStableCoin</strong></td>
+          <td style="padding:14px 16px;font-family:var(--font-mono);font-size:0.8rem;color:var(--fio-accent)">0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A</td>
+          <td style="padding:14px 16px;color:var(--fio-gold);font-size:0.75rem;font-family:var(--font-mono)">V1.0</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--fio-border)">
+          <td style="padding:14px 16px;color:var(--fio-text-2)"><strong>ComplianceEngine</strong></td>
+          <td style="padding:14px 16px;font-family:var(--font-mono);font-size:0.8rem;color:var(--fio-accent)">0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC</td>
+          <td style="padding:14px 16px;color:var(--fio-accent);font-size:0.75rem;font-family:var(--font-mono)">V2.1</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--fio-border)">
+          <td style="padding:14px 16px;color:var(--fio-text-2)"><strong>RiskRegistry</strong></td>
+          <td style="padding:14px 16px;font-family:var(--font-mono);font-size:0.8rem;color:var(--fio-accent)">0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc</td>
+          <td style="padding:14px 16px;color:var(--fio-accent);font-size:0.75rem;font-family:var(--font-mono)">V2.1</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--fio-border)">
+          <td style="padding:14px 16px;color:var(--fio-text-2)"><strong>PolicyEngine</strong></td>
+          <td style="padding:14px 16px;font-family:var(--font-mono);font-size:0.8rem;color:var(--fio-accent)">0x87089F67A61F9643796AE154663A6a9F21196b38</td>
+          <td style="padding:14px 16px;color:var(--fio-accent);font-size:0.75rem;font-family:var(--font-mono)">V2.1</td>
+        </tr>
+        <tr>
+          <td style="padding:14px 16px;color:var(--fio-text-2)"><strong>QuarantineVault</strong></td>
+          <td style="padding:14px 16px;font-family:var(--font-mono);font-size:0.8rem;color:var(--fio-accent)">0xF5593e26b2560b9fc71de729EA2D86F979dfd76b</td>
+          <td style="padding:14px 16px;color:var(--fio-gold);font-size:0.75rem;font-family:var(--font-mono)">V1.0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+        <span>FidesOrigin</span>
+      </div>
+      <div class="footer-links">
+        <a href="/architecture.html">アーキテクチャ</a>
+        <a href="/docs/">ドキュメント</a>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <span class="footer-copy">&copy; 2026 FidesOrigin. MIT License.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast">アドレスをクリップボードにコピーしました</div>
+
+<script>
+function copyAddr(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+</script>
+
+</body>
+</html>
