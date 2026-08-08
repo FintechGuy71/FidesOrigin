@@ -34,9 +34,16 @@ describe('ComplianceEngine', function () {
   describe('Core Compliance Checks', function () {
     it('should check address compliance for clean addresses', async function () {
       const [isCompliant, riskScore, reason] = await complianceEngine.checkAddressCompliance.staticCall(user1.address);
-      // Default: no profile exists → fail-closed
+      // [F-05 FIX R2] 未知地址默认 fail-open（无档案不阻断）
+      expect(isCompliant).to.be.true;
+    });
+
+    it('should fail closed for unknown address in strict mode (F-05 R2)', async function () {
+      await complianceEngine.connect(owner).setBlockUnknownProfiles(true);
+      const [isCompliant, , reason] = await complianceEngine.checkAddressCompliance.staticCall(user1.address);
       expect(isCompliant).to.be.false;
       expect(reason).to.include('fail closed');
+      await complianceEngine.connect(owner).setBlockUnknownProfiles(false);
     });
 
     it('should check address compliance for sanctioned address', async function () {

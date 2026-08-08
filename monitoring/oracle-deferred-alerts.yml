@@ -1,0 +1,27 @@
+# [G-05 FIX R2] RiskOracle deferred 队列告警规则
+# 加载方式：纳入 Prometheus rule_files（见 monitoring/prometheus.yml）
+groups:
+  - name: fidesorigin-oracle
+    interval: 60s
+    rules:
+      - alert: OracleDeferredQueueBacklog
+        # deferredCount 通过链下 exporter（data-publisher monitor 或 chain exporter）抓取
+        # 指标名约定：fidesorigin_oracle_deferred_count
+        expr: fidesorigin_oracle_deferred_count > 0
+        for: 10m
+        labels:
+          severity: warning
+          component: risk-oracle
+        annotations:
+          summary: "RiskOracle deferred 队列积压 (>10 分钟)"
+          description: "Chainlink 回调在暂停期被 deferred 的请求超过 10 分钟未被 processDeferredRequests 处理。当前深度: {{ $value }}。需要 OPERATOR 调用 processDeferredRequests。"
+
+      - alert: OracleDeferredQueueCritical
+        expr: fidesorigin_oracle_deferred_count > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: risk-oracle
+        annotations:
+          summary: "RiskOracle deferred 队列严重积压 (>10 条)"
+          description: "deferred 队列深度 {{ $value }}，风险数据可能长时间未上链。立即检查 Oracle 暂停状态与 OPERATOR 处理流程。"

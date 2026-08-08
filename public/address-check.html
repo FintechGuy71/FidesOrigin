@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://rpc.ankr.com;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://rpc.ankr.com;">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -167,9 +167,6 @@
 
     /* ─── Contract Info ──────────────────────────── */
     .contract-info { margin-top:16px; padding:16px; background:var(--fio-ink-soft); border:1px solid var(--fio-border); border-radius:10px }
-    .guard-demo-banner { display:flex; align-items:center; gap:12px; margin-top:16px; padding:14px 18px; background:rgba(212,184,122,0.06); border:1px solid rgba(212,184,122,0.12); border-radius:10px; font-size:0.85rem; color:var(--fio-gold); line-height:1.5; }
-    .guard-demo-banner svg { flex-shrink:0; color:var(--fio-gold); }
-    @media(max-width:768px){ .guard-demo-banner { font-size:0.8rem; padding:12px 14px; } }
     .contract-info h4 { font-size:0.8rem; color:var(--fio-text-3); margin-bottom:10px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em }
     .contract-row { display:flex; justify-content:space-between; font-size:0.8rem; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03) }
     .contract-row:last-child { border-bottom:none }
@@ -269,7 +266,7 @@
           <a href="/tw/address-check.html">TW</a>
           <a href="/jp/address-check.html">JP</a>
         </div>
-        <a href="/contact-form" class="nav-v2-cta-outline">Request Demo</a>
+        <a href="mailto:contact@fidesorigin.com" class="nav-v2-cta-outline">Request Demo</a>
       </nav>
       <button class="nav-v2-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -292,7 +289,7 @@
       <a href="/tw/address-check.html">TW</a>
       <a href="/jp/address-check.html">JP</a>
     </div>
-    <a href="/contact-form" class="nav-v2-cta" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
+    <a href="mailto:contact@fidesorigin.com" class="nav-v2-cta" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -342,11 +339,6 @@
             <div class="label">Network</div>
             <div class="sublabel" id="rpcStatus">Checking RPC...</div>
           </div>
-        </div>
-        <!-- Guard INACTIVE Demo Banner -->
-        <div class="guard-demo-banner" id="guardDemoBanner" style="display:none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          <span>Guard 当前处于演示模式。在生产环境中，Guard 通过 PreTransactionGuard 合约在交易广播前自动拦截风险交易。</span>
         </div>
       </div>
     </section>
@@ -531,7 +523,7 @@
         </div>
         <div class="footer-v2-col">
           <h4>Company</h4>
-          <a href="/contact-form">Contact</a>
+          <a href="mailto:contact@fidesorigin.com">Contact</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/terms.html">Terms</a>
         </div>
@@ -690,7 +682,6 @@
       const networkNameEl = document.getElementById('networkName');
       const rpcStatusEl = document.getElementById('rpcStatus');
       const fallbackBanner = document.getElementById('fallbackBanner');
-      const demoBanner = document.getElementById('guardDemoBanner');
 
       networkNameEl.textContent = CONFIG.CHAIN_NAME;
 
@@ -731,12 +722,10 @@
           statusDot.className = 'status-dot on';
           statusText.textContent = 'ACTIVE';
           statusSublabel.textContent = 'Guard Enabled';
-          if (demoBanner) demoBanner.style.display = 'none';
         } else {
           statusDot.className = 'status-dot off';
           statusText.textContent = 'INACTIVE';
           statusSublabel.textContent = 'Guard Disabled';
-          if (demoBanner) demoBanner.style.display = 'flex';
         }
 
         // Stats — try multiple method names

@@ -17,7 +17,7 @@ describe('Upgrade Path Tests', function () {
       });
       await riskRegistry.waitForDeployment();
 
-      expect(await riskRegistry.VERSION()).to.equal('2.0.0');
+      expect(await riskRegistry.VERSION()).to.equal('2.1.0');
       expect(await riskRegistry.hasRole(await riskRegistry.ADMIN_ROLE(), owner.address)).to.be.true;
     });
 

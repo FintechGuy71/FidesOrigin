@@ -57,7 +57,9 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     uint256 public historyIndex;
 
     /// @notice H-05 FIX: 多签 Relayer 共识要求
-    uint256 public constant REQUIRED_RELAYER_CONFIRMATIONS = 2;
+    /// @notice [N-13 FIX R2] 跨链更新所需 relayer 共识数：2 → 3
+    /// @dev 2-of-N 下任意两方串通即可推送恶意 root；主网级跨链桥建议 ≥3 且 relayer 异地隔离。
+    uint256 public constant REQUIRED_RELAYER_CONFIRMATIONS = 3;
     /// @notice H-05 FIX: 每条跨链更新的 relayer 签名记录
     mapping(bytes32 => mapping(address => bool)) public relayerApprovals;
     mapping(bytes32 => uint256) public approvalCount;

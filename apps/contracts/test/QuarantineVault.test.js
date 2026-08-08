@@ -70,7 +70,7 @@ describe('QuarantineVault', function () {
   // ========== Deployment ==========
   describe('Deployment', function () {
     it('should have correct VERSION', async function () {
-      expect(await vault.VERSION()).to.equal('2.0.0');
+      expect(await vault.VERSION()).to.equal('2.1.0');
     });
 
     it('should grant operational roles to deployer on deployment', async function () {
@@ -619,17 +619,22 @@ describe('QuarantineVault', function () {
       });
     });
 
-    it('should withdraw ETH by EMERGENCY_ROLE holder', async function () {
+    it('should withdraw ETH by EMERGENCY_ROLE holder via timelock flow (F-10 R2)', async function () {
       const vaultBalanceBefore = await ethers.provider.getBalance(vault.target);
       expect(vaultBalanceBefore).to.equal(ethers.parseEther('1'));
-      await vault.withdrawETH(user1.address);
+      // [F-10 FIX R2] 旧版直接提取已移除，改为提案+时间锁+执行
+      await vault.proposeWithdrawETH(user1.address);
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await vault.executeWithdrawETH();
       expect(await ethers.provider.getBalance(vault.target)).to.equal(0n);
     });
 
-    it('should allow withdrawETH by EMERGENCY_ROLE holder', async function () {
-      // Owner has EMERGENCY_ROLE, so withdrawETH should succeed
-      await vault.withdrawETH(user1.address);
-      expect(await ethers.provider.getBalance(vault.target)).to.equal(0n);
+    it('should revert legacy direct withdrawETH (F-10 R2)', async function () {
+      await expectRevert(
+        vault.withdrawETH(user1.address),
+        'QV: use proposeWithdrawETH + executeWithdrawETH (timelock)'
+      );
     });
 
     it('should reject withdrawETH by attacker', async function () {

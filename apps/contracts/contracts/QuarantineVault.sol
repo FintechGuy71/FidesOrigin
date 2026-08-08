@@ -10,17 +10,19 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * @title QuarantineVault
  * @notice 平台隔离资金池 — 存放所有被自动隔离的污染资金
  * @dev 只有平台运营方可以操作，用户资金在此安全托管
- * @dev VERSION: 1.2.1 - 安全修复版本
+ * @dev VERSION: 2.1.0 - R2 审计修复版（与 VERSION 常量保持一致）
+ *      R2 修复: C-01 批量 ETH 释放状态顺序 / F-09 claim gas 限制 / F-10 提取时间锁
  */
 contract QuarantineVault is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
     bytes32 public constant QUARANTINE_ROLE = keccak256("QUARANTINE_ROLE");
+    /// @notice [L-06 NOTE] AUDITOR_ROLE 为预留治理角色，供未来只读审计扩展使用
     bytes32 public constant AUDITOR_ROLE = keccak256("AUDITOR_ROLE");
     bytes32 public constant RELEASE_ROLE = keccak256("RELEASE_ROLE");
     bytes32 public constant EMERGENCY_ROLE = keccak256("EMERGENCY_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "2.0.0";
+    string public constant VERSION = "2.1.0";
 
     /// @notice 隔离记录
     struct QuarantineRecord {
@@ -281,10 +283,12 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
     }
 
     /**
-     * @notice 获取记录数量
+     * @notice 获取隔离记录总数（含已释放记录）
+     * @dev [L-05 FIX R2] 返回 recordIdList 长度，与 getRecordIdsPaginated 分页语义一致；
+     *      原实现返回 totalQuarantined（累计隔离计数），与函数名"记录数"语义不符。
      */
     function getRecordCount() external view returns (uint256) {
-        return totalQuarantined;
+        return recordIdList.length;
     }
 
     /**
@@ -500,6 +504,20 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
                 continue;
             }
 
+            // [C-01 FIX R2] 先执行转账，成功后再写入状态。
+            // 原实现先标记 released 再转账：ETH 转账失败时 continue 不回滚，
+            // 记录永久卡在"已释放"状态但资金未到账，且无法再补救。
+            if (record.token == address(0)) {
+                (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
+                if (!ok) {
+                    emit BatchReleaseFailed(recordId, "ETH transfer failed");
+                    continue; // 未标记状态，可后续重试
+                }
+            } else {
+                IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+            }
+
+            // 转账成功后才更新状态与统计
             record.released = true;
             record.releasedBy = msg.sender;
             record.releasedAt = block.timestamp;
@@ -510,17 +528,6 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             totalQuarantinedAmount -= record.amount;
             require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
             tokenQuarantinedAmount[record.token] -= record.amount;
-
-            // P0 FIX: 支持 ETH 批量释放，gas 限制提高到 10000
-            if (record.token == address(0)) {
-                (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
-                if (!ok) {
-                    emit BatchReleaseFailed(recordId, "ETH transfer failed");
-                    continue;
-                }
-            } else {
-                IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
-            }
 
             emit FundsReleased(
                 recordId,
@@ -576,8 +583,10 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         tokenQuarantinedAmount[record.token] -= record.amount;
 
         if (record.token == address(0)) {
-            // P0 FIX: 限制 gas 为 10000 防止重入攻击，同时兼容合约钱包
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
+            // [F-09 FIX R2] claimFunds 取消 gas 限制：originalOwner 本人调用且受
+            // nonReentrant 保护，无重入面；Gnosis Safe 等合约钱包的 receive()
+            // 需要 >10000 gas，原 10000 限制会导致用户永久无法提取。
+            (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
             require(ok, "ETH claim failed");
         } else {
             IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
@@ -665,13 +674,74 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         emit ClaimRequiresApprovalSet(recordId, _requiresApproval);
     }
 
-    // ============ ETH Withdrawal ============
-    function withdrawETH(address payable to) external onlyRole(EMERGENCY_ROLE) nonReentrant {
+    // ============ ETH Withdrawal（两步时间锁） ============
+
+    /// @notice [F-10 FIX R2] ETH 提取时间锁参数
+    uint256 public constant WITHDRAWAL_DELAY = 48 hours;
+    /// @notice [F-10 FIX R2] 待执行的 ETH 提取提案
+    address public pendingWithdrawalTo;
+    uint256 public pendingWithdrawalAmount;
+    uint256 public pendingWithdrawalExecuteAfter;
+
+    event ETHWithdrawalProposed(address indexed to, uint256 amount, uint256 executeAfter);
+    event ETHWithdrawalExecuted(address indexed to, uint256 amount);
+    event ETHWithdrawalCancelled(address indexed to);
+    error TooEarly(uint256 availableAt);
+    error NothingPending();
+
+    /**
+     * @notice [F-10 FIX R2] 提议提取 ETH（48 小时后可执行）
+     * @dev 原 withdrawETH 允许 EMERGENCY_ROLE 单笔提走全部余额且无对账，
+     *      改为两步提案 + 时间锁，给治理留出拦截窗口。
+     */
+    function proposeWithdrawETH(address payable to) external onlyRole(EMERGENCY_ROLE) {
         if (to == address(0)) revert InvalidAddress();
         uint256 balance = address(this).balance;
         require(balance > 0, "No ETH to withdraw");
-        (bool ok, ) = to.call{value: balance}("");
+        pendingWithdrawalTo = to;
+        pendingWithdrawalAmount = balance;
+        pendingWithdrawalExecuteAfter = block.timestamp + WITHDRAWAL_DELAY;
+        emit ETHWithdrawalProposed(to, balance, pendingWithdrawalExecuteAfter);
+    }
+
+    /**
+     * @notice [F-10 FIX R2] 时间锁到期后执行提取（金额以提案时快照为准，多出部分留存）
+     */
+    function executeWithdrawETH() external onlyRole(EMERGENCY_ROLE) nonReentrant {
+        address to = pendingWithdrawalTo;
+        uint256 amount = pendingWithdrawalAmount;
+        if (to == address(0)) revert NothingPending();
+        if (block.timestamp < pendingWithdrawalExecuteAfter) {
+            revert TooEarly(pendingWithdrawalExecuteAfter);
+        }
+        require(address(this).balance >= amount, "Insufficient ETH balance");
+        delete pendingWithdrawalTo;
+        delete pendingWithdrawalAmount;
+        delete pendingWithdrawalExecuteAfter;
+        (bool ok, ) = to.call{value: amount}("");
         require(ok, "ETH withdrawal failed");
+        emit ETHWithdrawalExecuted(to, amount);
+    }
+
+    /**
+     * @notice [F-10 FIX R2] 取消待执行的提取提案
+     */
+    function cancelWithdrawETH() external onlyRole(EMERGENCY_ROLE) {
+        if (pendingWithdrawalTo == address(0)) revert NothingPending();
+        address to = pendingWithdrawalTo;
+        delete pendingWithdrawalTo;
+        delete pendingWithdrawalAmount;
+        delete pendingWithdrawalExecuteAfter;
+        emit ETHWithdrawalCancelled(to);
+    }
+
+    /**
+     * @notice [F-10 FIX R2] 旧版直接提取已移除
+     * @dev DEPRECATED: 使用 proposeWithdrawETH + executeWithdrawETH 两步流程。
+     *      保留签名但直接 revert，防止旧脚本误用单步提取。
+     */
+    function withdrawETH(address payable) external view onlyRole(EMERGENCY_ROLE) {
+        revert("QV: use proposeWithdrawETH + executeWithdrawETH (timelock)");
     }
 
     // ============ View Functions ============

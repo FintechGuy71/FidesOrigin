@@ -12,7 +12,7 @@ import "./utils/ReentrancyGuardUpgradeable.sol";
  * @title RiskRegistry
  * @notice 风险档案注册表 — 存储所有地址的风险评估结果
  * @dev 基于 UUPS 代理模式，支持可升级
- * @dev VERSION: 1.2.1 - 安全修复版
+ * @dev VERSION: 2.1.0 - 安全修复版
  */
 contract RiskRegistry is
     Initializable,
@@ -26,7 +26,7 @@ contract RiskRegistry is
     bytes32 public constant COMPLIANCE_ENGINE_ROLE = keccak256("COMPLIANCE_ENGINE_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "2.0.0";
+    string public constant VERSION = "2.1.0";
 
     // ============ Data Structures ============
 
@@ -272,6 +272,18 @@ contract RiskRegistry is
             if (tags[i].length > MAX_TAGS_PER_ADDRESS) {
                 emit BatchUpdateSkipped(i, addrs[i], "Too many tags");
                 continue;
+            }
+
+            // [F-16 FIX R2] 频率限制预检：_updateRiskProfileInternal 对 1 小时内
+            // 已更新地址 revert UpdateTooFrequent，原实现会让整批回滚（运维 DoS）。
+            // 在调用前预检并跳过（V2 已是 skip-and-continue 语义，V1 对齐）。
+            // 注：零地址/分数/等级/标签数已在上方预检，内部唯一剩余 revert 源即频率限制。
+            {
+                RiskProfile storage existing = riskProfiles[addrs[i]];
+                if (existing.exists && block.timestamp - existing.lastUpdated < MIN_UPDATE_INTERVAL) {
+                    emit BatchUpdateSkipped(i, addrs[i], "Update too frequent");
+                    continue;
+                }
             }
 
             _updateRiskProfileInternal(addrs[i], riskScores[i], tiers[i], sanctioned[i], tags[i]);

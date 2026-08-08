@@ -320,35 +320,49 @@ describe('FidesCompliance Extended', function () {
   });
 
   describe('Admin Parameter Setters', function () {
-    it('should allow admin to set minRiskScoreForQuarantine', async function () {
-      const tx = await fidesCompliance.connect(owner).setMinRiskScoreForQuarantine(70);
-      await expect(tx)
-        .to.emit(fidesCompliance, 'RiskThresholdUpdated')
-        .withArgs('minRiskScoreForQuarantine', 80, 70, owner.address, await ethers.provider.getBlock('latest').then(b => b.timestamp));
+    // [F-13 FIX R2] 阈值 setter 已改为 propose/execute 时间锁（48h），
+    // 旧版即时 setter 直接 revert。以下用例同步更新为两步流程。
+    it('should allow admin to propose+execute minRiskScoreForQuarantine', async function () {
+      await fidesCompliance.connect(owner).proposeMinRiskScoreForQuarantine(70);
+      // 时间旅行 48 小时
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await fidesCompliance.connect(owner).executeMinRiskScoreForQuarantine();
       expect(await fidesCompliance.minRiskScoreForQuarantine()).to.equal(70);
     });
 
-    it('should revert minRiskScoreForQuarantine above 100', async function () {
+    it('should revert execute before timelock expires', async function () {
+      await fidesCompliance.connect(owner).proposeMinRiskScoreForQuarantine(60);
       await expect(
-        fidesCompliance.connect(owner).setMinRiskScoreForQuarantine(101)
-      ).to.be.revertedWith('Invalid value');
+        fidesCompliance.connect(owner).executeMinRiskScoreForQuarantine()
+      ).to.be.revertedWithCustomError(fidesCompliance, 'TooEarly');
     });
 
-    it('should revert minRiskScoreForQuarantine >= maxRiskScoreForBlock', async function () {
+    it('should revert legacy direct setMinRiskScoreForQuarantine', async function () {
       await expect(
-        fidesCompliance.connect(owner).setMinRiskScoreForQuarantine(95)
+        fidesCompliance.connect(owner).setMinRiskScoreForQuarantine(101)
+      ).to.be.revertedWith('FC: use propose/execute pattern (timelock)');
+    });
+
+    it('should revert propose minRiskScoreForQuarantine >= maxRiskScoreForBlock', async function () {
+      await expect(
+        fidesCompliance.connect(owner).proposeMinRiskScoreForQuarantine(95)
       ).to.be.revertedWith('Must be less than maxRiskScoreForBlock');
     });
 
-    it('should allow admin to set maxRiskScoreForBlock', async function () {
-      await fidesCompliance.connect(owner).setMinRiskScoreForQuarantine(50);
-      await fidesCompliance.connect(owner).setMaxRiskScoreForBlock(90);
+    it('should allow admin to propose+execute maxRiskScoreForBlock', async function () {
+      await fidesCompliance.connect(owner).proposeMinRiskScoreForQuarantine(50);
+      await fidesCompliance.connect(owner).proposeMaxRiskScoreForBlock(90);
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await fidesCompliance.connect(owner).executeMinRiskScoreForQuarantine();
+      await fidesCompliance.connect(owner).executeMaxRiskScoreForBlock();
       expect(await fidesCompliance.maxRiskScoreForBlock()).to.equal(90);
     });
 
-    it('should revert maxRiskScoreForBlock <= minRiskScoreForQuarantine', async function () {
+    it('should revert propose maxRiskScoreForBlock <= minRiskScoreForQuarantine', async function () {
       await expect(
-        fidesCompliance.connect(owner).setMaxRiskScoreForBlock(79)
+        fidesCompliance.connect(owner).proposeMaxRiskScoreForBlock(79)
       ).to.be.revertedWith('Must be greater than minRiskScoreForQuarantine');
     });
 
@@ -368,9 +382,9 @@ describe('FidesCompliance Extended', function () {
       ).to.be.revertedWithCustomError(fidesCompliance, 'InvalidCooldown');
     });
 
-    it('should revert when non-admin tries to set parameters', async function () {
+    it('should revert when non-admin tries to propose parameters', async function () {
       await expect(
-        fidesCompliance.connect(addr1).setMinRiskScoreForQuarantine(70)
+        fidesCompliance.connect(addr1).proposeMinRiskScoreForQuarantine(70)
       ).to.be.reverted;
     });
   });
@@ -689,11 +703,11 @@ describe('FidesCompliance Extended', function () {
   });
 
   describe('getRiskProfile', function () {
-    it('should return fail-closed for zero address', async function () {
-      const [riskScore, isSanctioned, lastUpdated] = await fidesCompliance.getRiskProfile(ethers.ZeroAddress);
-      expect(riskScore).to.equal(100);
-      expect(isSanctioned).to.be.false;
-      expect(lastUpdated).to.equal(0);
+    it('should revert for zero address (L-07 R2: 与 isBlacklisted 统一 fail-closed)', async function () {
+      // [L-07 FIX R2] 零地址不再返回 (100,false,0) 的自相矛盾值，改为直接 revert
+      await expect(
+        fidesCompliance.getRiskProfile(ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(fidesCompliance, 'InvalidAddress');
     });
 
     it('should return profile for known address', async function () {

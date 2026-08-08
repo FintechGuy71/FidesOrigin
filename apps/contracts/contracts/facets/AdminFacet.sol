@@ -113,6 +113,15 @@ contract AdminFacet is BaseFacet {
         emit PolicyEngineSet(_e);
     }
 
+    /// @notice [F-05 FIX R2] 未知地址阻断开关（严格模式，默认 fail-open）
+    function setBlockUnknownProfiles(bool enabled) external onlyRole(ADMIN_ROLE) {
+        LibComplianceStorage.diamondStorage().blockUnknownProfiles = enabled;
+        emit BlockUnknownProfilesToggled(enabled);
+    }
+
+    /// @notice [F-05 FIX R2] 开关事件
+    event BlockUnknownProfilesToggled(bool enabled);
+
     function setIssuerPolicy(
         address token,
         IAssetCompliance.IssuerPolicy calldata policy

@@ -1,0 +1,39 @@
+{
+  "$comment": "FidesOrigin 合约地址唯一注册表（G-01 FIX R2）。所有前端/后端/subgraph/脚本必须从此文件读取，禁止硬编码。当前生产代：以 subgraph.yaml 同步的最新一代为准。历史各代见 docs/audit-history/CONTRACT_DEPLOYMENT_STATUS.md。",
+  "version": "2.1.0",
+  "networks": {
+    "sepolia": {
+      "chainId": 11155111,
+      "current": {
+        "RiskRegistry": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+        "PolicyEngine": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+        "ComplianceEngine": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+        "FidesCompliance": "0x05497600618071C34CB3Fdb8A9E159e9589DEC79",
+        "CompliantStableCoin": "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A",
+        "QuarantineVault": "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b"
+      },
+      "proxies": {
+        "RiskRegistry": { "proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc", "implementation": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59" },
+        "PolicyEngine": { "proxy": "0x87089F67A61F9643796AE154663A6a9F21196b38", "implementation": "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7" },
+        "ComplianceEngine": { "proxy": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC", "implementation": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807" },
+        "FidesCompliance": { "proxy": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b", "implementation": "0x74c63D64a548262B0E1508Ac397C7Afc45e4d7cC" }
+      },
+      "deprecated": {
+        "$comment": "历史各代地址，仅供溯源，禁止新代码引用",
+        "RiskRegistry_v1_direct": "0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3",
+        "PolicyEngine_v1_direct": "0xF8f89120f5628aE3De747f55e7d00D79633002c4",
+        "ComplianceEngine_v1_direct": "0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa",
+        "QuarantineVault_v1": "0x787CC3b07D59830DFBF0c7D93430E241c8aEf762",
+        "QuarantineVault_v2": "0x497176b21CC2EDd90a8725a3023742358311a382",
+        "FidesCompliance_v0": "0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594",
+        "FidesCompliance_admin_config": "0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707",
+        "CompliantStableCoin_admin_config": "0xA058c5c0dD7791Ffc6A7EF14C01034d0f9F32a2B"
+      }
+    }
+  },
+  "usage": {
+    "typescript": "import deployments from '@fidesorigin/config/deployments.json'; const addr = deployments.networks.sepolia.current.FidesCompliance;",
+    "subgraph": "apps/subgraph 的 subgraph.yaml 由 scripts/generate-subgraph-yaml 从此注册表生成（勿手改地址）",
+    "ci_check": "scripts/verify-deployments.mjs 在 CI 校验注册表与链上 VERSION() 一致"
+  }
+}

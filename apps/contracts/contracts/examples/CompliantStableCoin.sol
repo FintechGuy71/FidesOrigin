@@ -9,10 +9,11 @@ import "../interfaces/IAssetCompliance.sol";
 
 /**
  * @title CompliantStableCoin
- * @notice 集成FidesOrigin合规协议的示例稳定币合约
- * @dev 展示资产发行方如何集成ComplianceEngine
- * @dev ⚠️ EXAMPLE ONLY - NOT FOR PRODUCTION USE
- * @dev 本合约包含测试专用功能，仅供演示和测试参考
+ * @notice 集成FidesOrigin合规协议的稳定币合约（生产版）
+ * @dev [F-02 FIX R2] 已从 examples/ 示例目录"转正"为生产合约管理：
+ *      移除 "EXAMPLE ONLY" 声明，纳入正式审计范围。
+ *      R2 修复: F-07 删除必失败的 claimOperatorRole / F-08 simulateTransfer 容错 /
+ *      F-11 mint 限额 / F-12 引擎与本地策略开关拆分 / L-03 事件命名澄清
  * 
  * 集成方式：在转账函数中调用compliance.preTransferHook()
  * 实现效果：所有转账自动经过FidesOrigin风控检查
@@ -28,8 +29,13 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
     /// @notice FidesOrigin合规引擎地址
     IAssetCompliance public complianceEngine;
     
-    /// @notice 合规检查是否启用
+    /// @notice 合规检查是否启用（引擎 hook 开关）
+    /// @dev [F-12 FIX R2] 语义收窄：仅控制对 ComplianceEngine 的 hook 调用。
+    ///      本地策略（限额/KYC）由 localPolicyEnabled 独立控制，不再被此开关连带停用。
     bool public complianceEnabled = true;
+
+    /// @notice [F-12 FIX R2] 本地策略开关（maxTxAmount / dailyLimit / KYC）
+    bool public localPolicyEnabled = true;
     
     /// @notice 本币的合规策略配置
     IAssetCompliance.IssuerPolicy public policy;
@@ -120,6 +126,20 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
     function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) whenNotPaused {
         if (to == address(0)) revert InvalidAddress();
 
+        // [F-11 FIX R2] 铸造同样受本地限额约束，且计入接收方当日额度
+        // （原实现 mint 绕过 maxTxAmount/dailyLimit，收款方当日还可转满 dailyLimit，
+        //   实际流通增量可超政策设定）
+        if (localPolicyEnabled) {
+            if (amount > policy.maxTxAmount) {
+                revert ComplianceCheckFailed("Mint exceeds max transaction amount");
+            }
+            uint256 currentDay = block.timestamp / 1 days;
+            if (dailySpent[to][currentDay] + amount > policy.dailyLimit) {
+                revert ComplianceCheckFailed("Mint exceeds recipient daily limit");
+            }
+            dailySpent[to][currentDay] += amount;
+        }
+
         // 铸造时检查接收方风险
         if (complianceEnabled && address(complianceEngine) != address(0)) {
             try complianceEngine.preTransferHook(address(0), to, amount) {
@@ -203,15 +223,15 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
         // 跳过合规检查的情况：
         // 1. 铸造 (from == address(0))
         // 2. 销毁 (to == address(0))
-        // 3. 合规检查已禁用
-        if (from != address(0) && to != address(0) && complianceEnabled) {
+        // [F-12 FIX R2] 本地策略检查由 localPolicyEnabled 独立控制（见 _checkCompliance 内部分流）
+        if (from != address(0) && to != address(0)) {
             _checkCompliance(from, to, amount);
         }
         
         super._update(from, to, amount);
         
-        // [H-17] 修复: 更新每日已用额度
-        if (from != address(0) && to != address(0) && complianceEnabled) {
+        // [H-17] 修复: 更新每日已用额度（[F-12] 本地策略开关控制）
+        if (from != address(0) && to != address(0) && localPolicyEnabled) {
             uint256 currentDay = block.timestamp / 1 days;
             dailySpent[from][currentDay] += amount;
         }
@@ -221,11 +241,14 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
             try complianceEngine.postTransferHook(from, to, amount, true) {
                 // success
             } catch (bytes memory reason) {
-                // 记录失败但不阻塞核心转账
-                emit TransferBlocked(from, to, amount, _getRevertMsg(reason));
+                // [L-03 FIX R2] 事件名澄清：hook 失败不阻断转账，改用专用事件名
+                emit PostTransferHookFailed(from, to, amount, _getRevertMsg(reason));
             }
         }
     }
+    
+    /// @notice [L-03 FIX R2] postTransferHook 失败专用事件（不再复用 TransferBlocked 造成"已阻断"误解）
+    event PostTransferHookFailed(address indexed from, address indexed to, uint256 amount, string reason);
     
     /**
      * @notice 内部合规检查函数
@@ -234,27 +257,29 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
      * @param amount 转账金额
      */
     function _checkCompliance(address from, address to, uint256 amount) internal {
-        if (address(complianceEngine) == address(0)) return;
-        
-        // 1. 基础策略检查
-        if (amount > policy.maxTxAmount) {
-            revert ComplianceCheckFailed("Exceeds max transaction amount");
-        }
-        
-        // [H-17] 修复: 检查日限额
-        uint256 currentDay = block.timestamp / 1 days;
-        if (dailySpent[from][currentDay] + amount > policy.dailyLimit) {
-            revert ComplianceCheckFailed("Exceeds daily limit");
-        }
-        
-        // 2. KYC检查 (如果启用)
-        if (policy.requireDestinationKYC) {
-            if (!kycVerified[to]) {
-                revert NotKYCVerified();
+        // [F-12 FIX R2] 本地策略由 localPolicyEnabled 独立控制
+        if (localPolicyEnabled) {
+            // 1. 基础策略检查
+            if (amount > policy.maxTxAmount) {
+                revert ComplianceCheckFailed("Exceeds max transaction amount");
+            }
+            
+            // [H-17] 修复: 检查日限额
+            uint256 currentDay = block.timestamp / 1 days;
+            if (dailySpent[from][currentDay] + amount > policy.dailyLimit) {
+                revert ComplianceCheckFailed("Exceeds daily limit");
+            }
+            
+            // 2. KYC检查 (如果启用)
+            if (policy.requireDestinationKYC) {
+                if (!kycVerified[to]) {
+                    revert NotKYCVerified();
+                }
             }
         }
         
-        // 3. 调用FidesOrigin合规引擎
+        // 3. 调用FidesOrigin合规引擎（由 complianceEnabled 独立控制）
+        if (!complianceEnabled || address(complianceEngine) == address(0)) return;
         try complianceEngine.preTransferHook(from, to, amount) {
             // 检查通过
         } catch (bytes memory reason) {
@@ -305,29 +330,43 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
         IAssetCompliance.Decision decision,
         string memory reason
     ) {
+        // [L-04 FIX R2] 与真实路径语义一致：开关语义与 _update 对齐
+        if (!localPolicyEnabled && !complianceEnabled) {
+            return (true, IAssetCompliance.Decision.ALLOW, "compliance disabled");
+        }
+
         // [M-02] 修复：与真实转账语义一致，先检查本地策略
-        if (amount > policy.maxTxAmount) {
-            return (false, IAssetCompliance.Decision.BLOCK, "Exceeds max transaction amount");
-        }
+        if (localPolicyEnabled) {
+            if (amount > policy.maxTxAmount) {
+                return (false, IAssetCompliance.Decision.BLOCK, "Exceeds max transaction amount");
+            }
 
-        if (policy.requireDestinationKYC && !kycVerified[to]) {
-            return (false, IAssetCompliance.Decision.BLOCK, "Not KYC verified");
-        }
+            if (policy.requireDestinationKYC && !kycVerified[to]) {
+                return (false, IAssetCompliance.Decision.BLOCK, "Not KYC verified");
+            }
 
-        // M-10 FIX: Check dailySpent limit for simulation consistency
-        uint256 currentDay = block.timestamp / 1 days;
-        if (dailySpent[from][currentDay] + amount > policy.dailyLimit) {
-            return (false, IAssetCompliance.Decision.BLOCK, "Exceeds daily limit");
+            // M-10 FIX: Check dailySpent limit for simulation consistency
+            uint256 currentDay = block.timestamp / 1 days;
+            if (dailySpent[from][currentDay] + amount > policy.dailyLimit) {
+                return (false, IAssetCompliance.Decision.BLOCK, "Exceeds daily limit");
+            }
         }
         
-        if (address(complianceEngine) == address(0)) {
+        if (!complianceEnabled || address(complianceEngine) == address(0)) {
             return (true, IAssetCompliance.Decision.ALLOW, "");
         }
         
-        (decision, reason) = complianceEngine.validateTransfer(from, to, amount, address(this));
-        wouldSucceed = decision != IAssetCompliance.Decision.BLOCK;
-        
-        return (wouldSucceed, decision, reason);
+        // [F-08 FIX R2] try/catch 容错：引擎 validateTransfer 要求
+        // msg.sender==from 或 OPERATOR_ROLE，代币合约调用必然 Unauthorized。
+        // 原实现直接调用必 revert，导致模拟功能整体不可用。
+        try complianceEngine.validateTransfer(from, to, amount, address(this)) returns (
+            IAssetCompliance.Decision d, string memory r
+        ) {
+            return (d != IAssetCompliance.Decision.BLOCK, d, r);
+        } catch {
+            // 引擎不可达/未授权时回退：本地策略已通过则视为成功，并明确标注原因
+            return (true, IAssetCompliance.Decision.ALLOW, "engine check skipped (unauthorized or unavailable)");
+        }
     }
     
     // ============ Admin Functions ============
@@ -398,18 +437,29 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
         _unpause();
     }
 
+    // [F-07 FIX R2] claimOperatorRole 已删除。
+    // 原实现调用 engine.grantRole(OPERATOR_ROLE, address(this))：AccessControl 要求
+    // 调用者（即本代币合约）持有角色管理员权限，代币合约并无此角色，函数必然 revert，
+    // 属误导性死函数。正确流程：由 ComplianceEngine 的 ADMIN_ROLE 直接执行
+    // `engine.grantRole(keccak256("OPERATOR_ROLE"), tokenAddress)`（见部署 runbook）。
+
     /**
-     * @notice 向 ComplianceEngine 申请 OPERATOR_ROLE
-     * @dev 需要 ComplianceEngine 的 ADMIN 在部署后调用，
-     *      或部署脚本自动执行
+     * @notice [F-12 FIX R2] 独立开关本地策略（限额/KYC），与引擎 hook 解耦
+     * @dev 原 toggleCompliance(false) 会连带停用本地 KYC 与限额，单点权力过大。
      */
-    function claimOperatorRole() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (address(complianceEngine) == address(0)) revert ComplianceEngineNotSet();
-        IAccessControl(address(complianceEngine)).grantRole(
-            keccak256("OPERATOR_ROLE"),
-            address(this)
-        );
+    function setLocalPolicyEnabled(bool _enabled) external onlyRole(COMPLIANCE_ADMIN_ROLE) {
+        localPolicyEnabled = _enabled;
+        emit LocalPolicyToggled(_enabled);
     }
+
+    /// @notice [F-12 FIX R2] 本地策略开关事件
+    event LocalPolicyToggled(bool enabled);
+
+    /**
+     * @notice [F-12 FIX R2] toggleCompliance 语义澄清
+     * @dev 仅控制对 ComplianceEngine 的 hook 调用；本地策略请用 setLocalPolicyEnabled。
+     */
+    // toggleCompliance 保留原签名（见上方 Admin Functions 开头），语义已收窄。
     
     // ============ Internal Helpers ============
     

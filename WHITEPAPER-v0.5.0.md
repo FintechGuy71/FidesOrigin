@@ -1,3 +1,5 @@
+> **⚠️ 版本边界声明（G-06 FIX R2）**：本白皮书为 v0.5.0 概念版。当前已实现版本为 **V2.1**（含 PreTransactionGuard、QuarantineVault、UUPS 升级体系）。白皮书中的路线图、代币经济与部分架构描述已落后于实现，以 `ARCHITECTURE.md` 与 `packages/config/deployments.json` 为最新事实来源。待白皮书 v1.0 重写后移除此声明。
+
 # FidesOrigin 项目白皮书 v0.5.0
 **链上执行级可编程合规协议**
 

@@ -44,13 +44,16 @@ describe('Integration Tests', function () {
     await riskRegistry.connect(owner).updateRiskProfile(user2.address, 10, 1, [], false);
 
     // Disable compliance before minting to bypass preTransferHook(address(0), ...) revert
+    // [F-11/F-12 FIX R2] 同步停用本地策略（mint 现受限额约束；1M 代币=默认单笔上限，防御性关闭）
     await stableCoin.connect(owner).toggleCompliance(false);
+    await stableCoin.connect(owner).setLocalPolicyEnabled(false);
 
     // Mint stablecoin to user1
     await stableCoin.connect(owner).mint(user1.address, 1000000 * 10 ** 6);
 
     // Re-enable compliance for transfer tests
     await stableCoin.connect(owner).toggleCompliance(true);
+    await stableCoin.connect(owner).setLocalPolicyEnabled(true);
 
     // Fund smart wallet
     await owner.sendTransaction({

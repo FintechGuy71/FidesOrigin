@@ -108,6 +108,18 @@ describe('FidesOrigin Contract Suite', function () {
 
     describe('PolicyEngine', function () {
         it('should evaluate transfer correctly', async function () {
+            // [F-21 FIX R2] 默认策略已为零值（未配置即 FLAG_FOR_REVIEW），
+            // 评估前显式配置发行方策略
+            await policyEngine.connect(owner).setIssuerPolicy(await testUSD.getAddress(), {
+                maxTxAmount: ethers.parseEther('1000'),
+                dailyLimit: ethers.parseEther('5000'),
+                allowMediumRisk: true,
+                allowHighRisk: true,
+                blockMixer: false,
+                requireDestinationKYC: false,
+                cooldownPeriod: 0,
+                blockedTokens: []
+            });
             const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(
                 user1.address,
                 user2.address,

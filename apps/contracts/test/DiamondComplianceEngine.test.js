@@ -556,10 +556,18 @@ describe('DiamondComplianceEngine', function () {
       expect(reason).to.equal('Critical');
     });
 
-    it('should fail closed for unknown address', async function () {
+    it('should fail open for unknown address by default (F-05 R2)', async function () {
+      // [F-05 FIX R2] 未知地址默认 fail-open（与 ComplianceEngine 一致）
+      const [isCompliant, , ] = await diamond.checkAddressCompliance.staticCall(addr1.address);
+      expect(isCompliant).to.be.true;
+    });
+
+    it('should fail closed for unknown address in strict mode (F-05 R2)', async function () {
+      await diamond.connect(owner).setBlockUnknownProfiles(true);
       const [isCompliant, , reason] = await diamond.checkAddressCompliance.staticCall(addr1.address);
       expect(isCompliant).to.be.false;
       expect(reason).to.equal('No profile - fail closed');
+      await diamond.connect(owner).setBlockUnknownProfiles(false);
     });
 
     it('should allow transfer for clean addresses', async function () {

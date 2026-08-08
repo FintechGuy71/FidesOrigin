@@ -83,12 +83,29 @@ function checkOrigin(req, res) {
 }
 
 // ==================== API Key Auth ====================
+// [F-19 FIX R2] 常数时间比较，防止时序侧信道泄露密钥前缀
+const crypto = require('crypto');
+
+function _timingSafeEqualStr(a, b) {
+  const ba = Buffer.from(String(a), 'utf8');
+  const bb = Buffer.from(String(b), 'utf8');
+  if (ba.length !== bb.length) {
+    // 长度不同也必须消耗一次比较，避免长度侧信道
+    crypto.timingSafeEqual(ba, ba);
+    return false;
+  }
+  return crypto.timingSafeEqual(ba, bb);
+}
+
 function checkApiKey(req, res) {
   if (process.env.NODE_ENV !== 'production') return true;
   const auth = req.headers.authorization || '';
   const bearerMatch = auth.match(/^Bearer\s+(.+)$/i);
   const token = bearerMatch ? bearerMatch[1] : req.headers['x-api-key'];
-  if (!RISK_SYNC_API_KEY || token !== RISK_SYNC_API_KEY) {
+  // [F-19 FIX R2] 原实现 `token !== RISK_SYNC_API_KEY` 为非常数时间比较，
+  // 且该静态 key 与后端 FastAPI 的 JWT 体系强度不一致。
+  // 运维要求：此 key 必须为专用受限 key（只读 + 可轮换 + 与 admin 密钥隔离）。
+  if (!RISK_SYNC_API_KEY || !token || !_timingSafeEqualStr(token, RISK_SYNC_API_KEY)) {
     res.status(401).json({ code: 'UNAUTHORIZED', message: 'Invalid or missing API key' });
     return false;
   }
@@ -296,6 +313,9 @@ function computeRiskScore(address, riskData) {
   }
 
   // Deterministic pseudo-risk for unknown addresses
+  // [F-22 FIX R2] 显式标注启发式估算数据：未知地址的评分由地址哈希确定性生成，
+  // 并非真实链上行为分析结果。响应中携带 heuristicEstimate 标记，
+  // 调用方不得将其作为真实风控结论使用（生产环境应接入真实风险引擎）。
   let hash = 0;
   for (let i = 0; i < normalized.length; i++) {
     hash = ((hash << 5) - hash + normalized.charCodeAt(i)) | 0;
@@ -310,6 +330,7 @@ function computeRiskScore(address, riskData) {
     score,
     level,
     confidence: 0.6 + (Math.abs(hash) % 30) / 100,
+    heuristicEstimate: true, // [F-22 FIX R2] 显式标记启发式估算
     flags: score > 60 ? [{
       id: 'behavioral-risk',
       name: 'Behavioral Risk Pattern',
@@ -351,10 +372,13 @@ function buildRiskCheckResult(address, chainId, riskData) {
     })),
     transactionStats: {
       // [Medium Fix #11] Replaced Math.random with deterministic hash-based values.
+      // [F-22 FIX R2] 显式标注：以下统计为占位估算值，非真实链上统计。
+      // 生产环境应接入真实交易数据源（Blockscout/索引层）。
       totalTransactions: Math.abs(detHash) % 10000,
       totalVolume: Math.abs(detHash) % 1000000,
       firstTransaction: now,
       lastTransaction: now,
+      heuristicEstimate: true,
     },
   };
 }
@@ -389,10 +413,12 @@ function buildAddressRisk(address, chainId, riskData) {
     })),
     stats: {
       // [Medium Fix #11] Replaced Math.random with deterministic hash-based values.
+      // [F-22 FIX R2] 显式标注：以下统计为占位估算值，非真实链上统计。
       totalTransactions: Math.abs(detHash) % 10000,
       totalVolume: Math.abs(detHash) % 1000000,
       firstTransaction: now,
       lastTransaction: now,
+      heuristicEstimate: true,
     },
     assessedAt: now,
   };

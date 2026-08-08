@@ -55,6 +55,9 @@ library LibComplianceStorage {
         uint256 upgradeTimelockDelay;
         mapping(bytes32 => uint256) upgradeProposals;
         mapping(address => bytes32) implementationToProposal;
+        // [F-05 FIX R2] 未知地址（无风险档案）是否阻断。默认 false = fail-open，
+        // 与 FidesCompliance/ComplianceEngine 语义一致；ADMIN 可开启严格模式。
+        bool blockUnknownProfiles;
     }
 
     function diamondStorage()

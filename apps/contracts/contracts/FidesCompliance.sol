@@ -21,9 +21,8 @@ import "./QuarantineVault.sol";
  * @title FidesCompliance
  * @notice FidesOrigin 主合规合约 — 面向用户的统一接口 (UUPS Upgradeable)
  * @dev 所有业务合约应调用此合约进行合规检查
- * @dev VERSION: 1.4.0 - UUPS Upgradeable 重构
- *      1.3.1 - 修复统计回滚(H-01) + MEV保护强制(H-02) + 多项安全加固
- *      + DEFAULT_ADMIN_ROLE后门移除(S-06) + isBlacklisted Fail-Closed(S-07) + 合约校验(S-08)
+ * @dev VERSION: 2.1.0 - R2 审计修复版（与 VERSION 常量保持一致）
+ *      R2 修复: Guard 真实 intent + 主路径接入 / 白名单生效 / 阈值时间锁 / 评估语义统一
  */
 contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, IFidesCompliance {
     
@@ -36,7 +35,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     ///         转移命令: `grantRole(DEFAULT_ADMIN_ROLE, timelockAddress)` 然后 `renounceRole(DEFAULT_ADMIN_ROLE, deployer)`
     
     /// @notice 合约版本号
-    string public constant VERSION = "2.0.0";
+    string public constant VERSION = "2.1.0";
 
     /// @notice MEV 保护最大 deadline 时长
     uint256 public constant MAX_DEADLINE_DURATION = 5 minutes;
@@ -263,6 +262,8 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         require(block.timestamp >= executeAfter, "Upgrade timelock active");
         delete upgradeProposals[proposalId];
         delete implementationToProposal[newImplementation];
+        // [L-02 FIX R2] 执行后同步清理反向映射（原仅在 cancel 中清理，造成存储残留）
+        delete proposalToImplementation[proposalId];
         emit UpgradeExecuted(proposalId, newImplementation);
     }
 
@@ -332,10 +333,10 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         view
         returns (uint256 riskScore, bool isSanctioned, uint256 lastUpdated)
     {
-        if (account == address(0) || address(riskRegistry) == address(0)) {
-            // L-13 FIX: 统一 Fail-Closed 行为 — 与 _getRiskScore 一致返回 100
-            return (100, false, 0);
-        }
+        // [L-07 FIX R2] 与 isBlacklisted 统一 fail-closed 行为：非法输入直接 revert
+        // （原实现对零地址返回 (100, false, 0)，分数满分但 sanctioned=false，语义不自洽）
+        if (account == address(0)) revert InvalidAddress();
+        if (address(riskRegistry) == address(0)) revert RiskRegistryNotSet();
         riskScore = _getRiskScore(account);
         isSanctioned = riskRegistry.isSanctioned(account);
         lastUpdated = _riskProfileLastUpdated[account];
@@ -366,17 +367,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             return (false, 0);
         }
         
-        // V2.1: Guard 预检
+        // V2.1: Guard 预检（F-03 FIX R2: 携带真实交易参数）
         if (guardEnabled && address(guard) != address(0)) {
-            IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
-                from: from,
-                to: to,
-                value: 0,
-                token: address(0),
-                data: "",
-                chainId: block.chainid
-            });
-            IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(intent);
+            IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(
+                _buildIntent(from, to, amount, token)
+            );
             if (result.action == IPreTransactionGuard.Action.BLOCK) {
                 return (false, 100);
             }
@@ -385,6 +380,9 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (address(riskRegistry) == address(0)) {
             return (false, 0);
         }
+
+        // [F-06 FIX R2] 白名单短路（不豁免制裁，见下方检查）
+        bool whitelistedParty = _isWhitelistedParty(from, to);
 
         uint256 fromRiskScore = _getRiskScore(from);
         uint256 toRiskScore = _getRiskScore(to);
@@ -396,11 +394,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (fromSanctioned || toSanctioned) {
             return (false, riskScore);
         }
-        if (riskScore >= maxRiskScoreForBlock) {
+        if (!whitelistedParty && riskScore >= maxRiskScoreForBlock) {
             return (false, riskScore);
         }
 
-        if (address(complianceEngine) != address(0)) {
+        if (!whitelistedParty && address(complianceEngine) != address(0)) {
             (IAssetCompliance.Decision decision, ) = complianceEngine.validateTransfer(
                 from, to, amount, token
             );
@@ -410,6 +408,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             if (decision == IAssetCompliance.Decision.HOLD) {
                 return (false, riskScore);
             }
+        }
+
+        // [F-06] 白名单交易方直接放行
+        if (whitelistedParty) {
+            return (true, riskScore);
         }
 
         allowed = riskScore < minRiskScoreForQuarantine;
@@ -446,17 +449,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             return (false, 0);
         }
         
-        // V2.1: Guard 预检（零Gas快速路径）
+        // V2.1: Guard 预检（零Gas快速路径）（F-03 FIX R2: 携带真实交易参数）
         if (guardEnabled && address(guard) != address(0)) {
-            IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
-                from: from,
-                to: to,
-                value: 0,
-                token: address(0),
-                data: "",
-                chainId: block.chainid
-            });
-            IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(intent);
+            IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(
+                _buildIntent(from, to, amount, token)
+            );
             totalGuardChecks++;
             if (result.action == IPreTransactionGuard.Action.BLOCK) {
                 totalGuardBlocked++;
@@ -465,6 +462,9 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             }
             emit GuardCheck(from, to, uint8(result.action), result.riskScore);
         }
+
+        // [F-06 FIX R2] 白名单短路（不豁免制裁）
+        bool whitelistedParty = _isWhitelistedParty(from, to);
 
         uint256 fromRiskScore = _getRiskScore(from);
         uint256 toRiskScore = _getRiskScore(to);
@@ -476,12 +476,12 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (fromSanctioned || toSanctioned) {
             return (false, riskScore);
         }
-        if (riskScore >= maxRiskScoreForBlock) {
+        if (!whitelistedParty && riskScore >= maxRiskScoreForBlock) {
             return (false, riskScore);
         }
 
         // 若引擎已设置，进一步参考引擎决策
-        if (address(complianceEngine) != address(0)) {
+        if (!whitelistedParty && address(complianceEngine) != address(0)) {
             (IAssetCompliance.Decision decision, ) = complianceEngine.checkTransfer(
                 from, to, amount, token
             );
@@ -491,6 +491,11 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             if (decision == IAssetCompliance.Decision.HOLD) {
                 return (false, riskScore);
             }
+        }
+
+        // [F-06] 白名单交易方直接放行
+        if (whitelistedParty) {
+            return (true, riskScore);
         }
 
         allowed = riskScore < minRiskScoreForQuarantine;
@@ -539,12 +544,50 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (from == address(0) || to == address(0)) revert InvalidAddress();
         if (address(complianceEngine) == address(0)) revert EngineNotSet();
         
+        // [F-03 FIX R2] 主执行路径接入 Guard 预检（此前 Guard 仅挂在不执行资金的路径上）
+        if (guardEnabled && address(guard) != address(0)) {
+            IPreTransactionGuard.RiskAssessment memory guardResult = guard.assessTransaction(
+                _buildIntent(from, to, amount, token)
+            );
+            totalGuardChecks++;
+            if (guardResult.action == IPreTransactionGuard.Action.BLOCK) {
+                totalGuardBlocked++;
+                totalTransactionsChecked++;
+                emit GuardBlocked(from, to, guardResult.reason);
+                emit TransactionChecked(from, to, amount, token, false, 100, block.timestamp, block.number);
+                return false;
+            }
+            emit GuardCheck(from, to, uint8(guardResult.action), guardResult.riskScore);
+        }
+
+        // [F-06 FIX R2] 白名单判定（不豁免制裁）
+        bool whitelistedParty = _isWhitelistedParty(from, to);
+
+        // [M-07 FIX R2] 与 evaluateTransaction 统一：主路径显式制裁检查
+        // （此前仅依赖引擎内部检查，两套管线判定不一致）
+        if (address(riskRegistry) != address(0)) {
+            if (riskRegistry.isSanctioned(from) || riskRegistry.isSanctioned(to)) {
+                totalTransactionsChecked++;
+                totalTransactionsBlocked++;
+                emit TransactionBlocked(from, to, amount, token, "Sanctioned address", block.timestamp, block.number);
+                emit TransactionChecked(from, to, amount, token, false, 100, block.timestamp, block.number);
+                return false;
+            }
+        }
+
         // 先更新"已检查"统计（无论结果如何都算一次检查）
         totalTransactionsChecked++;
         addressTransactionCount[from]++;
         addressLastCheckTime[from] = block.timestamp;
         _riskProfileLastUpdated[from] = block.timestamp;
-        
+
+        // [F-06] 白名单交易方：跳过引擎与风险评分判定，直接放行
+        if (whitelistedParty) {
+            totalTransactionsAllowed++;
+            emit TransactionChecked(from, to, amount, token, true, 0, block.timestamp, block.number);
+            return true;
+        }
+
         (IAssetCompliance.Decision decision, string memory reason) = complianceEngine.checkTransferWithDeadline(
             from, to, amount, token, deadline
         );
@@ -634,6 +677,36 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (address(riskRegistry) == address(0)) return 100; // Fail-Closed
         (uint256 score, , , , , , ,) = riskRegistry.getProfile(account);
         return score;
+    }
+
+    /**
+     * @notice [F-03 FIX R2] 构造携带真实交易参数的 Guard 意图
+     * @dev 原实现 value:0/token:0/data:""，Guard 无法获知金额与代币，规则失效。
+     *      ERC20 转账：value=0、token=代币地址、data=abi.encode(amount)；
+     *      ETH 转账（token==0）：value=amount。
+     */
+    function _buildIntent(
+        address from,
+        address to,
+        uint256 amount,
+        address token
+    ) internal view returns (IPreTransactionGuard.TransactionIntent memory) {
+        return IPreTransactionGuard.TransactionIntent({
+            from: from,
+            to: to,
+            value: token == address(0) ? amount : 0,
+            token: token,
+            data: abi.encode(amount),
+            chainId: block.chainid
+        });
+    }
+
+    /**
+     * @notice [F-06 FIX R2] 白名单判定：任一交易方在白名单则豁免风险评分类判定
+     * @dev 注意：白名单不豁免显式制裁（sanctioned），制裁地址仍一律阻断。
+     */
+    function _isWhitelistedParty(address from, address to) internal view returns (bool) {
+        return _whitelist[from] || _whitelist[to];
     }
 
     // ============ Admin: Two-Step Setters ============
@@ -728,20 +801,74 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
 
     // ============ Admin: Config ============
 
-    function setMinRiskScoreForQuarantine(uint256 _value) external onlyRole(ADMIN_ROLE) {
+    /// @notice [F-13 FIX R2] 风险阈值待执行值（两步时间锁）
+    uint256 public pendingMinRiskScoreForQuarantine;
+    uint256 public pendingMaxRiskScoreForBlock;
+
+    /**
+     * @notice [F-13 FIX R2] 提议修改隔离阈值（48 小时后执行）
+     * @dev 原 setter 即时生效：误设或恶意设置会即刻冻结/放行全网交易。
+     *      风控关键参数统一走 propose/execute 时间锁（复用 SETTER_DELAY）。
+     */
+    function proposeMinRiskScoreForQuarantine(uint256 _value) external onlyRole(ADMIN_ROLE) {
         require(_value <= 100, "Invalid value");
         require(_value < maxRiskScoreForBlock, "Must be less than maxRiskScoreForBlock");
-        uint256 old = minRiskScoreForQuarantine;
-        minRiskScoreForQuarantine = _value;
-        emit RiskThresholdUpdated("minRiskScoreForQuarantine", old, _value, msg.sender, block.timestamp);
+        pendingMinRiskScoreForQuarantine = _value;
+        pendingSetTime["minRiskScoreForQuarantine"] = block.timestamp;
+        emit RiskThresholdUpdated("propose:minRiskScoreForQuarantine", minRiskScoreForQuarantine, _value, msg.sender, block.timestamp);
     }
 
-    function setMaxRiskScoreForBlock(uint256 _value) external onlyRole(ADMIN_ROLE) {
+    function executeMinRiskScoreForQuarantine() external onlyRole(ADMIN_ROLE) {
+        uint256 setTime = pendingSetTime["minRiskScoreForQuarantine"];
+        if (setTime == 0) revert NothingPending();
+        if (block.timestamp < setTime + SETTER_DELAY) {
+            revert TooEarly(setTime + SETTER_DELAY);
+        }
+        uint256 old = minRiskScoreForQuarantine;
+        minRiskScoreForQuarantine = pendingMinRiskScoreForQuarantine;
+        delete pendingMinRiskScoreForQuarantine;
+        delete pendingSetTime["minRiskScoreForQuarantine"];
+        emit RiskThresholdUpdated("minRiskScoreForQuarantine", old, minRiskScoreForQuarantine, msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice [F-13 FIX R2] 提议修改阻断阈值（48 小时后执行）
+     */
+    function proposeMaxRiskScoreForBlock(uint256 _value) external onlyRole(ADMIN_ROLE) {
         require(_value <= 100, "Invalid value");
         require(_value > minRiskScoreForQuarantine, "Must be greater than minRiskScoreForQuarantine");
+        pendingMaxRiskScoreForBlock = _value;
+        pendingSetTime["maxRiskScoreForBlock"] = block.timestamp;
+        emit RiskThresholdUpdated("propose:maxRiskScoreForBlock", maxRiskScoreForBlock, _value, msg.sender, block.timestamp);
+    }
+
+    function executeMaxRiskScoreForBlock() external onlyRole(ADMIN_ROLE) {
+        uint256 setTime = pendingSetTime["maxRiskScoreForBlock"];
+        if (setTime == 0) revert NothingPending();
+        if (block.timestamp < setTime + SETTER_DELAY) {
+            revert TooEarly(setTime + SETTER_DELAY);
+        }
         uint256 old = maxRiskScoreForBlock;
-        maxRiskScoreForBlock = _value;
-        emit RiskThresholdUpdated("maxRiskScoreForBlock", old, _value, msg.sender, block.timestamp);
+        maxRiskScoreForBlock = pendingMaxRiskScoreForBlock;
+        delete pendingMaxRiskScoreForBlock;
+        delete pendingSetTime["maxRiskScoreForBlock"];
+        emit RiskThresholdUpdated("maxRiskScoreForBlock", old, maxRiskScoreForBlock, msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice [F-13 FIX R2] 旧版即时 setter 已移除
+     * @dev DEPRECATED: 请使用 proposeMinRiskScoreForQuarantine + executeMinRiskScoreForQuarantine。
+     */
+    function setMinRiskScoreForQuarantine(uint256) external view onlyRole(ADMIN_ROLE) {
+        revert("FC: use propose/execute pattern (timelock)");
+    }
+
+    /**
+     * @notice [F-13 FIX R2] 旧版即时 setter 已移除
+     * @dev DEPRECATED: 请使用 proposeMaxRiskScoreForBlock + executeMaxRiskScoreForBlock。
+     */
+    function setMaxRiskScoreForBlock(uint256) external view onlyRole(ADMIN_ROLE) {
+        revert("FC: use propose/execute pattern (timelock)");
     }
 
     function setMinUpdateInterval(uint256 _value) external onlyRole(ADMIN_ROLE) {
@@ -804,6 +931,8 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     
     /**
      * @notice 预览 Guard 检查结果
+     * @dev DEPRECATED: 不含金额/代币参数，Guard 无法评估完整意图。
+     *      请使用 previewTransactionGuard(from, to, amount, token)。
      */
     function previewGuardCheck(address from, address to) 
         external 
@@ -814,16 +943,26 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             return (false, "Guard disabled");
         }
         
-        IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
-            from: from,
-            to: to,
-            value: 0,
-            token: address(0),
-            data: "",
-            chainId: block.chainid
-        });
-        
-        IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(intent);
+        IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(
+            _buildIntent(from, to, 0, address(0))
+        );
+        return (result.action == IPreTransactionGuard.Action.BLOCK, result.reason);
+    }
+
+    /**
+     * @notice [F-03 FIX R2] 携带完整交易参数预览 Guard 检查结果
+     */
+    function previewTransactionGuard(address from, address to, uint256 amount, address token)
+        external
+        view
+        returns (bool wouldBlock, string memory reason)
+    {
+        if (!guardEnabled || address(guard) == address(0)) {
+            return (false, "Guard disabled");
+        }
+        IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(
+            _buildIntent(from, to, amount, token)
+        );
         return (result.action == IPreTransactionGuard.Action.BLOCK, result.reason);
     }
     

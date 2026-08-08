@@ -14,7 +14,7 @@ import "./RiskRegistry.sol";
  * @title PolicyEngine
  * @notice 策略引擎 — 定义和执行合规策略
  * @dev 基于 UUPS 代理模式，支持可升级
- * @dev VERSION: 1.2.1 - 修复 C-01/C-02/H-01..H-06 及相关 M/L 级别问题
+ * @dev VERSION: 2.1.0 - 修复 C-01/C-02/H-01..H-06 及相关 M/L 级别问题
  */
 contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
 
@@ -23,7 +23,7 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     bytes32 public constant COMPLIANCE_ENGINE_ROLE = keccak256("COMPLIANCE_ENGINE_ROLE");
 
     /// @notice 合约版本号
-    string public constant VERSION = "2.0.0";
+    string public constant VERSION = "2.1.0";
 
     /// @notice 规则上限（M-01）— P1-9: 从 200 降为 50，限制 evaluatePolicy 复杂度
     uint256 public constant MAX_RULES = 50;
@@ -48,6 +48,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         bool requiresAML;
         ActionType action;
         bool active;
+        /// @dev [N-14 NOTE R2] priority 为预留字段：当前评估收集全部匹配动作，
+        ///      BLOCK 短路，优先级不参与排序。保留供未来有序评估使用。
         uint256 priority;
     }
 
@@ -77,6 +79,8 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     RiskRegistry public riskRegistry;
 
     /// @notice 风险等级阈值
+    /// @dev [N-14 NOTE R2] 当前 evaluatePolicy 按规则 min/maxRiskScore 判定，
+    ///      此映射为预留阈值配置（供未来 tier→score 推导使用），写入暂无读取点。
     mapping(IAssetCompliance.RiskTier => uint256) public riskTierThresholds;
 
     /// @notice 版本历史头指针（P2-B: 环形缓冲）
@@ -240,9 +244,12 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         riskTierThresholds[IAssetCompliance.RiskTier.HIGH] = 80;
 
         // 设置默认发行方策略
+        // [F-21/N-16 FIX R2] 默认策略改为"禁用即保守"：不再以 10^18 精度给出宽限默认值
+        // （6 位小数代币误用默认策略时限额会放大 10^12 倍）。
+        // 未显式配置发行方策略的代币，_evaluateTransfer 返回 FLAG_FOR_REVIEW 而非套用默认值。
         defaultIssuerPolicy = IssuerPolicy({
-            maxTxAmount: 1000 * 10**18,
-            dailyLimit: 5000 * 10**18,
+            maxTxAmount: 0,   // 0 = 未配置；见 _evaluateTransfer 的 issuerPolicyEnabled 分支
+            dailyLimit: 0,
             allowMediumRisk: false,
             allowHighRisk: false,
             blockMixer: true,
@@ -550,23 +557,28 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         RiskRegistry.RiskTier tier = uint8(fromTier_) > uint8(toTier_) ? RiskRegistry.RiskTier(fromTier_) : RiskRegistry.RiskTier(toTier_);
 
         // M-03: 显式发行方策略启用标志
-        IssuerPolicy storage policy = issuerPolicyEnabled[issuer]
-            ? issuerPolicies[issuer]
-            : defaultIssuerPolicy;
+        // [F-21 FIX R2] 未显式配置策略的发行方：保守处理为人工复核，
+        // 不再套用 10^18 精度的默认值（精度陷阱会放大低小数代币限额）。
+        if (!issuerPolicyEnabled[issuer]) {
+            return (ActionType.FLAG_FOR_REVIEW, "No issuer policy configured");
+        }
+        IssuerPolicy storage policy = issuerPolicies[issuer];
 
         // 单笔限额
-        if (amount > policy.maxTxAmount) {
+        if (policy.maxTxAmount > 0 && amount > policy.maxTxAmount) {
             return (ActionType.BLOCK, "Exceeds max transaction amount");
         }
 
         // H-03: 每日限额（只读校验，状态更新在 recordTransfer）
-        uint256 spent = dailySpent[issuer][from];
-        uint256 resetAt = lastResetDay[issuer][from];
-        if (resetAt != 0 && block.timestamp >= resetAt + 1 days) {
-            spent = 0; // 视为已重置
-        }
-        if (spent + amount > policy.dailyLimit) {
-            return (ActionType.BLOCK, "Daily limit exceeded");
+        if (policy.dailyLimit > 0) {
+            uint256 spent = dailySpent[issuer][from];
+            uint256 resetAt = lastResetDay[issuer][from];
+            if (resetAt != 0 && block.timestamp >= resetAt + 1 days) {
+                spent = 0; // 视为已重置
+            }
+            if (spent + amount > policy.dailyLimit) {
+                return (ActionType.BLOCK, "Daily limit exceeded");
+            }
         }
 
         // L-01: 使用枚举常量替代魔数

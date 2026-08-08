@@ -26,13 +26,17 @@ describe('CompliantStableCoin', function () {
     await riskRegistry.connect(owner).updateRiskProfile(user2.address, 10, 1, [], false);
 
     // Disable compliance before minting to bypass preTransferHook(address(0), ...) revert
+    // [F-11/F-12 FIX R2] mint 现在也受本地限额约束（maxTxAmount/dailyLimit），
+    // 夹具铸造量（10M 代币）超过默认限额，需同时停用本地策略。
     await stableCoin.connect(owner).toggleCompliance(false);
+    await stableCoin.connect(owner).setLocalPolicyEnabled(false);
 
     // Mint some tokens to user1 for testing (more than maxTxAmount)
     await stableCoin.connect(owner).mint(user1.address, 10000000 * 10 ** 6);
 
     // Re-enable compliance for transfer tests
     await stableCoin.connect(owner).toggleCompliance(true);
+    await stableCoin.connect(owner).setLocalPolicyEnabled(true);
   });
 
   describe('Deployment', function () {
@@ -157,12 +161,9 @@ describe('CompliantStableCoin', function () {
       expect(policy.maxTxAmount).to.equal(newPolicy.maxTxAmount);
     });
 
-    // H-03 FIX: Test claimOperatorRole
-    // NOTE: claimOperatorRole is broken because ComplianceEngine requires ADMIN_ROLE
-    // (not DEFAULT_ADMIN_ROLE) to grant OPERATOR_ROLE. We test the intended outcome
-    // by having the owner directly grant the role.
-    it('should allow admin to claim operator role via claimOperatorRole', async function () {
-      // Deploy a new stable coin without the fixture's automatic role grant
+    // [F-07 FIX R2] claimOperatorRole 已删除（原实现必然 revert，属误导性死函数）。
+    // 正确流程验证：由 ComplianceEngine 的 ADMIN_ROLE 直接给代币授予 OPERATOR_ROLE。
+    it('should allow engine admin to grant OPERATOR_ROLE to token (replaces claimOperatorRole)', async function () {
       const CompliantStableCoin = await ethers.getContractFactory('CompliantStableCoin');
       const newStableCoin = await CompliantStableCoin.deploy(
         'TestUSD',
@@ -171,30 +172,12 @@ describe('CompliantStableCoin', function () {
       );
       await newStableCoin.waitForDeployment();
 
-      // Before claiming, stableCoin should NOT have OPERATOR_ROLE
       const opRole = await complianceEngine.OPERATOR_ROLE();
       expect(await complianceEngine.hasRole(opRole, await newStableCoin.getAddress())).to.be.false;
 
-      // Workaround: owner (who has ADMIN_ROLE on ComplianceEngine) grants OPERATOR_ROLE
-      // directly because claimOperatorRole calls grantRole which requires ADMIN_ROLE
       await complianceEngine.connect(owner).grantRole(opRole, await newStableCoin.getAddress());
 
-      // After claiming, stableCoin should have OPERATOR_ROLE
       expect(await complianceEngine.hasRole(opRole, await newStableCoin.getAddress())).to.be.true;
-    });
-
-    it('should revert claimOperatorRole when complianceEngine not set', async function () {
-      const CompliantStableCoin = await ethers.getContractFactory('CompliantStableCoin');
-      const noEngineCoin = await CompliantStableCoin.deploy(
-        'NoEngine',
-        'NOE',
-        await complianceEngine.getAddress()
-      );
-      await noEngineCoin.waitForDeployment();
-
-      // First set compliance engine to zero (admin only)
-      // Actually, there's no way to set it to zero in the current contract.
-      // So we just test the happy path above.
     });
   });
 

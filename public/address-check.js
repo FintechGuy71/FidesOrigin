@@ -16,9 +16,15 @@ let API_KEY = window.FIDESORIGIN_API_KEY || '';
 //   2. httpOnly cookie: Set by backend, inaccessible to JavaScript
 //   3. Scoped public token (pk_*): Rotate frequently, minimal permissions
 // If window.FIDESORIGIN_API_KEY is set, ensure it comes from a secure build-time injection.
+// [F-18 FIX R2] 检测到 localStorage 中的 API key 时主动清除并告警。
+// localStorage 中的 key 可被任何 XSS/浏览器扩展窃取或种植，属于不可接受的密钥存放方式。
+// 正确做法：后端反代注入（推荐）/ httpOnly cookie / 受限只读公开 key（pk_*，频繁轮换）。
 if (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('FIDESORIGIN_API_KEY')) {
-    console.warn('[SECURITY] API key detected in localStorage. This is insecure. Remove it immediately.');
+    console.warn('[SECURITY] API key detected in localStorage. Removing it — use a scoped read-only public key injected at build time instead.');
+    try { window.localStorage.removeItem('FIDESORIGIN_API_KEY'); } catch (e) { /* ignore */ }
 }
+// [F-18 FIX R2] 运维要求：本页面使用的 window.FIDESORIGIN_API_KEY 必须是
+// 专用受限只读 key（速率限制 + 可轮换 + 与 admin 密钥完全隔离），不得使用任何写权限 key。
 
 // [M-7 Fix] Backend API base: no hardcoded fallback; must be provided via env/config
 const BACKEND_API = (typeof window !== 'undefined' && window.FIDESORIGIN_BACKEND_URL)
@@ -104,10 +110,13 @@ function t(key) {
 }
 
 // [H-7 Fix] CSRF Token management
+// [F-17 FIX R2] 静态托管下（无后端 /api 路由）跳过 CSRF 获取，避免必然 404 的请求。
+// 仅在显式配置了 BACKEND_API 时才尝试获取 CSRF token。
 let csrfToken = '';
 async function fetchCsrfToken() {
+    if (!BACKEND_API) return; // [F-17] 纯静态/子图模式：无后端可用，直接跳过
     try {
-        const res = await fetch('/api/csrf-token', {
+        const res = await fetch(BACKEND_API + '/api/csrf-token', {
             method: 'GET',
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
@@ -249,8 +258,10 @@ async function loadDatabase() {
 }
 
 async function fetchBackendRisk(address) {
-    const apiBase = BACKEND_API || window.location.origin;
-    const url = `${apiBase}/api/v1/address/${address}/risk`;
+    // [F-17 FIX R2] 未显式配置 BACKEND_API 时不再回退到 window.location.origin：
+    // 纯静态托管下 /api 路由不存在必然 404，直接进入子图-only 模式。
+    if (!BACKEND_API) return null;
+    const url = `${BACKEND_API}/api/v1/address/${address}/risk`;
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);

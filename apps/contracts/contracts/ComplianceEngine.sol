@@ -19,7 +19,7 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    string public constant VERSION = "2.0.0";
+    string public constant VERSION = "2.1.0";
 
     RiskRegistry public riskRegistry;
     PolicyEngine public policyEngine;
@@ -66,6 +66,21 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     uint256 public upgradeTimelockDelay;
     mapping(bytes32 => uint256) public upgradeProposals;
     mapping(address => bytes32) public implementationToProposal;
+
+    /// @notice [F-05 FIX R2] 未知地址（无风险档案）是否阻断。默认 false = fail-open，
+    ///         与 FidesCompliance 语义一致（USDC 式 blocklist 模型：未列名即放行）。
+    ///         ADMIN 可开启严格模式恢复 fail-closed。
+    bool public blockUnknownProfiles;
+
+    /// @notice [F-04 FIX R2] 策略引擎接线开关。默认 false；ADMIN 开启后，
+    ///         checkTransferWithDeadline 会调用 PolicyEngine.evaluateTransaction 并执行其 BLOCK/QUARANTINE 判定。
+    bool public policyEngineHooksEnabled;
+
+    /// @notice [F-14/N-04 FIX R2] 独立的发行方授权登记（替代 maxTxAmount!=0 的脆弱判据）
+    mapping(address => bool) public registeredIssuers;
+
+    event PolicyEngineHooksToggled(bool enabled);
+    event BlockUnknownProfilesToggled(bool enabled);
 
     // ============ Events ============
 
@@ -141,7 +156,11 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     function _checkRisk(address addr) internal view returns (bool blocked, uint256 score, string memory reason) {
         (uint256 s, , , , , bool sanctioned, bool exists, ) = riskRegistry.getProfile(addr);
         score = s;
-        if (!exists) { blocked = true; reason = "No profile - fail closed"; }
+        // [F-05 FIX R2] 未知地址默认 fail-open（与 FidesCompliance 一致）；
+        // 严格模式（blockUnknownProfiles=true）下恢复 fail-closed。
+        if (!exists) {
+            if (blockUnknownProfiles) { blocked = true; reason = "No profile - fail closed"; }
+        }
         else if (sanctioned) { blocked = true; reason = "Sanctioned"; }
         else if (s >= 95) { blocked = true; reason = "Critical"; }
         else if (s >= 80) { blocked = true; reason = "High risk"; }
@@ -254,6 +273,24 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
                 return _blk(from, to, amount, token, "Daily limit exceeded");
         }
 
+        // [F-04 FIX R2] 策略引擎接线：开启后执行 PolicyEngine 的策略判定。
+        // 原实现仅存储 policyEngine 引用而从不调用，策略规则（mixer/tier/限额等）零效力。
+        // try/catch fail-open：策略引擎未配置或不匹配时不引入新的单点故障。
+        if (policyEngineHooksEnabled && address(policyEngine) != address(0)) {
+            try policyEngine.evaluateTransaction(from, to, amount, token) returns (
+                IAssetCompliance.RiskTier, uint256, PolicyEngine.ActionType act, string memory r2
+            ) {
+                if (act == PolicyEngine.ActionType.BLOCK) {
+                    return _blk(from, to, amount, token, r2);
+                }
+                if (act == PolicyEngine.ActionType.QUARANTINE) {
+                    return (Decision.HOLD, r2);
+                }
+            } catch {
+                // fail-open：策略引擎不可用时不阻断主流程（需运维监控开启状态）
+            }
+        }
+
         if (policy.cooldownPeriod > 0 && lastTransferTime[from] != 0
             && block.timestamp - lastTransferTime[from] < policy.cooldownPeriod)
         {
@@ -326,7 +363,16 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         uint256 end = offset + limit;
         if (end > total) end = total;
         page = new CheckRecord[](end - offset);
-        for (uint256 i = 0; i < page.length; i++) page[i] = checkHistory[offset + i];
+        if (total < MAX_HISTORY_SIZE) {
+            for (uint256 i = 0; i < page.length; i++) page[i] = checkHistory[offset + i];
+        } else {
+            // [F-15 FIX R2] 环形缓冲已满：最旧记录位于 totalChecks % MAX_HISTORY_SIZE。
+            // 按时间顺序（最旧→最新）读取，原线性读取在覆盖后顺序错乱。
+            uint256 oldest = totalChecks % MAX_HISTORY_SIZE;
+            for (uint256 i = 0; i < page.length; i++) {
+                page[i] = checkHistory[(oldest + offset + i) % MAX_HISTORY_SIZE];
+            }
+        }
     }
 
     function getQuarantineListPaginated(uint256 offset, uint256 limit)
@@ -365,6 +411,27 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         if (policy.maxTxAmount > policy.dailyLimit && policy.dailyLimit > 0) revert MaxTxExceedsDaily();
         if (policy.cooldownPeriod > 30 days) revert CooldownTooLong();
         issuerPolicies[token] = policy;
+        // [F-14 FIX R2] 设置策略即登记为授权发行方
+        registeredIssuers[token] = true;
+    }
+
+    /// @notice [F-14 FIX R2] 显式登记/注销发行方（不依赖 maxTxAmount 判据）
+    function setRegisteredIssuer(address token, bool registered) external onlyRole(ADMIN_ROLE) {
+        if (token == address(0)) revert InvalidAddress();
+        registeredIssuers[token] = registered;
+    }
+
+    /// @notice [F-05 FIX R2] 未知地址阻断开关（严格模式）
+    function setBlockUnknownProfiles(bool enabled) external onlyRole(ADMIN_ROLE) {
+        blockUnknownProfiles = enabled;
+        emit BlockUnknownProfilesToggled(enabled);
+    }
+
+    /// @notice [F-04 FIX R2] 策略引擎接线开关
+    /// @dev 开启前请确认 PolicyEngine.complianceEngine 已指向本合约。
+    function setPolicyEngineHooksEnabled(bool enabled) external onlyRole(ADMIN_ROLE) {
+        policyEngineHooksEnabled = enabled;
+        emit PolicyEngineHooksToggled(enabled);
     }
 
     function pauseRule(bytes32 ruleId) external onlyRole(ADMIN_ROLE) {
@@ -432,8 +499,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     function postTransferHook(address from, address to, uint256 amount, bool success)
         external
     {
-        // [K3-Audit Fix] Only authorized tokens (with issuer policy) can call postTransferHook
-        if (issuerPolicies[msg.sender].maxTxAmount == 0) revert UnauthorizedCaller(msg.sender);
+        // [F-14 FIX R2] 独立授权登记判据（原实现用 maxTxAmount==0 判定，
+        // 管理员将 maxTxAmount 调 0 即误锁代币的 hook 调用）
+        if (!registeredIssuers[msg.sender]) revert UnauthorizedCaller(msg.sender);
         emit TransferRecorded(msg.sender, from, to, amount, success);
     }
 

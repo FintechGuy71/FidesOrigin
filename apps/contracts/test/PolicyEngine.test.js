@@ -15,6 +15,19 @@ describe('PolicyEngine', function () {
     user1 = fixture.user1;
     user2 = fixture.user2;
     issuer = fixture.issuer;
+
+    // [F-21 FIX R2] 默认策略已改为"未配置即 FLAG_FOR_REVIEW"（精度陷阱修复）。
+    // 测试需要限额语义，显式配置发行方策略（与旧默认值一致）。
+    await policyEngine.connect(owner).setIssuerPolicy(issuer.address, {
+      maxTxAmount: 1000n * 10n ** 18n,
+      dailyLimit: 5000n * 10n ** 18n,
+      allowMediumRisk: false,
+      allowHighRisk: false,
+      blockMixer: true,
+      requireDestinationKYC: false,
+      cooldownPeriod: 0,
+      blockedTokens: []
+    });
   });
 
   describe('Deployment', function () {
@@ -22,10 +35,15 @@ describe('PolicyEngine', function () {
       expect(await policyEngine.riskRegistry()).to.equal(await riskRegistry.getAddress());
     });
 
-    it('should have default issuer policy with non-zero limits', async function () {
+    it('should have conservative zero default issuer policy (F-21 R2)', async function () {
+      // [F-21 FIX R2] 默认策略改为零值（未配置），避免 10^18 精度默认
+      // 被低小数代币误用导致限额放大；未配置发行方评估结果为 FLAG_FOR_REVIEW。
       const defaultPolicy = await policyEngine.defaultIssuerPolicy();
-      expect(defaultPolicy.maxTxAmount).to.be.gt(0);
-      expect(defaultPolicy.dailyLimit).to.be.gt(0);
+      expect(defaultPolicy.maxTxAmount).to.equal(0);
+      expect(defaultPolicy.dailyLimit).to.equal(0);
+      const unconfigured = ethers.Wallet.createRandom().address;
+      const [, , decision] = await policyEngine.evaluateTransaction(user1.address, user2.address, 1, unconfigured);
+      expect(decision).to.equal(5); // FLAG_FOR_REVIEW: No issuer policy configured
     });
   });
 
@@ -38,7 +56,8 @@ describe('PolicyEngine', function () {
     });
 
     it('should BLOCK if amount exceeds maxTxAmount', async function () {
-      const maxTx = (await policyEngine.defaultIssuerPolicy()).maxTxAmount;
+      // [F-21 FIX R2] 使用夹具中显式配置的发行方策略限额（默认策略已为零值）
+      const maxTx = (await policyEngine.issuerPolicies(issuer.address)).maxTxAmount;
       const [tier, riskScore, decision, reason] = await policyEngine.evaluateTransaction(user1.address, user2.address, maxTx + 1n, issuer.address);
       expect(decision).to.equal(1); // BLOCK
       expect(reason).to.include('max transaction');

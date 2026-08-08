@@ -279,8 +279,17 @@ async def login(body: LoginRequest):
 
     [HIGH-2 FIX] 支持分布式账户锁定：连续 N 次失败后将锁定 M 分钟。
     """
-    admin_username = os.environ.get("ADMIN_USERNAME", "admin")
+    # [F-20 FIX R2] 用户名不再提供默认值 "admin"（可预测用户名降低爆破成本）。
+    # 未配置 ADMIN_USERNAME 时与密码未配置一样拒绝服务（fail-closed）。
+    admin_username = os.environ.get("ADMIN_USERNAME", "")
     admin_password_hash = _get_admin_password_hash()
+
+    if not admin_username:
+        logger.error("ADMIN_USERNAME not configured")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server authentication not configured",
+        )
 
     if not admin_password_hash:
         logger.error("ADMIN_PASSWORD not configured")
@@ -310,7 +319,7 @@ async def login(body: LoginRequest):
         # [HIGH-2 FIX] 记录失败（分布式）
         await _record_login_failure(body.username)
 
-        # 获取当前失败次数用于提示
+        # 获取当前失败次数（仅用于服务端日志）
         failed_count = 0
         redis = await _get_redis_client()
         if redis:
@@ -330,9 +339,11 @@ async def login(body: LoginRequest):
         remaining = max(0, _settings.LOGIN_MAX_ATTEMPTS - failed_count)
 
         logger.warning("login_failed", username=body.username[:16], remaining_attempts=remaining)
+        # [F-20 FIX R2] 响应不再泄露剩余尝试次数（OWASP ASVS 2.2.1：统一错误消息，
+        # 防止攻击者校准爆破节奏）。剩余次数仅保留在服务端日志中。
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Incorrect username or password. {remaining} attempts remaining.",
+            detail="Incorrect username or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

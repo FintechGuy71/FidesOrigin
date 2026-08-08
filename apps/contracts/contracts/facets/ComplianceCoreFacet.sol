@@ -66,9 +66,13 @@ contract ComplianceCoreFacet is BaseFacet {
 
         ) = s.riskRegistry.getProfile(addr);
         score = sc;
+        // [F-05 FIX R2] 未知地址默认 fail-open（与 ComplianceEngine 一致）；
+        // 严格模式（s.blockUnknownProfiles=true）下恢复 fail-closed。
         if (!exists) {
-            blocked = true;
-            reason = "No profile - fail closed";
+            if (s.blockUnknownProfiles) {
+                blocked = true;
+                reason = "No profile - fail closed";
+            }
         } else if (sanctioned) {
             blocked = true;
             reason = "Sanctioned";

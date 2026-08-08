@@ -41,11 +41,23 @@ contract GuardedComplianceEngine is IAssetCompliance {
     
     /**
      * @notice 预交易 Guard 检查
+     * @dev [F-03/N-15 FIX R2] 携带真实金额与代币地址（原实现 value:0/token:0/data:"" 空转）
      */
     function checkGuard(address from, address to) 
         public 
         view 
         returns (Decision decision, string memory reason) 
+    {
+        return checkGuardWithAmount(from, to, 0, address(0));
+    }
+
+    /**
+     * @notice [F-03/N-15 FIX R2] 携带完整交易参数的 Guard 检查
+     */
+    function checkGuardWithAmount(address from, address to, uint256 amount, address token)
+        public
+        view
+        returns (Decision decision, string memory reason)
     {
         if (!guardEnabled || address(guard) == address(0)) {
             return (Decision.ALLOW, "Guard disabled");
@@ -54,9 +66,9 @@ contract GuardedComplianceEngine is IAssetCompliance {
         IPreTransactionGuard.TransactionIntent memory intent = IPreTransactionGuard.TransactionIntent({
             from: from,
             to: to,
-            value: 0,
-            token: address(0),
-            data: "",
+            value: token == address(0) ? amount : 0,
+            token: token,
+            data: abi.encode(amount),
             chainId: block.chainid
         });
         
@@ -81,7 +93,8 @@ contract GuardedComplianceEngine is IAssetCompliance {
         uint256 amount,
         address token
     ) external view override returns (Decision decision, string memory reason) {
-        (Decision guardDecision, string memory guardReason) = checkGuard(from, to);
+        // [F-03 FIX R2] 传递真实金额与代币
+        (Decision guardDecision, string memory guardReason) = checkGuardWithAmount(from, to, amount, token);
         
         if (guardDecision == Decision.BLOCK) {
             return (Decision.BLOCK, string(abi.encodePacked("Guard: ", guardReason)));
@@ -104,9 +117,10 @@ contract GuardedComplianceEngine is IAssetCompliance {
     
     /**
      * @notice preTransferHook 兼容接口
+     * @dev [F-03 FIX R2] 传递真实金额（接口不含代币参数，按 ETH 语义传递 value）
      */
-    function preTransferHook(address from, address to, uint256) external view override {
-        (Decision d, string memory reason) = checkGuard(from, to);
+    function preTransferHook(address from, address to, uint256 amount) external view override {
+        (Decision d, string memory reason) = checkGuardWithAmount(from, to, amount, address(0));
         if (d == Decision.BLOCK) {
             revert GuardBlocked(from, to, 100, reason);
         }
@@ -114,9 +128,17 @@ contract GuardedComplianceEngine is IAssetCompliance {
     
     /**
      * @notice 转账后钩子
+     * @dev [N-15 FIX R2] 原空实现静默丢弃记账行为。改为转发 fallbackEngine 的
+     *      postTransferHook（含其授权校验与 TransferRecorded 事件），失败不阻断转账。
      */
-    function postTransferHook(address, address, uint256, bool) external pure override {
-        // No-op
+    function postTransferHook(address from, address to, uint256 amount, bool success) external override {
+        if (fallbackEngine != address(0)) {
+            try IAssetCompliance(fallbackEngine).postTransferHook(from, to, amount, success) {
+                // forwarded
+            } catch {
+                // fallback 不可用时静默降级（不阻断主转账流程）
+            }
+        }
     }
     
     /**

@@ -26,6 +26,9 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
     // [HIGH-7 FIX] 可配置的 Chainlink Functions JavaScript 源码映射
     mapping(RequestType => string) public functionsSources;
 
+    /// @notice [G-05 FIX R2] 当前 deferred 队列深度（供链下监控/告警读取）
+    uint256 public deferredCount;
+
     // [HIGH-7 FIX] Functions 源码更新事件
     event FunctionsSourceUpdated(RequestType indexed reqType, string source);
 
@@ -260,7 +263,6 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
             result: "",
             error: ""
         });
-
         lastRequestId = assignedReqId;
         requestCount++;
 
@@ -297,6 +299,7 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
             // Mark as fulfilled but deferred — result stored for later processing
             info.fulfilled = true;
             info.deferred = true;
+            deferredCount++; // [G-05 FIX R2]
             info.result = response;
             info.error = err;
             emit FulfillmentDeferred(requestId);
@@ -427,6 +430,7 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
             if (!info.deferred) continue;
 
             info.deferred = false;
+            if (deferredCount > 0) deferredCount--; // [G-05 FIX R2]
             if (info.error.length == 0 && info.result.length > 0) {
                 _processRiskResponse(info.requestType, info.result, info.requester);
                 emit RiskUpdateFulfilled(requestId, true, block.timestamp);

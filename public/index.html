@@ -6,9 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="preload" href="/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="/styles.css"></noscript>
-<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/styles.css"/>
 <title>FidesOrigin — On-Chain Compliance That Executes</title>
 <meta name="description" content="Execution-grade programmable compliance protocol for stablecoins, RWA tokenization, and DeFi. AI-powered risk detection with 100% on-chain enforcement."/>
 <meta property="og:title" content="FidesOrigin — On-Chain Compliance That Executes"/>
@@ -362,7 +360,6 @@
   .arch-arrow { color:var(--fio-text-4); font-size:1.2rem; }
   @media(max-width:768px){ .arch-flow { flex-direction:column; } .arch-arrow { transform:rotate(90deg); } }
 </style>
-<script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body style="background:var(--fio-ink);color:var(--fio-text)">
 
@@ -382,7 +379,7 @@
     <a href="/tw/">TW</a>
     <a href="/jp/">JP</a>
   </div>
-  <a href="/contact-form" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
+  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">Request Demo</a>
 </div>
 
 <!-- Navigation -->
@@ -404,7 +401,7 @@
         <a href="/tw/">TW</a>
         <a href="/jp/">JP</a>
       </div>
-      <a href="/contact-form" class="nav-cta-outline">Request Demo</a>
+      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">Request Demo</a>
     </nav>
     <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -442,7 +439,7 @@
             <span class="hero-arch-pill"><span class="dot exec"></span>Contract Execution</span>
           </div>
           <div class="hero-ctas anim-fade-up anim-d4">
-            <a href="/contact-form" class="btn-primary">
+            <a href="mailto:contact@fidesorigin.com" class="btn-primary">
               Request Demo
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
             </a>
@@ -1047,7 +1044,7 @@
         from stablecoin issuance to RWA tokenization.
       </p>
       <div class="cta-ctas">
-        <a href="/contact-form" class="btn-primary">
+        <a href="mailto:contact@fidesorigin.com" class="btn-primary">
           Request Demo
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
         </a>
@@ -1072,7 +1069,7 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand">
-          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px" loading="lazy">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
           <span>FidesOrigin</span>
         </div>
         <p class="footer-desc">Execution-grade on-chain compliance protocol for stablecoins, RWA tokenization, and institutional DeFi.</p>
@@ -1097,7 +1094,7 @@
         <h4>Company</h4>
         <a href="/about.html">About</a>
         <a href="/case-studies.html">Case Studies</a>
-        <a href="/contact-form">Contact</a>
+        <a href="mailto:contact@fidesorigin.com">Contact</a>
         <a href="/privacy.html">Privacy</a>
         <a href="/terms.html">Terms</a>
       </div>
@@ -1113,13 +1110,6 @@
 <!-- SCRIPTS                                                       -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <script>
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
-
 // Scroll reveal
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {

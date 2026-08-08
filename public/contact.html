@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -24,7 +24,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/brand/logo-dark-icon.png">
-<script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
 
@@ -65,7 +64,9 @@
     <section class="section" style="padding-top: 0;">
       <div class="container">
         <div class="contact-form reveal">
-          <form id="contactForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+          <form id="contactForm" action="mailto:contact@fidesorigin.com" method="POST" enctype="text/plain">
+            <!-- [N-09 FIX R2] 原 action 为 formspree 占位符 YOUR_FORM_ID（提交必然失败）。
+                 改为 mailto 兜底可用；如需接入表单服务，将下方 action 替换为真实端点。 -->
             <div class="form-group">
               <label for="name">Full Name</label>
               <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required>
@@ -94,7 +95,7 @@
               <textarea id="message" name="message" class="form-input" placeholder="Tell us about your project and compliance requirements..."></textarea>
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Send Message</button>
-            <p style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">Prefer email? Reach us at <a href="/contact-form" style="color: var(--accent);">contact@fidesorigin.com</a></p>
+            <p style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">Prefer email? Reach us at <a href="mailto:contact@fidesorigin.com" style="color: var(--accent);">contact@fidesorigin.com</a></p>
           </form>
         </div>
       </div>
@@ -129,7 +130,7 @@
             </div>
             <h3>Email</h3>
             <p>For partnerships, press, and general inquiries.</p>
-            <a href="/contact-form" style="color: var(--accent); font-size: 0.875rem;">contact@fidesorigin.com</a>
+            <a href="mailto:contact@fidesorigin.com" style="color: var(--accent); font-size: 0.875rem;">contact@fidesorigin.com</a>
           </div>
         </div>
       </div>
