@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Newsletter — FidesOrigin Compliance Insights</title>
+  <meta name="description" content="Weekly analysis on on-chain regulation, stablecoin compliance, and DeFi risk management from FidesOrigin.">
+  <meta property="og:title" content="FidesOrigin Compliance Insights Newsletter">
+  <meta property="og:description" content="Weekly analysis on on-chain regulation, stablecoin compliance, and DeFi risk management.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fidesorigin.com/newsletter-signup.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FidesOrigin Compliance Insights">
+  <meta name="twitter:description" content="Weekly analysis on on-chain regulation, stablecoin compliance, and DeFi risk management.">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/newsletter-signup.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <style>
+    :root {
+      --fio-ink: #05060a;
+      --fio-surface: #0c0e18;
+      --fio-surface-2: #111320;
+      --fio-border: #252a3a;
+      --fio-border-light: #2e3448;
+      --fio-text: #f0f1f5;
+      --fio-text-2: #9a9fad;
+      --fio-text-3: #5e6478;
+      --fio-accent: #9b8ed8;
+      --fio-accent-dim: rgba(155,142,216,0.12);
+      --fio-gold: #d4b87a;
+      --fio-gold-dim: rgba(212,184,122,0.12);
+      --fio-success: #5ce68a;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Geist Mono', 'JetBrains Mono', 'SF Mono', monospace;
+    }
+
+    /* Page-specific overrides */
+    .newsletter-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--fio-ink);
+    }
+
+    .newsletter-hero {
+      position: relative;
+      padding: 160px 0 80px;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .newsletter-hero::before {
+      content: '';
+      position: absolute;
+      top: -20%; left: 30%;
+      width: 50vw; height: 50vw;
+      background: radial-gradient(circle, rgba(155,142,216,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .newsletter-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -10%; right: 20%;
+      width: 30vw; height: 30vw;
+      background: radial-gradient(circle, rgba(212,184,122,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .newsletter-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    .newsletter-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .newsletter-layout { grid-template-columns: 1fr; gap: 48px; }
+      .newsletter-hero { padding: 120px 0 60px; }
+    }
+
+    .newsletter-left {
+      text-align: left;
+    }
+
+    .newsletter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--fio-accent-dim);
+      border: 1px solid rgba(155,142,216,0.15);
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--fio-accent);
+      margin-bottom: 28px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .newsletter-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--fio-accent);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--fio-accent); }
+      50% { opacity: 0.5; box-shadow: 0 0 10px var(--fio-accent); }
+    }
+
+    .newsletter-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--fio-text);
+    }
+    .newsletter-title .accent {
+      background: linear-gradient(135deg, var(--fio-accent) 0%, var(--fio-gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .newsletter-subtitle {
+      font-size: 1.05rem;
+      color: var(--fio-text-2);
+      line-height: 1.7;
+      margin-top: 16px;
+      max-width: 440px;
+    }
+
+    .newsletter-benefits {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .newsletter-benefit {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--fio-text-2);
+    }
+    .newsletter-benefit svg {
+      flex-shrink: 0;
+      color: var(--fio-success);
+    }
+
+    /* Right side — form card */
+    .newsletter-card {
+      background: var(--fio-surface);
+      border: 1px solid var(--fio-border);
+      border-radius: 18px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .newsletter-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(155,142,216,0.2), transparent);
+    }
+
+    .newsletter-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--fio-text);
+      margin-bottom: 6px;
+    }
+    .newsletter-card .card-sub {
+      font-size: 0.85rem;
+      color: var(--fio-text-3);
+      margin-bottom: 28px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fio-text-2);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--fio-surface-2);
+      border: 1px solid var(--fio-border);
+      border-radius: 10px;
+      color: var(--fio-text);
+      font-size: 0.95rem;
+      font-family: var(--font-sans);
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--fio-accent);
+      box-shadow: 0 0 0 3px rgba(155,142,216,0.08);
+    }
+    .form-input::placeholder { color: var(--fio-text-3); }
+
+    .btn-subscribe {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--fio-accent) 0%, var(--fio-gold) 100%);
+      color: var(--fio-ink);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-subscribe:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(155,142,216,0.3);
+    }
+
+    .newsletter-trust {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--fio-text-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .newsletter-trust svg { color: var(--fio-success); }
+
+    /* Past issues preview */
+    .past-issues {
+      padding: 80px 0;
+      background: var(--fio-surface);
+      border-top: 1px solid var(--fio-border);
+    }
+    .past-issues-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .past-issues-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      font-weight: 500;
+      color: var(--fio-text);
+    }
+    .past-issues-header p {
+      color: var(--fio-text-2);
+      margin-top: 8px;
+      font-size: 0.95rem;
+    }
+
+    .issue-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    @media (max-width: 768px) {
+      .issue-grid { grid-template-columns: 1fr; }
+    }
+    .issue-card {
+      padding: 28px;
+      background: var(--fio-ink);
+      border: 1px solid var(--fio-border);
+      border-radius: 14px;
+      transition: all 0.3s;
+    }
+    .issue-card:hover {
+      border-color: var(--fio-border-light);
+      transform: translateY(-3px);
+    }
+    .issue-card .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--fio-accent);
+      padding: 3px 10px;
+      border-radius: 4px;
+      background: var(--fio-accent-dim);
+      margin-bottom: 12px;
+    }
+    .issue-card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--fio-text);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .issue-card p {
+      font-size: 0.85rem;
+      color: var(--fio-text-2);
+      line-height: 1.6;
+    }
+    .issue-card .date {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--fio-text-3);
+      margin-top: 12px;
+    }
+
+    /* Success state (hidden by default) */
+    .success-state {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .success-state.visible { display: block; }
+    .success-state .icon-wrap {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(92,230,138,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .success-state h3 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--fio-text);
+      margin-bottom: 8px;
+    }
+    .success-state p {
+      color: var(--fio-text-2);
+      font-size: 0.9rem;
+    }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+</head>
+<body class="newsletter-page">
+
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Navigation -->
+  <header class="nav" id="mainNav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+        <span class="nav-logo-text">FidesOrigin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="/docs/">Docs</a>
+        <div class="lang-switch">
+          <a href="/newsletter-signup.html" class="active">EN</a>
+        </div>
+      </nav>
+      <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
+    <a href="/" onclick="closeMobileMenu()">Home</a>
+    <a href="/blog/" onclick="closeMobileMenu()">Blog</a>
+    <a href="/docs/" onclick="closeMobileMenu()">Docs</a>
+    <a href="/contact-form.html" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">Contact</a>
+  </div>
+
+  <main id="main-content">
+    <!-- Hero / Form Section -->
+    <section class="newsletter-hero">
+      <div class="container newsletter-inner">
+        <div class="newsletter-layout">
+          <div class="newsletter-left">
+            <div class="newsletter-badge">
+              <span class="dot"></span>
+              Weekly Newsletter
+            </div>
+            <h1 class="newsletter-title">
+              FidesOrigin<br>
+              <span class="accent">Compliance Insights</span>
+            </h1>
+            <p class="newsletter-subtitle">
+              Weekly analysis on on-chain regulation, stablecoin compliance, and DeFi risk management.
+            </p>
+            <div class="newsletter-benefits">
+              <div class="newsletter-benefit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+                Regulatory updates across HKMA, MiCA, SEC, and MAS
+              </div>
+              <div class="newsletter-benefit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+                Technical deep dives into on-chain compliance architecture
+              </div>
+              <div class="newsletter-benefit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+                Early access to protocol updates and research
+              </div>
+              <div class="newsletter-benefit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+                No spam. Unsubscribe anytime.
+              </div>
+            </div>
+          </div>
+
+          <div class="newsletter-card">
+            <!-- Form State -->
+            <div id="formState">
+              <h3>Subscribe</h3>
+              <p class="card-sub">Join 2,000+ compliance professionals and builders.</p>
+              <form id="newsletterForm" onsubmit="handleSubscribe(event)">
+                <div class="form-group">
+                  <label for="email">Email address</label>
+                  <input type="email" id="email" name="email" class="form-input" placeholder="you@company.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                  <label for="company">Company (optional)</label>
+                  <input type="text" id="company" name="company" class="form-input" placeholder="Acme Inc." autocomplete="organization">
+                </div>
+                <div class="form-group">
+                  <label for="role">Role (optional)</label>
+                  <input type="text" id="role" name="role" class="form-input" placeholder="Compliance Officer" autocomplete="organization-title">
+                </div>
+                <button type="submit" class="btn-subscribe" id="submitBtn">
+                  Subscribe
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                </button>
+              </form>
+              <div class="newsletter-trust">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Your email is never shared. GDPR compliant.
+              </div>
+            </div>
+
+            <!-- Success State -->
+            <div class="success-state" id="successState">
+              <div class="icon-wrap">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fio-success)" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <h3>You&rsquo;re subscribed!</h3>
+              <p>Check your inbox for a confirmation email. Welcome to the community.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Past Issues Preview -->
+    <section class="past-issues">
+      <div class="container">
+        <div class="past-issues-header">
+          <h2>Recent Issues</h2>
+          <p>A taste of what subscribers receive every week.</p>
+        </div>
+        <div class="issue-grid">
+          <div class="issue-card">
+            <span class="tag">Regulation</span>
+            <h4>HKMA Stablecoin License: Technical Compliance Requirements</h4>
+            <p>A breakdown of the on-chain controls HKMA expects from licensed stablecoin issuers.</p>
+            <div class="date">Issue #24 &middot; Aug 2026</div>
+          </div>
+          <div class="issue-card">
+            <span class="tag">Engineering</span>
+            <h4>Pre-Transaction Guards: Architecture &amp; Implementation</h4>
+            <p>How FidesOrigin intercepts risky transactions before they hit the mempool.</p>
+            <div class="date">Issue #23 &middot; Aug 2026</div>
+          </div>
+          <div class="issue-card">
+            <span class="tag">Market</span>
+            <h4>MiCA Six Months In: What We&rsquo;ve Learned</h4>
+            <p>Early data on MiCA compliance costs, common pitfalls, and best practices.</p>
+            <div class="date">Issue #22 &middot; Jul 2026</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+            <span>FidesOrigin</span>
+          </div>
+          <p class="footer-desc">Execution-grade on-chain compliance protocol for stablecoins, RWA tokenization, and institutional DeFi.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/">Home</a>
+          <a href="/blog/">Blog</a>
+          <a href="/docs/">Docs</a>
+          <a href="/address-check.html">Address Check</a>
+        </div>
+        <div class="footer-col">
+          <h4>Developers</h4>
+          <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+          <a href="/docs/api.html">API Reference</a>
+          <a href="/docs/sdk.html">SDK</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/about.html">About</a>
+          <a href="/contact-form.html">Contact</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 FidesOrigin. MIT License.</span>
+        <span>Hong Kong &middot; Singapore &middot; San Francisco</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function closeMobileMenu() {
+      document.getElementById('mobileMenu').classList.remove('active');
+    }
+
+    function handleSubscribe(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const originalText = btn.innerHTML;
+
+      // Simulate submission
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Subscribing...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        document.getElementById('formState').style.display = 'none';
+        document.getElementById('successState').classList.add('visible');
+      }, 1200);
+    }
+
+    // Nav scroll effect
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 60) nav.classList.add('nav-scrolled');
+      else nav.classList.remove('nav-scrolled');
+    }, { passive: true });
+  </script>
+
+</body>
+</html>

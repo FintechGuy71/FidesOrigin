@@ -1,0 +1,24 @@
+{
+  "name": "FidesOrigin — On-Chain Compliance That Executes",
+  "short_name": "FidesOrigin",
+  "description": "Execution-grade programmable compliance protocol for stablecoins, RWA tokenization, and DeFi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05060a",
+  "theme_color": "#05060a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brand/logo-dark-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/logo-dark-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["finance", "technology", "business"],
+  "lang": "en"
+}

@@ -1,0 +1,105 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FIDESORIGIN — MOBILE BOTTOM NAVIGATION (Optional Enhancement)
+   P2-11: Bottom tab bar for mobile devices
+   Usage: Include this CSS and the companion JS on any page.
+   Not auto-injected — add <link> and <script> tags manually.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.fio-mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  background: rgba(5, 6, 10, 0.92);
+  backdrop-filter: blur(20px) saturate(1.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.fio-mobile-nav__list {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 56px;
+  max-width: 480px;
+  margin: 0 auto;
+  list-style: none;
+  padding: 0;
+}
+
+.fio-mobile-nav__item {
+  flex: 1;
+  text-align: center;
+}
+
+.fio-mobile-nav__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  padding: 6px 0;
+  color: var(--fio-text-3, #5e6478);
+  font-size: 0.65rem;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fio-mobile-nav__link svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.5;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.fio-mobile-nav__link:hover,
+.fio-mobile-nav__link:focus {
+  color: var(--fio-text-2, #9a9fad);
+}
+
+.fio-mobile-nav__link--active,
+.fio-mobile-nav__link--active:hover,
+.fio-mobile-nav__link--active:focus {
+  color: var(--fio-gold, #d4b87a);
+}
+
+.fio-mobile-nav__link--active svg {
+  transform: translateY(-1px);
+}
+
+/* Active indicator dot */
+.fio-mobile-nav__link--active::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--fio-gold, #d4b87a);
+  margin-top: 1px;
+}
+
+/* Show only on small screens */
+@media (max-width: 768px) {
+  .fio-mobile-nav {
+    display: block;
+  }
+
+  /* Add bottom padding to main content so it isn't hidden behind the nav */
+  body:has(.fio-mobile-nav) {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fio-mobile-nav__link,
+  .fio-mobile-nav__link svg {
+    transition: none;
+  }
+}
