@@ -49,6 +49,9 @@ async function main(): Promise<void> {
     // Start monitoring server
     monitor.start();
 
+    // Start RiskOracle deferred count monitoring
+    publisher.startDeferredCountReporting(monitor);
+
     // Start scheduled jobs
     scheduler.start();
 

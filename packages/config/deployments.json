@@ -10,7 +10,8 @@
         "ComplianceEngine": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
         "FidesCompliance": "0x05497600618071C34CB3Fdb8A9E159e9589DEC79",
         "CompliantStableCoin": "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A",
-        "QuarantineVault": "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b"
+        "QuarantineVault": "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b",
+        "RiskOracle": "0x10BB6C1C150dD68BB8359Bd725Fe49915A1eA4a0"
       },
       "proxies": {
         "RiskRegistry": { "proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc", "implementation": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59" },

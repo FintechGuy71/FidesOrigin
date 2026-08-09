@@ -33,6 +33,8 @@ export interface PublisherConfig {
   rpcUrl: string;
   chainId: number;
   riskRegistryAddress: string;
+  /** RiskOracle address for deferred count monitoring */
+  riskOracleAddress?: string;
   privateKey?: string;    // Optional: use env or KMS
   kmsProvider?: 'aws' | 'azure' | 'vault';
   kmsKeyId?: string;

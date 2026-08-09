@@ -11,6 +11,9 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+rule_files:
+  - oracle-deferred-alerts.yml
+
 scrape_configs:
   - job_name: 'fidesorigin-data-publisher'
     kubernetes_sd_configs:

@@ -143,6 +143,8 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
     rpcUrl: getEnv('RPC_URL', 'https://ethereum-sepolia-rpc.publicnode.com'),
     chainId: getEnvInt('CHAIN_ID', 11155111),
     riskRegistryAddress: getEnv('RISK_REGISTRY_ADDRESS'),
+    /** RiskOracle address for deferred count monitoring (optional) */
+    riskOracleAddress: process.env.RISK_ORACLE_ADDRESS,
     // Support both data-publisher (PUBLISHER_PRIVATE_KEY) and data-sync (PRIVATE_KEY / SYNC_PRIVATE_KEY) naming
     privateKey: process.env.PUBLISHER_PRIVATE_KEY || process.env.PRIVATE_KEY || process.env.SYNC_PRIVATE_KEY,
     // Support both data-publisher (KMS_PROVIDER + KMS_KEY_ID) and data-sync (AWS_KMS_KEY_ID) naming

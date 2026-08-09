@@ -43,6 +43,7 @@ export class MonitorServer {
   private profilesPublished: Counter;
   private pendingUpdates: Gauge;
   private dataSourceDown: Gauge;
+  private oracleDeferredCount: Gauge;
 
   // ── State for Alerting ──────────────────────────────────────────────
   private consecutiveSyncFailures = 0;
@@ -120,6 +121,11 @@ export class MonitorServer {
       name: 'fides_data_source_down',
       help: 'Number of data sources currently unreachable (1 = down)',
       labelNames: ['source'],
+      registers: [this.registry],
+    });
+    this.oracleDeferredCount = new Gauge({
+      name: 'fidesorigin_oracle_deferred_count',
+      help: 'RiskOracle deferred request queue depth',
       registers: [this.registry],
     });
 
@@ -484,6 +490,10 @@ export class MonitorServer {
 
   setDataSourceDown(source: string, isDown: boolean): void {
     this.dataSourceDown.set({ source }, isDown ? 1 : 0);
+  }
+
+  setOracleDeferredCount(count: number): void {
+    this.oracleDeferredCount.set(count);
   }
 }
 

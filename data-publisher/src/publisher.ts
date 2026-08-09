@@ -5,6 +5,7 @@ import { config } from './config';
 import logger from './logger';
 import { createKeyManager } from './kms-key-manager';
 import { getMessageQueue, MessageEnvelope, MessageQueue } from './message-queue';
+import { MonitorServer } from './monitor';
 
 // RiskRegistry ABI (minimal — only the functions we need)
 const RISK_REGISTRY_ABI = [
@@ -14,6 +15,11 @@ const RISK_REGISTRY_ABI = [
   'function hasRole(bytes32 role, address account) view returns (bool)',
   'function ORACLE_ROLE() view returns (bytes32)',
   'function totalProfiles() view returns (uint256)',
+];
+
+// RiskOracle ABI (minimal — only deferredCount)
+const RISK_ORACLE_ABI = [
+  'function deferredCount() view returns (uint256)',
 ];
 
 /**
@@ -224,6 +230,7 @@ class DistributedLockManager {
 export class BlockchainPublisher {
   private provider: JsonRpcProvider;
   private contract: Contract;
+  private riskOracle?: Contract;
   private signer?: Signer;
   private nonceManager?: NonceManager;  // [Audit-Fix #1] Use NonceManager for proper nonce handling
   private address?: string;
@@ -243,6 +250,11 @@ export class BlockchainPublisher {
   constructor(cfg: PublisherConfig) {
     this.provider = new JsonRpcProvider(cfg.rpcUrl, cfg.chainId);
     this.contract = new Contract(cfg.riskRegistryAddress, RISK_REGISTRY_ABI, this.provider);
+
+    // Initialize RiskOracle contract if address is provided
+    if (cfg.riskOracleAddress) {
+      this.riskOracle = new Contract(cfg.riskOracleAddress, RISK_ORACLE_ABI, this.provider);
+    }
     
     // P0-3 Fix: 初始化锁管理器
     this.lockManager = new DistributedLockManager(config.cluster.redisUrl);
@@ -796,6 +808,39 @@ export class BlockchainPublisher {
     await this.lockManager.close();
     await this.messageQueue.close();
     logger.info('Publisher closed');
+  }
+
+  /**
+   * Start periodic monitoring of RiskOracle deferredCount.
+   * Reports the value to the monitor every 60 seconds.
+   */
+  startDeferredCountReporting(monitor: MonitorServer): void {
+    if (!this.riskOracle) {
+      logger.warn('RiskOracle address not configured, deferred count monitoring disabled');
+      return;
+    }
+
+    const intervalMs = 60000;
+
+    const poll = async () => {
+      try {
+        const count = await this.riskOracle!.deferredCount();
+        const countNum = Number(count);
+        monitor.setOracleDeferredCount(countNum);
+        logger.debug('RiskOracle deferredCount updated', { count: countNum });
+      } catch (error) {
+        logger.warn('Failed to read RiskOracle deferredCount', { error: (error as Error).message });
+      }
+    };
+
+    // Run immediately, then every 60s
+    poll();
+    setInterval(poll, intervalMs);
+
+    logger.info('RiskOracle deferred count monitoring started', {
+      intervalMs,
+      riskOracleAddress: this.riskOracle.target,
+    });
   }
 }
 

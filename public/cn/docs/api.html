@@ -234,6 +234,47 @@
           </tbody>
         </table>
       </div>
+
+      <h2>Subgraph (GraphQL)</h2>
+      <p>Query on-chain compliance data via The Graph subgraph.</p>
+      <div class="docs-base-url">
+        <code>https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.2.0</code>
+      </div>
+      <p><strong>Network:</strong> Sepolia Testnet | <strong>Version:</strong> v0.2.0</p>
+
+      <h4>Example Query</h4>
+      <div class="docs-code-block">
+        <div class="docs-code-header">
+          <span>GraphQL</span>
+          <button class="docs-code-copy" aria-label="Copy code">Copy</button>
+        </div>
+        <pre><code>{
+  riskProfiles(first: 5) {
+    id
+    riskScore
+    tier
+    isSanctioned
+  }
+  complianceChecks(first: 5) {
+    id
+    from
+    to
+    decision
+    reason
+  }
+}</code></pre>
+      </div>
+
+      <h4>Available Entities</h4>
+      <ul>
+        <li><code>RiskProfile</code> — On-chain risk profiles</li>
+        <li><code>RiskProfileUpdate</code> — Profile update history</li>
+        <li><code>ComplianceCheck</code> — Compliance check results</li>
+        <li><code>Policy</code> — Issuer policies</li>
+        <li><code>PolicyEvaluation</code> — Policy evaluation records</li>
+        <li><code>QuarantineRecord</code> — Quarantine vault records</li>
+        <li><code>TokenTransfer</code> — Stablecoin transfer events</li>
+      </ul>
     </main>
   </div>
 
