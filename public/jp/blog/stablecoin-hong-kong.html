@@ -44,6 +44,7 @@
   .req-grid { display:grid; gap:16px; grid-template-columns:repeat(2,1fr); margin:28px 0; } @media(max-width:640px){ .req-grid { grid-template-columns:1fr; } } .req-card { padding:24px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:14px; } .req-card h5 { font-family:var(--font-display); font-size:0.95rem; font-weight:500; color:var(--fio-text); margin-bottom:8px; display:flex; align-items:center; gap:8px; } .req-card p { font-size:0.85rem; color:var(--fio-text-2); line-height:1.6; margin:0; } .req-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.85rem; }
   .flow-diagram { padding:28px; background:var(--fio-surface); border:1px solid var(--fio-border); border-radius:16px; margin:24px 0; } .flow-diagram h4 { font-family:var(--font-display); font-size:1rem; font-weight:500; color:var(--fio-text); margin-bottom:20px; text-align:center; } .flow-step { display:flex; align-items:center; gap:12px; margin-bottom:12px; } .flow-step:last-child { margin-bottom:0; } .flow-num { width:32px; height:32px; border-radius:8px; background:var(--fio-accent-dim); color:var(--fio-accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.75rem; font-weight:600; flex-shrink:0; } .flow-num.ok { background:rgba(92,230,138,0.1); color:var(--fio-success); } .flow-num.block { background:rgba(251,142,142,0.1); color:var(--fio-danger); } .flow-text { font-size:0.88rem; color:var(--fio-text-2); } .flow-arrow-v { text-align:center; color:var(--fio-text-4); font-size:1.2rem; margin:4px 0 4px 10px; }
 </style>
+  <link rel="stylesheet" href="/styles/nav.css"/>
 </head>
 <body>
 
@@ -56,25 +57,51 @@
   <a href="mailto:contact@fidesorigin.com" class="btn-primary" style="display:inline-block;margin-top:16px;text-align:center">デモをリクエスト</a>
 </div>
 
+<!-- Navigation -->
 <header class="nav" id="mainNav">
   <div class="nav-inner">
-    <a href="/jp/" class="nav-logo">
-      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="28" height="28" style="border-radius:6px">
+    <a href="/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="26" height="26" style="border-radius:6px">
       <span class="nav-logo-text">FidesOrigin</span>
     </a>
     <nav class="nav-links">
-      <a href="/jp/">ホーム</a>
-      <a href="/jp/architecture.html">アーキテクチャ</a>
-      <a href="/jp/blog/">ブログ</a>
-      <a href="/jp/pricing.html">料金</a>
-      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
-      <a href="mailto:contact@fidesorigin.com" class="nav-cta-outline">デモをリクエスト</a>
+      <a href="/about.html">About</a>
+      <a href="/architecture.html">Architecture</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer">GitHub</a>
     </nav>
+    <div class="nav-right">
+      <div class="lang-switch">
+        <a href="/jp/" class="">EN</a>
+        <a href="/" class="">CN</a>
+        <a href="/cn/" class="">TW</a>
+        <a href="/tw/" class="active">JP</a>
+      </div>
+      <a href="/contact.html" class="nav-cta">Contact</a>
+    </div>
     <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
   </div>
 </header>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')" aria-label="Close menu">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <a href="/about.html">About</a>
+  <a href="/architecture.html">Architecture</a>
+  <a href="/docs/">Docs</a>
+  <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <div class="lang-switch">
+    <a href="/jp/" class="">EN</a>
+    <a href="/" class="">CN</a>
+    <a href="/cn/" class="">TW</a>
+    <a href="/tw/" class="active">JP</a>
+  </div>
+  <a href="/contact.html" class="nav-cta" style="margin-top:8px;text-align:center">Contact</a>
+</div>
 
 <section class="hero">
   <div class="hero-bg-glow"></div>
