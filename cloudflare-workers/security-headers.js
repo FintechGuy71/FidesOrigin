@@ -33,3 +33,4 @@ export default {
 // Deploy trigger: 2026-08-07-01:35
 // Redeploy trigger: Fri Aug  7 09:51:08 PM CST 2026
 // Trigger deploy for sitemap update: Sat Aug  8 12:11:30 AM CST 2026
+// Trigger deploy for nav redesign: Mon Aug 10 15:57:00 CST 2026
