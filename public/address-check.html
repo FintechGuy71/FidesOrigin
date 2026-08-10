@@ -653,7 +653,6 @@
         } catch (e) {
           console.warn('[RPC] Failed:', url, e.message);
         }
-      }
       isRPCAvailable = false;
       return false;
     }
@@ -668,8 +667,6 @@
         console.warn('[Contracts] Init failed:', e.message);
         return false;
       }
-    }
-
     // ═══════════════════════════════════════════════════════════════
     // GUARD STATS
     // ═══════════════════════════════════════════════════════════════
@@ -716,8 +713,6 @@
               guardEnabled = await riskRegistry.guardEnabled();
             } catch (e3) {}
           }
-        }
-
         if (guardEnabled) {
           statusDot.className = 'status-dot on';
           statusText.textContent = 'ACTIVE';
@@ -753,8 +748,6 @@
               break;
             } catch (e) {}
           }
-        }
-
         if (checks !== null) {
           cachedStats.totalChecks = checks;
           cachedStats.totalBlocked = blocked;
@@ -775,8 +768,6 @@
         fallbackBanner.classList.add('show');
         document.getElementById('fallbackText').textContent = 'Contract query failed. Stats may be temporarily unavailable.';
       }
-    }
-
     // ═══════════════════════════════════════════════════════════════
     // ADDRESS CHECK
     // ═══════════════════════════════════════════════════════════════
@@ -874,12 +865,9 @@
                 result.sanctioned = blocked;
               } catch (e3) {}
             }
-          }
         } catch (e) {
           result.error = 'Contract query failed: ' + e.message;
         }
-      }
-
       // Determine risk level
       let riskLevel = 'unknown';
       let badgeText = 'Unknown';

@@ -50,22 +50,7 @@
   .anim-d1 { animation-delay:0.1s; } .anim-d2 { animation-delay:0.2s; } .anim-d3 { animation-delay:0.35s; }
   .anim-d4 { animation-delay:0.5s; } .anim-d5 { animation-delay:0.65s; } .anim-d6 { animation-delay:0.8s; }
 
-  .nav { position:fixed; top:0; left:0; right:0; z-index:1000; background:rgba(5,6,10,0.8); backdrop-filter:blur(20px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.03); transition:all 0.3s; }
-  .nav-scrolled { background:rgba(5,6,10,0.95); border-bottom-color:rgba(255,255,255,0.06); }
-  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; max-width:1200px; margin:0 auto; padding:0 24px; }
-  .nav-logo { display:flex; align-items:center; gap:10px; }
-  .nav-logo img { height:28px; width:auto; }
-  .nav-logo-text { font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--fio-text); letter-spacing:-0.025em; }
-  .nav-links { display:none; align-items:center; gap:32px; }
-  .nav-links a { font-size:0.8125rem; color:var(--fio-text-2); transition:all 0.2s; position:relative; font-weight:450; }
-  .nav-links a:hover { color:var(--fio-text); }
-  .nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1.5px; background:var(--fio-gold); transition:width 0.25s ease; border-radius:1px; }
-  .nav-links a:hover::after { width:100%; }
-  .nav-cta { font-size:0.8125rem; font-weight:600; color:var(--fio-ink); padding:8px 20px; border-radius:8px; transition:all 0.25s; background:var(--fio-gold); }
-  .nav-cta:hover { background:#e0c88a; transform:translateY(-1px); box-shadow:0 4px 20px rgba(212,184,122,0.25); }
-  .nav-cta-outline { font-size:0.8125rem; font-weight:500; color:var(--fio-gold); padding:7px 18px; border:1px solid rgba(212,184,122,0.2); border-radius:8px; transition:all 0.25s; background:rgba(212,184,122,0.04); }
-  .nav-cta-outline:hover { background:rgba(212,184,122,0.1); border-color:rgba(212,184,122,0.35); }
-  .nav-mobile-btn { display:flex; width:40px; height:40px; align-items:center; justify-content:center; color:var(--fio-text-2); background:none; border:none; cursor:pointer; }
+  
   @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
 
   .hero { position:relative; overflow:hidden; min-height:70vh; display:flex; align-items:center; background:var(--fio-ink); padding-top:64px; }
