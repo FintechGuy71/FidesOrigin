@@ -1,5 +1,14 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FIDESORIGIN — MEGA MENU NAVIGATION v3
+   Enterprise-grade dropdown nav (Stripe/Linear/Vercel style)
+   ═══════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* Compatibility: map --accent/* vars to --fio-* if not defined */
+  --nav-bg: rgba(5,6,10,0.9);
+  --nav-bg-scrolled: rgba(5,6,10,0.98);
+  --dropdown-bg: #0e1018;
+  --dropdown-border: rgba(255,255,255,0.06);
+  --dropdown-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
   --fio-ink: var(--bg, #05060a);
   --fio-text: var(--text, #f0f1f5);
   --fio-text-2: var(--text-secondary, #9a9fad);
@@ -10,21 +19,20 @@
   --font-mono: 'Geist Mono', 'JetBrains Mono', 'SF Mono', monospace;
 }
 
-/* ─── Navigation ──────────────────────────────────────────────── */
+/* ─── Top Bar ─────────────────────────────────────────────────── */
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  background: rgba(5,6,10,0.85);
+  background: var(--nav-bg);
   backdrop-filter: blur(20px) saturate(1.2);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
   border-bottom: 1px solid rgba(255,255,255,0.04);
   transition: all 0.3s ease;
 }
 .nav-scrolled {
-  background: rgba(5,6,10,0.96);
+  background: var(--nav-bg-scrolled);
   border-bottom-color: rgba(255,255,255,0.08);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.2);
 }
 
 .nav-inner {
@@ -45,24 +53,22 @@
   flex-shrink: 0;
 }
 .nav-logo img {
-  height: 26px;
-  width: auto;
+  height: 26px; width: auto;
   border-radius: 6px;
 }
 .nav-logo-text {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 0.9375rem; /* 15px — balanced with nav links */
+  font-size: 0.9375rem;
   color: var(--fio-text);
   letter-spacing: -0.02em;
-  line-height: 1;
 }
 
-/* ─── Desktop Links ───────────────────────────────────────────── */
+/* ─── Desktop Nav Links ───────────────────────────────────────── */
 .nav-links {
-  display: none; /* hidden on mobile */
+  display: none;
   align-items: center;
-  gap: 28px;
+  gap: 4px;
   flex: 1;
   justify-content: center;
 }
@@ -70,42 +76,169 @@
   .nav-links { display: flex; }
 }
 
-.nav-links a {
-  font-size: 0.8125rem; /* 13px */
-  color: var(--fio-text-2);
-  transition: color 0.2s ease;
+/* ─── Dropdown Trigger ────────────────────────────────────────── */
+.nav-item {
   position: relative;
-  font-weight: 500; /* standard weight, always renders clean */
-  white-space: nowrap;
-  padding: 4px 0;
 }
 
-.nav-links a:hover {
+.nav-item > a,
+.nav-item > button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--fio-text-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-item > a:hover,
+.nav-item > button:hover {
+  color: var(--fio-text);
+  background: rgba(255,255,255,0.04);
+}
+
+.nav-item > a .chevron,
+.nav-item > button .chevron {
+  width: 12px; height: 12px;
+  opacity: 0.5;
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover > button .chevron,
+.nav-item:hover > a .chevron {
+  transform: rotate(180deg);
+  opacity: 0.8;
+}
+
+/* ─── Mega Dropdown Panel ─────────────────────────────────────── */
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  min-width: 560px;
+  max-width: 640px;
+  background: var(--dropdown-bg);
+  border: 1px solid var(--dropdown-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--dropdown-shadow);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.nav-item:hover .nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Arrow tip */
+.nav-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px; height: 10px;
+  background: var(--dropdown-bg);
+  border-left: 1px solid var(--dropdown-border);
+  border-top: 1px solid var(--dropdown-border);
+}
+
+/* ─── Dropdown Grid Layout ────────────────────────────────────── */
+.dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.dropdown-grid.single {
+  grid-template-columns: 1fr;
+}
+
+/* ─── Dropdown Link Card ──────────────────────────────────────── */
+.dropdown-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dropdown-link:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.dropdown-icon {
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(139,126,200,0.08);
+  color: var(--fio-gold);
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.dropdown-link:hover .dropdown-icon {
+  background: rgba(139,126,200,0.15);
+}
+
+.dropdown-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--fio-text);
 }
 
-/* Underline hover effect */
-.nav-links a::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 1.5px;
-  background: var(--fio-gold);
-  transition: width 0.25s ease;
-  border-radius: 1px;
-}
-.nav-links a:hover::after {
-  width: 100%;
+.dropdown-desc {
+  font-size: 0.6875rem;
+  color: var(--fio-text-3);
+  line-height: 1.5;
 }
 
-/* GitHub link — slightly muted */
-.nav-links a[href*="github"] {
-  color: var(--fio-text-3);
+/* ─── Dropdown Section Divider ────────────────────────────────── */
+.dropdown-section {
+  margin-bottom: 8px;
 }
-.nav-links a[href*="github"]:hover {
-  color: var(--fio-text-2);
+
+.dropdown-section-title {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fio-text-3);
+  padding: 0 12px 8px;
+}
+
+/* ─── Right Side ──────────────────────────────────────────────── */
+.nav-right {
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+@media (min-width: 1024px) {
+  .nav-right { display: flex; }
 }
 
 /* ─── Language Switcher ───────────────────────────────────────── */
@@ -113,11 +246,9 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: 0.6875rem; /* 11px */
+  font-size: 0.6875rem;
   font-family: var(--font-mono);
   font-weight: 500;
-  margin-left: 4px;
-  margin-right: 4px;
   padding: 3px;
   background: rgba(255,255,255,0.03);
   border-radius: 8px;
@@ -130,6 +261,7 @@
   color: var(--fio-text-3);
   transition: all 0.2s ease;
   line-height: 1;
+  font-size: 0.6875rem;
 }
 
 .lang-switch a:hover {
@@ -147,17 +279,18 @@
 .nav-cta {
   display: inline-flex;
   align-items: center;
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--fio-ink);
   padding: 7px 16px;
   border-radius: 8px;
-  transition: all 0.25s ease;
   background: linear-gradient(135deg, var(--fio-gold) 0%, #c9a96e 100%);
   border: none;
   cursor: pointer;
   white-space: nowrap;
   letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: all 0.25s ease;
 }
 
 .nav-cta:hover {
@@ -166,35 +299,11 @@
   filter: brightness(1.08);
 }
 
-/* Outline variant */
-.nav-cta-outline {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--fio-gold);
-  padding: 6px 15px;
-  border: 1.5px solid rgba(212,184,122,0.25);
-  border-radius: 8px;
-  transition: all 0.25s ease;
-  background: transparent;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.nav-cta-outline:hover {
-  background: rgba(212,184,122,0.08);
-  border-color: rgba(212,184,122,0.45);
-  color: #e0c88a;
-}
-
 /* ─── Mobile Toggle ───────────────────────────────────────────── */
 .nav-mobile-btn {
   display: flex;
-  width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
+  width: 36px; height: 36px;
+  align-items: center; justify-content: center;
   color: var(--fio-text-2);
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
@@ -212,7 +321,7 @@
   .nav-mobile-btn { display: none; }
 }
 
-/* ─── Mobile Menu Overlay ─────────────────────────────────────── */
+/* ─── Mobile Menu ─────────────────────────────────────────────── */
 .mobile-menu {
   display: none;
   position: fixed;
@@ -226,6 +335,7 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
+  overflow-y: auto;
 }
 
 .mobile-menu.active {
@@ -236,13 +346,10 @@
 
 .mobile-menu-close {
   position: absolute;
-  top: 16px;
-  right: 20px;
-  width: 36px;
-  height: 36px;
+  top: 16px; right: 20px;
+  width: 36px; height: 36px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center; justify-content: center;
   color: var(--fio-text-2);
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
@@ -250,11 +357,25 @@
   cursor: pointer;
 }
 
+.mobile-section {
+  margin-bottom: 16px;
+}
+
+.mobile-section-title {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fio-text-3);
+  padding: 12px 0 8px;
+}
+
 .mobile-menu a {
-  font-size: 1.125rem;
+  display: block;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--fio-text);
-  padding: 14px 0;
+  padding: 10px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: color 0.2s ease;
 }
@@ -273,15 +394,4 @@
   border: none;
   font-size: 0.8125rem;
   padding: 6px 12px;
-}
-
-/* ─── Right-side cluster (lang + cta) ─────────────────────────── */
-.nav-right {
-  display: none;
-  align-items: center;
-  gap: 16px;
-}
-
-@media (min-width: 1024px) {
-  .nav-right { display: flex; }
 }
