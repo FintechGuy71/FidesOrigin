@@ -77,7 +77,8 @@
   
   @media(min-width:900px){ .nav-links { display:flex; } .nav-mobile-btn { display:none; } }
 
-  .hero { position:relative; overflow:hidden; min-height:100vh; display:flex; align-items:center; background:var(--fio-ink); }
+  .hero { position:relative; overflow:hidden; min-height:100vh; display:flex; align-items:center;
+  padding: 0; background:var(--fio-ink); }
   .hero-bg-glow { position:absolute; inset:0; pointer-events:none; }
   .hero-bg-glow::before { content:''; position:absolute; top:-30%; left:20%; width:70vw; height:70vw; background:radial-gradient(circle,rgba(155,142,216,0.07) 0%,transparent 60%); }
   .hero-bg-glow::after { content:''; position:absolute; bottom:-20%; right:10%; width:50vw; height:50vw; background:radial-gradient(circle,rgba(212,184,122,0.05) 0%,transparent 60%); }
@@ -323,27 +324,7 @@
 </style>
   <link rel="stylesheet" href="/styles/nav.css"/>
 </head>
-<body style="background:var(--fio-ink);color:var(--fio-text)">
-
-<div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')">&times;</button>
-  <a href="#products" onclick="closeMobileMenu()">製品</a>
-  <a href="#architecture" onclick="closeMobileMenu()">アーキテクチャ</a>
-  <a href="#differentiation" onclick="closeMobileMenu()">差別化</a>
-  <a href="#use-cases" onclick="closeMobileMenu()">ユースケース</a>
-  <a href="#security" onclick="closeMobileMenu()">セキュリティ</a>
-  <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
-  <a href="/docs/" onclick="closeMobileMenu()">ドキュメント</a>
-  <div class="lang-row">
-    <a href="/">EN</a>
-    <a href="/cn/">CN</a>
-    <a href="/tw/">TW</a>
-    <a href="/jp/" class="active">JP</a>
-  </div>
-  <a href="mailto:contact@fidesorigin.com" class="nav-cta" style="display:inline-block;margin-top:16px;text-align:center">デモをリクエスト</a>
-</div>
-
-<!-- Navigation -->
+<body style="background:var(--fio-ink);color:var(--fio-text)"><!-- Navigation -->
 <header class="nav" id="mainNav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
@@ -547,8 +528,6 @@
 
 
   <a href="/contact.html" class="nav-cta" style="margin-top:8px;text-align:center">Contact</a>
-</div>
-
 </div>
 
 <section class="hero">
