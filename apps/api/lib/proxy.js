@@ -14,14 +14,23 @@ const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
  */
 async function proxyToBackend(backendPath, options = {}) {
   const url = `${BACKEND_API_URL}${backendPath}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
-  return response;
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+    return response;
+  } catch (err) {
+    // [ERR-FIX] Wrap network errors so callers get a predictable response shape.
+    console.error('[proxyToBackend] Network error:', err.message);
+    return new Response(JSON.stringify({ error: 'Backend unavailable', detail: err.message }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 /**

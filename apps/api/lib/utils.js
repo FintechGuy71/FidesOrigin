@@ -87,14 +87,12 @@ function checkOrigin(req, res) {
 const crypto = require('crypto');
 
 function _timingSafeEqualStr(a, b) {
-  const ba = Buffer.from(String(a), 'utf8');
-  const bb = Buffer.from(String(b), 'utf8');
-  if (ba.length !== bb.length) {
-    // 长度不同也必须消耗一次比较，避免长度侧信道
-    crypto.timingSafeEqual(ba, ba);
-    return false;
-  }
-  return crypto.timingSafeEqual(ba, bb);
+  // [SEC-FIX] Hash both inputs to fixed-length SHA-256 before comparison.
+  // This eliminates length-based timing side-channels and avoids the previous
+  // bug where different-length inputs were compared against themselves.
+  const hashA = crypto.createHash('sha256').update(String(a), 'utf8').digest();
+  const hashB = crypto.createHash('sha256').update(String(b), 'utf8').digest();
+  return crypto.timingSafeEqual(hashA, hashB);
 }
 
 function checkApiKey(req, res) {
@@ -517,7 +515,16 @@ function withMiddleware(handler) {
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', (chunk) => (body += chunk));
+    let size = 0;
+    const MAX_BODY_SIZE = 1024 * 1024; // 1MB limit [SEC-FIX]
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > MAX_BODY_SIZE) {
+        req.destroy();
+        return reject(new Error('Request body too large'));
+      }
+      body += chunk;
+    });
     req.on('end', () => {
       try {
         req.body = body ? JSON.parse(body) : {};
