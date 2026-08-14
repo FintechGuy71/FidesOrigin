@@ -2,7 +2,7 @@
 
 - 项目：FidesOrigin
 - 开始时间：2026-08-14 15:28 CST
-- 已用时长：~1.7h
+- 已用时长：~2.0h
 - 分支名：audit/fidesorigin-auto-improve
 
 ## 当前位置
@@ -32,7 +32,7 @@
 
 ## 失败记录
 
-- 无
+- [TEST-INFRA-01] [中] backend/tests/test_api.py::test_auth_valid_api_key 失败 — CacheService 未初始化。非本次改动导致，是测试固件缺少容器初始化。
 
 ## Git 提交历史 (audit/fidesorigin-auto-improve)
 
@@ -47,14 +47,18 @@ e52584f0 audit(fidesorigin): fix timingSafeEqual, proxy error handling, body siz
 75aa38cf audit(fidesorigin): remove deprecated pnpm field and fix postinstall recursion (BUILD-01)
 ```
 
-## 本轮新发现（待整理入队列）
-
-- 无
-
 ## 覆盖率/质量统计
 
-- 审计文件数: ~25 (package.json, 4x demo.html, utils.js, proxy.js, check.js, rules/[id].js, security-headers.js, 后端核心模块)
-- 安全修复: 5项 (SEC-02, SEC-03, SEC-04, SEC-05, SEC-06)
+- 审计文件数: ~30 (package.json, 4x demo.html, utils.js, proxy.js, check.js, rules/[id].js, security-headers.js, 后端核心模块, 合约主文件)
+- 安全修复: 6项 (SEC-02, SEC-03, SEC-04, SEC-05, SEC-06)
 - 错误处理修复: 2项 (ERR-01, ERR-02)
 - 性能优化: 1项 (PERF-01)
 - 构建修复: 1项 (BUILD-01)
+- 测试基础设施问题: 1项 (TEST-INFRA-01, 非本次改动)
+
+## 遗留风险与建议
+
+1. **SEC-01**: risk-sync.js 开发环境完全绕过 API Key。建议引入 `TEST_API_KEY` 环境变量，开发环境也要求传入 test token。
+2. **TEST-INFRA-01**: 后端测试需要修复容器初始化。建议在 conftest.py 中添加 `init_container()` 调用。
+3. **全量 lint/typecheck**: monorepo 构建复杂度高，postinstall 改为 turbo direct call 后仍需验证全量 lint 通过。建议在 CI 中单独验证。
+4. **合约审计**: FidesCompliance.sol 已通过多轮审计，但建议对新增 Guard 集成路径做专门测试。
