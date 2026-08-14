@@ -448,15 +448,18 @@
         result.classList.add('show');
         result.innerHTML = '檢查中...';
         
+        // [SEC-FIX] Escape HTML to prevent XSS from user input
+        function _e(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
         // Simulate check
         setTimeout(function() {
           var isSafe = Math.random() > 0.3;
           if (isSafe) {
             result.className = 'demo-result show safe';
-            result.innerHTML = '<span style="color: var(--success);">✓ 合規</span><br>地址: ' + address.slice(0, 20) + '...<br>風險評分: 低 (12/100)<br>制裁: 無<br>最後更新: ' + new Date().toISOString().slice(0, 10);
+            result.innerHTML = '<span style="color: var(--success);">✓ 合規</span><br>地址: ' + _e(address.slice(0, 20)) + '...<br>風險評分: 低 (12/100)<br>制裁: 無<br>最後更新: ' + new Date().toISOString().slice(0, 10);
           } else {
             result.className = 'demo-result show danger';
-            result.innerHTML = '<span style="color: var(--danger);">✗ 高風險</span><br>地址: ' + address.slice(0, 20) + '...<br>風險評分: 高 (87/100)<br>標記: 制裁名單, 混幣<br>操作: 已阻止';
+            result.innerHTML = '<span style="color: var(--danger);">✗ 高風險</span><br>地址: ' + _e(address.slice(0, 20)) + '...<br>風險評分: 高 (87/100)<br>標記: 制裁名單, 混幣<br>操作: 已阻止';
           }
         }, 800);
       });
