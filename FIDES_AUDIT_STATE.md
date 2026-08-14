@@ -2,7 +2,7 @@
 
 - 项目：FidesOrigin
 - 开始时间：2026-08-14 15:28 CST
-- 已用时长：~1.0h
+- 已用时长：~1.1h
 - 分支名：audit/fidesorigin-auto-improve
 
 ## 当前位置
@@ -21,9 +21,12 @@
 - [SEC-01] [高] apps/api/api/risk-sync.js 生产环境 API Key 认证逻辑待完善 | 状态：待办
 - [CONFIG-01] [中] .env BASESCAN_API_KEY 为空 | 状态：待办
 - [CONFIG-02] [低] .npmrc 包含 pnpm 专属配置，npm 安装时报警告 | 状态：待办
+- [PERF-01] [低] cloudflare-workers 安全头 Worker 缺少缓存控制头 | 状态：待办
 
 ## 失败记录
 
 - 无
 
 ## 本轮新发现（待整理入队列）
+
+- cloudflare-workers/security-headers.js 未设置 Cache-Control 头，静态资源每次请求都回源
