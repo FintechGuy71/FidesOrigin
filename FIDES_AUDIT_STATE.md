@@ -2,7 +2,7 @@
 
 - 项目：FidesOrigin
 - 开始时间：2026-08-14 15:28 CST
-- 已用时长：~2.5h
+- 已用时长：~2.7h
 - 分支名：audit/fidesorigin-auto-improve
 
 ## 当前位置
@@ -12,7 +12,7 @@
 
 ## 任务队列（按严重度排序）
 
-### 已完成 (15项)
+### 已完成 (18项)
 
 - [BUILD-01] [高] 根 package.json 移除弃用 pnpm 字段 + 修复 postinstall 递归 | ✅
 - [SEC-01] [高] apps/api/api/risk-sync.js 引入 TEST_API_KEY，开发环境可选安全认证 | ✅
@@ -24,12 +24,14 @@
 - [ERR-02] [中] apps/api/lib/proxy.js `createProxyHandler` 无错误处理 | ✅
 - [SEC-03] [中] apps/api/lib/utils.js `parseBody` 无请求体大小限制 | ✅
 - [SEC-04] [中] apps/api/api/v1/risk/check.js chainId 未 URL 编码 | ✅
-- [TEST-INFRA-01] [中] backend/tests/conftest.py 缺少容器初始化 → 已添加 container.initialize() | ✅
-- [SEC-01-review] [中] risk-sync.js 开发环境安全模式改进 + .env.example CI 指导 | ✅
-- [GUARD-01] [中] FidesCompliance.test.js 添加 Guard 集成测试（5个测试用例） | ✅
-- [LINT-HOOK-01] [低] pre-commit hook 添加缺失依赖时的优雅降级 | ✅
-- [CONFIG-02] [低] .npmrc 添加 pnpm 注释头，澄清 packageManager 用途 | ✅
+- [TEST-INFRA-01] [中] backend/tests/conftest.py 添加 container.initialize()，修复 CacheService 错误 | ✅
+- [SEC-01-review] [中] risk-sync.js 安全模式改进 + .env.example CI 指导 | ✅
+- [GUARD-01] [中] FidesCompliance.test.js 添加 Guard 集成测试（5用例）+ 修复 enableGuard/staticCall | ✅
+- [LINT-01] [中] 修复 CommonJS API 文件 lint error + .eslintrc.json 添加 override | ✅
+- [LINT-HOOK-01] [低] pre-commit hook 缺失依赖时优雅降级 | ✅
+- [CONFIG-02] [低] .npmrc 添加 pnpm 注释头 | ✅
 - [PERF-01] [低] cloudflare-workers 安全头 Worker 缺少缓存控制头 | ✅
+- [PYTEST-ENV] [低] 后端虚拟环境配置（.venv + requirements.txt 依赖） | ✅
 
 ### 待办
 
@@ -42,6 +44,8 @@
 ## Git 提交历史 (audit/fidesorigin-auto-improve)
 
 ```
+a6173215 audit(fidesorigin): fix Guard integration tests — use enableGuard + staticCall + deadline
+1862fc52 audit(fidesorigin): fix lint errors in CommonJS API files + add eslint override (lint/typecheck)
 e5179250 audit(fidesorigin): add graceful fallback in pre-commit hook when deps missing (LINT-HOOK-01)
 b0ccc869 audit(fidesorigin): update state — TEST-INFRA-01, SEC-01-review, GUARD-01 completed
 7dc79430 audit(fidesorigin): add Guard integration tests to FidesCompliance (contract audit coverage)
@@ -61,19 +65,21 @@ e52584f0 audit(fidesorigin): fix timingSafeEqual, proxy error handling, body siz
 
 ## 覆盖率/质量统计
 
-- 审计文件数: ~40
+- 审计文件数: ~45
 - 安全修复: 7项 (SEC-01..06)
 - 错误处理修复: 2项 (ERR-01, ERR-02)
 - 测试基础设施修复: 1项 (TEST-INFRA-01)
 - 安全模式改进: 1项 (SEC-01-review)
 - 合约测试覆盖: 1项 (GUARD-01, +5测试用例)
+- Lint 修复: 1项 (LINT-01, CommonJS override)
 - Pre-commit 健壮性: 1项 (LINT-HOOK-01)
 - 性能优化: 1项 (PERF-01)
 - 构建修复: 1项 (BUILD-01)
-- 配置改进: 2项 (CONFIG-01 审查, CONFIG-02 注释)
+- 配置改进: 2项 (CONFIG-01, CONFIG-02)
+- 后端环境: 1项 (PYTEST-ENV, .venv + 依赖)
 
 ## 遗留风险与建议
 
-1. **全量 lint/typecheck**: monorepo 构建复杂，建议在修复 node_modules 后单独验证全量 lint 通过。
-2. **合约审计**: Guard 集成路径测试已补充（FidesCompliance.test.js +5 用例），建议 CI 中运行合约测试验证。
-3. **后端测试**: TEST-INFRA-01 已修复容器初始化，但后端环境缺少 pytest，建议在 CI 中配置 Python 测试环境。
+1. **后端测试数据库**: 本地 PostgreSQL 未运行，测试跑到数据库连接阶段后失败。CI 中需配置测试数据库。
+2. **全量 lint**: 已修复审计范围内的文件，monorepo 其他文件可能有类似 CommonJS/ESM 配置不匹配问题。
+3. **合约测试**: Guard 集成测试已通过（11 passing），建议 CI 中运行完整 `npx hardhat test` 验证。
