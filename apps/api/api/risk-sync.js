@@ -20,7 +20,7 @@ const ALLOWED_ORIGINS = [
 
 const RISK_SYNC_API_KEY = process.env.RISK_SYNC_API_KEY;
 if (!RISK_SYNC_API_KEY) {
-  console.warn('⚠️ RISK_SYNC_API_KEY not set. API authentication is disabled in development mode only.');
+  console.warn('⚠️ RISK_SYNC_API_KEY not set. Production API authentication will fail.');
 }
 
 function checkOrigin(req, res) {
@@ -44,6 +44,9 @@ function checkOrigin(req, res) {
 // If TEST_API_KEY is set, dev environment also requires the key (safe-by-default).
 // If unset, falls back to legacy bypass for backward compatibility.
 const TEST_API_KEY = process.env.TEST_API_KEY;
+if (process.env.NODE_ENV !== 'production' && !TEST_API_KEY) {
+  console.warn('⚠️ TEST_API_KEY not set. Dev environment auth is BYPASSED. Set TEST_API_KEY for secure dev mode.');
+}
 
 function checkApiKey(req, res) {
   const key = req.headers['x-api-key'];
