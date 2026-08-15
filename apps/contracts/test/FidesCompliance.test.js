@@ -65,59 +65,63 @@ describe('FidesCompliance', function () {
     });
 
     it('should pass evaluateTransaction without Guard (guard not set)', async function () {
-      const [allowed, riskScore] = await fidesCompliance.connect(addr1).evaluateTransaction(
+      const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
+      const [allowed, riskScore] = await fidesCompliance.connect(addr1).evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         100,
         ethers.ZeroAddress,
-        0
+        deadline
       );
       expect(allowed).to.be.true;
       expect(riskScore).to.equal(0);
     });
 
     it('should BLOCK via Guard when Guard returns BLOCK action', async function () {
-      await fidesCompliance.connect(owner).setGuard(await mockGuard.getAddress());
+      await fidesCompliance.connect(owner).enableGuard(await mockGuard.getAddress());
       await mockGuard.setNextAction(2); // Action.BLOCK = 2
 
-      const [allowed, riskScore] = await fidesCompliance.connect(addr1).evaluateTransaction(
+      const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
+      const [allowed, riskScore] = await fidesCompliance.connect(addr1).evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         100,
         ethers.ZeroAddress,
-        0
+        deadline
       );
       expect(allowed).to.be.false;
       expect(riskScore).to.equal(100);
     });
 
     it('should ALLOW via Guard when Guard returns ALLOW action', async function () {
-      await fidesCompliance.connect(owner).setGuard(await mockGuard.getAddress());
+      await fidesCompliance.connect(owner).enableGuard(await mockGuard.getAddress());
       await mockGuard.setNextAction(0); // Action.ALLOW = 0
 
-      const [allowed] = await fidesCompliance.connect(addr1).evaluateTransaction(
+      const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
+      const [allowed] = await fidesCompliance.connect(addr1).evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         100,
         ethers.ZeroAddress,
-        0
+        deadline
       );
       expect(allowed).to.be.true;
     });
 
     it('should disable Guard and bypass check', async function () {
-      await fidesCompliance.connect(owner).setGuard(await mockGuard.getAddress());
+      await fidesCompliance.connect(owner).enableGuard(await mockGuard.getAddress());
       await mockGuard.setNextAction(2); // BLOCK
 
       await fidesCompliance.connect(owner).disableGuard();
       expect(await fidesCompliance.guardEnabled()).to.be.false;
 
-      const [allowed] = await fidesCompliance.connect(addr1).evaluateTransaction(
+      const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
+      const [allowed] = await fidesCompliance.connect(addr1).evaluateTransaction.staticCall(
         addr1.address,
         addr2.address,
         100,
         ethers.ZeroAddress,
-        0
+        deadline
       );
       expect(allowed).to.be.true;
     });
