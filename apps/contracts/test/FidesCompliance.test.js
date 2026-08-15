@@ -54,4 +54,78 @@ describe('FidesCompliance', function () {
       expect(await fidesCompliance.hasRole(await fidesCompliance.ADMIN_ROLE(), owner.address)).to.be.true;
     });
   });
+
+  describe('Guard Integration', function () {
+    let mockGuard;
+
+    beforeEach(async function () {
+      const MockGuard = await ethers.getContractFactory('MockPreTransactionGuard');
+      mockGuard = await MockGuard.deploy();
+      await mockGuard.waitForDeployment();
+    });
+
+    it('should pass evaluateTransaction without Guard (guard not set)', async function () {
+      const [allowed, riskScore] = await fidesCompliance.connect(addr1).evaluateTransaction(
+        addr1.address,
+        addr2.address,
+        100,
+        ethers.ZeroAddress,
+        0
+      );
+      expect(allowed).to.be.true;
+      expect(riskScore).to.equal(0);
+    });
+
+    it('should BLOCK via Guard when Guard returns BLOCK action', async function () {
+      await fidesCompliance.connect(owner).setGuard(await mockGuard.getAddress());
+      await mockGuard.setNextAction(2); // Action.BLOCK = 2
+
+      const [allowed, riskScore] = await fidesCompliance.connect(addr1).evaluateTransaction(
+        addr1.address,
+        addr2.address,
+        100,
+        ethers.ZeroAddress,
+        0
+      );
+      expect(allowed).to.be.false;
+      expect(riskScore).to.equal(100);
+    });
+
+    it('should ALLOW via Guard when Guard returns ALLOW action', async function () {
+      await fidesCompliance.connect(owner).setGuard(await mockGuard.getAddress());
+      await mockGuard.setNextAction(0); // Action.ALLOW = 0
+
+      const [allowed] = await fidesCompliance.connect(addr1).evaluateTransaction(
+        addr1.address,
+        addr2.address,
+        100,
+        ethers.ZeroAddress,
+        0
+      );
+      expect(allowed).to.be.true;
+    });
+
+    it('should disable Guard and bypass check', async function () {
+      await fidesCompliance.connect(owner).setGuard(await mockGuard.getAddress());
+      await mockGuard.setNextAction(2); // BLOCK
+
+      await fidesCompliance.connect(owner).disableGuard();
+      expect(await fidesCompliance.guardEnabled()).to.be.false;
+
+      const [allowed] = await fidesCompliance.connect(addr1).evaluateTransaction(
+        addr1.address,
+        addr2.address,
+        100,
+        ethers.ZeroAddress,
+        0
+      );
+      expect(allowed).to.be.true;
+    });
+
+    it('should only allow admin to setGuard', async function () {
+      await expect(
+        fidesCompliance.connect(addr1).setGuard(await mockGuard.getAddress())
+      ).to.be.revertedWithCustomError(fidesCompliance, 'AccessControlUnauthorizedAccount');
+    });
+  });
 });
