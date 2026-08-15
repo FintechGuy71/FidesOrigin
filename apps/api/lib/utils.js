@@ -3,6 +3,7 @@
 // Extracted from risk-sync.js, extended for v1 REST API routes
 // ─────────────────────────────────────────────────────────────────────────────
 
+const crypto = require('crypto');
 const https = require('https');
 
 // ==================== Environment & Config ====================
@@ -84,7 +85,6 @@ function checkOrigin(req, res) {
 
 // ==================== API Key Auth ====================
 // [F-19 FIX R2] 常数时间比较，防止时序侧信道泄露密钥前缀
-const crypto = require('crypto');
 
 function _timingSafeEqualStr(a, b) {
   // [SEC-FIX] Hash both inputs to fixed-length SHA-256 before comparison.
