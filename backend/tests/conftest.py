@@ -127,6 +127,12 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     # 检查是否标记了 noauth
     noauth_marker = request.node.get_closest_marker("noauth")
     
+    # [TEST-INFRA-01 Fix] 初始化容器，使 CacheService 可用
+    # Redis 连接失败会自动降级到内存缓存，不影响测试
+    container = get_container()
+    if not container._initialized:
+        await container.initialize()
+    
     # 保存原始中间件引用以便恢复
     original_request_signature_middleware = security_module.request_signature_middleware
     
