@@ -40,12 +40,26 @@ function checkOrigin(req, res) {
   return true;
 }
 
+// [SEC-01 Fix] Development mode now supports optional TEST_API_KEY authentication.
+// If TEST_API_KEY is set, dev environment also requires the key (safe-by-default).
+// If unset, falls back to legacy bypass for backward compatibility.
+const TEST_API_KEY = process.env.TEST_API_KEY;
+
 function checkApiKey(req, res) {
-  // [Low Fix #18] Development mode bypasses API key auth for convenience.
-  // TODO: In production, always require API key auth. Consider using a separate test token
-  // instead of completely disabling auth.
-  if (process.env.NODE_ENV !== 'production') return true; // 开发环境跳过
   const key = req.headers['x-api-key'];
+
+  // 开发环境：如果配置了 TEST_API_KEY，则强制要求传入（安全开发模式）
+  if (process.env.NODE_ENV !== 'production') {
+    if (TEST_API_KEY) {
+      if (key !== TEST_API_KEY) {
+        res.status(401).json({ error: 'Unauthorized: Invalid or missing test API key' });
+        return false;
+      }
+    }
+    return true; // 未配置 TEST_API_KEY 时保持向后兼容
+  }
+
+  // 生产环境：强制要求 RISK_SYNC_API_KEY
   if (!RISK_SYNC_API_KEY || key !== RISK_SYNC_API_KEY) {
     res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
     return false;
