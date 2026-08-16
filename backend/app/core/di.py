@@ -192,10 +192,10 @@ def get_container() -> DIContainer:
 async def init_container() -> None:
     """初始化容器"""
     container = get_container()
-    # [M-10 Fix] 使用明确的测试模式标志
-    if os.environ.get("TESTING", "").lower() == "true":
-        logger.debug("test_mode_skip_container_init")
-        return
+    # [R2 CI FIX] TESTING 模式不再跳过初始化：initialize() 内部的 CacheService.connect()
+    # 失败会被捕获降级（Redis 不可用时自动回落 L1 内存缓存），而跳过初始化会让
+    # container.cache 属性抛 RuntimeError("CacheService not initialized")，导致所有
+    # 触及缓存的 API 测试失败。
     await container.initialize()
 
 
