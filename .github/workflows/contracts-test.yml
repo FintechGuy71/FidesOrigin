@@ -6,6 +6,56 @@ on:
     paths:
       - 'apps/contracts/**'
       - '.github/workflows/contracts-test.yml'
+  # pull_request 不再做 paths 过滤：ruleset 要求 hardhat 检查必过，
+  # 若 PR 不涉及 apps/contracts/ 时检查不触发会导致 PR 永远 pending 无法合并
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hardhat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/contracts/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/contracts
+        run: npm ci --no-fund --no-audit
+
+      - name: Compile contracts
+        working-directory: apps/contracts
+        run: npx hardhat compile
+
+      # 失败时把编译/测试错误转成 check-run 注解（供 API 读取，便于远程诊断）
+      - name: Run contract tests
+        id: tests
+        working-directory: apps/contracts
+        run: |
+          npx hardhat test 2>&1 | tee hardhat-test.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Report failures as annotations
+        if: failure()
+        working-directory: apps/contracts
+        run: |
+          grep -E "^\s+[0-9]+\) |Error:|AssertionError|reverted" hardhat-test.log | head -20 | while IFS= read -r line; do echo "::error::${line:0:300}"; done
+name: Contracts Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/contracts/**'
+      - '.github/workflows/contracts-test.yml'
   pull_request:
     paths:
       - 'apps/contracts/**'
