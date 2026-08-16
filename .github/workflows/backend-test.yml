@@ -6,9 +6,9 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-test.yml'
+  # pull_request 不再做 paths 过滤：ruleset 要求 pytest 检查必过，
+  # 若 PR 不涉及 backend/ 时检查不触发会导致 PR 永远 pending 无法合并
   pull_request:
-    paths:
-      - 'backend/**'
   workflow_dispatch:
 
 permissions:
