@@ -62,4 +62,13 @@ jobs:
         run: |
           cd backend
           source .venv/bin/activate
-          pytest tests/ -v
+          pytest tests/ -v --tb=short 2>&1 | tee pytest.log
+          exit ${PIPESTATUS[0]}
+
+      # 失败时把关键信息转成 check-run 注解（供 API 读取，便于远程诊断）
+      - name: Report failures as annotations
+        if: failure()
+        run: |
+          cd backend
+          grep -E "^(FAILED|ERROR)" pytest.log | head -20 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -E "^(E  |.*Error)" pytest.log | sort -u | head -10 | while IFS= read -r line; do echo "::error::${line:0:300}"; done
