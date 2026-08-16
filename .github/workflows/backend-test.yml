@@ -6,6 +6,80 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-test.yml'
+  # pull_request 不再做 paths 过滤：ruleset 要求 pytest 检查必过，
+  # 若 PR 不涉及 backend/ 时检查不触发会导致 PR 永远 pending 无法合并
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: fidesorigin_test
+          POSTGRES_USER: fidesorigin
+          POSTGRES_PASSWORD: fidesorigin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fidesorigin -d fidesorigin_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run backend tests
+        env:
+          TESTING: "true"
+          SECRET_KEY: "ci-secret-key-at-least-32-characters-long"
+          TEST_DATABASE_URL: "postgresql+asyncpg://fidesorigin:fidesorigin@localhost:5432/fidesorigin_test"
+          DB_PASSWORD: "fidesorigin"
+          ADMIN_USERNAME: "ci_admin"
+          ADMIN_PASSWORD: "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iK2a"  # bcrypt("password") — 仅 CI 使用
+        run: |
+          cd backend
+          source .venv/bin/activate
+          pytest tests/ -v --tb=short 2>&1 | tee pytest.log
+          exit ${PIPESTATUS[0]}
+
+      # 失败时把关键信息转成 check-run 注解（供 API 读取，便于远程诊断）
+      - name: Report failures as annotations
+        if: failure()
+        run: |
+          cd backend
+          grep -E "^(FAILED|ERROR)" pytest.log | head -20 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -E "^(E  |.*Error)" pytest.log | sort -u | head -10 | while IFS= read -r line; do echo "::error::${line:0:300}"; done
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-test.yml'
   pull_request:
     paths:
       - 'backend/**'
