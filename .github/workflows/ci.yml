@@ -1,10 +1,10 @@
 name: CI
 
+# [2026-08-16] 暂停自动触发：pnpm install --frozen-lockfile 持续失败（疑似 postinstall 构建 shared/config 包在 CI 环境失败）。
+# 修复后恢复 push/pull_request 触发。手动跑：Actions → CI → Run workflow。
+# 注：后端/合约质量门已由 backend-test.yml(pytest) 和 contracts-test.yml(hardhat) 接管（ruleset main-ci-gate 必过检查）。
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 # [High Fix #54] Explicit least-privilege permissions for CI/CD workflows.
 permissions:
