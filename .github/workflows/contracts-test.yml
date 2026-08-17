@@ -15,8 +15,6 @@ permissions:
 jobs:
   hardhat:
     runs-on: ubuntu-latest
-    env:
-      npm_config_block_exotic_subdeps: "false"
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +31,8 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/contracts
-        run: pnpm install --no-frozen-lockfile
+        # [CI-FIX] block-exotic-subdeps: pnpm 在 CI 中不读取 .npmrc
+        run: pnpm install --no-frozen-lockfile --config.block-exotic-subdeps=false
 
       - name: Compile contracts
         working-directory: apps/contracts

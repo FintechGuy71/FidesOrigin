@@ -14,11 +14,6 @@ on:
 permissions:
   contents: read
 
-# [CI-FIX] job 级别环境变量，确保所有子进程继承
-env:
-  ESLINT_USE_FLAT_CONFIG: "false"
-  npm_config_block_exotic_subdeps: "false"
-
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -31,10 +26,12 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      # [CI-FIX] block-exotic-subdeps: pnpm 在 CI 中不读取 .npmrc，用 CLI 参数禁用
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
-      - run: cd apps/contracts && pnpm install --no-frozen-lockfile
-      - run: pnpm lint
+      - run: cd apps/contracts && pnpm install --no-frozen-lockfile --config.block-exotic-subdeps=false
+      # [CI-FIX] 只有 web 和 config 有 eslint 配置，其他包 lint 会失败
+      - run: pnpm turbo run lint --filter=@fidesorigin/web --filter=@fidesorigin/config
       - run: pnpm typecheck
 
   test:
@@ -49,7 +46,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm test
 
@@ -65,7 +62,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm build
       - name: Audit dependencies
@@ -82,8 +79,8 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts --no-frozen-lockfile
-      - run: cd apps/contracts && pnpm install --no-frozen-lockfile
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
+      - run: cd apps/contracts && pnpm install --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: cd apps/contracts && npx hardhat test
 
   security-scan:
@@ -97,5 +94,5 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm audit --audit-level high || true
