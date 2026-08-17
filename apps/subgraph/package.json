@@ -13,7 +13,7 @@
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 fidesorigin",
     "clean": "rm -rf build generated",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.88.0",
