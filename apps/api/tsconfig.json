@@ -8,8 +8,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false
   },
-  "include": ["src/**/*.ts"],
+  "include": ["api/**/*", "lib/**/*", "middleware/**/*"],
   "exclude": ["node_modules"]
 }
