@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "types": ["@graphprotocol/graph-ts"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "assemblyscript.d.ts"],
   "exclude": ["node_modules", "generated", "build"]
 }
