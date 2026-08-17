@@ -36,7 +36,7 @@ async function main() {
   console.log('Proxy address:', PROXY_ADDRESS);
 
   // Step 1: Get current proxy state
-  const proxy = await ethers.getContractAt('RiskRegistryV2', PROXY_ADDRESS);
+  const proxy = await ethers.getContractAt('RiskRegistryV2', PROXY_ADDRESS!);
   const currentVersion = await proxy.VERSION();
   console.log(`\nCurrent proxy version: ${currentVersion}`);
 
