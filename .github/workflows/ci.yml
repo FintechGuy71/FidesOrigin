@@ -31,6 +31,8 @@ jobs:
       - run: pnpm install --ignore-scripts
       # 手动构建需要的包（替代 postinstall）
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
+      # [CI-FIX] contracts 包需要 solhint，单独安装其依赖
+      - run: cd apps/contracts && pnpm install
       - run: pnpm lint
       - run: pnpm typecheck
 
