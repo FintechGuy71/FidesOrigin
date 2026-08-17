@@ -78,6 +78,40 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+# ==================== Mock Blockscout Service ====================
+class MockBlockscoutService:
+    """Mock Blockscout 服务，避免测试时发起外部 HTTP 请求"""
+
+    async def connect(self):
+        pass
+
+    async def close(self):
+        pass
+
+    async def get_transaction(self, tx_hash: str):
+        """Mock: 所有交易查不到，直接抛出异常"""
+        from app.core.exceptions import NotFoundException
+        raise NotFoundException("Transaction", tx_hash)
+
+    async def get_address_info(self, address: str):
+        return {"address": address, "balance": "0", "transaction_count": 0}
+
+    async def get_address_transactions(self, address: str, limit=50, page=1):
+        return {"items": []}
+
+    async def get_address_token_transfers(self, address: str, limit=50):
+        return {"items": []}
+
+    async def get_address_internal_transactions(self, address: str, limit=50):
+        return {"items": []}
+
+    async def get_address_stats(self, address: str):
+        return {"address": address, "balance": "0", "transaction_count": 0}
+
+    async def batch_get_transactions(self, tx_hashes, max_concurrent=5):
+        return []
+
+
 @pytest_asyncio.fixture(scope="function")
 async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     """创建测试客户端 - 覆盖所有模块的 get_db 依赖
@@ -132,6 +166,10 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     container = get_container()
     if not container._initialized:
         await container.initialize()
+    
+    # [TEST-MOCK-01] Mock BlockscoutService，避免外部 HTTP 请求卡住
+    original_blockscout = container._blockscout
+    container._blockscout = MockBlockscoutService()
     
     # 保存原始中间件引用以便恢复
     original_request_signature_middleware = security_module.request_signature_middleware
@@ -194,6 +232,7 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
     di_module.get_db = original_get_db
     app.dependency_overrides = original_overrides
     container.get_risk_engine = original_get_risk_engine
+    container._blockscout = original_blockscout
     security_module.request_signature_middleware = original_request_signature_middleware
     
     # 恢复认证覆盖
