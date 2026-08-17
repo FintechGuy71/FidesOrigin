@@ -18,6 +18,7 @@
  */
 
 import hre from 'hardhat';
+import '@nomicfoundation/hardhat-ethers';
 
 const { ethers, network } = hre;
 
