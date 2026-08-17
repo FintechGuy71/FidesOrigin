@@ -27,7 +27,8 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      # [CI-FIX] --ignore-scripts 跳过 postinstall；--no-frozen-lockfile 允许 lockfile 更新
+      # [CI-FIX] 显式禁用 block-exotic-subdeps（.npmrc 在 CI 中可能未被读取）
+      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       # 手动构建需要的包（替代 postinstall）
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
@@ -48,6 +49,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
+      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm test
@@ -64,6 +66,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
+      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm build
@@ -82,6 +85,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
+      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: cd apps/contracts && pnpm install --no-frozen-lockfile
       - run: cd apps/contracts && npx hardhat test
@@ -97,5 +101,6 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
+      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm audit --audit-level high || true
