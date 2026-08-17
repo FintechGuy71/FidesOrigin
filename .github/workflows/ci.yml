@@ -1,7 +1,7 @@
 name: CI
 # [CI-FIX-2026-08-17] 修复 pnpm install --frozen-lockfile 失败问题
 # 根因: postinstall 中 turbo build 在 CI 环境缺少依赖/配置，导致安装失败
-# 解决: 改用 npm ci（与本地实际环境一致），并跳过 postinstall 在 CI 中自动构建
+# 解决: pnpm install --ignore-scripts（跳过 postinstall 构建，保留 pnpm 供 turbo 识别）
 # 历史: 2026-08-16 曾暂停自动触发，本次修复后恢复
 
 on:
@@ -19,66 +19,81 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # [CI-FIX] 安装 pnpm（turbo 需要识别包管理器二进制）
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      # [CI-FIX] 使用 npm ci 替代 pnpm install --frozen-lockfile
-      # 原因: 1) 本地实际使用 npm 安装 2) 避免 pnpm lockfile v9 兼容问题 3) 跳过 postinstall 构建
-      - run: npm ci --ignore-scripts
+          cache: 'pnpm'
+      # [CI-FIX] --ignore-scripts 跳过 postinstall，避免 shared/config 构建失败
+      - run: pnpm install --ignore-scripts
       # 手动构建需要的包（替代 postinstall）
-      - run: npx turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
-      - run: npm run lint
-      - run: npm run typecheck
+      - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
+      - run: pnpm lint
+      - run: pnpm typecheck
 
   test:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci --ignore-scripts
-      - run: npx turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
-      - run: npm test
+          cache: 'pnpm'
+      - run: pnpm install --ignore-scripts
+      - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
+      - run: pnpm test
 
   build:
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, test]
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci --ignore-scripts
-      - run: npx turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
-      - run: npm run build
+          cache: 'pnpm'
+      - run: pnpm install --ignore-scripts
+      - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
+      - run: pnpm build
       - name: Audit dependencies
-        run: npm audit --audit-level moderate || true
+        run: pnpm audit --audit-level moderate || true
 
   # 合约测试（独立 job，不依赖前端构建）
   contracts-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci --ignore-scripts
-      - run: cd apps/contracts && npm install
+          cache: 'pnpm'
+      - run: pnpm install --ignore-scripts
+      - run: cd apps/contracts && pnpm install
       - run: cd apps/contracts && npx hardhat test
 
   security-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci --ignore-scripts
-      - run: npm audit --audit-level high || true
+          cache: 'pnpm'
+      - run: pnpm install --ignore-scripts
+      - run: pnpm audit --audit-level high || true
