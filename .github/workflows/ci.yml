@@ -14,12 +14,16 @@ on:
 permissions:
   contents: read
 
+# [CI-FIX] job 级别环境变量，确保所有子进程继承
+env:
+  ESLINT_USE_FLAT_CONFIG: "false"
+  npm_config_block_exotic_subdeps: "false"
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # [CI-FIX] 安装 pnpm（turbo 需要识别包管理器二进制）
       - uses: pnpm/action-setup@v4
         with:
           version: 11.6.0
@@ -27,15 +31,10 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      # [CI-FIX] 显式禁用 block-exotic-subdeps（.npmrc 在 CI 中可能未被读取）
-      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
-      # 手动构建需要的包（替代 postinstall）
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
-      # [CI-FIX] contracts 包需要 solhint，单独安装其依赖
       - run: cd apps/contracts && pnpm install --no-frozen-lockfile
-      # [CI-FIX] ESLint v9 默认用 flat config，但项目用 .eslintrc.json 格式
-      - run: ESLINT_USE_FLAT_CONFIG=false pnpm lint
+      - run: pnpm lint
       - run: pnpm typecheck
 
   test:
@@ -50,7 +49,6 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm test
@@ -67,14 +65,12 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm build
       - name: Audit dependencies
         run: pnpm audit --audit-level moderate || true
 
-  # 合约测试（独立 job，不依赖前端构建）
   contracts-test:
     runs-on: ubuntu-latest
     steps:
@@ -86,7 +82,6 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: cd apps/contracts && pnpm install --no-frozen-lockfile
       - run: cd apps/contracts && npx hardhat test
@@ -102,6 +97,5 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm config set block-exotic-subdeps false
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm audit --audit-level high || true
