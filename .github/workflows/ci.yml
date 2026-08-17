@@ -34,7 +34,8 @@ jobs:
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       # [CI-FIX] contracts 包需要 solhint，单独安装其依赖
       - run: cd apps/contracts && pnpm install --no-frozen-lockfile
-      - run: pnpm lint
+      # [CI-FIX] ESLint v9 默认用 flat config，但项目用 .eslintrc.json 格式
+      - run: ESLINT_USE_FLAT_CONFIG=false pnpm lint
       - run: pnpm typecheck
 
   test:
