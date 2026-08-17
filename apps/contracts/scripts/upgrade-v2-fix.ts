@@ -17,7 +17,9 @@
  *   PROXY_ADDRESS - Proxy address (default: 0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc)
  */
 
-import { ethers, network } from 'hardhat';
+import hre from 'hardhat';
+
+const { ethers, network } = hre;
 
 const PROXY_ADDRESS = process.env.PROXY_ADDRESS;
 if (!PROXY_ADDRESS) {
