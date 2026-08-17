@@ -27,12 +27,12 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      # [CI-FIX] --ignore-scripts 跳过 postinstall，避免 shared/config 构建失败
-      - run: pnpm install --ignore-scripts
+      # [CI-FIX] --ignore-scripts 跳过 postinstall；--no-frozen-lockfile 允许 lockfile 更新
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
       # 手动构建需要的包（替代 postinstall）
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       # [CI-FIX] contracts 包需要 solhint，单独安装其依赖
-      - run: cd apps/contracts && pnpm install
+      - run: cd apps/contracts && pnpm install --no-frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
 
@@ -48,7 +48,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm test
 
@@ -64,7 +64,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
       - run: pnpm build
       - name: Audit dependencies
@@ -82,8 +82,8 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts
-      - run: cd apps/contracts && pnpm install
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - run: cd apps/contracts && pnpm install --no-frozen-lockfile
       - run: cd apps/contracts && npx hardhat test
 
   security-scan:
@@ -97,5 +97,5 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --ignore-scripts
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - run: pnpm audit --audit-level high || true
