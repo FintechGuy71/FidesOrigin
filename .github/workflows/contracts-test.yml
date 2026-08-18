@@ -32,8 +32,8 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/contracts
-        # [CI-FIX] block-exotic-subdeps: pnpm 在 CI 中不读取 .npmrc
-        run: pnpm install --no-frozen-lockfile --config.block-exotic-subdeps=false
+        # [CI-FIX] block-exotic-subdeps + ignore-scripts 避免 postinstall 构建卡住
+        run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
 
       - name: Compile contracts
         working-directory: apps/contracts
