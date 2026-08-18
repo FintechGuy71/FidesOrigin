@@ -32,9 +32,8 @@ jobs:
       - run: cd apps/contracts && pnpm install --no-frozen-lockfile --config.block-exotic-subdeps=false
       # [CI-FIX] 只有 web 和 config 有 eslint 配置，其他包 lint 会失败
       - run: pnpm turbo run lint --filter=@fidesorigin/web --filter=@fidesorigin/config
-      # [CI-FIX] subgraph 需要先生成类型文件才能 typecheck
-      - run: cd apps/subgraph && pnpm codegen
-      - run: pnpm typecheck
+      # [CI-FIX] subgraph 是 AssemblyScript，与 TypeScript 不兼容，跳过 typecheck
+      - run: pnpm turbo run typecheck --filter=!@fidesorigin/subgraph
 
   test:
     runs-on: ubuntu-latest
