@@ -49,7 +49,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
-      - run: pnpm test -- --passWithNoTests
+      - run: pnpm test
 
   build:
     runs-on: ubuntu-latest
