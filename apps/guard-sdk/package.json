@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "vitest",
+    "test": "vitest --run --passWithNoTests",
     "lint": "eslint src/",
     "prepublishOnly": "npm run build"
   },
