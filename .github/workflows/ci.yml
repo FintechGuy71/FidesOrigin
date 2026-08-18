@@ -65,6 +65,8 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
+      # [CI-FIX] subgraph build 需要先生成类型文件
+      - run: cd apps/subgraph && pnpm codegen
       - run: pnpm build
       - name: Audit dependencies
         run: pnpm audit --audit-level moderate || true
