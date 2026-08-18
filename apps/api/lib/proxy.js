@@ -14,14 +14,23 @@ const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
  */
 async function proxyToBackend(backendPath, options = {}) {
   const url = `${BACKEND_API_URL}${backendPath}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
-  return response;
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+    return response;
+  } catch (err) {
+    // [ERR-FIX] Wrap network errors so callers get a predictable response shape.
+    console.error('[proxyToBackend] Network error:', err.message);
+    return new Response(JSON.stringify({ error: 'Backend unavailable', detail: err.message }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 /**
@@ -30,26 +39,32 @@ async function proxyToBackend(backendPath, options = {}) {
  */
 function createProxyHandler(backendPathTemplate) {
   return async function handler(req, res) {
-    let backendPath = backendPathTemplate;
-    // Replace path params
-    const params = req.query || {};
-    for (const [key, value] of Object.entries(params)) {
-      backendPath = backendPath.replace(`:${key}`, encodeURIComponent(value));
-    }
-
-    const response = await proxyToBackend(backendPath, {
-      method: req.method,
-      body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
-    });
-
-    const data = await response.json().catch(() => null);
-    res.status(response.status);
-    for (const [key, value] of response.headers.entries()) {
-      if (key.toLowerCase() !== 'content-encoding') {
-        res.setHeader(key, value);
+    try {
+      let backendPath = backendPathTemplate;
+      // Replace path params
+      const params = req.query || {};
+      for (const [key, value] of Object.entries(params)) {
+        backendPath = backendPath.replace(`:${key}`, encodeURIComponent(value));
       }
+
+      const response = await proxyToBackend(backendPath, {
+        method: req.method,
+        body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
+      });
+
+      const data = await response.json().catch(() => null);
+      res.status(response.status);
+      for (const [key, value] of response.headers.entries()) {
+        if (key.toLowerCase() !== 'content-encoding') {
+          res.setHeader(key, value);
+        }
+      }
+      res.json(data);
+    } catch (err) {
+      // [ERR-FIX] Catch unexpected errors in proxy handler
+      console.error('[createProxyHandler] Unexpected error:', err.message);
+      res.status(500).json({ error: 'Internal proxy error' });
     }
-    res.json(data);
   };
 }
 

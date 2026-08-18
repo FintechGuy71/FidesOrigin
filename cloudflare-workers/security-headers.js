@@ -22,6 +22,16 @@ export default {
     if (!newHeaders.has('strict-transport-security')) {
       newHeaders.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
     }
+    // [PERF-FIX] 静态资源长期缓存，减少回源请求
+    if (!newHeaders.has('cache-control') && request.method === 'GET') {
+      const url = new URL(request.url);
+      const isAsset = /\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|json)$/.test(url.pathname);
+      if (isAsset) {
+        newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (url.pathname.endsWith('.html') || url.pathname === '/') {
+        newHeaders.set('Cache-Control', 'public, max-age=3600');
+      }
+    }
 
     return new Response(response.body, {
       status: response.status,

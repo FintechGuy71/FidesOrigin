@@ -91,6 +91,20 @@
         "max-lines": "off",
         "no-magic-numbers": "off"
       }
+    },
+    {
+      "files": ["apps/api/**/*.js"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off",
+        "import/order": [
+          "error",
+          {
+            "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+            "alphabetize": { "order": "asc", "caseInsensitive": true },
+            "newlines-between": "never"
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["node_modules/", ".next/", "dist/", "build/", "coverage/", "sdk/", "subgraph/"]

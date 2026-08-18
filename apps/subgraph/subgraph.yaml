@@ -110,7 +110,7 @@ dataSources:
     network: sepolia
     source:
       abi: FidesCompliance
-      address: "0x05497600618071C34CB3Fdb8A9E159e9589DEC79"
+      address: "0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707"
       startBlock: 7800000
     mapping:
       kind: ethereum/events
@@ -180,7 +180,7 @@ dataSources:
     network: sepolia
     source:
       abi: QuarantineVault
-      address: "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b"
+      address: "0xF7c5c4DdcB0F868a6c271334131728CecA313DFb"
       startBlock: 7650000
     mapping:
       kind: ethereum/events

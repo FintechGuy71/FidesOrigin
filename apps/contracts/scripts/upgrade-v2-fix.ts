@@ -17,7 +17,10 @@
  *   PROXY_ADDRESS - Proxy address (default: 0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc)
  */
 
-import { ethers, network } from 'hardhat';
+import hre from 'hardhat';
+import '@nomicfoundation/hardhat-ethers';
+
+const { ethers, network } = hre;
 
 const PROXY_ADDRESS = process.env.PROXY_ADDRESS;
 if (!PROXY_ADDRESS) {
@@ -33,7 +36,7 @@ async function main() {
   console.log('Proxy address:', PROXY_ADDRESS);
 
   // Step 1: Get current proxy state
-  const proxy = await ethers.getContractAt('RiskRegistryV2', PROXY_ADDRESS);
+  const proxy = await ethers.getContractAt('RiskRegistryV2', PROXY_ADDRESS!);
   const currentVersion = await proxy.VERSION();
   console.log(`\nCurrent proxy version: ${currentVersion}`);
 

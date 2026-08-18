@@ -5,11 +5,32 @@ const {
   initDefaultRules,
 } = require('../../../lib/utils');
 
+// [HIGH Fix #7] CSRF protection: validate Origin/Referer header for state-changing requests.
+const ALLOWED_CSRF_ORIGINS = [
+  'https://fidesorigin.com',
+  'https://www.fidesorigin.com',
+  'https://admin.fidesorigin.com',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
+function checkCSRF(req) {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return true;
+  const origin = req.headers.origin || req.headers.referer || '';
+  if (!origin) return false;
+  return ALLOWED_CSRF_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed + '/'));
+}
+
 // GET    /v1/rules/:id
 // PUT    /v1/rules/:id → updateRule (SDK uses PATCH, but we accept both)
 // PATCH  /v1/rules/:id → updateRule
 // DELETE /v1/rules/:id → deleteRule
 async function handler(req, res) {
+  // [HIGH Fix #7] CSRF check for state-changing requests
+  if (!checkCSRF(req)) {
+    return sendError(res, 403, 'CSRF_FORBIDDEN', 'Origin not allowed for this request');
+  }
+
   initDefaultRules();
 
   const { id } = req.query || {};

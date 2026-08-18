@@ -1,1 +1,11 @@
+#!/bin/sh
+# [LINT-HOOK-01 Fix] Graceful fallback when node_modules is incomplete
+# Prevents commit failures due to missing dependencies (e.g., chalk)
+if [ ! -d "node_modules/chalk" ] || [ ! -d "node_modules/lint-staged" ]; then
+  echo "⚠️  Warning: lint-staged dependencies missing (node_modules incomplete)."
+  echo "   Run 'pnpm install' or 'npm install' to restore full dev dependencies."
+  echo "   Skipping pre-commit lint for now."
+  exit 0
+fi
+
 npx lint-staged

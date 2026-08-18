@@ -14,7 +14,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sol,py}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,sol,py}\"",
     "lint:py": "cd backend && ruff check . && ruff format --check . && mypy .",
-    "postinstall": "pnpm build --filter=@fidesorigin/shared --filter=@fidesorigin/config",
+    "postinstall": "turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -45,20 +45,6 @@
     "vitest": "^2.1.0"
   },
   "packageManager": "pnpm@11.6.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "@napi-rs/canvas",
-      "secp256k1",
-      "keccak",
-      "bcrypt",
-      "esbuild",
-      "protobufjs"
-    ],
-    "overrides": {
-      "@chainlink/contracts": "1.3.0"
-    }
-  },
   "engines": {
     "node": ">=22.0.0"
   },

@@ -1,10 +1,10 @@
+const { proxyToBackend } = require('../../../lib/proxy');
 const {
   withMiddleware,
   isValidEthereumAddress,
   isValidChainId,
   sendError,
 } = require('../../../lib/utils');
-const { proxyToBackend } = require('../../../lib/proxy');
 
 // GET /v1/risk/check
 // Proxies to Python backend: /api/v1/address/{address}/risk
@@ -24,10 +24,11 @@ async function handler(req, res) {
 
   // Proxy to backend
   try {
-    const response = await proxyToBackend(`/api/v1/address/${address}/risk?chainId=${chainId || 1}`);
+    const response = await proxyToBackend(`/api/v1/address/${address}/risk?chainId=${encodeURIComponent(chainId || 1)}`);
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
+    console.error('[check] Proxy error:', error.message);
     return sendError(res, 502, 'PROXY_ERROR', 'Backend unavailable');
   }
 }

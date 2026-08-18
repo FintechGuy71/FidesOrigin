@@ -445,15 +445,18 @@
         result.classList.add('show');
         result.innerHTML = 'Checking...';
         
+        // [SEC-FIX] Escape HTML to prevent XSS from user input
+        function _e(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
         // Simulate check
         setTimeout(function() {
           var isSafe = Math.random() > 0.3;
           if (isSafe) {
             result.className = 'demo-result show safe';
-            result.innerHTML = '<span style="color: var(--success);">✓ COMPLIANT</span><br>Address: ' + address.slice(0, 20) + '...<br>Risk Score: LOW (12/100)<br>Sanctions: None<br>Last Updated: ' + new Date().toISOString().slice(0, 10);
+            result.innerHTML = '<span style="color: var(--success);">✓ COMPLIANT</span><br>Address: ' + _e(address.slice(0, 20)) + '...<br>Risk Score: LOW (12/100)<br>Sanctions: None<br>Last Updated: ' + new Date().toISOString().slice(0, 10);
           } else {
             result.className = 'demo-result show danger';
-            result.innerHTML = '<span style="color: var(--danger);">✗ HIGH RISK</span><br>Address: ' + address.slice(0, 20) + '...<br>Risk Score: HIGH (87/100)<br>Flags: Sanctions List, Mixing<br>Action: BLOCKED';
+            result.innerHTML = '<span style="color: var(--danger);">✗ HIGH RISK</span><br>Address: ' + _e(address.slice(0, 20)) + '...<br>Risk Score: HIGH (87/100)<br>Flags: Sanctions List, Mixing<br>Action: BLOCKED';
           }
         }, 800);
       });
