@@ -28,7 +28,7 @@
     --fio-accent:#9b8ed8; --fio-accent-dim:#9b8ed81a; --fio-accent-glow:#9b8ed80a;
     --fio-gold:#d4b87a; --fio-gold-dim:#d4b87a1a; --fio-gold-glow:#d4b87a10;
     --fio-steel:#7b9ab8; --fio-success:#5ce68a; --fio-warn:#fcd34d; --fio-danger:#fb8e8e; --fio-info:#7ab8f0;
-    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Kaku Gothic ProN','Hiragino Sans','Meiryo','Yu Gothic',sans-serif;
     --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     --font-mono:'Geist Mono','JetBrains Mono','SF Mono','Fira Code',monospace;
   }
@@ -174,6 +174,7 @@
 </style>
   <link rel="stylesheet" href="/styles/nav.css"/>
   <link rel="icon" type="image/png" href="/brand/logo-dark-icon.png">
+  <link rel="stylesheet" href="/styles/lang-switch.css"/>
 </head>
 <body><!-- Navigation -->
 <header class="nav" id="mainNav">
@@ -191,29 +192,29 @@
             <a href="/jp/architecture.html#compliance-engine" class="dropdown-link">
               <div class="dropdown-icon">⚡</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Compliance Engine</span>
-                <span class="dropdown-desc">On-chain compliance checks for every transfer</span>
+                <span class="dropdown-title">コンプライアンスエンジン</span>
+                <span class="dropdown-desc">すべての送金にオンチェーンのコンプライアンスチェック</span>
               </div>
             </a>
             <a href="/jp/architecture.html#risk-registry" class="dropdown-link">
               <div class="dropdown-icon">📊</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Risk Registry</span>
-                <span class="dropdown-desc">Real-time risk profiles powered by AI Oracles</span>
+                <span class="dropdown-title">リスクレジストリ</span>
+                <span class="dropdown-desc">AIオラクルによるリアルタイムリスクプロファイル</span>
               </div>
             </a>
             <a href="/jp/architecture.html#policy-engine" class="dropdown-link">
               <div class="dropdown-icon">📜</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Policy Engine</span>
-                <span class="dropdown-desc">Customizable rules for issuers and operators</span>
+                <span class="dropdown-title">ポリシーエンジン</span>
+                <span class="dropdown-desc">発行者と運営者向けのカスタマイズ可能なルール</span>
               </div>
             </a>
             <a href="/jp/architecture.html#quarantine" class="dropdown-link">
               <div class="dropdown-icon">🔒</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Quarantine Vault</span>
-                <span class="dropdown-desc">Asset freezing with time-locked recovery</span>
+                <span class="dropdown-title">隔離ボールト</span>
+                <span class="dropdown-desc">タイムロック付き回復機能付き資産凍結</span>
               </div>
             </a>
           </div>
@@ -227,22 +228,22 @@
             <a href="/jp/use-cases/stablecoin-compliance.html" class="dropdown-link">
               <div class="dropdown-icon">💰</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Stablecoin Compliance</span>
-                <span class="dropdown-desc">HKMA / MiCA-ready on-chain compliance</span>
+                <span class="dropdown-title">ステーブルコインコンプライアンス</span>
+                <span class="dropdown-desc">HKMA / MiCA 対応のオンチェーンコンプライアンス</span>
               </div>
             </a>
             <a href="/jp/use-cases/rwa-tokenization.html" class="dropdown-link">
               <div class="dropdown-icon">🏛️</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">RWA Tokenization</span>
-                <span class="dropdown-desc">Tokenized real-world assets with built-in compliance</span>
+                <span class="dropdown-title">RWAトークン化</span>
+                <span class="dropdown-desc">コンプライアンス内蔵の実世界資産トークン化</span>
               </div>
             </a>
             <a href="/jp/use-cases/smart-wallet.html" class="dropdown-link">
               <div class="dropdown-icon">👛</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Smart Wallet</span>
-                <span class="dropdown-desc">Account abstraction with policy enforcement</span>
+                <span class="dropdown-title">スマートウォレット</span>
+                <span class="dropdown-desc">ポリシー強制付きアカウント抽象化</span>
               </div>
             </a>
           </div>
@@ -256,29 +257,29 @@
             <a href="/jp/docs/" class="dropdown-link">
               <div class="dropdown-icon">📖</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Documentation</span>
-                <span class="dropdown-desc">Protocol architecture and integration guides</span>
+                <span class="dropdown-title">ドキュメント</span>
+                <span class="dropdown-desc">プロトコルアーキテクチャと統合ガイド</span>
               </div>
             </a>
             <a href="/jp/docs/api.html" class="dropdown-link">
               <div class="dropdown-icon">🔌</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">API Reference</span>
-                <span class="dropdown-desc">REST API and GraphQL endpoints</span>
+                <span class="dropdown-title">APIリファレンス</span>
+                <span class="dropdown-desc">REST APIとGraphQLエンドポイント</span>
               </div>
             </a>
             <a href="/jp/docs/sdk.html" class="dropdown-link">
               <div class="dropdown-icon">🧰</div>
               <div class="dropdown-text">
                 <span class="dropdown-title">SDK</span>
-                <span class="dropdown-desc">JavaScript/TypeScript integration toolkit</span>
+                <span class="dropdown-desc">JavaScript/TypeScript統合ツールキット</span>
               </div>
             </a>
             <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer" class="dropdown-link">
               <div class="dropdown-icon">🐙</div>
               <div class="dropdown-text">
                 <span class="dropdown-title">GitHub</span>
-                <span class="dropdown-desc">Open-source contracts and tooling</span>
+                <span class="dropdown-desc">オープンソースのコントラクトとツール</span>
               </div>
             </a>
           </div>
@@ -292,29 +293,29 @@
             <a href="/jp/about.html" class="dropdown-link">
               <div class="dropdown-icon">ℹ️</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">About</span>
-                <span class="dropdown-desc">Our mission and team</span>
+                <span class="dropdown-title">会社概要</span>
+                <span class="dropdown-desc">ミッションとチーム</span>
               </div>
             </a>
             <a href="/jp/blog/" class="dropdown-link">
               <div class="dropdown-icon">✍️</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Blog</span>
-                <span class="dropdown-desc">Insights on on-chain compliance</span>
+                <span class="dropdown-title">ブログ</span>
+                <span class="dropdown-desc">オンチェーンコンプライアンスの洞察</span>
               </div>
             </a>
             <a href="/jp/case-studies.html" class="dropdown-link">
               <div class="dropdown-icon">📋</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Case Studies</span>
-                <span class="dropdown-desc">Real-world implementations</span>
+                <span class="dropdown-title">導入事例</span>
+                <span class="dropdown-desc">実際の導入実績</span>
               </div>
             </a>
             <a href="/jp/contact.html" class="dropdown-link">
               <div class="dropdown-icon">📧</div>
               <div class="dropdown-text">
-                <span class="dropdown-title">Contact</span>
-                <span class="dropdown-desc">Get in touch with our team</span>
+                <span class="dropdown-title">お問い合わせ</span>
+                <span class="dropdown-desc">チームへのお問い合わせ</span>
               </div>
             </a>
           </div>
@@ -352,30 +353,30 @@
   <div class="mobile-section">
     <div class="mobile-section-title">製品</div>
     
-    <a href="/jp/architecture.html#compliance-engine">Compliance Engine</a>
-    <a href="/jp/architecture.html#risk-registry">Risk Registry</a>
-    <a href="/jp/architecture.html#policy-engine">Policy Engine</a>
-    <a href="/jp/architecture.html#quarantine">Quarantine Vault</a>
+    <a href="/jp/architecture.html#compliance-engine">コンプライアンスエンジン</a>
+    <a href="/jp/architecture.html#risk-registry">リスクレジストリ</a>
+    <a href="/jp/architecture.html#policy-engine">ポリシーエンジン</a>
+    <a href="/jp/architecture.html#quarantine">隔離ボールト</a>
   </div>
   <div class="mobile-section">
     <div class="mobile-section-title">ソリューション</div>
-    <a href="/jp/use-cases/stablecoin-compliance.html">Stablecoin Compliance</a>
-    <a href="/jp/use-cases/rwa-tokenization.html">RWA Tokenization</a>
-    <a href="/jp/use-cases/smart-wallet.html">Smart Wallet</a>
+    <a href="/jp/use-cases/stablecoin-compliance.html">ステーブルコインコンプライアンス</a>
+    <a href="/jp/use-cases/rwa-tokenization.html">RWAトークン化</a>
+    <a href="/jp/use-cases/smart-wallet.html">スマートウォレット</a>
   </div>
   <div class="mobile-section">
     <div class="mobile-section-title">開発者</div>
-    <a href="/jp/docs/">Documentation</a>
-    <a href="/jp/docs/api.html">API Reference</a>
+    <a href="/jp/docs/">ドキュメント</a>
+    <a href="/jp/docs/api.html">APIリファレンス</a>
     <a href="/jp/docs/sdk.html">SDK</a>
     <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer">GitHub</a>
   </div>
   <div class="mobile-section">
     <div class="mobile-section-title">会社</div>
-    <a href="/jp/about.html">About</a>
-    <a href="/jp/blog/">Blog</a>
-    <a href="/jp/case-studies.html">Case Studies</a>
-    <a href="/jp/contact.html">Contact</a>
+    <a href="/jp/about.html">会社概要</a>
+    <a href="/jp/blog/">ブログ</a>
+    <a href="/jp/case-studies.html">導入事例</a>
+    <a href="/jp/contact.html">お問い合わせ</a>
   </div>
   <div class="lang-switch">
       <button class="lang-switch-btn" id="langBtnMobile" onclick="toggleLangDropdown('langDropdownMobile', 'langBtnMobile')" aria-label="Select language">
@@ -392,7 +393,7 @@
     </div>
 
 
-  <a href="/jp/contact.html" class="nav-cta" style="margin-top:8px;text-align:center">Contact</a>
+  <a href="/jp/contact.html" class="nav-cta" style="margin-top:8px;text-align:center">お問い合わせ</a>
 </div>
 
 <section class="hero">
@@ -818,5 +819,6 @@ function closeMobileMenu() {
 }
 </script>
 
+  <script src="/assets/lang-switch.js" defer></script>
 </body>
 </html>
