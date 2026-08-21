@@ -3,42 +3,404 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0;url=/blog/mica-stablecoin-compliance.html">
-  <title>FidesOrigin Blog</title>
-  <meta name="description" content="This page is available in English. Redirecting...">
-  <meta name="robots" content="noindex, follow">
-  <link rel="canonical" href="https://fidesorigin.com/blog/mica-stablecoin-compliance.html">
-  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/mica-stablecoin-compliance.html"/>
-  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/mica-stablecoin-compliance.html"/>
-  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/mica-stablecoin-compliance.html"/>
-  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/mica-stablecoin-compliance.html"/>
-  <style>body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}a{color:#d4b87a;text-decoration:none}</style>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://plausible.io https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>MiCA 稳定币合规：技术指南 — FidesOrigin 博客</title>
+  <meta name="description" content="面向稳定币发行人的欧盟 MiCA 合规技术指南：链上储备鉴证、交易筛查与监管报告要求。">
+  <meta name="author" content="FidesOrigin">
+  <meta property="og:title" content="MiCA 稳定币合规：技术指南">
+  <meta property="og:description" content="面向稳定币发行人的欧盟 MiCA 合规技术指南。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://fidesorigin.com/cn/blog/mica-stablecoin-compliance.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <meta name="twitter:site" content="@fidesorigin">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/cn/blog/mica-stablecoin-compliance.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/mica-stablecoin-compliance.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/mica-stablecoin-compliance.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/mica-stablecoin-compliance.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/mica-stablecoin-compliance.html">
+  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/mica-stablecoin-compliance.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <style>
+    .blog-article { padding: 140px 0 60px; }
+    .blog-article .container { max-width: 800px; }
+    .blog-article h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+    .blog-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; color: var(--text-muted); font-size: 0.875rem; }
+    .blog-meta .tag { background: var(--accent-dim); color: var(--accent); padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .blog-content h2 { font-size: 1.4rem; font-weight: 600; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .blog-content h3 { font-size: 1.1rem; font-weight: 600; margin: 32px 0 12px; color: var(--accent); }
+    .blog-content p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; }
+    .blog-content ul, .blog-content ol { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; padding-left: 24px; }
+    .blog-content li { margin-bottom: 8px; }
+    .blog-content code { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+    .blog-content pre { background: #0a0c14; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.7; color: var(--text-secondary); margin: 20px 0; }
+    .blog-content blockquote { border-left: 3px solid var(--accent); padding-left: 20px; margin: 24px 0; color: var(--text-secondary); font-style: italic; }
+    .blog-nav { display: flex; justify-content: space-between; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .blog-nav a { color: var(--accent); font-size: 0.875rem; }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+  <link rel="stylesheet" href="/styles/nav.css"/>
+  <link rel="icon" type="image/png" href="/brand/logo-dark-icon.png">
+  <link rel="stylesheet" href="/styles/lang-switch.css"/>
 </head>
 <body>
-  <div>
-    <p>This page is currently available in English only.</p>
-    <p><a href="/blog/mica-stablecoin-compliance.html">Click here if you are not redirected automatically →</a></p>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Navigation -->
+  <header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/cn/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="26" height="26" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <!-- Products Dropdown -->
+      <div class="nav-item">
+        <button>产品 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid">
+            <a href="/cn/architecture.html#compliance-engine" class="dropdown-link">
+              <div class="dropdown-icon">⚡</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">合规引擎</span>
+                <span class="dropdown-desc">每笔转账的链上合规检查</span>
+              </div>
+            </a>
+            <a href="/cn/architecture.html#risk-registry" class="dropdown-link">
+              <div class="dropdown-icon">📊</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">风险登记册</span>
+                <span class="dropdown-desc">AI 预言机驱动的实时风险画像</span>
+              </div>
+            </a>
+            <a href="/cn/architecture.html#policy-engine" class="dropdown-link">
+              <div class="dropdown-icon">📜</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">策略引擎</span>
+                <span class="dropdown-desc">面向发行方与运营方的可定制规则</span>
+              </div>
+            </a>
+            <a href="/cn/architecture.html#quarantine" class="dropdown-link">
+              <div class="dropdown-icon">🔒</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">隔离金库</span>
+                <span class="dropdown-desc">资产冻结与时间锁恢复</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Solutions Dropdown -->
+      <div class="nav-item">
+        <button>解决方案 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid single">
+            <a href="/cn/use-cases/stablecoin-compliance.html" class="dropdown-link">
+              <div class="dropdown-icon">💰</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">稳定币合规</span>
+                <span class="dropdown-desc">符合 HKMA / MiCA 的链上合规</span>
+              </div>
+            </a>
+            <a href="/cn/use-cases/rwa-tokenization.html" class="dropdown-link">
+              <div class="dropdown-icon">🏛️</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">RWA 代币化</span>
+                <span class="dropdown-desc">内置合规的现实世界资产代币化</span>
+              </div>
+            </a>
+            <a href="/cn/use-cases/smart-wallet.html" class="dropdown-link">
+              <div class="dropdown-icon">👛</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">智能钱包</span>
+                <span class="dropdown-desc">带策略执行的账户抽象</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Developers Dropdown -->
+      <div class="nav-item">
+        <button>开发者 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid single">
+            <a href="/cn/docs/" class="dropdown-link">
+              <div class="dropdown-icon">📖</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">开发文档</span>
+                <span class="dropdown-desc">协议架构与集成指南</span>
+              </div>
+            </a>
+            <a href="/cn/docs/api.html" class="dropdown-link">
+              <div class="dropdown-icon">🔌</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">API 参考</span>
+                <span class="dropdown-desc">REST API 与 GraphQL 端点</span>
+              </div>
+            </a>
+            <a href="/cn/docs/sdk.html" class="dropdown-link">
+              <div class="dropdown-icon">🧰</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">SDK</span>
+                <span class="dropdown-desc">JavaScript/TypeScript 集成工具包</span>
+              </div>
+            </a>
+            <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer" class="dropdown-link">
+              <div class="dropdown-icon">🐙</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">GitHub</span>
+                <span class="dropdown-desc">开源合约与工具链</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Company Dropdown -->
+      <div class="nav-item">
+        <button>公司 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid single">
+            <a href="/cn/about.html" class="dropdown-link">
+              <div class="dropdown-icon">ℹ️</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">关于我们</span>
+                <span class="dropdown-desc">我们的使命与团队</span>
+              </div>
+            </a>
+            <a href="/cn/blog/" class="dropdown-link">
+              <div class="dropdown-icon">✍️</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">博客</span>
+                <span class="dropdown-desc">链上合规洞察</span>
+              </div>
+            </a>
+            <a href="/cn/case-studies.html" class="dropdown-link">
+              <div class="dropdown-icon">📋</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">案例研究</span>
+                <span class="dropdown-desc">真实世界的实施案例</span>
+              </div>
+            </a>
+            <a href="/cn/contact.html" class="dropdown-link">
+              <div class="dropdown-icon">📧</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">联系我们</span>
+                <span class="dropdown-desc">与我们的团队取得联系</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-right">
+      <div class="lang-switch">
+      <button class="lang-switch-btn" id="langBtn" onclick="toggleLangDropdown('langDropdown', 'langBtn')" aria-label="Select language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>简体中文</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:2px"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="lang-switch-dropdown" id="langDropdown">
+        <a href="/cn/" class=""><span>English</span><span class="lang-native">English</span></a>
+        <a href="/cn/" class="active"><span>简体中文</span><span class="lang-native">Simplified Chinese</span></a>
+        <a href="/cn/tw/" class=""><span>繁體中文</span><span class="lang-native">Traditional Chinese</span></a>
+        <a href="/cn/jp/" class=""><span>日本語</span><span class="lang-native">Japanese</span></a>
+      </div>
+    </div>
+    </div>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
   </div>
-<script>
-// Language Switcher
-function toggleLangDropdown(dropdownId, btnId) {
-  var dd = document.getElementById(dropdownId);
-  var btn = document.getElementById(btnId);
-  if (!dd || !btn) return;
-  var isOpen = dd.classList.contains('open');
-  document.querySelectorAll('.lang-switch-dropdown').forEach(function(d){ d.classList.remove('open'); });
-  document.querySelectorAll('.lang-switch-btn').forEach(function(b){ b.classList.remove('active'); });
-  if (!isOpen) {
-    dd.classList.add('open');
-    btn.classList.add('active');
-  }
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.lang-switch')) {
-    document.querySelectorAll('.lang-switch-dropdown').forEach(function(d){ d.classList.remove('open'); });
-    document.querySelectorAll('.lang-switch-btn').forEach(function(b){ b.classList.remove('active'); });
-  }
-});
-</script>
+</header>
+
+
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')" aria-label="Close menu">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Products</div>
+    
+    <a href="/cn/architecture.html#compliance-engine">Compliance Engine</a>
+    <a href="/cn/architecture.html#risk-registry">Risk Registry</a>
+    <a href="/cn/architecture.html#policy-engine">Policy Engine</a>
+    <a href="/cn/architecture.html#quarantine">Quarantine Vault</a>
+  </div>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Solutions</div>
+    <a href="/cn/use-cases/stablecoin-compliance.html">Stablecoin Compliance</a>
+    <a href="/cn/use-cases/rwa-tokenization.html">RWA Tokenization</a>
+    <a href="/cn/use-cases/smart-wallet.html">Smart Wallet</a>
+  </div>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Developers</div>
+    <a href="/cn/docs/">Documentation</a>
+    <a href="/cn/docs/api.html">API Reference</a>
+    <a href="/cn/docs/sdk.html">SDK</a>
+    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Company</div>
+    <a href="/cn/about.html">About</a>
+    <a href="/cn/blog/">博客</a>
+    <a href="/cn/case-studies.html">Case Studies</a>
+    <a href="/cn/contact.html">Contact</a>
+  </div>
+  <div class="lang-switch">
+      <button class="lang-switch-btn" id="langBtnMobile" onclick="toggleLangDropdown('langDropdownMobile', 'langBtnMobile')" aria-label="Select language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>English</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:2px"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="lang-switch-dropdown" id="langDropdownMobile">
+        <a href="/cn/" class="active"><span>English</span><span class="lang-native">English</span></a>
+        <a href="/cn/" class=""><span>简体中文</span><span class="lang-native">Simplified Chinese</span></a>
+        <a href="/cn/tw/" class=""><span>繁體中文</span><span class="lang-native">Traditional Chinese</span></a>
+        <a href="/cn/jp/" class=""><span>日本語</span><span class="lang-native">Japanese</span></a>
+      </div>
+    </div>
+
+
+  <a href="/cn/contact.html" class="nav-cta" style="margin-top:8px;text-align:center">Contact</a>
+</div>
+
+  <main id="main-content">
+    <article class="blog-article">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">Blog</p>
+          <h1>MiCA 稳定币合规：技术指南</h1>
+          <div class="blog-meta">
+            <span>2026 年 7 月</span>
+            <span class="tag">监管动态</span>
+            <span>阅读约 8 分钟</span>
+          </div>
+        </div>
+
+        <div class="blog-content reveal">
+          <p>欧盟《加密资产市场法规》（MiCA）已于 2024 年全面生效，为稳定币发行人建立了全球最完整的监管框架。要在欧盟市场运营，合规不是可选项，而是生存前提。</p>
+
+          <h2>MiCA 对稳定币的要求</h2>
+
+          <p>MiCA 将稳定币分为两类：资产参考代币（ART）和电子货币代币（EMT）。两者都面临严格的要求：</p>
+
+          <ul>
+            <li><strong>储备管理：</strong>1:1 流动资产背书、每日估值、分账隔离</li>
+            <li><strong>赎回权：</strong>按面值保证赎回，不超过 5 个工作日</li>
+            <li><strong>交易筛查：</strong>对所有转账进行反洗钱检查</li>
+            <li><strong>白皮书：</strong>全面披露风险、权利与技术细节</li>
+            <li><strong>授权许可：</strong>发行须取得 CASP 牌照</li>
+          </ul>
+
+          <h2>为什么链上合规对 MiCA 至关重要</h2>
+
+          <p>传统合规架构依赖链下 API 来筛查交易。这会带来几个致命问题：</p>
+
+          <ol>
+            <li><strong>延迟：</strong>API 调用给每笔交易引入 100-500 毫秒延迟。在规模化场景下，这会破坏 DeFi 的可组合性。</li>
+            <li><strong>可用性：</strong>API 一旦宕机，交易要么失败要么绕过检查——在 MiCA 框架下两者都不可接受。</li>
+            <li><strong>可审计性：</strong>监管机构要求证明每笔交易都经过筛查。链下日志可能被篡改。</li>
+            <li><strong>确定性：</strong>MiCA 要求规则的一致性执行。链下系统在不同时间可能返回不同结果。</li>
+          </ol>
+
+          <blockquote>“证明合规的唯一方式，是让绕过检查成为不可能。”——这正是链上合规的核心原则。</blockquote>
+
+          <h2>技术实现</h2>
+
+          <p>FidesOrigin 的方案将合规直接嵌入代币合约：</p>
+
+          <pre>// Every transfer is screened on-chain
+function _update(address from, address to, uint256 amount) internal override {
+  guard.requireClean(from, to, amount);
+  super._update(from, to, amount);
+}</p>
+
+          <ul>
+            <li>储备资产的实时验证</li>
+            <li>透明、可审计的储备率</li>
+            <li>储备低于阈值时自动暂停铸造</li>
+          </ul>
+
+          <h2>为 MiCA 做好准备</h2>
+
+          <p>对于瞄准欧盟市场的稳定币发行人，合规架构必须从协议设计之初就内建其中，事后补救的代价远超早期投入。</p>
+
+          <p>FidesOrigin 提供的基础设施层让 MiCA 合规变得确定、可审计且开箱即用。</p>
+        </div>
+
+        <div class="blog-nav reveal">
+          <a href="/cn/blog/">← All Articles</a>
+          <a href="/cn/blog/why-on-chain-compliance.html">Next: Why On-Chain →</a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">面向代币化资产和DeFi的链上合规协议。</p>
+      </div>
+      <div class="footer-col">
+        <h4>产品</h4>
+        <a href="/cn/">风险雷达</a>
+        <a href="/cn/">策略引擎</a>
+        <a href="/cn/">审计盾</a>
+        <a href="/cn/address-check.html">地址检查</a>
+        <a href="/cn/pricing.html">定价</a>
+      </div>
+      <div class="footer-col">
+        <h4>开发者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/cn/docs/">文档</a>
+        <a href="/cn/docs/api">API参考</a>
+        <a href="/cn/changelog.html">更新日志</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="/cn/about.html">关于</a>
+        <a href="/cn/case-studies.html">案例研究</a>
+        <a href="mailto:contact@fidesorigin.com">联系</a>
+        <a href="/cn/privacy.html">隐私</a>
+        <a href="/cn/terms.html">条款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT许可证。</span>
+      <span>香港 &middot; 新加坡 &middot; 旧金山</span>
+    </div>
+  </div>
+</footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script>
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+  </script>
+  <script src="/assets/lang-switch.js" defer></script>
 </body>
 </html>
