@@ -243,6 +243,7 @@
   <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
   <link rel="icon" type="image/png" href="/brand/logo-dark-icon.png">
   <link rel="stylesheet" href="/styles/nav.css"/>
+  <link rel="stylesheet" href="/styles/lang-switch.css"/>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -968,5 +969,27 @@
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
+<script>
+// Language Switcher
+function toggleLangDropdown(dropdownId, btnId) {
+  var dd = document.getElementById(dropdownId);
+  var btn = document.getElementById(btnId);
+  if (!dd || !btn) return;
+  var isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.lang-switch-dropdown').forEach(function(d){ d.classList.remove('open'); });
+  document.querySelectorAll('.lang-switch-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (!isOpen) {
+    dd.classList.add('open');
+    btn.classList.add('active');
+  }
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.lang-switch')) {
+    document.querySelectorAll('.lang-switch-dropdown').forEach(function(d){ d.classList.remove('open'); });
+    document.querySelectorAll('.lang-switch-btn').forEach(function(b){ b.classList.remove('active'); });
+  }
+});
+</script>
+  <script src="/assets/lang-switch.js" defer></script>
 </body>
 </html>
