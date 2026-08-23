@@ -37,6 +37,8 @@ jobs:
       - name: Build Subgraph
         run: pnpm --filter=subgraph build
       - name: Deploy to The Graph Studio
-        run: pnpm --filter=subgraph deploy
+        # [CI-FIX-2026-08-23] 必须显式 run：`pnpm --filter=x deploy` 会命中 pnpm
+        # 内置的 deploy 命令（ERR_PNPM_INVALID_DEPLOY_TARGET），而非包脚本。
+        run: pnpm --filter=subgraph run deploy
         env:
           SUBGRAPH_ACCESS_TOKEN: ${{ secrets.SUBGRAPH_ACCESS_TOKEN }}
