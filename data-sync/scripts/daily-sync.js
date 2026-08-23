@@ -1,4 +1,4 @@
-const { StandardMerkleTree } = require('@openzeppelin/merkle-tree');
+// [M-1/M-2 FIX] StandardMerkleTree 已弃用（leaf 格式与链上合约不兼容），改用共享 merkleBuilder
 const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
@@ -208,25 +208,27 @@ class DailySyncService {
   }
 
   // ========== 5. 构建 Merkle Tree ==========
+  // [M-1/M-2 FIX] 改用共享 merkleBuilder（规范 leaf + OZ MerkleProof 兼容树）：
+  // 原实现使用 @openzeppelin/merkle-tree 的 StandardMerkleTree —— 其 leaf 为
+  // 单哈希 keccak256(abi.encode(...)) 且内部节点带排序/前缀，与仓库内合约的
+  // 双哈希类型化 leaf + MerkleProof.verify 完全不兼容（链上永远验证不过）。
   buildMerkleTree(addresses) {
     console.log('\n🌲 Building Merkle Tree...');
-    
-    // 格式: [address, riskScore, tier]
-    const values = addresses.map(a => [a.address, a.riskScore, a.tier]);
-    
-    const tree = StandardMerkleTree.of(values, ['address', 'uint8', 'uint8']);
-    
+
+    const { buildMerkleTree: buildTree, dumpTree } = require('../src/merkleBuilder');
+    const tree = buildTree(addresses);
+
     console.log(`   Root: ${tree.root}`);
-    console.log(`   Leaves: ${tree.length}`);
-    
+    console.log(`   Leaves: ${tree.count}`);
+
     // 保存树到缓存
     const treeFile = path.join(CONFIG.cacheDir, 'merkle-tree.json');
-    fs.writeFileSync(treeFile, JSON.stringify(tree.dump()));
-    
+    fs.writeFileSync(treeFile, dumpTree(tree));
+
     // 保存根到单独文件（供脚本读取）
     const rootFile = path.join(CONFIG.cacheDir, 'merkle-root-latest.txt');
     fs.writeFileSync(rootFile, tree.root);
-    
+
     return tree;
   }
 
@@ -360,7 +362,7 @@ class DailySyncService {
       },
       merkle: {
         root: tree.root,
-        leaves: tree.length,
+        leaves: tree.count,
       },
       chain: chainResult,
       duration: Date.now() - startTime,

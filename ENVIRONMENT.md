@@ -186,7 +186,10 @@ Preview:
 
 ```bash
 # .env.local (不提交到 Git)
-PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+# [L-26 FIX] 原示例直接给出 Hardhat Account #0 的公开测试私钥（0xac09...ff80）。
+# 该密钥全网公开——任何人可控制对应地址，误转入该地址的资金即被盗。
+# 示例一律使用占位符；本地开发请使用 `npx hardhat node` 自动生成的临时账户。
+PRIVATE_KEY=0xYOUR_LOCAL_DEV_PRIVATE_KEY
 ETHEREUM_SEPOLIA_RPC=https://rpc.sepolia.org
 ETHERSCAN_API_KEY=your_key_here
 DATABASE_URL=postgresql://localhost:5432/fidesorigin

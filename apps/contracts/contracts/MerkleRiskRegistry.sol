@@ -99,12 +99,16 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
 
     // ============ Internal Helpers ============
 
-    /// @notice 标准 Leaf 格式：keccak256(abi.encode(addr, riskScore, riskTier))
-    /// @dev 所有验证函数统一使用此格式，确保 Merkle Tree 一致性
+    /// @notice 标准 Leaf 格式：keccak256(bytes.concat(keccak256(abi.encode(addr, riskScore, riskTier))))
+    /// @dev [M-1 FIX] 全仓库统一 Merkle leaf 规范为 uint8 tier（与
+    ///      MerkleRiskRegistryFacet 的 H-07 FIX 及 ComplianceEngine.verifyMerkleRisk 对齐）。
+    ///      原实现使用 string tier，与另外两处实现互不兼容——同一棵树无法被
+    ///      多个合约同时验证。tier 编码：0=UNKNOWN 1=LOW 2=MEDIUM 3=HIGH 4=CRITICAL。
+    ///      注意：这是破坏性接口变更（string riskTier → uint8 riskTier）。
     function _leaf(
         address addr,
         uint256 riskScore,
-        string memory riskTier
+        uint8 riskTier
     ) internal pure returns (bytes32) {
         return keccak256(
             bytes.concat(keccak256(abi.encode(addr, riskScore, riskTier)))
@@ -158,6 +162,44 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
         emit MerkleRootUpdated(oldRoot, newRoot, block.timestamp, VERSION);
     }
 
+    /// @notice 预言机链上更新频率下限（防滥用）
+    uint256 public constant MIN_ORACLE_UPDATE_INTERVAL = 1 hours;
+    /// @notice [M-2 FIX] 上次预言机更新时间
+    uint256 public lastOracleRootUpdate;
+
+    /**
+     * @notice [M-2 FIX] 预言机（data-sync 发布方）专用 root 更新入口
+     * @dev 原 data-sync/chainSyncer.js 的 ABI 调用 updateMerkleRoot(bytes32,uint256,uint256)
+     *      ——该三参数签名在仓库内任何合约中都不存在，链路必然失败。修复：
+     *      提供与发布方角色（ORACLE_ROLE）匹配的一参数入口；totalAddresses/version
+     *      由链下日志记录，无需上链。频率限制防止 ORACLE 滥用刷 root。
+     */
+    function updateMerkleRootFromOracle(bytes32 newRoot)
+        external
+        onlyRole(ORACLE_ROLE)
+        whenNotPaused
+    {
+        require(newRoot != bytes32(0), "Invalid root");
+        require(newRoot != merkleRoot, "Same root");
+        require(
+            block.timestamp - lastOracleRootUpdate >= MIN_ORACLE_UPDATE_INTERVAL,
+            "Oracle update too frequent"
+        );
+        lastOracleRootUpdate = block.timestamp;
+
+        bytes32 oldRoot = merkleRoot;
+        merkleRoot = newRoot;
+
+        if (merkleRootHistory.length < MAX_HISTORY) {
+            merkleRootHistory.push(newRoot);
+        } else {
+            merkleRootHistory[historyIndex % MAX_HISTORY] = newRoot;
+        }
+        historyIndex++;
+
+        emit MerkleRootUpdated(oldRoot, newRoot, block.timestamp, VERSION);
+    }
+
     /**
      * @notice 验证地址是否在 Merkle Tree 中（带签名验证，防重放）
      * @param addr 要验证的地址
@@ -171,7 +213,7 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
     function verifyAddressWithSignature(
         address addr,
         uint256 riskScore,
-        string memory riskTier,
+        uint8 riskTier,
         bytes32[] calldata proof,
         bytes calldata signature,
         address signer,
@@ -229,7 +271,7 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
     function verifyAddress(
         address addr,
         uint256 riskScore,
-        string memory riskTier,
+        uint8 riskTier,
         bytes32[] calldata proof
     ) external view returns (bool) {
         // [Critical-1] 统一 Leaf 格式
@@ -246,7 +288,7 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
     function batchVerify(
         address[] calldata addresses,
         uint256[] calldata riskScores,
-        string[] calldata riskTiers,
+        uint8[] calldata riskTiers,
         bytes32[][] calldata proofs
     ) external view returns (bool[] memory results) {
         require(addresses.length == riskScores.length, "Length mismatch");

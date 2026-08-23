@@ -230,7 +230,33 @@ contract RiskRegistry is
             revert TagsLimitExceeded(tags.length, MAX_TAGS_PER_ADDRESS);
         }
 
-        _updateRiskProfileInternal(addr, riskScore, tier, sanctioned, tags);
+        _updateRiskProfileInternal(addr, riskScore, tier, sanctioned, tags, 100);
+
+        emit RiskProfileUpdated(addr, riskScore, tier, sanctioned);
+    }
+
+    /**
+     * @notice [L-6 FIX] 带置信度的风险档案更新
+     * @dev 原实现将 sourceConfidence 硬编码为 100——所有数据源一律宣称
+     *      100% 置信度，字段失去意义。预言机应以确认比例填充该字段
+     *      （如 3/5 节点确认 → 60）。confidence 取值 0-100。
+     */
+    function updateRiskProfileWithConfidence(
+        address addr,
+        uint8 riskScore,
+        RiskTier tier,
+        bytes32[] calldata tags,
+        bool sanctioned,
+        uint8 confidence
+    ) external onlyRole(ORACLE_ROLE) validAddress(addr) validRiskScore(riskScore) validRiskTier(tier) whenNotPaused nonReentrant {
+        if (tags.length > MAX_TAGS_PER_ADDRESS) {
+            revert TagsLimitExceeded(tags.length, MAX_TAGS_PER_ADDRESS);
+        }
+        if (confidence > 100) {
+            revert InvalidRiskScore(confidence);
+        }
+
+        _updateRiskProfileInternal(addr, riskScore, tier, sanctioned, tags, confidence);
 
         emit RiskProfileUpdated(addr, riskScore, tier, sanctioned);
     }
@@ -286,7 +312,7 @@ contract RiskRegistry is
                 }
             }
 
-            _updateRiskProfileInternal(addrs[i], riskScores[i], tiers[i], sanctioned[i], tags[i]);
+            _updateRiskProfileInternal(addrs[i], riskScores[i], tiers[i], sanctioned[i], tags[i], 100);
             successCount++;
         }
 
@@ -298,13 +324,15 @@ contract RiskRegistry is
      * @dev 内部函数：更新风险档案（无权限检查，供批量调用）
      * @dev [H-01] Fix: 添加 MIN_UPDATE_INTERVAL 频率限制检查
      * @dev [H-02] Fix: 增加 tags 参数，清除旧标签并设置新标签
+     * @dev [L-6 FIX] 增加 confidence 参数（默认路径传 100 保持向后兼容）
      */
     function _updateRiskProfileInternal(
         address addr,
         uint8 riskScore,
         RiskTier tier,
         bool sanctioned,
-        bytes32[] memory tags
+        bytes32[] memory tags,
+        uint8 confidence
     ) internal {
         RiskProfile storage profile = riskProfiles[addr];
 
@@ -322,7 +350,8 @@ contract RiskRegistry is
         profile.riskTier = uint8(tier);
         profile.sanctioned = sanctioned;
         profile.lastUpdated = uint32(block.timestamp);
-        profile.sourceConfidence = 100;
+        // [L-6 FIX] 置信度由调用方按数据实际质量填充
+        profile.sourceConfidence = confidence;
         profile.exists = true;
 
         // [H-02] Fix: 清除旧标签并设置新标签

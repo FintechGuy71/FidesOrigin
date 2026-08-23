@@ -2,9 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // ==================== 数据库配置说明 ====================
-// 开发环境使用 SQLite，生产环境使用 PostgreSQL
-// 生产环境 DATABASE_URL 应指向 PostgreSQL 实例
-// 建议通过环境变量 DATABASE_URL 配置连接字符串
+// [INFO-3 FIX] provider 由 scripts/switch-db.js 管理切换（Prisma 要求 provider
+// 为字面量，不能读环境变量）：
+//   - 开发（默认）：SQLite
+//   - 生产：执行 `node scripts/switch-db.js postgres` 后 DATABASE_URL 指向
+//     PostgreSQL 实例（原实现注释声称"生产使用 PostgreSQL"但 provider 硬编码
+//     sqlite，切换需要手工改 schema 且无文档，属部署陷阱）
 //
 // 生产环境 PostgreSQL 连接示例：
 // DATABASE_URL="postgresql://user:password@localhost:5432/fidesorigin?schema=public&sslmode=require"
@@ -20,7 +23,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "sqlite" // 切换用 scripts/switch-db.js，勿手改
   url      = env("DATABASE_URL")
 }
 

@@ -19,7 +19,9 @@ const BAR_CHART_WIDTH = 20;
 // API 配置
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || `${API_BASE}/dashboard`;
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://api.fidesorigin.com/ws";
+// [L-24 FIX] 移除硬编码生产 WS 回退地址：环境变量未配置时不建立 WS 连接
+// （原实现静默指向生产 wss://api.fidesorigin.com/ws，环境错配难以察觉）
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "";
 
 // WebSocket 重连配置
 const WS_INITIAL_RETRY_DELAY = 1000;
@@ -142,10 +144,13 @@ function useDashboardWebSocket(
 }
 
 // 获取仪表盘数据
+// [M-15 FIX] 移除静默 mock 回退：原实现 API 失败时 console.warn 后返回硬编码
+// 虚构统计（"今日拦截 1247 笔、合规率 98.7%"）——合规产品的仪表盘展示
+// 假数据而用户无从分辨。修复：失败返回 null，UI 显式渲染"数据不可用"状态。
 async function fetchDashboardData(): Promise<{
-  stats: DashboardStats;
+  stats: DashboardStats | null;
   events: RiskEvent[];
-}> {
+} | null> {
   try {
     const response = await fetch(`${DASHBOARD_API_URL}/summary`, {
       method: "GET",
@@ -158,87 +163,17 @@ async function fetchDashboardData(): Promise<{
 
     const data = await response.json();
     return {
-      stats: data.stats || getMockStats(),
-      events: data.events || getMockEvents(),
+      stats: data.stats ?? null,
+      events: Array.isArray(data.events) ? data.events : [],
     };
   } catch (error) {
-    console.warn("API 调用失败，使用模拟数据:", error);
-    return {
-      stats: getMockStats(),
-      events: getMockEvents(),
-    };
+    console.warn("仪表盘 API 调用失败:", error);
+    return null;
   }
 }
 
-// 模拟统计数据
-function getMockStats(): DashboardStats {
-  return {
-    todayBlocked: 1247,
-    todayBlockedChange: 12.5,
-    riskAddresses: 3892,
-    riskAddressesChange: 8.2,
-    complianceRate: 98.7,
-    complianceRateChange: 0.3,
-    monitoredTransactions: 2400000,
-    monitoredTransactionsChange: 23.1,
-  };
-}
-
-// 模拟风险事件
-function getMockEvents(): RiskEvent[] {
-  return [
-    {
-      id: "EVT-001",
-      type: "高风险交易",
-      address: "0x7a2c...9b3d",
-      amount: "150,000 USDC",
-      risk: "极高",
-      time: "2分钟前",
-      status: "已拦截",
-      timestamp: Date.now() - REFRESH_INTERVALS.realtime,
-    },
-    {
-      id: "EVT-002",
-      type: "制裁名单匹配",
-      address: "0x3f8e...2a1c",
-      amount: "50,000 USDT",
-      risk: "高",
-      time: "5分钟前",
-      status: "已拦截",
-      timestamp: Date.now() - REFRESH_INTERVALS.fast,
-    },
-    {
-      id: "EVT-003",
-      type: "异常交易模式",
-      address: "0x9d4b...7e2f",
-      amount: "25,000 DAI",
-      risk: "中",
-      time: "12分钟前",
-      status: "审核中",
-      timestamp: Date.now() - REFRESH_INTERVALS.normal,
-    },
-    {
-      id: "EVT-004",
-      type: "闪电贷攻击",
-      address: "0x1c5a...4b8e",
-      amount: "500,000 USDC",
-      risk: "极高",
-      time: "18分钟前",
-      status: "已拦截",
-      timestamp: Date.now() - REFRESH_INTERVALS.slow,
-    },
-    {
-      id: "EVT-005",
-      type: "混币器交互",
-      address: "0x6e3d...1a9c",
-      amount: "10,000 ETH",
-      risk: "高",
-      time: "25分钟前",
-      status: "已标记",
-      timestamp: Date.now() - REFRESH_INTERVALS.verySlow,
-    },
-  ];
-}
+// [M-15 FIX] getMockStats / getMockEvents 已删除（静默虚构数据回退）。
+// 无数据时 UI 显式展示"数据不可用"占位状态。
 
 // 图标组件
 function ShieldIcon() {
@@ -319,10 +254,11 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>(getMockStats());
-  const [events, setEvents] = useState<RiskEvent[]>(getMockEvents());
+  // [M-15 FIX] stats 允许为 null：无数据时渲染显式占位而非虚构数字
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [events, setEvents] = useState<RiskEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [useMockData, setUseMockData] = useState(true);
+  const [dataUnavailable, setDataUnavailable] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   // 初始加载数据
@@ -331,11 +267,16 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         const data = await fetchDashboardData();
-        setStats(data.stats);
-        setEvents(data.events);
-        setUseMockData(false);
+        if (data) {
+          setStats(data.stats);
+          setEvents(data.events);
+          setDataUnavailable(data.stats === null);
+        } else {
+          setDataUnavailable(true);
+        }
       } catch (error) {
         console.error("加载数据失败:", error);
+        setDataUnavailable(true);
       } finally {
         setLoading(false);
       }
@@ -351,7 +292,7 @@ export default function DashboardPage() {
   // WebSocket 数据更新处理
   const handleStatsUpdate = useCallback((newStats: DashboardStats) => {
     setStats(newStats);
-    setUseMockData(false);
+    setDataUnavailable(false);
   }, []);
 
   const handleNewEvent = useCallback((event: RiskEvent) => {
@@ -366,33 +307,33 @@ export default function DashboardPage() {
   // WebSocket 连接
   const { isConnected } = useDashboardWebSocket(WS_URL, handleStatsUpdate, handleNewEvent);
 
-  // 统计数据卡片
+  // 统计数据卡片（[M-15 FIX] 无数据时显示占位符而非虚构数字）
   const statCards = [
     {
       title: "今日拦截",
-      value: formatNumber(stats.todayBlocked),
-      change: `+${stats.todayBlockedChange}%`,
+      value: stats ? formatNumber(stats.todayBlocked) : "—",
+      change: stats ? `+${stats.todayBlockedChange}%` : "",
       changeType: "positive" as const,
       icon: ShieldIcon,
     },
     {
       title: "风险地址",
-      value: formatNumber(stats.riskAddresses),
-      change: `+${stats.riskAddressesChange}%`,
+      value: stats ? formatNumber(stats.riskAddresses) : "—",
+      change: stats ? `+${stats.riskAddressesChange}%` : "",
       changeType: "negative" as const,
       icon: AlertIcon,
     },
     {
       title: "合规通过率",
-      value: `${stats.complianceRate}%`,
-      change: `+${stats.complianceRateChange}%`,
+      value: stats ? `${stats.complianceRate}%` : "—",
+      change: stats ? `+${stats.complianceRateChange}%` : "",
       changeType: "positive" as const,
       icon: CheckIcon,
     },
     {
       title: "监控交易",
-      value: formatNumber(stats.monitoredTransactions),
-      change: `+${stats.monitoredTransactionsChange}%`,
+      value: stats ? formatNumber(stats.monitoredTransactions) : "—",
+      change: stats ? `+${stats.monitoredTransactionsChange}%` : "",
       changeType: "positive" as const,
       icon: ChartIcon,
     },
@@ -424,9 +365,9 @@ export default function DashboardPage() {
               <p className="text-gray-400 mt-1">FidesOrigin 实时风险监控与合规数据概览</p>
             </div>
             <div className="flex items-center gap-4">
-              {useMockData && (
-                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
-                  模拟数据
+              {dataUnavailable && (
+                <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400">
+                  数据不可用
                 </span>
               )}
               <LiveIndicator isConnected={isConnected} />
@@ -541,13 +482,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Live Transaction Stream */}
+        {/* [M-15 FIX] 不再使用模拟交易流：WS 未配置时显示空状态而非编造交易 */}
         <LiveTransactionStream
           maxItems={30}
           autoScroll={true}
           showHeader={true}
           onTransactionClick={handleTransactionClick}
-          wsUrl={WS_URL}
-          useMockData={useMockData}
+          wsUrl={WS_URL || undefined}
+          useMockData={false}
           className="mb-8"
         />
 

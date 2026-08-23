@@ -74,13 +74,49 @@ describe('CompliantStableCoin', function () {
 
   describe('Minting', function () {
     it('should allow minting to clean address', async function () {
-      // Disable compliance to bypass preTransferHook(address(0), ...) revert on mint
+      // Disable compliance to bypass preTransferHook(address(0), ...) revert
       await stableCoin.connect(owner).toggleCompliance(false);
       await expect(stableCoin.connect(owner).mint(user2.address, 1000000 * 10 ** 6))
         .to.emit(stableCoin, 'Transfer')
         .withArgs(ethers.ZeroAddress, user2.address, 1000000 * 10 ** 6);
       // Re-enable compliance
       await stableCoin.connect(owner).toggleCompliance(true);
+    });
+
+    // [H-2 FIX 回归测试] 合规开启时 mint/burn 不再必然失败
+    // 原缺陷：mint 传 from=address(0)、burn 传 to=address(0) 调用
+    // preTransferHook，引擎对零地址 revert → 合规开启时 mint/burn 完全不可用
+    // （原测试以"先关合规"绕过）。修复后合规开启即可正常铸造/销毁。
+    it('should mint WITH compliance enabled [H-2 FIX]', async function () {
+      await stableCoin.connect(owner).toggleCompliance(true);
+      // user2 已有低风险档案（beforeEach 设置），小额在默认限额内
+      await expect(stableCoin.connect(owner).mint(user2.address, 1000 * 10 ** 6))
+        .to.emit(stableCoin, 'Transfer')
+        .withArgs(ethers.ZeroAddress, user2.address, 1000 * 10 ** 6);
+    });
+
+    it('should burn WITH compliance enabled [H-2 FIX]', async function () {
+      await stableCoin.connect(owner).toggleCompliance(true);
+      // beforeEach 每个用例重新部署合约，先铸造再销毁
+      await stableCoin.connect(owner).mint(user2.address, 1000 * 10 ** 6);
+      const balance = await stableCoin.balanceOf(user2.address);
+      expect(balance).to.be.gt(0n);
+      // 销毁他人代币需要 allowance（C-01 修复语义）
+      await stableCoin.connect(user2).approve(owner.address, 500 * 10 ** 6);
+      await expect(stableCoin.connect(owner).burn(user2.address, 500 * 10 ** 6))
+        .to.emit(stableCoin, 'Transfer')
+        .withArgs(user2.address, ethers.ZeroAddress, 500 * 10 ** 6);
+    });
+
+    it('should refuse mint to sanctioned address with compliance enabled [H-2 FIX]', async function () {
+      await stableCoin.connect(owner).toggleCompliance(true);
+      // 推进时间避开 RiskRegistry 的 1 小时更新频率限制
+      await ethers.provider.send('evm_increaseTime', [3700]);
+      await ethers.provider.send('evm_mine');
+      await riskRegistry.connect(owner).updateRiskProfile(user2.address, 100, 4, [], true);
+      await expect(
+        stableCoin.connect(owner).mint(user2.address, 1000 * 10 ** 6)
+      ).to.be.revertedWithCustomError(stableCoin, 'ComplianceCheckFailed');
     });
   });
 

@@ -65,6 +65,10 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
     /**
      * @notice 添加授权预言机
      * @dev M-10 FIX: 检查 MAX_ORACLES 上限，防止 oracleList 无限增长
+     * @dev [M-3 FIX] 当授权预言机达到 3 个且当前阈值低于 3 时，自动提升
+     *      requiredOracleConfirmations 至 3。原实现默认阈值恒为 1：单节点
+     *      即可改写任意地址风险分，"多预言机共识"名存实亡。自动提升保证
+     *      冗余一旦存在，共识立即真实生效（治理仍可显式调整阈值）。
      */
     function _addAuthorizedOracle(address oracle) internal {
         if (oracle == address(0)) revert InvalidAddress();
@@ -75,6 +79,12 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
 
         authorizedOracles[oracle] = true;
         oracleList.push(oracle);
+
+        // [M-3 FIX] 冗余达标时自动启用真实共识
+        if (requiredOracleConfirmations < 3 && oracleList.length >= 3) {
+            requiredOracleConfirmations = 3;
+            emit RequiredConfirmationsAutoAdjusted(3);
+        }
 
         emit OracleAuthorized(oracle);
     }
@@ -150,6 +160,32 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
         emit OracleUnstaked(msg.sender, amount);
     }
 
+    /// @notice [L-13 FIX] 罚没金库（治理多签），默认未配置时禁止罚没
+    /// @dev 管理入口见 RiskOracle 门面合约（setSlashTreasury / slashOracleStake，
+    ///      ADMIN_ROLE + OZ onlyRole；本层无角色系统）
+    address public slashTreasury;
+
+    event SlashTreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+    event OracleStakeSlashed(address indexed oracle, uint256 amount, string reason);
+
+    /**
+     * @notice [L-13 FIX] 罚没预言机质押的内部执行（转入治理金库，而非销毁）
+     * @dev 由 RiskOracle 门面的 slashOracleStake(ADMIN_ROLE) 调用；
+     *      金额以当前质押余额为上限。
+     */
+    function _slashOracleStake(address oracle, uint256 amount, string calldata reason)
+        internal nonReentrant
+    {
+        if (slashTreasury == address(0)) revert InvalidAddress();
+        uint256 stakeBalance = oracleStakes[oracle];
+        uint256 slashAmount = amount > stakeBalance ? stakeBalance : amount;
+        if (slashAmount == 0) revert InvalidAddress();
+        oracleStakes[oracle] = stakeBalance - slashAmount;
+        (bool success, ) = payable(slashTreasury).call{value: slashAmount}("");
+        require(success, "ETH transfer failed");
+        emit OracleStakeSlashed(oracle, slashAmount, reason);
+    }
+
     /**
      * @dev 修复 C-1: 防止同一预言机重复投票
      * @dev 修复 H-1: score 类型收紧为 uint8
@@ -219,12 +255,18 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
 
             bytes32[] memory emptyTags = new bytes32[](0);
             // H-1: 不再截断，直接使用 uint8
-            riskRegistry.updateRiskProfile(
+            // [L-6 FIX] 以确认比例填充置信度（3/5 节点确认 → 60），
+            // 替代 registry 内硬编码的 100
+            uint8 confidence = uint8(
+                (currentConfirmations * 100) / (oracleList.length == 0 ? 1 : oracleList.length)
+            );
+            riskRegistry.updateRiskProfileWithConfidence(
                 account,
                 score,
                 RiskRegistry.RiskTier(tier),
                 emptyTags,
-                isSanctioned
+                isSanctioned,
+                confidence
             );
 
             lastUpdateTime[account] = block.timestamp;

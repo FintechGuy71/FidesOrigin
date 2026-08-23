@@ -141,8 +141,13 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
         }
 
         // 铸造时检查接收方风险
+        // [H-2 FIX] 原实现传 from=address(0)，而 ComplianceEngine.preTransferHook
+        // 对任一零地址 revert InvalidAddress → complianceEnabled=true 时 mint 必然失败
+        // （项目原测试以"先关闭合规再铸造"绕过，佐证缺陷真实存在）。
+        // 修复：以接收方双侧参数检查接收方风险（from=to=接收方），
+        // 保留"制裁/高风险地址不可接收铸造"的合规意图且规避零地址语义。
         if (complianceEnabled && address(complianceEngine) != address(0)) {
-            try complianceEngine.preTransferHook(address(0), to, amount) {
+            try complianceEngine.preTransferHook(to, to, amount) {
                 // 检查通过
             } catch {
                 // 修复: 移除死代码 emit（revert 会回滚所有状态变更，包括事件）
@@ -169,8 +174,11 @@ contract CompliantStableCoin is ERC20, AccessControl, Pausable {
         }
 
         // [H-02] 修复：burn 也应经过合规检查
+        // [H-2 FIX] 原实现传 to=address(0)，同样触发引擎的零地址 revert →
+        // complianceEnabled=true 时 burn 必然失败。修复：以被销毁方双侧参数
+        // 检查其风险（from=to=被销毁地址），保留"制裁地址不可销毁退出"的意图。
         if (complianceEnabled && address(complianceEngine) != address(0)) {
-            try complianceEngine.preTransferHook(from, address(0), amount) {
+            try complianceEngine.preTransferHook(from, from, amount) {
                 // 检查通过
             } catch (bytes memory reason) {
                 emit TransferBlocked(from, address(0), amount, _getRevertMsg(reason));

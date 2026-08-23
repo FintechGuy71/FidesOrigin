@@ -156,6 +156,31 @@ contract RiskOracle is FunctionsClient, ConfirmedOwner, AccessControl, Pausable,
         _resetConfirmations(account);
     }
 
+    // ============ [L-13 FIX] 质押罚没（治理） ============
+
+    /**
+     * @notice [L-13 FIX] 设置罚没金库
+     * @dev 原质押机制无罚没路径：unstake 无条件退还，质押只能防闪电贷租借、
+     *      无法惩罚提交恶意数据的预言机。设置金库后治理可罚没作恶节点质押。
+     */
+    function setSlashTreasury(address treasury) external onlyRole(ADMIN_ROLE) {
+        if (treasury == address(0)) revert InvalidAddress();
+        emit SlashTreasuryUpdated(slashTreasury, treasury);
+        slashTreasury = treasury;
+    }
+
+    /**
+     * @notice [L-13 FIX] 罚没预言机质押（转入治理金库，而非销毁）
+     * @param oracle 被罚没的预言机
+     * @param amount 罚没金额（以当前质押余额为上限）
+     * @param reason 罚没原因（事件留痕，供链下仲裁对账）
+     */
+    function slashOracleStake(address oracle, uint256 amount, string calldata reason)
+        external onlyRole(ADMIN_ROLE)
+    {
+        _slashOracleStake(oracle, amount, reason);
+    }
+
     // ============ Pause / Unpause ============
 
     function pause() external onlyRole(ADMIN_ROLE) {

@@ -337,8 +337,11 @@ describe('DiamondComplianceEngine', function () {
 
   describe('Storage Layout Consistency', function () {
     it('should preserve data after facet replacement', async function () {
+      // [M-8 FIX] AdminFacet 的 upgradeTimelockDelay 死代码已移除，
+      // 存储一致性改用真实业务状态（riskRegistry 引用）验证
       // Set some data via AdminFacet
-      await diamond.setUpgradeTimelockDelay(7 * 24 * 60 * 60);
+      const newRegistry = await riskRegistry.getAddress();
+      await diamond.setRiskRegistry(newRegistry);
 
       // Replace AdminFacet
       const NewAdminFacet = await ethers.getContractFactory('AdminFacet');
@@ -355,8 +358,7 @@ describe('DiamondComplianceEngine', function () {
       await executeDiamondCut(cut);
 
       // Data should still be there
-      const delay = await diamond.upgradeTimelockDelay();
-      expect(delay).to.equal(7 * 24 * 60 * 60);
+      expect(await diamond.riskRegistry()).to.equal(newRegistry);
     });
 
     it('should preserve check history after facet upgrade', async function () {

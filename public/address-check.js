@@ -23,8 +23,10 @@ if (typeof window !== 'undefined' && window.localStorage && window.localStorage.
     console.warn('[SECURITY] API key detected in localStorage. Removing it — use a scoped read-only public key injected at build time instead.');
     try { window.localStorage.removeItem('FIDESORIGIN_API_KEY'); } catch (e) { /* ignore */ }
 }
-// [F-18 FIX R2] 运维要求：本页面使用的 window.FIDESORIGIN_API_KEY 必须是
-// 专用受限只读 key（速率限制 + 可轮换 + 与 admin 密钥完全隔离），不得使用任何写权限 key。
+// [F-18 FIX R2 + L-19 FIX] 运维要求：本页面使用的 window.FIDESORIGIN_API_KEY 必须
+// 是只读作用域 Key（RISK_SYNC_API_KEY）。服务端已按作用域强制分级（见 apps/api/lib/utils.js
+// 的 H-4 FIX）：只读 Key 无法调用规则写端点，前端约定现有技术强制兜底，
+// 不再仅依赖运维纪律。
 
 // [M-7 Fix] Backend API base: no hardcoded fallback; must be provided via env/config
 const BACKEND_API = (typeof window !== 'undefined' && window.FIDESORIGIN_BACKEND_URL)

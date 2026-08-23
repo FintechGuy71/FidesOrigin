@@ -744,11 +744,43 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         emit ThresholdUpdated(tier, threshold);
     }
 
-    function setUpgradeTimelockDelay(uint256 delay) external onlyRole(ADMIN_ROLE) {
+    /// @notice [M-4 FIX] 时间锁延迟变更两步状态（自举保护）
+    uint256 public pendingTimelockDelay;
+    uint256 public pendingTimelockDelaySetAt;
+
+    /**
+     * @notice [M-4 FIX] 提议修改升级时间锁延迟（等待当前延迟后执行）
+     * @dev 原实现即时生效：ADMIN 可先缩到 1 小时再升级，绕过时间锁保护
+     */
+    function proposeTimelockDelayChange(uint256 delay) external onlyRole(ADMIN_ROLE) {
         require(delay >= 1 hours && delay <= 30 days, "Invalid delay");
+        pendingTimelockDelay = delay;
+        pendingTimelockDelaySetAt = block.timestamp;
+        emit UpgradeTimelockDelayUpdated(upgradeTimelockDelay, delay);
+    }
+
+    /**
+     * @notice [M-4 FIX] 时间锁到期后执行延迟变更
+     */
+    function executeTimelockDelayChange() external onlyRole(ADMIN_ROLE) {
+        require(pendingTimelockDelaySetAt != 0, "No pending change");
+        require(
+            block.timestamp >= pendingTimelockDelaySetAt + upgradeTimelockDelay,
+            "Timelock active"
+        );
         uint256 oldDelay = upgradeTimelockDelay;
-        upgradeTimelockDelay = delay;
-        emit UpgradeTimelockDelayUpdated(oldDelay, delay);
+        upgradeTimelockDelay = pendingTimelockDelay;
+        delete pendingTimelockDelay;
+        delete pendingTimelockDelaySetAt;
+        emit UpgradeTimelockDelayUpdated(oldDelay, upgradeTimelockDelay);
+    }
+
+    /**
+     * @notice [M-4 FIX] 旧版即时修改已移除
+     * @dev DEPRECATED: 使用 proposeTimelockDelayChange + executeTimelockDelayChange
+     */
+    function setUpgradeTimelockDelay(uint256) external view onlyRole(ADMIN_ROLE) {
+        revert("PE: use propose/execute timelock delay change");
     }
 
     // ============ Version Management (I-02) ============

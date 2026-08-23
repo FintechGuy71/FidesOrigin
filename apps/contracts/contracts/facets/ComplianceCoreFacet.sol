@@ -251,7 +251,8 @@ contract ComplianceCoreFacet is BaseFacet {
             });
             s.quarantineList.push(qId);
             s.quarantinedTransactions++;
-            s.lastTransferTime[from] = block.timestamp;
+            // [L-5 FIX] HOLD（冷却期隔离）不再刷新 lastTransferTime：
+            // 原实现重试会顺延冷却计时（"越重试越锁"）。仅 ALLOW 路径刷新（见下方）。
             emit TransactionQuarantined(
                 from,
                 to,

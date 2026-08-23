@@ -1,13 +1,22 @@
 const https = require('https');
+const crypto = require('crypto');
 
 const { checkRateLimit } = require('../middleware/rateLimit');
 
 // 配置
+// [L-17 FIX] 模块级 throw 改为惰性校验：原实现缺 ETHERSCAN_API_KEY 时模块加载即
+// 崩溃（整个 serverless 函数 500 且错误信息暴露内部要求）。
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
-if (!ETHERSCAN_API_KEY) {
-  throw new Error('ETHERSCAN_API_KEY environment variable is required');
-}
 const CACHE_TTL = 3600;
+
+function _ensureEtherscanKey() {
+  if (!ETHERSCAN_API_KEY) {
+    throw new ApiConfigError('Upstream data source not configured');
+  }
+}
+
+class ApiConfigError extends Error {}
+ApiConfigError.prototype.name = 'ApiConfigError';
 
 // ==================== 安全增强：CORS 白名单 + API Key 认证 ====================
 const ALLOWED_ORIGINS = [
@@ -24,8 +33,10 @@ if (!RISK_SYNC_API_KEY) {
 }
 
 function checkOrigin(req, res) {
-  // [High Fix] Use strict equality instead of startsWith to prevent bypass like fidesorigin.com.evil.com
+  // [M-11 FIX] 无 Origin/Referer 的服务端客户端（curl/SDK）放行，交给 API Key 鉴权；
+  // 浏览器来源仍按白名单校验（严格相等，防 fidesorigin.com.evil.com 类绕过）
   const origin = req.headers.origin || req.headers.referer || '';
+  if (!origin) return true;
   const allowed = ALLOWED_ORIGINS.includes(origin);
   if (!allowed && process.env.NODE_ENV === 'production') {
     res.status(403).json({ error: 'Forbidden: Origin not allowed' });
@@ -41,11 +52,17 @@ function checkOrigin(req, res) {
 }
 
 // [SEC-01 Fix] Development mode now supports optional TEST_API_KEY authentication.
-// If TEST_API_KEY is set, dev environment also requires the key (safe-by-default).
-// If unset, falls back to legacy bypass for backward compatibility.
 const TEST_API_KEY = process.env.TEST_API_KEY;
 if (process.env.NODE_ENV !== 'production' && !TEST_API_KEY) {
   console.warn('⚠️ TEST_API_KEY not set. Dev environment auth is BYPASSED. Set TEST_API_KEY for secure dev mode.');
+}
+
+// [L-16 FIX] 常数时间比较（SHA-256 定长哈希后 timingSafeEqual）：
+// lib/utils.js 的 F-19 FIX R2 未同步到本文件，姊妹实现不一致。
+function _timingSafeEqualStr(a, b) {
+  const hashA = crypto.createHash('sha256').update(String(a), 'utf8').digest();
+  const hashB = crypto.createHash('sha256').update(String(b), 'utf8').digest();
+  return crypto.timingSafeEqual(hashA, hashB);
 }
 
 function checkApiKey(req, res) {
@@ -54,7 +71,7 @@ function checkApiKey(req, res) {
   // 开发环境：如果配置了 TEST_API_KEY，则强制要求传入（安全开发模式）
   if (process.env.NODE_ENV !== 'production') {
     if (TEST_API_KEY) {
-      if (key !== TEST_API_KEY) {
+      if (!key || !_timingSafeEqualStr(key, TEST_API_KEY)) {
         res.status(401).json({ error: 'Unauthorized: Invalid or missing test API key' });
         return false;
       }
@@ -63,7 +80,7 @@ function checkApiKey(req, res) {
   }
 
   // 生产环境：强制要求 RISK_SYNC_API_KEY
-  if (!RISK_SYNC_API_KEY || key !== RISK_SYNC_API_KEY) {
+  if (!RISK_SYNC_API_KEY || !key || !_timingSafeEqualStr(key, RISK_SYNC_API_KEY)) {
     res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
     return false;
   }
@@ -89,22 +106,14 @@ try {
   // 未安装 @vercel/kv，使用内存缓存
 }
 
-// 内存缓存（仅当 KV 不可用时）- 带TTL清理
+// 内存缓存（仅当 KV 不可用时）
+// [L-17 FIX] 移除模块级 setInterval：serverless 冻结模型下挂住事件循环
+// 且实例复用带来的是成本而非收益。缓存过期改为读取时惰性判定。
 let memoryCache = null;
-let cacheLastCleaned = Date.now();
-const CACHE_CLEAN_INTERVAL = 3600000; // 1小时清理一次
 
-function cleanupExpiredCache() {
-  const now = Date.now();
-  if (memoryCache && (now - memoryCache.timestamp) > CACHE_TTL * 1000) {
-    memoryCache = null;
-  }
-  // [Perf-Fix] Rate-limit cleanup now handled by middleware/rateLimit.js (auto TTL purge)
-  cacheLastCleaned = now;
+function isMemoryCacheValid() {
+  return memoryCache && (Date.now() - memoryCache.timestamp) < CACHE_TTL * 1000;
 }
-
-// 定期清理
-setInterval(cleanupExpiredCache, CACHE_CLEAN_INTERVAL);
 
 
 // HTTP请求工具 - 带超时和重试
@@ -216,11 +225,15 @@ module.exports = async function handler(req, res) {
   
   // 4. 强制刷新参数
   const forceRefresh = req.query?.refresh === 'true';
-  
-  // 定期清理内存缓存，防止泄漏（速率限制已迁移到 middleware/rateLimit.js，自带 TTL 清理）
-  cleanupExpiredCache();
-  
-  // 5. 检查缓存
+
+  // [L-17 FIX] 上游依赖惰性校验（原实现模块加载即 throw）
+  try {
+    _ensureEtherscanKey();
+  } catch (err) {
+    return res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+
+  // 5. 检查缓存（[L-17 FIX] 过期判定为读取时惰性判定，无定时器）
   const now = Date.now();
   if (!forceRefresh) {
     if (kvCache) {
@@ -237,7 +250,7 @@ module.exports = async function handler(req, res) {
       } catch (e) {
         console.warn('KV cache read failed:', e.message);
       }
-    } else if (memoryCache && (now - memoryCache.timestamp) < CACHE_TTL * 1000) {
+    } else if (isMemoryCacheValid()) {
       return res.json({
         success: true,
         source: 'cache',

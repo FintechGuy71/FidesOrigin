@@ -54,8 +54,16 @@ function createProxyHandler(backendPathTemplate) {
 
       const data = await response.json().catch(() => null);
       res.status(response.status);
+      // [L-18 FIX] 响应头白名单：原实现把后端全部响应头无差别复制给客户端
+      // （含 Set-Cookie / 内部服务标识等），存在内部信息泄露面。
+      const ALLOWED_RESPONSE_HEADERS = new Set([
+        'content-type',
+        'x-request-id',
+        'retry-after',
+        'cache-control',
+      ]);
       for (const [key, value] of response.headers.entries()) {
-        if (key.toLowerCase() !== 'content-encoding') {
+        if (ALLOWED_RESPONSE_HEADERS.has(key.toLowerCase())) {
           res.setHeader(key, value);
         }
       }

@@ -1,6 +1,52 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { StandardMerkleTree } = require('@openzeppelin/merkle-tree');
+
+// [M-1 FIX] 测试树构建与合约规范对齐：
+// 原测试使用 @openzeppelin/merkle-tree 的 StandardMerkleTree（单哈希 leaf +
+// 排序对内部节点），与合约的 双哈希类型化 leaf + MerkleProof.verify 哈希链
+// 不兼容（原测试实际不可能通过——佐证审计"测试从未真正运行"的判断）。
+// 以下实现与 MerkleRiskRegistry._leaf / OZ MerkleProof 完全一致的本地构建器。
+const ABI_CODER = ethers.AbiCoder.defaultAbiCoder();
+
+function canonicalLeaf(address, riskScore, tier) {
+    const encoded = ABI_CODER.encode(['address', 'uint256', 'uint8'], [address, riskScore, tier]);
+    return ethers.keccak256(ethers.keccak256(encoded));
+}
+
+function buildCanonicalTree(entries) {
+    const leaves = entries.map(([addr, score, tier]) => canonicalLeaf(addr, score, tier));
+    const layers = [leaves];
+    let current = leaves;
+    while (current.length > 1) {
+        const next = [];
+        for (let i = 0; i < current.length; i += 2) {
+            const left = current[i];
+            const right = current[i + 1] ?? current[i];
+            // OZ MerkleProof._hashPair 语义：按字典序排序后哈希
+            const [a, b] = BigInt(left) <= BigInt(right) ? [left, right] : [right, left];
+            next.push(ethers.keccak256(ethers.concat([a, b])));
+        }
+        layers.push(next);
+        current = next;
+    }
+    return {
+        root: current[0],
+        getProof: (index) => {
+            const proof = [];
+            let idx = index;
+            for (let i = 0; i < layers.length - 1; i++) {
+                const layer = layers[i];
+                const pairIndex = idx % 2 === 0 ? idx + 1 : idx - 1;
+                proof.push(layer[pairIndex] ?? layer[idx]);
+                idx = Math.floor(idx / 2);
+            }
+            return proof;
+        },
+    };
+}
+
+// tier 编码（与合约一致：0=UNKNOWN 1=LOW 2=MEDIUM 3=HIGH 4=CRITICAL）
+const TIER = { GREY: 2, BLACK: 4 };
 
 describe('MerkleRiskRegistry Extended Tests', function () {
     let owner, admin, oracle, user1, user2, attacker;
@@ -8,32 +54,32 @@ describe('MerkleRiskRegistry Extended Tests', function () {
     let merkleTree;
     let merkleRoot;
     let testAddresses;
-    
+
     beforeEach(async function () {
         [owner, admin, oracle, user1, user2, attacker] = await ethers.getSigners();
-        
-        // Create test Merkle Tree with 10 addresses
+
+        // Create test Merkle Tree with 10 addresses（[address, score, tier] 规范元组）
         testAddresses = [
-            [user1.address, 80, 'BLACK'],
-            [user2.address, 30, 'GREY'],
-            [owner.address, 100, 'BLACK'],
-            [admin.address, 50, 'GREY'],
-            [oracle.address, 20, 'GREY'],
-            ['0x1234567890123456789012345678901234567890', 90, 'BLACK'],
-            ['0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', 85, 'BLACK'],
-            ['0xdAC17F958D2ee523a2206206994597C13D831ec7', 40, 'GREY'],
-            ['0xa0b86a33e6441e0a421e56e4773c3c4b0db1fc6b', 95, 'BLACK'],
-            ['0xbe0eb53f46cd790cd13851d5eff43d12404d33e8', 25, 'GREY'],
+            [user1.address, 80, TIER.BLACK],
+            [user2.address, 30, TIER.GREY],
+            [owner.address, 100, TIER.BLACK],
+            [admin.address, 50, TIER.GREY],
+            [oracle.address, 20, TIER.GREY],
+            ['0x1234567890123456789012345678901234567890', 90, TIER.BLACK],
+            ['0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', 85, TIER.BLACK],
+            ['0xdAC17F958D2ee523a2206206994597C13D831ec7', 40, TIER.GREY],
+            ['0xa0b86a33e6441e0a421e56e4773c3c4b0db1fc6b', 95, TIER.BLACK],
+            ['0xbe0eb53f46cd790cd13851d5eff43d12404d33e8', 25, TIER.GREY],
         ];
-        
-        merkleTree = StandardMerkleTree.of(testAddresses, ['address', 'uint256', 'string']);
+
+        merkleTree = buildCanonicalTree(testAddresses);
         merkleRoot = merkleTree.root;
-        
+
         // Deploy contract
         const MerkleRiskRegistry = await ethers.getContractFactory('MerkleRiskRegistry');
         registry = await MerkleRiskRegistry.deploy(merkleRoot);
         await registry.waitForDeployment();
-        
+
         // Grant roles
         await registry.grantRole(await registry.ADMIN_ROLE(), admin.address);
         await registry.grantRole(await registry.ORACLE_ROLE(), oracle.address);
@@ -149,7 +195,7 @@ describe('MerkleRiskRegistry Extended Tests', function () {
             const fakeProof = [ethers.keccak256(ethers.toUtf8Bytes('fake'))];
             
             const result = await registry.verifyAddress(
-                user1.address, 80, 'BLACK', fakeProof
+                user1.address, 80, TIER.BLACK, fakeProof
             );
             expect(result).to.be.false;
         });
@@ -171,7 +217,7 @@ describe('MerkleRiskRegistry Extended Tests', function () {
             
             // Try with wrong tier
             const result = await registry.verifyAddress(
-                value[0], value[1], 'GREY', proof
+                value[0], value[1], TIER.GREY, proof
             );
             expect(result).to.be.false;
         });
@@ -182,7 +228,7 @@ describe('MerkleRiskRegistry Extended Tests', function () {
             const proof = merkleTree.getProof(index);
             
             const result = await registry.verifyAddress(
-                notInTree, 80, 'BLACK', proof
+                notInTree, 80, TIER.BLACK, proof
             );
             expect(result).to.be.false;
         });
@@ -228,7 +274,7 @@ describe('MerkleRiskRegistry Extended Tests', function () {
         it('should reject batch with mismatched lengths', async function () {
             const addresses = [user1.address];
             const riskScores = [80, 30];
-            const riskTiers = ['BLACK'];
+            const riskTiers = [TIER.BLACK];
             const proofs = [merkleTree.getProof(0)];
             
             await expect(registry.batchVerify(addresses, riskScores, riskTiers, proofs))
@@ -238,7 +284,7 @@ describe('MerkleRiskRegistry Extended Tests', function () {
         it('should batch verify with some invalid', async function () {
             const addresses = [user1.address, user2.address];
             const riskScores = [80, 999]; // Second score is wrong
-            const riskTiers = ['BLACK', 'GREY'];
+            const riskTiers = [TIER.BLACK, TIER.GREY];
             const proofs = [merkleTree.getProof(0), merkleTree.getProof(1)];
             
             const results = await registry.batchVerify(

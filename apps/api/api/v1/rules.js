@@ -1,35 +1,27 @@
 const {
   withMiddleware,
   sendError,
-  rulesStore,
+  checkApiKey,
+  SCOPE,
+  getRules,
+  addRule,
   generateRuleId,
   initDefaultRules,
 } = require('../../../lib/utils');
 
-// [HIGH Fix #7] CSRF protection: validate Origin/Referer header for state-changing requests (POST/PUT/PATCH/DELETE).
-// This prevents cross-site form submissions from rogue domains.
-const ALLOWED_CSRF_ORIGINS = [
-  'https://fidesorigin.com',
-  'https://www.fidesorigin.com',
-  'https://admin.fidesorigin.com',
-  'http://localhost:3000',
-  'http://localhost:5173',
-];
+// [H-4/H-5 FIX R2-FULL] 重构说明：
+//   1. 鉴权：写操作要求 RULES_ADMIN_API_KEY（作用域强制），读操作接受只读或管理 Key
+//   2. 存储：规则接入 Vercel KV（内存降级）——原实现为实例内存，serverless 下
+//      新建规则随机丢失、风控实例不可见
+//   3. CSRF：Origin 头校验仅对浏览器跨站请求有意义（utils.checkOrigin 已修正：
+//      无 Origin 的服务端客户端放行并交给 API Key 鉴权；伪造 Origin 头对
+//      非浏览器客户端无防护意义，防线在作用域化 API Key）
 
-function checkCSRF(req) {
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return true;
-  const origin = req.headers.origin || req.headers.referer || '';
-  if (!origin) return false;
-  return ALLOWED_CSRF_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed + '/'));
-}
-
-// GET /v1/rules  → listRules
-// POST /v1/rules → createRule
+// GET /v1/rules  → listRules（READ 作用域）
+// POST /v1/rules → createRule（WRITE 作用域）
 async function handler(req, res) {
-  // [HIGH Fix #7] CSRF check for state-changing requests
-  if (!checkCSRF(req)) {
-    return sendError(res, 403, 'CSRF_FORBIDDEN', 'Origin not allowed for this request');
-  }
+  // [H-4 FIX] 写操作强制 WRITE 作用域（RULES_ADMIN_API_KEY）
+  if (req.method === 'POST' && !checkApiKey(req, res, SCOPE.WRITE)) return;
 
   initDefaultRules();
 
@@ -42,9 +34,9 @@ async function handler(req, res) {
   return sendError(res, 405, 'BAD_REQUEST', 'Method not allowed');
 }
 
-function handleList(req, res) {
+async function handleList(req, res) {
   const { status, limit = '50', offset = '0' } = req.query || {};
-  let rules = [...rulesStore.rules];
+  let rules = [...(await getRules())];
 
   if (status) {
     rules = rules.filter((r) => r.status === status);
@@ -64,7 +56,7 @@ function handleList(req, res) {
   });
 }
 
-function handleCreate(req, res) {
+async function handleCreate(req, res) {
   const body = req.body || {};
   const { name, description, conditions, actions, priority } = body;
 
@@ -91,8 +83,8 @@ function handleCreate(req, res) {
     updatedAt: now,
   };
 
-  rulesStore.rules.push(rule);
+  await addRule(rule);
   return res.status(201).json(rule);
 }
 
-module.exports = withMiddleware(handler);
+module.exports = withMiddleware(handler, SCOPE.READ); // POST 在 handler 内再校验 WRITE

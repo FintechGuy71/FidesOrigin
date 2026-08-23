@@ -15,6 +15,10 @@ contract GuardedComplianceEngine is IAssetCompliance {
     bool public guardEnabled;
     address public fallbackEngine;
     address public admin;
+    /// @notice [L-14 FIX] 下游引擎不可用时的失败语义（默认 fail-closed）
+    bool public fallbackFailClosed = true;
+
+    event FallbackFailClosedUpdated(bool enabled);
     
     uint256 public totalGuardChecks;
     uint256 public totalGuardBlocks;
@@ -95,23 +99,30 @@ contract GuardedComplianceEngine is IAssetCompliance {
     ) external view override returns (Decision decision, string memory reason) {
         // [F-03 FIX R2] 传递真实金额与代币
         (Decision guardDecision, string memory guardReason) = checkGuardWithAmount(from, to, amount, token);
-        
+
         if (guardDecision == Decision.BLOCK) {
             return (Decision.BLOCK, string(abi.encodePacked("Guard: ", guardReason)));
         }
-        
+
         if (fallbackEngine != address(0)) {
-            try IAssetCompliance(fallbackEngine).validateTransfer(from, to, amount, token) 
-                returns (Decision d, string memory r) 
+            try IAssetCompliance(fallbackEngine).validateTransfer(from, to, amount, token)
+                returns (Decision d, string memory r)
             {
                 if (d == Decision.BLOCK) return (d, r);
                 if (guardDecision == Decision.FLAG) return (Decision.FLAG, guardReason);
                 return (d, r);
             } catch {
+                // [L-14 FIX] 失败语义显式化且默认 fail-closed：
+                // 合规产品中下游引擎不可用时静默放行（原 FLAG 降级）等同于
+                // 把引擎变成可选组件。fallbackFailClosed=true（默认）返回 BLOCK，
+                // 需要可用性优先的部署可由 admin 显式关闭。
+                if (fallbackFailClosed) {
+                    return (Decision.BLOCK, "Fallback compliance engine unavailable (fail-closed)");
+                }
                 return (Decision.FLAG, "Fallback check failed");
             }
         }
-        
+
         return (guardDecision, guardReason);
     }
     
@@ -173,8 +184,16 @@ contract GuardedComplianceEngine is IAssetCompliance {
     function setFallbackEngine(address _fallback) external onlyAdmin {
         fallbackEngine = _fallback;
     }
-    
+
+    /// @notice [L-14 FIX] 设置下游引擎不可用时的失败语义
+    /// @dev true（默认）= fail-closed（BLOCK）；false = 降级 FLAG（可用性优先）
+    function setFallbackFailClosed(bool enabled) external onlyAdmin {
+        fallbackFailClosed = enabled;
+        emit FallbackFailClosedUpdated(enabled);
+    }
+
     function transferAdmin(address newAdmin) external onlyAdmin {
+        if (newAdmin == address(0)) revert Unauthorized();
         admin = newAdmin;
     }
     

@@ -118,12 +118,12 @@ async function deployFidesOriginFixture() {
   await quarantineVault.waitForDeployment();
 
   // 10. Deploy FidesCompliance (UUPS upgradeable via proxy)
+  // [M-6 FIX] initialize 不再接收 quarantineVault（死引用已移除）
   const FidesCompliance = await ethers.getContractFactory('FidesCompliance');
   const fidesCompliance = await upgrades.deployProxy(FidesCompliance, [
     await complianceEngine.getAddress(),
     await riskRegistry.getAddress(),
-    await policyEngine.getAddress(),
-    await quarantineVault.getAddress()
+    await policyEngine.getAddress()
   ], {
     initializer: 'initialize',
     unsafeAllow: ['constructor']

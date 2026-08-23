@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+/**
+ * @dev [L-10 FIX] DEPRECATED — 非权威版本，仅保留供历史部署参考。
+ *      权威生产合约集见仓库根 DEPLOYED.md；新集成请勿使用本合约。
+ */
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";

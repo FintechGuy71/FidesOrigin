@@ -12,7 +12,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [INFO-4 FIX: pin]
 
       # Pure static upload of repo-root public/ via Build Output API v3.
       # No install / no build steps at all: the site is pre-built static HTML,
