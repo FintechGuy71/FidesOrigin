@@ -39,19 +39,24 @@ jobs:
       - name: Run tests
         run: cd apps/contracts && npx hardhat test
 
-      # [SECURITY] PRIVATE_KEY is scoped ONLY to this single step.
-      # Never move this to job-level env — it would expose the key to ALL steps.
+      # [SECURITY] 密钥仅作用于 Deploy 单个步骤，绝不提升到 job 级 env。
+      # [CI-FIX-2026-08-23] 环境变量名与 hardhat.config.js 对齐：
+      #   配置读取 ADMIN_PRIVATE_KEY（经 HIGH-9 校验）与 SEPOLIA_RPC（缺省用公共 RPC），
+      #   原来的 PRIVATE_KEY/ALCHEMY_API_KEY 根本没被配置读取，部署必然失败。
       - name: Deploy
         if: github.event.inputs.confirm == 'DEPLOY'
         env:
-          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          SEPOLIA_RPC: ${{ secrets.SEPOLIA_RPC }}
         run: |
           cd apps/contracts
           npx hardhat run scripts/deploy-full.js --network ${{ github.event.inputs.network }}
 
+      # [CI-FIX-2026-08-23] Etherscan 验证为增强步骤：ETHERSCAN_API_KEY 未配置或
+      # hardhat.config 无 etherscan 段时不应让整个部署工作流显示失败（部署已成功）。
       - name: Verify on Etherscan
         if: success()
+        continue-on-error: true
         env:
           ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
         run: |
