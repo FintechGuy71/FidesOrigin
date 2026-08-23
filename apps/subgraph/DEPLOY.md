@@ -11,11 +11,11 @@
 
 | 合约 | 地址 | Start Block |
 |------|------|-------------|
-| RiskRegistry | `0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc` | 7,650,000 |
-| ComplianceEngine | `0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC` | 7,650,000 |
-| PolicyEngine | `0x87089F67A61F9643796AE154663A6a9F21196b38` | 7,650,000 |
+| RiskRegistry | `0x953f985f38f94d6159c0600d1f15D543895cE896` | 7,650,000 |
+| ComplianceEngine | `0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E` | 7,650,000 |
+| PolicyEngine | `0xCA12BB2daD2a6D429277823366D8C88a490EDDeA` | 7,650,000 |
 | FidesCompliance | `0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594` | 7,800,000 |
-| CompliantStableCoin | `0xb47a6520740a54B375e6F3B22bC316B4b02bFbCF` | 7,800,000 |
+| CompliantStableCoin | `0x2245A8FCf6aca017327eA8950Ba510e9596595E9` | 7,800,000 |
 
 ## 实体映射状态
 

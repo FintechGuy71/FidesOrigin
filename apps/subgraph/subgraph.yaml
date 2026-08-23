@@ -9,8 +9,8 @@ dataSources:
     network: sepolia
     source:
       abi: RiskRegistry
-      address: "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc"
-      startBlock: 7650000
+      address: "0x953f985f38f94d6159c0600d1f15D543895cE896"
+      startBlock: 11550000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -39,8 +39,8 @@ dataSources:
     network: sepolia
     source:
       abi: ComplianceEngine
-      address: "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC"
-      startBlock: 7650000
+      address: "0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E"
+      startBlock: 11550000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -75,8 +75,8 @@ dataSources:
     network: sepolia
     source:
       abi: PolicyEngine
-      address: "0x87089F67A61F9643796AE154663A6a9F21196b38"
-      startBlock: 7650000
+      address: "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA"
+      startBlock: 11550000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -110,7 +110,7 @@ dataSources:
     network: sepolia
     source:
       abi: FidesCompliance
-      address: "0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707"
+      address: "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5"
       startBlock: 7800000
     mapping:
       kind: ethereum/events
@@ -180,8 +180,8 @@ dataSources:
     network: sepolia
     source:
       abi: QuarantineVault
-      address: "0xF7c5c4DdcB0F868a6c271334131728CecA313DFb"
-      startBlock: 7650000
+      address: "0x6803E163259B07F58111f56423aB0732858196Be"
+      startBlock: 11550000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
