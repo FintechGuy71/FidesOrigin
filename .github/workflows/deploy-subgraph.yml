@@ -26,7 +26,12 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      # [CI-FIX-2026-08-23] 与 ci.yml 2026-08-17 修复对齐：根 postinstall 的
+      # turbo build 在 CI 环境会挂起（见 ci.yml 头部注释与 deploy.yml 的同类规避），
+      # 必须 --ignore-scripts 跳过。subgraph 仅依赖 graph-cli/graph-ts，
+      # 不依赖 turbo 预构建的 @fidesorigin/shared 与 @fidesorigin/config。
+      # pnpm-lock.yaml 已于 v3.1.0 后重新生成并同步，--frozen-lockfile 可通过。
+      - run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Generate Subgraph Code
         run: pnpm --filter=subgraph codegen
       - name: Build Subgraph
