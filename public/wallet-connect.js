@@ -34,7 +34,7 @@
       chainIdHex: '0xaa36a7',
       name: 'Sepolia',
       rpc: 'https://rpc.sepolia.org',
-      contract: '0x0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5',
+      contract: '0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5',
       explorer: 'https://sepolia.etherscan.io',
     },
     mainnet: {

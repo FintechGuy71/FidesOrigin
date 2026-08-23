@@ -171,19 +171,19 @@ update_with_sed() {
     log_warn "Node.js yaml parser not available, using sed fallback"
 
     if [ -n "$RISK_REGISTRY" ]; then
-        sed -i "s|address: \"0x0x953f985f38f94d6159c0600d1f15D543895cE896\"|address: \"$RISK_REGISTRY\"|g" subgraph.yaml 2>/dev/null || true
+        sed -i "s|address: \"0x953f985f38f94d6159c0600d1f15D543895cE896\"|address: \"$RISK_REGISTRY\"|g" subgraph.yaml 2>/dev/null || true
     fi
     if [ -n "$COMPLIANCE_ENGINE" ]; then
-        sed -i "s|address: \"0x0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E\"|address: \"$COMPLIANCE_ENGINE\"|g" subgraph.yaml 2>/dev/null || true
+        sed -i "s|address: \"0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E\"|address: \"$COMPLIANCE_ENGINE\"|g" subgraph.yaml 2>/dev/null || true
     fi
     if [ -n "$POLICY_ENGINE" ]; then
-        sed -i "s|address: \"0x0xCA12BB2daD2a6D429277823366D8C88a490EDDeA\"|address: \"$POLICY_ENGINE\"|g" subgraph.yaml 2>/dev/null || true
+        sed -i "s|address: \"0xCA12BB2daD2a6D429277823366D8C88a490EDDeA\"|address: \"$POLICY_ENGINE\"|g" subgraph.yaml 2>/dev/null || true
     fi
     if [ -n "$FIDES_COMPLIANCE" ]; then
         sed -i "s|address: \"0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594\"|address: \"$FIDES_COMPLIANCE\"|g" subgraph.yaml 2>/dev/null || true
     fi
     if [ -n "$COMPLIANT_STABLE_COIN" ]; then
-        sed -i "s|address: \"0x0x2245A8FCf6aca017327eA8950Ba510e9596595E9\"|address: \"$COMPLIANT_STABLE_COIN\"|g" subgraph.yaml 2>/dev/null || true
+        sed -i "s|address: \"0x2245A8FCf6aca017327eA8950Ba510e9596595E9\"|address: \"$COMPLIANT_STABLE_COIN\"|g" subgraph.yaml 2>/dev/null || true
     fi
 }
 
