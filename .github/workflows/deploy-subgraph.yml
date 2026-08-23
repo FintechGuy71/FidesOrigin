@@ -6,6 +6,8 @@ on:
     paths:
       - 'apps/subgraph/**'
       - '.github/workflows/deploy-subgraph.yml'
+      # 工作流在仓库根执行 pnpm install，锁文件变更同样影响其安装结果
+      - 'pnpm-lock.yaml'
 
 # [High Fix #54] Explicit least-privilege permissions for CI/CD workflows.
 permissions:
