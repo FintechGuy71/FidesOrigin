@@ -190,8 +190,11 @@ describe('R2 Audit Fixes Regression', function () {
       );
       expect(allowedBefore).to.be.false;
 
-      // 加白后：放行
-      await fidesCompliance.connect(owner).setWhitelist(user1.address, true);
+      // 加白后：放行（[M-5 FIX] 白名单为两步时间锁，推进 48h+1 后执行）
+      await fidesCompliance.connect(owner).proposeWhitelist(user1.address, true);
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await fidesCompliance.connect(owner).executeWhitelistUpdate();
       const [allowedAfter] = await fidesCompliance.connect(owner).evaluateTransaction.staticCall(
         user1.address, user2.address, 100, TOKEN_ADDR, 0
       );
@@ -207,7 +210,11 @@ describe('R2 Audit Fixes Regression', function () {
       );
       expect(allowedSanctioned).to.be.false;
 
-      await fidesCompliance.connect(owner).setWhitelist(user1.address, false);
+      // 移除白名单（两步）
+      await fidesCompliance.connect(owner).proposeWhitelist(user1.address, false);
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await fidesCompliance.connect(owner).executeWhitelistUpdate();
       // 还原 user2 档案（移除制裁），避免污染后续用例
       await ethers.provider.send('evm_increaseTime', [3700]);
       await ethers.provider.send('evm_mine');

@@ -185,11 +185,48 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         emit UpgradeProposed(proposalId, newImpl, upgradeProposals[proposalId]);
     }
 
-    function setUpgradeTimelockDelay(uint256 delay) external onlyRole(ADMIN_ROLE) {
+    /// @notice [M-4 FIX] 时间锁延迟变更的两步状态（自举保护）
+    uint256 public pendingTimelockDelay;
+    uint256 public pendingTimelockDelaySetAt;
+
+    event TimelockDelayChangeProposed(uint256 newDelay, uint256 executeAfter);
+    event TimelockDelayChanged(uint256 oldDelay, uint256 newDelay);
+    error NothingPendingTimelockChange();
+    error TimelockChangeTooEarly(uint256 executeAfter);
+
+    /**
+     * @notice [M-4 FIX] 提议修改升级时间锁延迟。
+     * @dev 原实现 setUpgradeTimelockDelay 即时生效：ADMIN 可先把延迟缩到 1 小时
+     *      再 propose+execute 升级，绕过 2 天保护。修复为两步制——变更本身
+     *      需等待「当前」延迟到期才能执行（缩短延迟也要先熬过旧延迟）。
+     */
+    function proposeTimelockDelayChange(uint256 delay) external onlyRole(ADMIN_ROLE) {
         if (delay < 1 hours || delay > 30 days) revert InvalidDelay();
+        pendingTimelockDelay = delay;
+        pendingTimelockDelaySetAt = block.timestamp;
+        emit TimelockDelayChangeProposed(delay, block.timestamp + upgradeTimelockDelay);
+    }
+
+    /**
+     * @notice [M-4 FIX] 时间锁到期后执行延迟变更
+     */
+    function executeTimelockDelayChange() external onlyRole(ADMIN_ROLE) {
+        if (pendingTimelockDelaySetAt == 0) revert NothingPendingTimelockChange();
+        uint256 executeAfter = pendingTimelockDelaySetAt + upgradeTimelockDelay;
+        if (block.timestamp < executeAfter) revert TimelockChangeTooEarly(executeAfter);
         uint256 old = upgradeTimelockDelay;
-        upgradeTimelockDelay = delay;
-        emit UpgradeTimelockDelayUpdated(old, delay);
+        upgradeTimelockDelay = pendingTimelockDelay;
+        delete pendingTimelockDelay;
+        delete pendingTimelockDelaySetAt;
+        emit TimelockDelayChanged(old, upgradeTimelockDelay);
+    }
+
+    /**
+     * @notice [M-4 FIX] 旧版即时修改已移除
+     * @dev DEPRECATED: 使用 proposeTimelockDelayChange + executeTimelockDelayChange。
+     */
+    function setUpgradeTimelockDelay(uint256) external view onlyRole(ADMIN_ROLE) {
+        revert("CE: use propose/execute timelock delay change");
     }
 
     function _authorizeUpgrade(address newImpl) internal override onlyRole(ADMIN_ROLE) {
@@ -305,7 +342,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
             });
             quarantineList.push(qId);
             quarantinedTransactions++;
-            lastTransferTime[from] = block.timestamp;
+            // [L-5 FIX] HOLD（冷却期隔离）不再刷新 lastTransferTime：
+            // 原实现会在重试时顺延冷却计时，导致"越重试越锁"。
+            // 计时器仅在 ALLOW 路径刷新（见下方）。
             emit TransactionQuarantined(from, to, amount, token, qId, block.timestamp, block.number);
             return (Decision.HOLD, "Cooldown");
         }
@@ -413,12 +452,30 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         issuerPolicies[token] = policy;
         // [F-14 FIX R2] 设置策略即登记为授权发行方
         registeredIssuers[token] = true;
+        emit RegisteredIssuerUpdated(token, true);
     }
+
+    // [L-8 FIX] 登记状态变更与策略清理事件
+    event RegisteredIssuerUpdated(address indexed token, bool registered);
+    event IssuerPolicyCleared(address indexed token);
 
     /// @notice [F-14 FIX R2] 显式登记/注销发行方（不依赖 maxTxAmount 判据）
     function setRegisteredIssuer(address token, bool registered) external onlyRole(ADMIN_ROLE) {
         if (token == address(0)) revert InvalidAddress();
         registeredIssuers[token] = registered;
+        emit RegisteredIssuerUpdated(token, registered);
+    }
+
+    /**
+     * @notice [L-8 FIX] 清空发行方策略并同步注销发行方登记
+     * @dev 原实现 setIssuerPolicy 自动 registeredIssuers[token]=true，但没有任何
+     *      路径在策略移除时反登记，登记只增不减。本函数提供对称的清理出口。
+     */
+    function clearIssuerPolicy(address token) external onlyRole(ADMIN_ROLE) {
+        if (token == address(0)) revert InvalidAddress();
+        delete issuerPolicies[token];
+        registeredIssuers[token] = false;
+        emit IssuerPolicyCleared(token);
     }
 
     /// @notice [F-05 FIX R2] 未知地址阻断开关（严格模式）
@@ -470,6 +527,22 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     ) external view returns (Decision decision, string memory reason) {
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender))
             revert UnauthorizedCaller(msg.sender);
+        return _validateTransferUnchecked(from, to, amount, assetContract);
+    }
+
+    /**
+     * @dev [H-3 FIX] 无鉴权的内部校验逻辑。
+     *      原实现 validateOperation 通过 this.validateTransfer 外部自调用转发，
+     *      使 msg.sender 变为引擎合约自身 → 恒触发 UnauthorizedCaller →
+     *      TRANSFER 类操作必然 revert（除非给引擎自身授予 OPERATOR_ROLE，
+     *      而部署清单从未要求；下游 CompliantSmartWallet 会将所有转账静默
+     *      标记为 BLOCK）。抽取内部函数后，钱包合规接口不再依赖隐式自授权配置。
+     *      [M-10 FIX] 同时补齐 blockedTokens 与冷却期只读判定，使预览路径
+     *      与执行路径（checkTransferWithDeadline）的阻断语义一致。
+     */
+    function _validateTransferUnchecked(
+        address from, address to, uint256 amount, address assetContract
+    ) internal view returns (Decision decision, string memory reason) {
         if (from == address(0) || to == address(0)) return (Decision.BLOCK, "Invalid address");
         if (address(riskRegistry) == address(0)) return (Decision.BLOCK, "Registry not set");
 
@@ -479,10 +552,18 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         if (b2) return (Decision.BLOCK, r2);
 
         IssuerPolicy memory p = issuerPolicies[assetContract];
+        for (uint256 i = 0; i < p.blockedTokens.length; i++) {
+            if (p.blockedTokens[i] == to) return (Decision.BLOCK, "Dest blocked");
+        }
         if (p.maxTxAmount > 0 && amount > p.maxTxAmount) return (Decision.BLOCK, "Max tx");
         if (p.dailyLimit > 0) {
             if (dailySpent[from][block.timestamp / 1 days] + amount > p.dailyLimit)
                 return (Decision.BLOCK, "Daily limit exceeded");
+        }
+        if (p.cooldownPeriod > 0 && lastTransferTime[from] != 0
+            && block.timestamp - lastTransferTime[from] < p.cooldownPeriod)
+        {
+            return (Decision.HOLD, "Cooldown");
         }
         return (Decision.ALLOW, "Transfer allowed");
     }
@@ -560,7 +641,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         (bool b, , string memory r) = _checkRisk(walletOwner);
         if (b) return (Decision.BLOCK, r);
         if (op.opType == OperationType.TRANSFER)
-            return this.validateTransfer(walletOwner, op.target, op.value, walletContract);
+            // [H-3 FIX] 改用内部函数，不再 this.validateTransfer 外部自调用
+            // （原实现 msg.sender 变为引擎自身，恒 revert UnauthorizedCaller）
+            return _validateTransferUnchecked(walletOwner, op.target, op.value, walletContract);
         return (Decision.ALLOW, "Op allowed");
     }
 
@@ -618,12 +701,16 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         external onlyRole(ADMIN_ROLE)
     {
         _grantRole(role, account);
+        // [L-2 FIX] 原实现丢弃 reason 且不发任何事件，审计追踪缺失
+        emit RoleGrantedDetailed(role, account, msg.sender, block.timestamp, reason);
     }
 
     function revokeRoleWithReason(bytes32 role, address account, string calldata reason)
         external onlyRole(ADMIN_ROLE)
     {
         _revokeRole(role, account);
+        // [L-2 FIX] 同上
+        emit RoleRevokedDetailed(role, account, msg.sender, block.timestamp, reason);
     }
 
     // ============ P1-1: MerkleProof Verification ============

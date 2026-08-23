@@ -46,7 +46,12 @@ const EVENT_ABIS = [
 
 const iface = new Interface(EVENT_ABIS);
 
-const TOKEN_DECIMALS = 6;
+// [L-15 FIX] 精度由环境变量配置（默认 6 保持向后兼容）：
+// 原实现硬编码 6，非 6 精度代币的金额展示全部错误
+const TOKEN_DECIMALS = (() => {
+  const parsed = parseInt(process.env.TOKEN_DECIMALS ?? '', 10);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 36 ? parsed : 6;
+})();
 
 /**
  * 安全格式化金额

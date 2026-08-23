@@ -25,11 +25,23 @@ export interface DetectionResult {
 export class MempoolWatcher extends EventEmitter {
   private providers: WebSocketProvider[] = [];
   private isRunning = false;
-  private processedTxs = new Set<string>();
+  // [L-22 FIX] 去重缓存改为 Map（保持插入序）实现 FIFO 淘汰：
+  // 原实现 Set 达 10 万上限时整体 clear() —— 近期去重记忆全部丢失，
+  // 已见交易会重复处理。Map 逐条淘汰最旧条目，保留近期记忆。
+  private processedTxs = new Map<string, true>();
   private maxCacheSize = 100000;
 
   constructor(private rpcUrls: string[]) {
     super();
+  }
+
+  private markProcessed(txHash: string): void {
+    this.processedTxs.set(txHash, true);
+    while (this.processedTxs.size > this.maxCacheSize) {
+      const oldest = this.processedTxs.keys().next().value;
+      if (oldest === undefined) break;
+      this.processedTxs.delete(oldest);
+    }
   }
 
   async start(): Promise<void> {
@@ -39,13 +51,10 @@ export class MempoolWatcher extends EventEmitter {
     for (const url of this.rpcUrls) {
       try {
         const provider = new WebSocketProvider(url);
-        
+
         provider.on('pending', async (txHash: string) => {
           if (this.processedTxs.has(txHash)) return;
-          if (this.processedTxs.size >= this.maxCacheSize) {
-            this.processedTxs.clear();
-          }
-          this.processedTxs.add(txHash);
+          this.markProcessed(txHash);
 
           try {
             const tx = await provider.getTransaction(txHash);

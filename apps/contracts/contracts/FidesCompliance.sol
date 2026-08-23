@@ -15,7 +15,6 @@ import "./interfaces/IFidesCompliance.sol";
 import "./ComplianceEngine.sol";
 import "./RiskRegistry.sol";
 import "./PolicyEngine.sol";
-import "./QuarantineVault.sol";
 
 /**
  * @title FidesCompliance
@@ -53,12 +52,14 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     ComplianceEngine public complianceEngine;
     RiskRegistry public riskRegistry;
     PolicyEngine public policyEngine;
-    QuarantineVault public quarantineVault;
-    
+    // [M-6 FIX] 移除 quarantineVault 死引用：该状态变量仅被两步 setter 赋值，
+    // 无任何业务逻辑调用（"隔离"路径只发事件不动资金）。QuarantineVault 由
+    // keeper（QUARANTINE_ROLE 持有者）独立运营，与本合约无关。
+
     /// @notice 合规配置
     uint256 public minRiskScoreForQuarantine;
     uint256 public maxRiskScoreForBlock;
-    uint256 public minUpdateInterval;
+    // [L-7 FIX] 移除 minUpdateInterval 死配置（全仓库无读取方，setter 无校验无时间锁）
     
     /// @notice 交易统计
     uint256 public totalTransactionsChecked;
@@ -85,11 +86,19 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     address public pendingComplianceEngine;
     address public pendingRiskRegistry;
     address public pendingPolicyEngine;
-    address public pendingQuarantineVault;
+    // [M-6 FIX] 移除 pendingQuarantineVault（死引用两步 setter 的一部分）
     mapping(bytes32 => uint256) public pendingSetTime;
 
     /// @notice 白名单集合（用于 IFidesCompliance.isWhitelisted）
     mapping(address => bool) private _whitelist;
+
+    /// @notice [M-5 FIX] 白名单两步状态（proposed account => proposed status）
+    struct PendingWhitelist {
+        address account;
+        bool status;
+        uint256 proposedAt;
+    }
+    PendingWhitelist private _pendingWhitelist;
 
     /// @notice 升级提案映射（P0 FIX: 添加升级时间锁）
     mapping(bytes32 => uint256) public upgradeProposals;
@@ -160,7 +169,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     event ComplianceEngineUpdated(address indexed oldEngine, address indexed newEngine, address indexed admin, uint256 timestamp);
     event RiskRegistryUpdated(address indexed oldRegistry, address indexed newRegistry, address indexed admin, uint256 timestamp);
     event PolicyEngineUpdated(address indexed oldEngine, address indexed newEngine, address indexed admin, uint256 timestamp);
-    event QuarantineVaultUpdated(address indexed oldVault, address indexed newVault, address indexed admin, uint256 timestamp);
+    // [M-6 FIX] QuarantineVaultUpdated / QuarantineVaultProposed 事件已随死引用一并移除
     event RiskThresholdUpdated(string indexed paramName, uint256 oldValue, uint256 newValue, address indexed admin, uint256 timestamp);
     event EmergencyCooldownUpdated(uint256 oldValue, uint256 newValue, address indexed admin, uint256 timestamp);
     event EmergencyCooldownRemaining(uint256 remaining);
@@ -173,7 +182,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     event ComplianceEngineProposed(address indexed proposed, address indexed proposer, uint256 timestamp);
     event RiskRegistryProposed(address indexed proposed, address indexed proposer, uint256 timestamp);
     event PolicyEngineProposed(address indexed proposed, address indexed proposer, uint256 timestamp);
-    event QuarantineVaultProposed(address indexed proposed, address indexed proposer, uint256 timestamp);
+    // [M-6 FIX] QuarantineVaultProposed 事件已移除（随死引用）
 
     event WhitelistUpdated(address indexed account, bool status, address indexed admin, uint256 timestamp);
     event UpgradeProposed(bytes32 indexed proposalId, address indexed newImplementation, uint256 executeAfter);
@@ -195,6 +204,10 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     error InvalidCooldown(uint256 cooldown);
     error AlreadyInEmergency();
     error RiskRegistryNotSet();
+    /// @notice [L-3 FIX] 显式未授权错误（替代静默 (false,0) 返回）
+    error UnauthorizedCaller(address caller);
+    /// @notice [M-5 FIX] 白名单两步化状态
+    error WhitelistProposalNotFound();
     
     // ============ Constructor & Initializer ============
 
@@ -206,34 +219,30 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     function initialize(
         address _complianceEngine,
         address _riskRegistry,
-        address _policyEngine,
-        address _quarantineVault
+        address _policyEngine
     ) external initializer {
         __Context_init();
         __AccessControl_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-        
+
         require(_complianceEngine != address(0), "Invalid compliance engine");
         require(_riskRegistry != address(0), "Invalid risk registry");
         require(_policyEngine != address(0), "Invalid policy engine");
-        require(_quarantineVault != address(0), "Invalid quarantine vault");
-        
+
         // [NICE_TO_HAVE] 验证依赖地址为真实合约
         require(_complianceEngine.code.length > 0, "Compliance engine not a contract");
         require(_riskRegistry.code.length > 0, "Risk registry not a contract");
         require(_policyEngine.code.length > 0, "Policy engine not a contract");
-        require(_quarantineVault.code.length > 0, "Quarantine vault not a contract");
-        
+
         complianceEngine = ComplianceEngine(_complianceEngine);
         riskRegistry = RiskRegistry(_riskRegistry);
         policyEngine = PolicyEngine(_policyEngine);
-        quarantineVault = QuarantineVault(payable(_quarantineVault));
+        // [M-6 FIX] 不再接线 quarantineVault（死引用，见状态变量注释）
 
         // 初始化默认值
         minRiskScoreForQuarantine = 80;
         maxRiskScoreForBlock = 95;
-        minUpdateInterval = 24 hours;
         emergencyCooldown = 24 hours;
 
         // L-05: 设置角色管理关系
@@ -345,7 +354,8 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
 
     /**
      * @notice M-03 FIX: 预览交易合规性（纯 view，无副作用）
-     * @dev 与 evaluateTransaction 逻辑一致，但不调用任何 state-changing 函数
+     * @dev [L-3 FIX] 非法输入/紧急模式/未授权改为显式 revert（自定义错误），
+     *      不再返回 (false, 0) 静默失败——调用方无法区分"高风险阻断"与"参数错误"。
      */
     function previewTransaction(
         address from,
@@ -355,18 +365,18 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         uint256 deadline
     ) external view virtual returns (bool allowed, uint256 riskScore) {
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
-            return (false, 0);
+            revert UnauthorizedCaller(msg.sender);
         }
         if (from == address(0) || to == address(0)) {
-            return (false, 0);
+            revert InvalidAddress();
         }
         if (deadline > 0 && block.timestamp > deadline) {
-            return (false, 0);
+            revert DeadlineExpired(deadline, block.timestamp);
         }
         if (emergencyMode) {
-            return (false, 0);
+            revert EmergencyModeActive();
         }
-        
+
         // V2.1: Guard 预检（F-03 FIX R2: 携带真实交易参数）
         if (guardEnabled && address(guard) != address(0)) {
             IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(
@@ -376,9 +386,9 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
                 return (false, 100);
             }
         }
-        
+
         if (address(riskRegistry) == address(0)) {
-            return (false, 0);
+            revert RiskRegistryNotSet();
         }
 
         // [F-06 FIX R2] 白名单短路（不豁免制裁，见下方检查）
@@ -420,8 +430,13 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     }
 
     /**
-     * @notice M-03 FIX: 评估交易（状态变更路径，非纯 view）
-     * @dev 如需纯预览，使用 previewTransaction
+     * @notice M-03 FIX: 评估交易（无副作用路径）
+     * @dev [M-9 FIX] 原实现调用 complianceEngine.checkTransfer（状态变更函数），
+     *      "评估"却真实消耗 from 的每日限额、刷新冷却计时并可能写入隔离记录。
+     *      修复：与 previewTransaction 一致改走 view 路径（validateTransfer）；
+     *      需要有状态执行的请使用 checkAndExecuteTransaction。
+     *      [M-10 FIX] 预览/评估/执行三路径的阻断语义因此对齐。
+     *      [L-3 FIX] 非法输入显式 revert，不再返回 (false, 0) 静默失败。
      */
     function evaluateTransaction(
         address from,
@@ -433,22 +448,22 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         // [HIGH-2 FIX] 只有交易发起方本人或授权运营方可以评估交易
         // 防止恶意中间合约/外部地址以任意 from 身份调用，操纵统计数据或批量探测风险
         if (msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)) {
-            return (false, 0);
+            revert UnauthorizedCaller(msg.sender);
         }
         if (from == address(0) || to == address(0)) {
-            return (false, 0);
+            revert InvalidAddress();
         }
         // D2-017 fix: add deadline check for MEV protection
         if (deadline > 0 && block.timestamp > deadline) {
-            return (false, 0);
+            revert DeadlineExpired(deadline, block.timestamp);
         }
         if (emergencyMode) {
-            return (false, 0);
+            revert EmergencyModeActive();
         }
         if (address(riskRegistry) == address(0)) {
-            return (false, 0);
+            revert RiskRegistryNotSet();
         }
-        
+
         // V2.1: Guard 预检（零Gas快速路径）（F-03 FIX R2: 携带真实交易参数）
         if (guardEnabled && address(guard) != address(0)) {
             IPreTransactionGuard.RiskAssessment memory result = guard.assessTransaction(
@@ -480,9 +495,9 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
             return (false, riskScore);
         }
 
-        // 若引擎已设置，进一步参考引擎决策
+        // 若引擎已设置，参考引擎决策（view 路径，无副作用）
         if (!whitelistedParty && address(complianceEngine) != address(0)) {
-            (IAssetCompliance.Decision decision, ) = complianceEngine.checkTransfer(
+            (IAssetCompliance.Decision decision, ) = complianceEngine.validateTransfer(
                 from, to, amount, token
             );
             if (decision == IAssetCompliance.Decision.BLOCK) {
@@ -777,27 +792,8 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         emit PolicyEngineUpdated(old, pending, msg.sender, block.timestamp);
     }
 
-    function proposeQuarantineVault(address _vault) external onlyRole(ADMIN_ROLE) {
-        if (_vault == address(0)) revert InvalidAddress();
-        require(_vault.code.length > 0, "Not a contract");
-        pendingQuarantineVault = _vault;
-        pendingSetTime["quarantineVault"] = block.timestamp;
-        emit QuarantineVaultProposed(_vault, msg.sender, block.timestamp);
-    }
-
-    function executeQuarantineVaultUpdate() external onlyRole(ADMIN_ROLE) {
-        address pending = pendingQuarantineVault;
-        if (pending == address(0)) revert NothingPending();
-        uint256 setTime = pendingSetTime["quarantineVault"];
-        if (block.timestamp < setTime + SETTER_DELAY) {
-            revert TooEarly(setTime + SETTER_DELAY);
-        }
-        address old = address(quarantineVault);
-        quarantineVault = QuarantineVault(payable(pending));
-        delete pendingQuarantineVault;
-        delete pendingSetTime["quarantineVault"];
-        emit QuarantineVaultUpdated(old, pending, msg.sender, block.timestamp);
-    }
+    // [M-6 FIX] proposeQuarantineVault / executeQuarantineVaultUpdate 已移除：
+    // 它们维护的是一个从未被业务逻辑使用的死引用（详见状态变量注释）。
 
     // ============ Admin: Config ============
 
@@ -871,10 +867,12 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         revert("FC: use propose/execute pattern (timelock)");
     }
 
-    function setMinUpdateInterval(uint256 _value) external onlyRole(ADMIN_ROLE) {
-        uint256 old = minUpdateInterval;
-        minUpdateInterval = _value;
-        emit RiskThresholdUpdated("minUpdateInterval", old, _value, msg.sender, block.timestamp);
+    /**
+     * @notice [L-7 FIX] setMinUpdateInterval 已移除（死配置：minUpdateInterval
+     *      无任何读取方，setter 亦无范围校验）。DEPRECATED 保留签名防误用。
+     */
+    function setMinUpdateInterval(uint256) external view onlyRole(ADMIN_ROLE) {
+        revert("FC: minUpdateInterval removed (unused config)");
     }
 
     function setEmergencyCooldown(uint256 _cooldown) external onlyRole(ADMIN_ROLE) {
@@ -884,10 +882,39 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         emit EmergencyCooldownUpdated(old, _cooldown, msg.sender, block.timestamp);
     }
 
-    function setWhitelist(address account, bool status) external onlyRole(ADMIN_ROLE) {
+    /**
+     * @notice [M-5 FIX] 提议白名单变更（48 小时后执行）
+     * @dev 原实现即时生效：白名单可绕过风险评分与引擎判定（仅保留制裁检查），
+     *      被盗/恶意 ADMIN 可即时建立放行通道——对比风险阈值已有 48h 两步时间锁
+     *      （F-13 FIX R2），更强的放行开关反而无保护。修复为同款两步制。
+     */
+    function proposeWhitelist(address account, bool status) external onlyRole(ADMIN_ROLE) {
         if (account == address(0)) revert InvalidAddress();
+        _pendingWhitelist = PendingWhitelist(account, status, block.timestamp);
+        emit WhitelistUpdated(account, status, msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice [M-5 FIX] 时间锁到期后执行白名单变更
+     */
+    function executeWhitelistUpdate() external onlyRole(ADMIN_ROLE) {
+        if (_pendingWhitelist.proposedAt == 0) revert WhitelistProposalNotFound();
+        if (block.timestamp < _pendingWhitelist.proposedAt + SETTER_DELAY) {
+            revert TooEarly(_pendingWhitelist.proposedAt + SETTER_DELAY);
+        }
+        address account = _pendingWhitelist.account;
+        bool status = _pendingWhitelist.status;
+        delete _pendingWhitelist;
         _whitelist[account] = status;
         emit WhitelistUpdated(account, status, msg.sender, block.timestamp);
+    }
+
+    /**
+     * @notice [M-5 FIX] 旧版即时白名单已移除
+     * @dev DEPRECATED: 使用 proposeWhitelist + executeWhitelistUpdate。
+     */
+    function setWhitelist(address, bool) external view onlyRole(ADMIN_ROLE) {
+        revert("FC: use propose/execute whitelist (timelock)");
     }
     
     // ============ V2.1: Guard Integration ============

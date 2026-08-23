@@ -134,22 +134,17 @@ async def monitor_stream(
     # [Audit Fix #9] 验证 API Key
     from app.core.security import verify_api_key
     if not await verify_api_key(api_key, db):
-        # [P0-2 Fix] 安全清除 API Key 内存引用 — 必须在 return 之前执行
-        if auth_msg and hasattr(auth_msg, 'clear'):
-            auth_msg.clear()
-        auth_data = ""
-        api_key = ""
+        # [INFO-1 FIX] 原实现试图用 auth_msg.clear()/del "擦除密钥内存"——
+        # CPython 中字符串不可变且 GC 不保证回收，该操作是安慰剂。
+        # 诚实的做法：尽快解除本地引用（del），不宣称安全擦除；
+        # 真正的密钥保护依赖传输层（wss）+ 认证消息不落日志。
         del auth_msg, auth_data, api_key
         # [Audit Fix #9] 增加随机延迟到 100-500ms，防止时序攻击
         await asyncio.sleep(secrets.randbelow(400) / 1000 + 0.1)
         await websocket.close(code=4001, reason="Invalid API key")
         return
 
-    # [P0-2 Fix] 验证通过后立即清除 API Key 内存引用
-    if auth_msg and hasattr(auth_msg, 'clear'):
-        auth_msg.clear()
-    auth_data = ""
-    api_key = ""
+    # [INFO-1 FIX] 验证通过后解除引用（非安全擦除，仅缩短生命周期）
     del auth_msg, auth_data, api_key
 
     # 生成客户端 ID - 使用加密安全的随机数

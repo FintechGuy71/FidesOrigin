@@ -65,6 +65,9 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
     mapping(bytes32 => uint256) public approvalCount;
     /// @notice H-05 FIX: 已执行的跨链更新哈希
     mapping(bytes32 => bool) public executedUpdates;
+    /// @notice [L-12 FIX] 已见 relayer 列表（供审批存储清理遍历，规模受 relayer 数量约束）
+    address[] private _seenRelayers;
+    mapping(address => bool) private _knownRelayer;
 
     // ============ Events ============
     event CrossChainSynced(
@@ -131,7 +134,9 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         }
 
         // 2. 验证 nonce（防重放）
-        if (nonce <= syncNonce) {
+        // [L-12 FIX] 严格 +1 递增：原实现 nonce > syncNonce 即可，跳号提交
+        // （如直接提交 999）会使中间所有合法 nonce 永久作废。
+        if (nonce != syncNonce + 1) {
             revert ReplayDetected(nonce, syncNonce + 1);
         }
 
@@ -160,6 +165,11 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         }
 
         // H-05 FIX: 记录当前 relayer 的批准
+        // [L-12 FIX] 同步维护 relayer 列表（供执行后的审批存储清理遍历）
+        if (!_knownRelayer[msg.sender]) {
+            _knownRelayer[msg.sender] = true;
+            _seenRelayers.push(msg.sender);
+        }
         if (!relayerApprovals[updateHash][msg.sender]) {
             relayerApprovals[updateHash][msg.sender] = true;
             approvalCount[updateHash]++;
@@ -181,6 +191,13 @@ contract FidesBridgeReceiver is Initializable, AccessControlUpgradeable, UUPSUpg
         lastSyncTime = block.timestamp;
         lastSyncedRoot = newRoot;
         executedUpdates[updateHash] = true;
+
+        // [L-12 FIX] 执行后清理审批存储（原实现永久累积 relayerApprovals/
+        // approvalCount，存储无界缓慢增长）
+        delete approvalCount[updateHash];
+        for (uint256 i = 0; i < _seenRelayers.length; i++) {
+            delete relayerApprovals[updateHash][_seenRelayers[i]];
+        }
 
         // 7. 记录历史
         if (rootHistory.length >= MAX_ROOT_HISTORY) {

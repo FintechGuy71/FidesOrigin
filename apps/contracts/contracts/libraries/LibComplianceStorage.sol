@@ -51,10 +51,9 @@ library LibComplianceStorage {
         mapping(address => IAssetCompliance.IssuerPolicy) issuerPolicies;
         mapping(address => mapping(uint256 => uint256)) dailySpent;
         mapping(address => uint256) lastTransferTime;
-        // Upgrade timelock
-        uint256 upgradeTimelockDelay;
-        mapping(bytes32 => uint256) upgradeProposals;
-        mapping(address => bytes32) implementationToProposal;
+        // [M-8 FIX] upgradeTimelockDelay / upgradeProposals / implementationToProposal
+        // 已移除（AdminFacet 死代码，无任何执行方）。注意：此为存储布局变更，
+        // 仅适用于全新部署，不适用于已部署实例的原地升级。
         // [F-05 FIX R2] 未知地址（无风险档案）是否阻断。默认 false = fail-open，
         // 与 FidesCompliance/ComplianceEngine 语义一致；ADMIN 可开启严格模式。
         bool blockUnknownProfiles;

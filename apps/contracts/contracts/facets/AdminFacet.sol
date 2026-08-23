@@ -51,16 +51,8 @@ contract AdminFacet is BaseFacet {
     event ZeroAddressRejected(string functionName, uint256 timestamp);
     event ContractPaused(address indexed account, uint256 timestamp);
     event ContractUnpaused(address indexed account, uint256 timestamp);
-    event UpgradeProposed(
-        bytes32 indexed proposalId,
-        address indexed newImplementation,
-        uint256 executeAfter
-    );
-    event UpgradeExecuted(
-        bytes32 indexed proposalId,
-        address indexed newImplementation
-    );
-    event UpgradeTimelockDelayUpdated(uint256 oldDelay, uint256 newDelay);
+    // [M-8 FIX] UpgradeProposed / UpgradeExecuted / UpgradeTimelockDelayUpdated
+    // 事件已随死代码移除
 
     // ============ Initializer ============
     function initialize(
@@ -79,6 +71,7 @@ contract AdminFacet is BaseFacet {
             revert InvalidAddress();
         if (_riskRegistry.code.length == 0 || _policyEngine.code.length == 0)
             revert NotAContract();
+        if (_admin == address(0)) revert InvalidAddress();
 
         s.riskRegistry = RiskRegistry(_riskRegistry);
         s.policyEngine = PolicyEngine(_policyEngine);
@@ -86,8 +79,6 @@ contract AdminFacet is BaseFacet {
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ADMIN_ROLE, _admin);
         _grantRole(OPERATOR_ROLE, _admin);
-
-        s.upgradeTimelockDelay = 2 days;
     }
 
     // ============ Setters ============
@@ -162,40 +153,10 @@ contract AdminFacet is BaseFacet {
         emit ContractUnpaused(msg.sender, block.timestamp);
     }
 
-    // ============ Upgrade Timelock ============
-    function proposeUpgrade(address newImpl)
-        external
-        onlyRole(ADMIN_ROLE)
-        returns (bytes32 proposalId)
-    {
-        if (newImpl == address(0)) revert InvalidAddress();
-        LibComplianceStorage.AppStorage storage s = LibComplianceStorage
-            .diamondStorage();
-        proposalId = keccak256(
-            abi.encode(newImpl, block.chainid, block.timestamp)
-        );
-        s.upgradeProposals[proposalId] =
-            block.timestamp +
-            s.upgradeTimelockDelay;
-        s.implementationToProposal[newImpl] = proposalId;
-        emit UpgradeProposed(
-            proposalId,
-            newImpl,
-            s.upgradeProposals[proposalId]
-        );
-    }
-
-    function setUpgradeTimelockDelay(uint256 delay)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
-        if (delay < 1 hours || delay > 30 days) revert InvalidDelay();
-        uint256 old = LibComplianceStorage
-            .diamondStorage()
-            .upgradeTimelockDelay;
-        LibComplianceStorage.diamondStorage().upgradeTimelockDelay = delay;
-        emit UpgradeTimelockDelayUpdated(old, delay);
-    }
+    // [M-8 FIX] Upgrade Timelock 死代码已移除：proposeUpgrade / setUpgradeTimelockDelay /
+    // upgradeProposals / implementationToProposal 全套状态与函数没有任何执行方
+    // （Diamond 的真实升级路径是 DiamondCutFacet.proposeDiamondCut + 48h 时间锁），
+    // 只会误导审计者与集成方以为存在双重升级保护。
 
     // ============ Role Management ============
     function grantRoleWithReason(
@@ -270,9 +231,7 @@ contract AdminFacet is BaseFacet {
         return LibComplianceStorage.diamondStorage().quarantineNonce;
     }
 
-    function upgradeTimelockDelay() external view returns (uint256) {
-        return LibComplianceStorage.diamondStorage().upgradeTimelockDelay;
-    }
+    // [M-8 FIX] upgradeTimelockDelay() 查询函数已随死代码移除
 
     function addressCheckCount(address addr) external view returns (uint256) {
         return LibComplianceStorage.diamondStorage().addressCheckCount[addr];
@@ -296,41 +255,76 @@ contract AdminFacet is BaseFacet {
         return LibComplianceStorage.diamondStorage().lastTransferTime[account];
     }
 
-    function implementationToProposal(address impl)
-        external
-        view
-        returns (bytes32)
-    {
-        return LibComplianceStorage
-            .diamondStorage()
-            .implementationToProposal[impl];
-    }
+    // [M-8 FIX] implementationToProposal / upgradeProposals 查询函数已随死代码一并移除
 
-    function upgradeProposals(bytes32 proposalId)
-        external
-        view
-        returns (uint256)
-    {
-        return LibComplianceStorage
-            .diamondStorage()
-            .upgradeProposals[proposalId];
-    }
+    // ============ ETH Withdrawal（两步时间锁） ============
+    /// @notice [M-7 FIX] ETH 提取时间锁参数（与 QuarantineVault F-10 FIX 标准对齐：
+    ///      原实现仅 owner 校验且无时间锁——同一代码库内两套标准不一致）
+    uint256 public constant WITHDRAWAL_DELAY = 48 hours;
+    address public pendingWithdrawalTo;
+    uint256 public pendingWithdrawalAmount;
+    uint256 public pendingWithdrawalExecuteAfter;
 
-    // ============ ETH Withdrawal ============
+    event ETHWithdrawalProposed(address indexed to, uint256 amount, uint256 executeAfter);
+    event ETHWithdrawalExecuted(address indexed to, uint256 amount);
+    event ETHWithdrawalCancelled(address indexed to);
+    error NothingPending();
+    error TooEarly(uint256 availableAt);
+
     /**
-     * @notice C-4 FIX: 提取 Diamond 合约中收到的 ETH
-     * @dev 只有合约 owner 可以调用，防止 ETH 被永久锁定
-     * @param to 接收地址
-     * @param amount 提取金额（0 表示全部）
+     * @notice [M-7 FIX] 提议提取 Diamond 合约中收到的 ETH（48 小时后可执行）
+     * @dev 给治理留出拦截窗口；金额以提案时余额快照为准，多出部分留存
      */
-    function withdrawETH(address to, uint256 amount) external {
+    function proposeWithdrawETH(address to) external {
         LibDiamond.enforceIsContractOwner();
         if (to == address(0)) revert InvalidAddress();
         uint256 balance = address(this).balance;
-        uint256 withdrawAmount = amount == 0 ? balance : amount;
-        require(withdrawAmount <= balance, "Insufficient ETH balance");
-        (bool success, ) = payable(to).call{value: withdrawAmount}("");
-        require(success, "ETH withdrawal failed");
+        require(balance > 0, "No ETH to withdraw");
+        pendingWithdrawalTo = to;
+        pendingWithdrawalAmount = balance;
+        pendingWithdrawalExecuteAfter = block.timestamp + WITHDRAWAL_DELAY;
+        emit ETHWithdrawalProposed(to, balance, pendingWithdrawalExecuteAfter);
+    }
+
+    /**
+     * @notice [M-7 FIX] 时间锁到期后执行提取
+     */
+    function executeWithdrawETH() external nonReentrant {
+        LibDiamond.enforceIsContractOwner();
+        address to = pendingWithdrawalTo;
+        uint256 amount = pendingWithdrawalAmount;
+        if (to == address(0)) revert NothingPending();
+        if (block.timestamp < pendingWithdrawalExecuteAfter) {
+            revert TooEarly(pendingWithdrawalExecuteAfter);
+        }
+        require(address(this).balance >= amount, "Insufficient ETH balance");
+        delete pendingWithdrawalTo;
+        delete pendingWithdrawalAmount;
+        delete pendingWithdrawalExecuteAfter;
+        (bool ok, ) = to.call{value: amount}("");
+        require(ok, "ETH withdrawal failed");
+        emit ETHWithdrawalExecuted(to, amount);
+    }
+
+    /**
+     * @notice [M-7 FIX] 取消待执行的提取提案
+     */
+    function cancelWithdrawETH() external {
+        LibDiamond.enforceIsContractOwner();
+        if (pendingWithdrawalTo == address(0)) revert NothingPending();
+        address to = pendingWithdrawalTo;
+        delete pendingWithdrawalTo;
+        delete pendingWithdrawalAmount;
+        delete pendingWithdrawalExecuteAfter;
+        emit ETHWithdrawalCancelled(to);
+    }
+
+    /**
+     * @notice [M-7 FIX] 旧版单步提取已移除
+     * @dev DEPRECATED: 使用 proposeWithdrawETH + executeWithdrawETH（48h 时间锁）
+     */
+    function withdrawETH(address, uint256) external view {
+        revert("AF: use proposeWithdrawETH + executeWithdrawETH (timelock)");
     }
 
     // ============ Complex Getters ============

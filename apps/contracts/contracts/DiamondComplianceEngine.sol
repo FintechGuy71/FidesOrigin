@@ -11,6 +11,12 @@ contract DiamondComplianceEngine {
         address _init,
         bytes memory _calldata
     ) payable {
+        // [L-1 FIX] 零地址校验：owner=0 将永久锁死 diamondCut 与 withdrawETH
+        // （enforceIsContractOwner 要求 msg.sender==address(0) 不可达）
+        require(
+            _contractOwner != address(0),
+            "DiamondComplianceEngine: owner cannot be zero address"
+        );
         LibDiamond.setContractOwner(_contractOwner);
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }

@@ -48,17 +48,33 @@ class Settings(BaseSettings):
             if test_url:
                 return test_url
         password = self.DB_PASSWORD or os.environ.get("DB_PASSWORD", "")
-        if not password:
-            # 无密码时使用无密码连接
-            return f"postgresql+asyncpg://{self.DB_USER}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        return f"postgresql+asyncpg://{self.DB_USER}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        # [L-20 FIX] 使用 URL.create 安全构造：原实现 f-string 手工拼接，
+        # 密码含 @ : / # ? 等特殊字符时生成的连接串非法（部署陷阱）。
+        from sqlalchemy.engine import URL
+        return URL.create(
+            drivername="postgresql+asyncpg",
+            username=self.DB_USER,
+            password=password or None,
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            database=self.DB_NAME,
+        ).render_as_string(hide_password=False)
 
     @cached_property
     def DATABASE_URL_SYNC(self) -> str:
         """同步数据库 URL（用于 Alembic，首次访问后缓存）"""
         if self.DATABASE_URL_SYNC_VALUE:
             return self.DATABASE_URL_SYNC_VALUE
-        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        # [L-20 FIX] 同样使用 URL.create 安全构造
+        from sqlalchemy.engine import URL
+        return URL.create(
+            drivername="postgresql",
+            username=self.DB_USER,
+            password=self.DB_PASSWORD or None,
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            database=self.DB_NAME,
+        ).render_as_string(hide_password=False)
     
     # ==================== Redis 配置 ====================
     REDIS_URL: Optional[str] = Field(default=None, description="Redis URL (e.g. redis://localhost:6379)")

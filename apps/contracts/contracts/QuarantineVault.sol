@@ -455,15 +455,10 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 
-        // P0 FIX: 支持 ETH 释放，gas 限制提高到 10000 以兼容合约钱包 (Gnosis Safe / Argent)
-        if (record.token == address(0)) {
-            // ETH 释放路径 — 限制 gas 防止恶意接收方消耗无限 gas
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
-            require(ok, "ETH release failed");
-        } else {
-            // ERC20 释放路径
-            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
-        }
+        // [L-4 FIX] 移除 ETH 释放分支：隔离入口（_quarantineFunds/batchDeposit）
+        // 强制 token != address(0)，ETH 隔离记录永远不可能存在，该分支为死代码。
+        // 误转入的 ETH 由 proposeWithdrawETH/executeWithdrawETH 两步时间锁路径处理。
+        IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
 
         emit FundsReleased(
             recordId,
@@ -505,17 +500,10 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             }
 
             // [C-01 FIX R2] 先执行转账，成功后再写入状态。
-            // 原实现先标记 released 再转账：ETH 转账失败时 continue 不回滚，
+            // 原实现先标记 released 再转账：转账失败时 continue 不回滚，
             // 记录永久卡在"已释放"状态但资金未到账，且无法再补救。
-            if (record.token == address(0)) {
-                (bool ok, ) = payable(record.originalOwner).call{value: record.amount, gas: 10000}("");
-                if (!ok) {
-                    emit BatchReleaseFailed(recordId, "ETH transfer failed");
-                    continue; // 未标记状态，可后续重试
-                }
-            } else {
-                IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
-            }
+            // [L-4 FIX] ETH 分支已移除（隔离入口强制 ERC20，ETH 记录不可能存在）
+            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
 
             // 转账成功后才更新状态与统计
             record.released = true;
@@ -582,15 +570,8 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
         require(tokenQuarantinedAmount[record.token] >= record.amount, "QV: underflow");
         tokenQuarantinedAmount[record.token] -= record.amount;
 
-        if (record.token == address(0)) {
-            // [F-09 FIX R2] claimFunds 取消 gas 限制：originalOwner 本人调用且受
-            // nonReentrant 保护，无重入面；Gnosis Safe 等合约钱包的 receive()
-            // 需要 >10000 gas，原 10000 限制会导致用户永久无法提取。
-            (bool ok, ) = payable(record.originalOwner).call{value: record.amount}("");
-            require(ok, "ETH claim failed");
-        } else {
-            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
-        }
+        // [L-4 FIX] ETH 分支已移除（隔离入口强制 ERC20，ETH 隔离记录不可能存在）
+        IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
 
         emit FundsReleased(
             recordId,

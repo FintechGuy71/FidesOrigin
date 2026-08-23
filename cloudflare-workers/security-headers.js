@@ -23,11 +23,17 @@ export default {
       newHeaders.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
     }
     // [PERF-FIX] 静态资源长期缓存，减少回源请求
+    // [L-25 FIX] .json 不再套用一年 immutable 缓存：public/ 下的数据类 JSON
+    // （风险数据快照等）更新会被边缘缓存屏蔽一年。版本化资源（带内容哈希的
+    // 文件名）才适合 immutable；JSON 改为短缓存。
     if (!newHeaders.has('cache-control') && request.method === 'GET') {
       const url = new URL(request.url);
-      const isAsset = /\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|json)$/.test(url.pathname);
+      const isAsset = /\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$/.test(url.pathname);
+      const isJson = /\.json$/.test(url.pathname);
       if (isAsset) {
         newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (isJson) {
+        newHeaders.set('Cache-Control', 'public, max-age=300');
       } else if (url.pathname.endsWith('.html') || url.pathname === '/') {
         newHeaders.set('Cache-Control', 'public, max-age=3600');
       }

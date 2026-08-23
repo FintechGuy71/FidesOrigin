@@ -24,13 +24,19 @@ const logger = createLogger('ChainSyncer');
 const MIN_CONFIRMATIONS = parseInt(process.env.MIN_CONFIRMATIONS || '6', 10);
 
 // ==================== 合约 ABI ====================
+// [M-2 FIX] ABI 对齐仓库内真实合约：原 updateMerkleRoot(bytes32,uint256,uint256)
+// 三参数签名在仓库内任何合约中都不存在（MerkleRiskRegistry 为一参数），
+// 链路必然失败。现指向 MerkleRiskRegistry.updateMerkleRootFromOracle(bytes32)
+// （[M-2 FIX] 新增的 ORACLE_ROLE 专用入口，带 1 小时频率限制）。
+// totalAddresses/version 改由链下日志/审计记录承载，不再要求合约支持。
 const RISK_REGISTRY_ABI = [
-  'function updateMerkleRoot(bytes32 merkleRoot, uint256 totalAddresses, uint256 version) external',
-  'function getCurrentMerkleRoot() external view returns (bytes32)',
-  'function getTotalAddresses() external view returns (uint256)',
-  'function getVersion() external view returns (uint256)',
+  'function updateMerkleRootFromOracle(bytes32 newRoot) external',
+  'function updateMerkleRoot(bytes32 newRoot) external',
+  'function merkleRoot() external view returns (bytes32)',
+  'function merkleRootHistory(uint256) external view returns (bytes32)',
+  'function lastOracleRootUpdate() external view returns (uint256)',
   'function owner() external view returns (address)',
-  'event MerkleRootUpdated(bytes32 indexed merkleRoot, uint256 totalAddresses, uint256 version, uint256 timestamp)',
+  'event MerkleRootUpdated(bytes32 indexed oldRoot, bytes32 indexed newRoot, uint256 timestamp, string version)',
 ];
 
 // ==================== 模块状态 ====================
@@ -444,19 +450,19 @@ async function syncMerkleRootToChain(merkleRoot, totalAddresses, auditLogger) {
   if (!contract || !signer || !provider)
     throw new Error('区块链组件未初始化');
 
-  const currentRoot = await contract.getCurrentMerkleRoot();
+  // [M-2 FIX] 读取当前 root 用 merkleRoot()（ABI 已对齐真实合约）
+  const currentRoot = await contract.merkleRoot();
   if (currentRoot.toLowerCase() === merkleRoot.toLowerCase()) {
     secureLog.info('[Sync] Merkle Root 未变化，跳过链上更新');
     return { txHash: null, skipped: true };
   }
 
-  const currentVersion = await contract.getVersion();
   const nonce = await nonceManager.getNonce();
 
-  const txData = await contract.updateMerkleRoot.populateTransaction(
-    merkleRoot,
-    totalAddresses,
-    currentVersion + 1n
+  // [M-2 FIX] 调用 ORACLE_ROLE 专用入口 updateMerkleRootFromOracle(bytes32)
+  // （原三参数 updateMerkleRoot(bytes32,uint256,uint256) 在仓库内不存在对应合约）
+  const txData = await contract.updateMerkleRootFromOracle.populateTransaction(
+    merkleRoot
   );
 
   const unsignedTx = {
@@ -509,23 +515,22 @@ async function syncMerkleRootToChain(merkleRoot, totalAddresses, auditLogger) {
 
   nonceManager.confirmNonce(nonce);
 
-  const newVersion = Number(currentVersion) + 1;
+  // [M-2 FIX] 版本号不再依赖合约（链下审计承载 totalAddresses/版本语义）
   secureLog.info(
-    `[Sync] Merkle Root 已更新: ${merkleRoot}, version=${newVersion}, tx=${tx.hash}`
+    `[Sync] Merkle Root 已更新: ${merkleRoot}, totalAddresses=${totalAddresses}, tx=${tx.hash}`
   );
 
   if (auditLogger) {
     auditLogger.log('MERKLE_ROOT_UPDATED', {
       merkleRoot,
       totalAddresses,
-      version: newVersion,
       txHash: tx.hash,
       blockNumber: receipt.blockNumber,
       gasUsed: receipt.gasUsed?.toString(),
     });
   }
 
-  return { txHash: tx.hash, skipped: false, version: newVersion };
+  return { txHash: tx.hash, skipped: false };
 }
 
 function getProvider() {

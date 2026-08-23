@@ -72,6 +72,12 @@ abstract contract BaseFacet {
 
     // ============ AccessControl Functions ============
 
+    // [L-9 FIX] 标准角色事件（与 OZ AccessControl 对齐）：
+    // 原实现 _grantRole/_revokeRole 静默变更角色，仅 *WithReason 封装路径
+    // 有事件——其他内部调用路径完全无链上审计痕迹。
+    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
+    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+
     function hasRole(bytes32 role, address account)
         public
         view
@@ -87,12 +93,14 @@ abstract contract BaseFacet {
     function _grantRole(bytes32 role, address account) internal {
         if (!hasRole(role, account)) {
             baseFacetStorage().roles[role][account] = true;
+            emit RoleGranted(role, account, msg.sender);
         }
     }
 
     function _revokeRole(bytes32 role, address account) internal {
         if (hasRole(role, account)) {
             baseFacetStorage().roles[role][account] = false;
+            emit RoleRevoked(role, account, msg.sender);
         }
     }
 

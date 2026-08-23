@@ -89,15 +89,23 @@ function cleanupMemoryStore() {
 setInterval(cleanupMemoryStore, 5 * 60 * 1000);
 
 // ── IP extraction ─────────────────────────────────────────────────────────
+// [M-12 FIX] 代理头默认不受信任：客户端可伪造 x-real-ip / x-forwarded-for
+// 无限轮换绕过限流。默认仅取 TCP 对端地址；仅在 TRUST_PROXY=true（部署于
+// 会剥离/覆写这些头的可信反向代理之后）时才信任代理头。
+const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
+
 function getClientIp(req) {
-  // [High Fix] Prefer Vercel's x-real-ip, then x-forwarded-for, then remoteAddress.
-  const rawIp =
-    req.headers?.['x-real-ip'] ||
-    req.headers?.['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    'unknown';
-  // Strip IPv6 prefix from IPv4-mapped addresses (e.g., ::ffff:192.168.1.1)
-  return rawIp.replace(/^::ffff:/, '');
+  if (TRUST_PROXY) {
+    const rawIp =
+      req.headers?.['x-real-ip'] ||
+      req.headers?.['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown';
+    // Strip IPv6 prefix from IPv4-mapped addresses (e.g., ::ffff:192.168.1.1)
+    return rawIp.replace(/^::ffff:/, '');
+  }
+  const remote = req.socket?.remoteAddress || 'unknown';
+  return remote.replace(/^::ffff:/, '');
 }
 
 // ── Sliding window logic (Redis) ─────────────────────────────────────────

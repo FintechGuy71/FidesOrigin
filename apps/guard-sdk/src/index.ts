@@ -146,6 +146,10 @@ export class FidesGuard {
 
   /**
    * 评估交易风险
+   * @dev [H-6 FIX] 缓存键修复：原实现 cacheKey = to_token，忽略 from 与金额——
+   *      同一收款方 1 小时内复用首次评估：不同发送方（含受制裁地址）共享结论，
+   *      且 maxTxAmount 等金额相关规则完全失效（$10 交易缓存 ALLOW 后，
+   *      $10M 同地址交易直接复用）。现键入 from+to+token+value 四要素。
    */
   async checkTransaction(tx: TransactionRequest): Promise<RiskAssessment> {
     const intent = {
@@ -157,8 +161,13 @@ export class FidesGuard {
       chainId: tx.chainId || 1
     };
 
-    // 缓存检查（基于to地址）
-    const cacheKey = `${tx.to?.toLowerCase()}_${tx.token?.toLowerCase()}`;
+    // [H-6 FIX] 缓存键包含 from 与金额
+    const cacheKey = [
+      tx.from?.toLowerCase() ?? '',
+      tx.to?.toLowerCase() ?? '',
+      tx.token?.toLowerCase() ?? '',
+      tx.value ?? '0'
+    ].join('_');
     if (this.cacheEnabled && tx.to) {
       const cached = this.localCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -223,13 +232,17 @@ export class FidesGuard {
   }
 
   private _parseAssessment(result: any): RiskAssessment {
-    const actionMap = ['ALLOW', 'WARN', 'BLOCK'];
-    const categoryMap = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'SANCTIONED'];
+    // [L-23 FIX] 枚举越界防御：未知 action/category 值兜底为 UNKNOWN，
+    // 不再返回 undefined（原实现 actionMap[3+] 为 undefined 透传给调用方）
+    const actionMap = ['ALLOW', 'WARN', 'BLOCK'] as const;
+    const categoryMap = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'SANCTIONED'] as const;
+    const actionIdx = Number(result.action);
+    const categoryIdx = Number(result.category);
 
     return {
-      action: actionMap[Number(result.action)] as Action,
+      action: (actionMap[actionIdx] ?? 'WARN') as Action,
       riskScore: Number(result.riskScore),
-      category: categoryMap[Number(result.category)] as RiskCategory,
+      category: (categoryMap[categoryIdx] ?? 'UNKNOWN') as RiskCategory,
       tags: result.tags.map((t: string) => t.toString()),
       confidence: Number(result.confidence),
       reason: result.reason,

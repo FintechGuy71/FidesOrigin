@@ -86,41 +86,44 @@ describe('FidesCompliance Extended', function () {
       expect(riskScore).to.equal(98);
     });
 
-    it('should DENY transaction when deadline has expired', async function () {
+    it('should REVERT when deadline has expired [L-3 FIX]', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp - 1;
-      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
-        addr1.address,
-        addr2.address,
-        ethers.parseEther('1'),
-        ethers.ZeroAddress,
-        deadline
-      );
-      expect(allowed).to.be.false;
+      await expect(
+        fidesCompliance.evaluateTransaction.staticCall(
+          addr1.address,
+          addr2.address,
+          ethers.parseEther('1'),
+          ethers.ZeroAddress,
+          deadline
+        )
+      ).to.be.revertedWithCustomError(fidesCompliance, 'DeadlineExpired');
     });
 
-    it('should DENY transaction when emergency mode is active', async function () {
+    it('should REVERT when emergency mode is active [L-3 FIX]', async function () {
       await fidesCompliance.connect(owner).activateEmergency();
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
-        addr1.address,
-        addr2.address,
-        ethers.parseEther('1'),
-        ethers.ZeroAddress,
-        deadline
-      );
-      expect(allowed).to.be.false;
+      await expect(
+        fidesCompliance.evaluateTransaction.staticCall(
+          addr1.address,
+          addr2.address,
+          ethers.parseEther('1'),
+          ethers.ZeroAddress,
+          deadline
+        )
+      ).to.be.revertedWithCustomError(fidesCompliance, 'EmergencyModeActive');
     });
 
-    it('should DENY transaction for zero address', async function () {
+    it('should REVERT for zero address [L-3 FIX]', async function () {
       const deadline = (await ethers.provider.getBlock('latest')).timestamp + 3600;
-      const [allowed] = await fidesCompliance.evaluateTransaction.staticCall(
-        ethers.ZeroAddress,
-        addr2.address,
-        ethers.parseEther('1'),
-        ethers.ZeroAddress,
-        deadline
-      );
-      expect(allowed).to.be.false;
+      await expect(
+        fidesCompliance.evaluateTransaction.staticCall(
+          ethers.ZeroAddress,
+          addr2.address,
+          ethers.parseEther('1'),
+          ethers.ZeroAddress,
+          deadline
+        )
+      ).to.be.revertedWithCustomError(fidesCompliance, 'InvalidAddress');
     });
 
     it('should use engine decision when engine is set', async function () {
@@ -366,9 +369,10 @@ describe('FidesCompliance Extended', function () {
       ).to.be.revertedWith('Must be greater than minRiskScoreForQuarantine');
     });
 
-    it('should allow admin to set minUpdateInterval', async function () {
-      await fidesCompliance.connect(owner).setMinUpdateInterval(3600);
-      expect(await fidesCompliance.minUpdateInterval()).to.equal(3600);
+    it('should reject legacy setMinUpdateInterval [L-7 FIX: dead config removed]', async function () {
+      await expect(
+        fidesCompliance.connect(owner).setMinUpdateInterval(3600)
+      ).to.be.revertedWith('FC: minUpdateInterval removed (unused config)');
     });
 
     it('should allow admin to set emergencyCooldown', async function () {
@@ -530,18 +534,10 @@ describe('FidesCompliance Extended', function () {
         .to.emit(fidesCompliance, 'PolicyEngineUpdated');
     });
 
-    it('should propose and execute quarantine vault update', async function () {
-      const MockQV = await ethers.getContractFactory('QuarantineVault');
-      const mockQV = await MockQV.deploy();
-      await mockQV.waitForDeployment();
-
-      await fidesCompliance.connect(owner).proposeQuarantineVault(await mockQV.getAddress());
-
-      await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
-      await ethers.provider.send('evm_mine');
-
-      await expect(fidesCompliance.connect(owner).executeQuarantineVaultUpdate())
-        .to.emit(fidesCompliance, 'QuarantineVaultUpdated');
+    it('should reject legacy quarantine vault setters [M-6 FIX: dead reference removed]', async function () {
+      // 函数已随死引用移除——ABI 上不存在该函数
+      expect(fidesCompliance.proposeQuarantineVault).to.be.undefined;
+      expect(fidesCompliance.executeQuarantineVaultUpdate).to.be.undefined;
     });
 
     it('should revert proposing zero address', async function () {
@@ -552,26 +548,51 @@ describe('FidesCompliance Extended', function () {
   });
 
   describe('Whitelist Management', function () {
-    it('should allow admin to add and remove from whitelist', async function () {
-      await expect(fidesCompliance.connect(owner).setWhitelist(addr1.address, true))
+    // [M-5 FIX] 白名单已改为两步时间锁（propose + 48h + execute）：
+    // 测试用 evm 时间推进越过 SETTER_DELAY 后验证生效/移除。
+    it('should allow admin to add and remove from whitelist via two-step timelock', async function () {
+      await expect(fidesCompliance.connect(owner).proposeWhitelist(addr1.address, true))
         .to.emit(fidesCompliance, 'WhitelistUpdated');
+      // 未到时间锁不可执行
+      await expect(fidesCompliance.connect(owner).executeWhitelistUpdate())
+        .to.be.revertedWithCustomError(fidesCompliance, 'TooEarly');
+      // 推进 48h+1s
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await fidesCompliance.connect(owner).executeWhitelistUpdate();
       expect(await fidesCompliance.isWhitelisted(addr1.address)).to.be.true;
 
-      await expect(fidesCompliance.connect(owner).setWhitelist(addr1.address, false))
+      // 移除（两步）
+      await fidesCompliance.connect(owner).proposeWhitelist(addr1.address, false);
+      await ethers.provider.send('evm_increaseTime', [48 * 3600 + 1]);
+      await ethers.provider.send('evm_mine');
+      await expect(fidesCompliance.connect(owner).executeWhitelistUpdate())
         .to.emit(fidesCompliance, 'WhitelistUpdated');
       expect(await fidesCompliance.isWhitelisted(addr1.address)).to.be.false;
     });
 
     it('should revert whitelisting zero address', async function () {
       await expect(
-        fidesCompliance.connect(owner).setWhitelist(ethers.ZeroAddress, true)
+        fidesCompliance.connect(owner).proposeWhitelist(ethers.ZeroAddress, true)
       ).to.be.revertedWithCustomError(fidesCompliance, 'InvalidAddress');
     });
 
     it('should revert whitelist management by non-admin', async function () {
       await expect(
-        fidesCompliance.connect(addr1).setWhitelist(addr2.address, true)
+        fidesCompliance.connect(addr1).proposeWhitelist(addr2.address, true)
       ).to.be.reverted;
+    });
+
+    it('should reject legacy instant setWhitelist [M-5 FIX]', async function () {
+      await expect(
+        fidesCompliance.connect(owner).setWhitelist(addr2.address, true)
+      ).to.be.revertedWith('FC: use propose/execute whitelist (timelock)');
+    });
+
+    it('should revert execute without proposal [M-5 FIX]', async function () {
+      await expect(
+        fidesCompliance.connect(owner).executeWhitelistUpdate()
+      ).to.be.revertedWithCustomError(fidesCompliance, 'WhitelistProposalNotFound');
     });
   });
 
