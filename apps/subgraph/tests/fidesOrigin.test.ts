@@ -7,7 +7,7 @@ import { ComplianceCheckPerformed, TransactionBlocked, TransactionQuarantined, Q
 
 function createMockEvent<T>(): T {
   let event = changetype<T>(new ethereum.Event());
-  event.address = Address.fromString("0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc");
+  event.address = Address.fromString("0x0x953f985f38f94d6159c0600d1f15D543895cE896");
   event.block = new ethereum.Block(
     BigInt.fromI32(1),
     BigInt.fromI32(1),

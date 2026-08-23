@@ -65,6 +65,91 @@ async function deployDirect(name, args = []) {
   return address;
 }
 
+/**
+ * 部署 Diamond 架构的合规引擎（DiamondComplianceEngine + facets）。
+ *
+ * 背景：审计修复后标准 ComplianceEngine 实现达 26.8KB，超过 EIP-170 的
+ * 24576 字节上限（旧版链上实现仅剩 235 字节余量）。Diamond 分片架构正是
+ * 为此存在（见 DEPLOYED.md 权威合约集），本部署采用 Diamond 版引擎。
+ *
+ * 选择器全局去重：多个 facet 继承 OZ AccessControl/Pausable 产生相同
+ * 选择器，LibDiamond.addFunctions 对重复选择器 revert，必须保证每个
+ * 选择器只注册到一个 facet（先到先得）。
+ */
+async function deployDiamondEngine(riskRegistry, policyEngine, signer) {
+  console.log('  ▶ DiamondComplianceEngine (Diamond + 6 facets)');
+
+  const facetNames = [
+    'DiamondCutFacet',
+    'DiamondLoupeFacet',
+    'ComplianceCoreFacet',
+    'AssetComplianceFacet',
+    'WalletComplianceFacet',
+    'AdminFacet',
+  ];
+
+  const facetAddresses = {};
+  for (const name of facetNames) {
+    const Factory = await ethers.getContractFactory(name);
+    const facet = await Factory.deploy();
+    await facet.waitForDeployment();
+    facetAddresses[name] = await facet.getAddress();
+    console.log(`    facet ${name}: ${facetAddresses[name]}`);
+  }
+
+  // 选择器计算 + 全局去重
+  const getSelectors = (abi) => {
+    const iface = new ethers.Interface(abi);
+    const out = [];
+    for (const frag of iface.fragments) {
+      if (frag.type !== 'function' || frag.name === 'initialize') continue;
+      out.push(frag.selector);
+    }
+    return out;
+  };
+  const seen = new Set();
+  const dedupe = (sels) => sels.filter((s) => !seen.has(s) && seen.add(s));
+
+  const cuts = [];
+  for (const name of facetNames) {
+    if (name === 'DiamondCutFacet') continue; // 在构造初始 cut 中处理
+    const artifact = await hre.artifacts.readArtifact(name);
+    const unique = dedupe(getSelectors(artifact.abi));
+    if (unique.length === 0) continue;
+    cuts.push({ facetAddress: facetAddresses[name], action: 0, functionSelectors: unique });
+  }
+  const diamondCutArtifact = await hre.artifacts.readArtifact('DiamondCutFacet');
+  const diamondCutSelectors = dedupe(getSelectors(diamondCutArtifact.abi));
+
+  const initialCuts = [
+    { facetAddress: facetAddresses.DiamondCutFacet, action: 0, functionSelectors: diamondCutSelectors },
+    ...cuts,
+  ];
+  console.log(`    注册选择器总数: ${seen.size}`);
+
+  // AdminFacet.initialize(riskRegistry, policyEngine, admin)
+  const adminArtifact = await hre.artifacts.readArtifact('AdminFacet');
+  const adminIface = new ethers.Interface(adminArtifact.abi);
+  const initCalldata = adminIface.encodeFunctionData('initialize', [
+    riskRegistry,
+    policyEngine,
+    signer.address,
+  ]);
+
+  const Diamond = await ethers.getContractFactory('DiamondComplianceEngine');
+  const diamond = await Diamond.deploy(
+    signer.address,
+    initialCuts,
+    facetAddresses.AdminFacet,
+    initCalldata,
+    { gasLimit: 8000000 }
+  );
+  await diamond.waitForDeployment();
+  const diamondAddr = await diamond.getAddress();
+  record('DiamondComplianceEngine', diamondAddr, { type: 'diamond', facets: facetAddresses });
+  return diamondAddr;
+}
+
 async function main() {
   const [signer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
@@ -90,7 +175,11 @@ async function main() {
 
   const riskRegistry = await deployProxyWithInit('RiskRegistry', [signer.address]);
   const policyEngine = await deployProxyWithInit('PolicyEngine', [signer.address, riskRegistry]);
-  const complianceEngine = await deployProxyWithInit('ComplianceEngine', [riskRegistry, policyEngine]);
+
+  // ═══ Phase 2: Diamond 合规引擎 ═══
+  console.log('\n━━━ Phase 2: Diamond Compliance Engine ━━━');
+
+  const complianceEngine = await deployDiamondEngine(riskRegistry, policyEngine, signer);
 
   // v3.1.0: initialize 3 参（quarantineVault 死引用已移除）
   const fidesCompliance = await deployProxyWithInit('FidesCompliance', [
@@ -99,8 +188,8 @@ async function main() {
     policyEngine,
   ]);
 
-  // ═══ Phase 2: 直接部署合约 ═══
-  console.log('\n━━━ Phase 2: Direct Contracts ━━━');
+  // ═══ Phase 3: 直接部署合约 ═══
+  console.log('\n━━━ Phase 3: Direct Contracts ━━━');
 
   const quarantineVault = await deployDirect('QuarantineVault');
   const merkleRiskRegistry = await deployDirect('MerkleRiskRegistry', [PLACEHOLDER_MERKLE_ROOT]);
@@ -113,8 +202,8 @@ async function main() {
     complianceEngine,
   ]);
 
-  // ═══ Phase 3: 角色接线（沿用 v3.0.4 部署矩阵）═══
-  console.log('\n━━━ Phase 3: Role Wiring ━━━');
+  // ═══ Phase 4: 角色接线（沿用 v3.0.4 部署矩阵）═══
+  console.log('\n━━━ Phase 4: Role Wiring ━━━');
 
   const ORACLE_ROLE = ethers.keccak256(ethers.toUtf8Bytes('ORACLE_ROLE'));
   const COMPLIANCE_ENGINE_ROLE = ethers.keccak256(ethers.toUtf8Bytes('COMPLIANCE_ENGINE_ROLE'));
@@ -122,7 +211,10 @@ async function main() {
 
   const registry = await ethers.getContractAt('RiskRegistry', riskRegistry);
   const policy = await ethers.getContractAt('PolicyEngine', policyEngine);
-  const engine = await ethers.getContractAt('ComplianceEngine', complianceEngine);
+  // Diamond 引擎：grantRole 等角色函数由 BaseFacet 存储提供（经任一 facet
+  // 的 ABI 调用均可路由），此处用 AdminFacet 的 ABI 绑定 Diamond 地址
+  const adminArtifact = await hre.artifacts.readArtifact('AdminFacet');
+  const engine = new ethers.Contract(complianceEngine, adminArtifact.abi, signer);
 
   const grantAndRecord = async (label, contract, role, account, resultsKey) => {
     const tx = await contract.grantRole(role, account);
@@ -131,16 +223,24 @@ async function main() {
     console.log(`  ✅ ${label}`);
   };
 
-  await grantAndRecord('RiskRegistry.ORACLE_ROLE → ComplianceEngine', registry, ORACLE_ROLE, complianceEngine, 'RiskRegistry.ORACLE_ROLE');
+  // Diamond 引擎：审计修复 L-9 后角色管理走 grantRoleWithReason（带事件留痕）
+  const grantWithReason = async (label, role, account, resultsKey) => {
+    const tx = await engine.grantRoleWithReason(role, account, 'v3.1.0 deployment wiring');
+    await tx.wait();
+    (deploymentResults.roles[resultsKey] ||= []).push(account);
+    console.log(`  ✅ ${label}`);
+  };
+
+  await grantAndRecord('RiskRegistry.ORACLE_ROLE → ComplianceEngine(Diamond)', registry, ORACLE_ROLE, complianceEngine, 'RiskRegistry.ORACLE_ROLE');
   await grantAndRecord('RiskRegistry.ORACLE_ROLE → deployer', registry, ORACLE_ROLE, signer.address, 'RiskRegistry.ORACLE_ROLE');
-  await grantAndRecord('PolicyEngine.COMPLIANCE_ENGINE_ROLE → ComplianceEngine', policy, COMPLIANCE_ENGINE_ROLE, complianceEngine, 'PolicyEngine.COMPLIANCE_ENGINE_ROLE');
-  await grantAndRecord('ComplianceEngine.OPERATOR_ROLE → deployer', engine, OPERATOR_ROLE, signer.address, 'ComplianceEngine.OPERATOR_ROLE');
+  await grantAndRecord('PolicyEngine.COMPLIANCE_ENGINE_ROLE → ComplianceEngine(Diamond)', policy, COMPLIANCE_ENGINE_ROLE, complianceEngine, 'PolicyEngine.COMPLIANCE_ENGINE_ROLE');
+  await grantWithReason('ComplianceEngine(Diamond).OPERATOR_ROLE → deployer', OPERATOR_ROLE, signer.address, 'ComplianceEngine.OPERATOR_ROLE');
 
   // MerkleRiskRegistry 的 ORACLE_ROLE 已在构造中授予 deployer（data-sync 签名者
   // 生产环境应替换为独立 KMS 密钥，见 DEPLOYED.md 检查清单）
 
-  // ═══ Phase 4: 冒烟验证 ═══
-  console.log('\n━━━ Phase 4: Smoke Tests ━━━');
+  // ═══ Phase 5: 冒烟验证 ═══
+  console.log('\n━━━ Phase 5: Smoke Tests ━━━');
 
   const fc = await ethers.getContractAt('FidesCompliance', fidesCompliance);
   const regView = await ethers.getContractAt('RiskRegistry', riskRegistry);
@@ -152,9 +252,14 @@ async function main() {
   console.log(`  MerkleRiskRegistry.merkleRoot() → ${root} (占位 root，待 data-sync 推送)`);
   const fcVersion = await fc.hasRole(await fc.DEFAULT_ADMIN_ROLE(), signer.address);
   console.log(`  FidesCompliance deployer is admin → ${fcVersion}`);
+  // Diamond 冒烟：Loupe 应能返回已注册 facet
+  const loupeArtifact = await hre.artifacts.readArtifact('DiamondLoupeFacet');
+  const loupe = new ethers.Contract(complianceEngine, loupeArtifact.abi, signer);
+  const facetList = await loupe.facetAddresses();
+  console.log(`  Diamond 已注册 facet 数 → ${facetList.length} (预期 6)`);
 
-  // ═══ Phase 5: 保存部署记录 ═══
-  console.log('\n━━━ Phase 5: Save Deployment Record ━━━');
+  // ═══ Phase 6: 保存部署记录 ═══
+  console.log('\n━━━ Phase 6: Save Deployment Record ━━━');
 
   deploymentResults.network = networkName;
   deploymentResults.chainId = Number(network.chainId);
