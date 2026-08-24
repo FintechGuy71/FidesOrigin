@@ -110,10 +110,10 @@ const CONFIG = {
   chainId: 11155111,
   rpc: 'https://ethereum-sepolia-rpc.publicnode.com',
   contracts: {
-    RiskRegistry: '0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3',
-    PolicyEngine: '0xF8f89120f5628aE3De747f55e7d00D79633002c4',
-    ComplianceEngine: '0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa',
-    CompliantStableCoin: '0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A',
+    RiskRegistry: '0x953f985f38f94d6159c0600d1f15D543895cE896',
+    PolicyEngine: '0xCA12BB2daD2a6D429277823366D8C88a490EDDeA',
+    ComplianceEngine: '0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E',
+    CompliantStableCoin: '0x2245A8FCf6aca017327eA8950Ba510e9596595E9',
   },
   subgraph: 'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.1'
 };
@@ -288,10 +288,10 @@ query {
 
 | 合约 | 地址 |
 |------|------|
-| RiskRegistry | `0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3` |
-| PolicyEngine | `0xF8f89120f5628aE3De747f55e7d00D79633002c4` |
-| ComplianceEngine | `0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa` |
-| CompliantStableCoin | `0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A` |
+| RiskRegistry | `0x953f985f38f94d6159c0600d1f15D543895cE896` |
+| PolicyEngine | `0xCA12BB2daD2a6D429277823366D8C88a490EDDeA` |
+| ComplianceEngine | `0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E` |
+| CompliantStableCoin | `0x2245A8FCf6aca017327eA8950Ba510e9596595E9` |
 | CompliantSmartWallet | `0xC0F142DcC67a186C16e8c244b041A1c938891F0D` |
 
 ### 查询端点

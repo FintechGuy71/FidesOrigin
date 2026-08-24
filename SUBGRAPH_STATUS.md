@@ -1,5 +1,7 @@
 # Subgraph Deployment Status Report
 
+> ⚠️ **已被取代 (2026-08-25)**：本文档为 2026-08-07 的历史快照。当前权威部署状态见 **DEPLOYED.md**（v3.1.0），机器可读注册表见 `packages/config/deployments.json`。
+
 > Generated: 2026-08-07
 > Network: Sepolia Testnet (Chain ID 11155111)
 > Subgraph Path: `apps/subgraph/`

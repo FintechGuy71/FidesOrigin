@@ -61,6 +61,7 @@ OFAC/OpenSanctions/MetaMask 名单
 | MerkleRiskRegistry | `0x31A034efbe22eDc1a78ceb37F52BA869D869c33B` | 直部署（已推送 OFAC 真实 root，见下） |
 | TestUSD | `0x34c76eE51f3A063365279f510dA9503dF809D374` | 直部署（演示） |
 | CompliantStableCoin (fUSD) | `0x2245A8FCf6aca017327eA8950Ba510e9596595E9` | 直部署（演示） |
+| FidesOriginTimelock | `0x04B2Fc88b57AE8d8E6cE26d93294E3511cFbb247` | 直部署（2026-08-25 补部署；proposers/executors/admin=部署者，主网移交多签） |
 
 > 引擎采用 Diamond 架构：审计修复后标准 ComplianceEngine 实现超 EIP-170
 > 代码上限（26.8KB > 24576B，旧版仅剩 235B 余量），Diamond 分片为权威替代。

@@ -1,40 +1,67 @@
 {
-  "$comment": "FidesOrigin 合约地址唯一注册表（G-01 FIX R2）。所有前端/后端/subgraph/脚本必须从此文件读取，禁止硬编码。当前生产代：以 subgraph.yaml 同步的最新一代为准。历史各代见 docs/audit-history/CONTRACT_DEPLOYMENT_STATUS.md。",
-  "version": "2.1.0",
+  "$comment": "FidesOrigin 合约地址唯一注册表（G-01 FIX R2）。所有前端/后端/subgraph/脚本必须从此文件读取，禁止硬编码。当前生产代：v3.1.0（2026-08-24 全新部署，审计修复版）。人类可读权威文档见 DEPLOYED.md；历史各代见 docs/audit-history/ 与 CONTRACT_DEPLOYMENT_STATUS.md。",
+  "version": "3.1.0",
   "networks": {
     "sepolia": {
       "chainId": 11155111,
       "current": {
-        "RiskRegistry": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
-        "PolicyEngine": "0x87089F67A61F9643796AE154663A6a9F21196b38",
-        "ComplianceEngine": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
-        "FidesCompliance": "0x05497600618071C34CB3Fdb8A9E159e9589DEC79",
-        "CompliantStableCoin": "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A",
-        "QuarantineVault": "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b",
-        "RiskOracle": "0x33B843aEd03B2907236cD379e3B1ac2e4DE7E4dd"
+        "RiskRegistry": "0x953f985f38f94d6159c0600d1f15D543895cE896",
+        "PolicyEngine": "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA",
+        "ComplianceEngine": "0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E",
+        "FidesCompliance": "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5",
+        "QuarantineVault": "0x6803E163259B07F58111f56423aB0732858196Be",
+        "MerkleRiskRegistry": "0x31A034efbe22eDc1a78ceb37F52BA869D869c33B",
+        "FidesOriginTimelock": "0x04B2Fc88b57AE8d8E6cE26d93294E3511cFbb247",
+        "TestUSD": "0x34c76eE51f3A063365279f510dA9503dF809D374",
+        "CompliantStableCoin": "0x2245A8FCf6aca017327eA8950Ba510e9596595E9"
       },
       "proxies": {
-        "RiskRegistry": { "proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc", "implementation": "0x73F97E9e33b9eb952B8Ec7e0722523bAef555A59" },
-        "PolicyEngine": { "proxy": "0x87089F67A61F9643796AE154663A6a9F21196b38", "implementation": "0xFD89795Bb954C175267e7d78d9492Ce22200dBA7" },
-        "ComplianceEngine": { "proxy": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC", "implementation": "0x84838e8c9721e7f9475Bb379c6aF4b11240e9807" },
-        "FidesCompliance": { "proxy": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b", "implementation": "0x74c63D64a548262B0E1508Ac397C7Afc45e4d7cC" }
+        "RiskRegistry": { "proxy": "0x953f985f38f94d6159c0600d1f15D543895cE896", "implementation": "0x2426e26f6182052eD4a6B0b0ac176Dc42B2C5F08" },
+        "PolicyEngine": { "proxy": "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA", "implementation": "0x0A0db0D56A345710591174726270CAe544D9b0e2" },
+        "FidesCompliance": { "proxy": "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5", "implementation": "0xD104b05442F5032f6BCF7a4F90dfff58D9a4FBf3" }
+      },
+      "diamond": {
+        "$comment": "ComplianceEngine 为 Diamond 架构（EIP-2535），实现逻辑分布在 6 个 facets",
+        "diamond": "0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E",
+        "facets": {
+          "DiamondCutFacet": "0x496A674FACE2722b7dD62b25d58F73BF7D141a99",
+          "DiamondLoupeFacet": "0x3d9C891145226Bc49D43a82Ec3cc95Ff526EBeE3",
+          "ComplianceCoreFacet": "0x96cA1BD56bC5390Bac134Da165318f0C3e3FC20B",
+          "AssetComplianceFacet": "0xD80Ccee6167818E307bbAF436060003EeB6e415d",
+          "WalletComplianceFacet": "0x3C99EF323832FB723A6eff4A43B03A03b8CC3917",
+          "AdminFacet": "0xdB06c51C26bc3e8fdF541EcC31b3669F4E5cD7A7"
+        }
+      },
+      "notDeployed": {
+        "$comment": "v3.1.0 未部署的组件，引用前请先部署",
+        "CompliantSmartWallet": null,
+        "RiskOracle": null
       },
       "deprecated": {
         "$comment": "历史各代地址，仅供溯源，禁止新代码引用",
         "RiskRegistry_v1_direct": "0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3",
         "PolicyEngine_v1_direct": "0xF8f89120f5628aE3De747f55e7d00D79633002c4",
         "ComplianceEngine_v1_direct": "0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa",
+        "RiskRegistry_v2.1_proxy": "0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc",
+        "PolicyEngine_v2.1_proxy": "0x87089F67A61F9643796AE154663A6a9F21196b38",
+        "ComplianceEngine_v2.1_proxy": "0x50aAaf70b50fB26e588e0d296A4c042943FfB0AC",
+        "FidesCompliance_v2.1_proxy": "0x05497600618071C34CB3Fdb8A9E159e9589DEC79",
+        "QuarantineVault_v2.1": "0xF5593e26b2560b9fc71de729EA2D86F979dfd76b",
+        "RiskOracle_v2.1": "0x33B843aEd03B2907236cD379e3B1ac2e4DE7E4dd",
         "QuarantineVault_v1": "0x787CC3b07D59830DFBF0c7D93430E241c8aEf762",
         "QuarantineVault_v2": "0x497176b21CC2EDd90a8725a3023742358311a382",
+        "QuarantineVault_admin_config": "0xF7c5c4DdcB0F868a6c271334131728CecA313DFb",
         "FidesCompliance_v0": "0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594",
         "FidesCompliance_admin_config": "0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707",
-        "CompliantStableCoin_admin_config": "0xA058c5c0dD7791Ffc6A7EF14C01034d0f9F32a2B"
+        "FidesCompliance_v3.0.4_proxy": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b",
+        "CompliantStableCoin_admin_config": "0xA058c5c0dD7791Ffc6A7EF14C01034d0f9F32a2B",
+        "CompliantStableCoin_v3.0.4": "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A",
+        "TestUSD_v3.0.4": "0xeF90F9FdB868EDA98b337CbF54111b8539533ED2"
       }
     }
   },
   "usage": {
     "typescript": "import deployments from '@fidesorigin/config/deployments.json'; const addr = deployments.networks.sepolia.current.FidesCompliance;",
-    "subgraph": "apps/subgraph 的 subgraph.yaml 由 scripts/generate-subgraph-yaml 从此注册表生成（勿手改地址）",
-    "ci_check": "scripts/verify-deployments.mjs 在 CI 校验注册表与链上 VERSION() 一致"
+    "note": "subgraph 部署直接读取 apps/subgraph/subgraph.yaml（当前无模板化生成脚本，两处地址需与注册表同步维护）"
   }
 }

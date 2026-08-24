@@ -104,13 +104,17 @@ const CONTRACT_ABI = [
   "event TransferBlocked(address indexed from, address indexed to, uint256 amount, string reason)"
 ];
 
+// v3.1.0 权威地址（与 DEPLOYED.md 一致；fallback 仅在 admin-config.js 未加载时使用）
 const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || Object.freeze({
-  RiskRegistry: '0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3',
-  PolicyEngine: '0xF8f89120f5628aE3De747f55e7d00D79633002c4',
-  ComplianceEngine: '0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa',
-  CompliantStableCoin: '0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A',
-  CompliantSmartWallet: '0xbe33EBA3E0d6Dc324aBF1DE1aD0E1e65DcA526AB',
-  FidesCompliance: '0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b'
+  RiskRegistry: '0x953f985f38f94d6159c0600d1f15D543895cE896',
+  PolicyEngine: '0xCA12BB2daD2a6D429277823366D8C88a490EDDeA',
+  ComplianceEngine: '0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E', // Diamond 引擎
+  CompliantStableCoin: '0x2245A8FCf6aca017327eA8950Ba510e9596595E9',
+  CompliantSmartWallet: 'PENDING', // v3.1.0 未部署
+  FidesCompliance: '0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5',
+  TestUSD: '0x34c76eE51f3A063365279f510dA9503dF809D374',
+  QuarantineVault: '0x6803E163259B07F58111f56423aB0732858196Be',
+  MerkleRiskRegistry: '0x31A034efbe22eDc1a78ceb37F52BA869D869c33B'
 });
 
 const SUBGRAPH_URL = (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRAPH_URL) || '';
