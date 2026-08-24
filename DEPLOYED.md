@@ -57,13 +57,23 @@ OFAC/OpenSanctions/MetaMask 名单
 | RiskRegistry | `0x953f985f38f94d6159c0600d1f15D543895cE896` | UUPS 代理 |
 | PolicyEngine | `0xCA12BB2daD2a6D429277823366D8C88a490EDDeA` | UUPS 代理 |
 | QuarantineVault | `0x6803E163259B07F58111f56423aB0732858196Be` | 直部署 |
-| MerkleRiskRegistry | `0x31A034efbe22eDc1a78ceb37F52BA869D869c33B` | 直部署（占位 root，待 data-sync 推送） |
+| MerkleRiskRegistry | `0x31A034efbe22eDc1a78ceb37F52BA869D869c33B` | 直部署（已推送 OFAC 真实 root，见下） |
 | TestUSD | `0x34c76eE51f3A063365279f510dA9503dF809D374` | 直部署（演示） |
 | CompliantStableCoin (fUSD) | `0x2245A8FCf6aca017327eA8950Ba510e9596595E9` | 直部署（演示） |
 
 > 引擎采用 Diamond 架构：审计修复后标准 ComplianceEngine 实现超 EIP-170
 > 代码上限（26.8KB > 24576B，旧版仅剩 235B 余量），Diamond 分片为权威替代。
 > 旧 v3.0.4 合约（`0x1176...` / `0x50aA...` 等）仍在链上但已弃用，勿用于新集成。
+
+### Merkle 风险名单状态（2026-08-24 已激活）
+
+- **数据源**：美国财政部 OFAC SDN 官方名单（`treasury.gov/ofac/downloads/sdn.csv`，2026-08-07 版）
+- **内容**：76 个 ETH 制裁地址，全部 score=100 / tier=4（CRITICAL）
+- **当前 root**：`0x1a292437361d236f51dfa198609a2ec309d8173ed253c1e47ed22c193cab4404`
+- **推送交易**：`0x90a0a04bb5771ad717e3b2f5f65941254fbeaa7039b2ed01b5ae66c2751f9980`（区块 11557471，经 `updateMerkleRootFromOracle`）
+- **链上验证**：`verifyAddress(制裁地址, 100, 4, proof)` ✅ 通过；错误分数生成证明被拒 ✅
+- **树快照**：`data-sync/cache/`（merkle-tree.json / ofac-eth-source.txt / merkle-root-latest.txt）
+- **后续更新**：data-sync 管道每日跑 `daily-sync` 自动重推（受 `MIN_ORACLE_UPDATE_INTERVAL` 频率限制）
 
 ## 部署前检查清单
 

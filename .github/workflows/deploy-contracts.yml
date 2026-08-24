@@ -52,8 +52,8 @@ jobs:
           cd apps/contracts
           npx hardhat run scripts/deploy-full.js --network ${{ github.event.inputs.network }}
 
-      # [CI-FIX-2026-08-23] Etherscan 验证为增强步骤：ETHERSCAN_API_KEY 未配置或
-      # hardhat.config 无 etherscan 段时不应让整个部署工作流显示失败（部署已成功）。
+      # [CI-FIX-2026-08-24] 使用专用验证脚本（verify-v3.1.0-sepolia.js，
+      # 覆盖 UUPS 实现代理/Diamond facets/直部署合约）；密钥未配置时跳过不失败。
       - name: Verify on Etherscan
         if: success()
         continue-on-error: true
@@ -61,7 +61,11 @@ jobs:
           ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
         run: |
           cd apps/contracts
-          npx hardhat verify --network ${{ github.event.inputs.network }} --list
+          if [ -n "$ETHERSCAN_API_KEY" ]; then
+            npx hardhat run scripts/verify-v3.1.0-sepolia.js --network ${{ github.event.inputs.network }}
+          else
+            echo "ETHERSCAN_API_KEY 未配置，跳过源码验证"
+          fi
 
       - name: Upload deployment artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 [INFO-4 FIX: pin]
