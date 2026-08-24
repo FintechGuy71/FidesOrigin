@@ -3,42 +3,398 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0;url=/blog/ofac-sanctions-screening-blockchain.html">
-  <title>FidesOrigin Blog</title>
-  <meta name="description" content="This page is available in English. Redirecting...">
-  <meta name="robots" content="noindex, follow">
-  <link rel="canonical" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
-  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html"/>
-  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/ofac-sanctions-screening-blockchain.html"/>
-  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/ofac-sanctions-screening-blockchain.html"/>
-  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/ofac-sanctions-screening-blockchain.html"/>
-  <style>body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}a{color:#d4b87a;text-decoration:none}</style>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://plausible.io https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>區塊鏈上的 OFAC 制裁篩查：最佳實踐 — FidesOrigin 部落格</title>
+  <meta name="description" content="區塊鏈 OFAC 制裁篩查最佳實踐：如何在智能合約層為穩定幣和 DeFi 協議實現 SDN 名單檢查。">
+  <meta property="og:title" content="區塊鏈上的 OFAC 制裁篩查：最佳實踐">
+  <meta property="og:description" content="區塊鏈 OFAC 制裁篩查最佳實踐：智能合約層的 SDN 名單檢查。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://fidesorigin.com/tw/blog/ofac-sanctions-screening-blockchain.html">
+  <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
+  <link rel="canonical" href="https://fidesorigin.com/tw/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="ja" href="https://fidesorigin.com/jp/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="alternate" hreflang="x-default" href="https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <style>
+    .blog-article { padding: 140px 0 60px; }
+    .blog-article .container { max-width: 800px; }
+    .blog-article h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+    .blog-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; color: var(--text-muted); font-size: 0.875rem; }
+    .blog-meta .tag { background: var(--accent-dim); color: var(--accent); padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .blog-content h2 { font-size: 1.4rem; font-weight: 600; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .blog-content h3 { font-size: 1.1rem; font-weight: 600; margin: 32px 0 12px; color: var(--accent); }
+    .blog-content p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; }
+    .blog-content ul, .blog-content ol { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; padding-left: 24px; }
+    .blog-content li { margin-bottom: 8px; }
+    .blog-content code { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+    .blog-content blockquote { border-left: 3px solid var(--accent); padding-left: 20px; margin: 24px 0; color: var(--text-secondary); font-style: italic; }
+    .blog-nav { display: flex; justify-content: space-between; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .blog-nav a { color: var(--accent); font-size: 0.875rem; }
+  </style>
+  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+  <link rel="stylesheet" href="/styles/nav.css"/>
+  <link rel="icon" type="image/png" href="/brand/logo-dark-icon.png">
+  <link rel="stylesheet" href="/styles/lang-switch.css"/>
 </head>
 <body>
-  <div>
-    <p>This page is currently available in English only.</p>
-    <p><a href="/blog/ofac-sanctions-screening-blockchain.html">Click here if you are not redirected automatically →</a></p>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <header class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/tw/" class="nav-logo">
+      <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" width="26" height="26" style="border-radius:6px">
+      <span class="nav-logo-text">FidesOrigin</span>
+    </a>
+    <nav class="nav-links">
+      <!-- Products Dropdown -->
+      <div class="nav-item">
+        <button>產品 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid">
+            <a href="/tw/architecture.html#compliance-engine" class="dropdown-link">
+              <div class="dropdown-icon">⚡</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">合規引擎</span>
+                <span class="dropdown-desc">每筆轉帳的鏈上合規檢查</span>
+              </div>
+            </a>
+            <a href="/tw/architecture.html#risk-registry" class="dropdown-link">
+              <div class="dropdown-icon">📊</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">風險登錄冊</span>
+                <span class="dropdown-desc">AI 預言機驅動的即時風險畫像</span>
+              </div>
+            </a>
+            <a href="/tw/architecture.html#policy-engine" class="dropdown-link">
+              <div class="dropdown-icon">📜</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">策略引擎</span>
+                <span class="dropdown-desc">面向發行方與營運方的可自訂規則</span>
+              </div>
+            </a>
+            <a href="/tw/architecture.html#quarantine" class="dropdown-link">
+              <div class="dropdown-icon">🔒</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">隔離金庫</span>
+                <span class="dropdown-desc">資產凍結與時間鎖恢復</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Solutions Dropdown -->
+      <div class="nav-item">
+        <button>解決方案 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid single">
+            <a href="/tw/use-cases/stablecoin-compliance.html" class="dropdown-link">
+              <div class="dropdown-icon">💰</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">穩定幣合規</span>
+                <span class="dropdown-desc">符合 HKMA / MiCA 的鏈上合規</span>
+              </div>
+            </a>
+            <a href="/tw/use-cases/rwa-tokenization.html" class="dropdown-link">
+              <div class="dropdown-icon">🏛️</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">RWA 代幣化</span>
+                <span class="dropdown-desc">內建合規的現實世界資產代幣化</span>
+              </div>
+            </a>
+            <a href="/tw/use-cases/smart-wallet.html" class="dropdown-link">
+              <div class="dropdown-icon">👛</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">智能錢包</span>
+                <span class="dropdown-desc">帶策略執行的帳戶抽象</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Developers Dropdown -->
+      <div class="nav-item">
+        <button>開發者 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid single">
+            <a href="/tw/docs/" class="dropdown-link">
+              <div class="dropdown-icon">📖</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">開發文件</span>
+                <span class="dropdown-desc">協議架構與整合指南</span>
+              </div>
+            </a>
+            <a href="/tw/docs/api.html" class="dropdown-link">
+              <div class="dropdown-icon">🔌</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">API 參考</span>
+                <span class="dropdown-desc">REST API 與 GraphQL 端點</span>
+              </div>
+            </a>
+            <a href="/tw/docs/sdk.html" class="dropdown-link">
+              <div class="dropdown-icon">🧰</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">SDK</span>
+                <span class="dropdown-desc">JavaScript/TypeScript 整合工具包</span>
+              </div>
+            </a>
+            <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer" class="dropdown-link">
+              <div class="dropdown-icon">🐙</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">GitHub</span>
+                <span class="dropdown-desc">開源合約與工具鏈</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Company Dropdown -->
+      <div class="nav-item">
+        <button>公司 <svg class="chevron" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dropdown">
+          <div class="dropdown-grid single">
+            <a href="/tw/about.html" class="dropdown-link">
+              <div class="dropdown-icon">ℹ️</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">關於我們</span>
+                <span class="dropdown-desc">我們的使命與團隊</span>
+              </div>
+            </a>
+            <a href="/tw/blog/" class="dropdown-link">
+              <div class="dropdown-icon">✍️</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">部落格</span>
+                <span class="dropdown-desc">鏈上合規洞察</span>
+              </div>
+            </a>
+            <a href="/tw/case-studies.html" class="dropdown-link">
+              <div class="dropdown-icon">📋</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">案例研究</span>
+                <span class="dropdown-desc">真實世界的實施案例</span>
+              </div>
+            </a>
+            <a href="/tw/contact.html" class="dropdown-link">
+              <div class="dropdown-icon">📧</div>
+              <div class="dropdown-text">
+                <span class="dropdown-title">聯絡我們</span>
+                <span class="dropdown-desc">與我們的團隊取得聯絡</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-right">
+      <div class="lang-switch">
+      <button class="lang-switch-btn" id="langBtn" onclick="toggleLangDropdown('langDropdown', 'langBtn')" aria-label="Select language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>繁體中文</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:2px"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="lang-switch-dropdown" id="langDropdown">
+        <a href="/tw/" class=""><span>English</span><span class="lang-native">English</span></a>
+        <a href="/tw/cn/" class=""><span>简体中文</span><span class="lang-native">Simplified Chinese</span></a>
+        <a href="/tw/" class="active"><span>繁體中文</span><span class="lang-native">Traditional Chinese</span></a>
+        <a href="/tw/jp/" class=""><span>日本語</span><span class="lang-native">Japanese</span></a>
+      </div>
+    </div>
+    </div>
+    <button class="nav-mobile-btn" onclick="document.getElementById('mobileMenu').classList.add('active')" aria-label="Open menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
   </div>
-<script>
-// Language Switcher
-function toggleLangDropdown(dropdownId, btnId) {
-  var dd = document.getElementById(dropdownId);
-  var btn = document.getElementById(btnId);
-  if (!dd || !btn) return;
-  var isOpen = dd.classList.contains('open');
-  document.querySelectorAll('.lang-switch-dropdown').forEach(function(d){ d.classList.remove('open'); });
-  document.querySelectorAll('.lang-switch-btn').forEach(function(b){ b.classList.remove('active'); });
-  if (!isOpen) {
-    dd.classList.add('open');
-    btn.classList.add('active');
-  }
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.lang-switch')) {
-    document.querySelectorAll('.lang-switch-dropdown').forEach(function(d){ d.classList.remove('open'); });
-    document.querySelectorAll('.lang-switch-btn').forEach(function(b){ b.classList.remove('active'); });
-  }
-});
-</script>
+</header>
+
+
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('active')" aria-label="Close menu">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Products</div>
+    
+    <a href="/tw/architecture.html#compliance-engine">Compliance Engine</a>
+    <a href="/tw/architecture.html#risk-registry">Risk Registry</a>
+    <a href="/tw/architecture.html#policy-engine">Policy Engine</a>
+    <a href="/tw/architecture.html#quarantine">Quarantine Vault</a>
+  </div>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Solutions</div>
+    <a href="/tw/use-cases/stablecoin-compliance.html">Stablecoin Compliance</a>
+    <a href="/tw/use-cases/rwa-tokenization.html">RWA Tokenization</a>
+    <a href="/tw/use-cases/smart-wallet.html">Smart Wallet</a>
+  </div>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Developers</div>
+    <a href="/tw/docs/">Documentation</a>
+    <a href="/tw/docs/api.html">API Reference</a>
+    <a href="/tw/docs/sdk.html">SDK</a>
+    <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+  <div class="mobile-section">
+    <div class="mobile-section-title">Company</div>
+    <a href="/tw/about.html">About</a>
+    <a href="/tw/blog/">部落格</a>
+    <a href="/tw/case-studies.html">Case Studies</a>
+    <a href="/tw/contact.html">Contact</a>
+  </div>
+  <div class="lang-switch">
+      <button class="lang-switch-btn" id="langBtnMobile" onclick="toggleLangDropdown('langDropdownMobile', 'langBtnMobile')" aria-label="Select language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>English</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:2px"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="lang-switch-dropdown" id="langDropdownMobile">
+        <a href="/tw/" class="active"><span>English</span><span class="lang-native">English</span></a>
+        <a href="/tw/cn/" class=""><span>简体中文</span><span class="lang-native">Simplified Chinese</span></a>
+        <a href="/tw/" class=""><span>繁體中文</span><span class="lang-native">Traditional Chinese</span></a>
+        <a href="/tw/jp/" class=""><span>日本語</span><span class="lang-native">Japanese</span></a>
+      </div>
+    </div>
+
+
+  <a href="/tw/contact.html" class="nav-cta" style="margin-top:8px;text-align:center">Contact</a>
+</div>
+
+  <main id="main-content">
+    <article class="blog-article">
+      <div class="container">
+        <div class="reveal">
+          <p class="micro">Blog</p>
+          <h1>區塊鏈上的 OFAC 制裁篩查：最佳實踐</h1>
+          <div class="blog-meta">
+            <span>2026 年 7 月</span>
+            <span class="tag">合規</span>
+            <span>閱讀約 7 分鐘</span>
+          </div>
+        </div>
+
+        <div class="blog-content reveal">
+          <p>美國外國資產控制辦公室（OFAC）維護著特別指定國民（SDN）名單——一份與制裁對象相關的地址和實體清單。任何觸及這些地址的協議都可能面臨執法行動。</p>
+
+          <h2>鏈上制裁篩查的挑戰</h2>
+
+          <p>傳統金融的交易透過中介機構流轉，而區塊鏈交易是點對點的。這帶來了一系列獨特挑戰：</p>
+
+          <ul>
+            <li><strong>交易前篩查：</strong>每筆轉帳都必須在執行前完成評估</li>
+            <li><strong>非託管環境：</strong>沒有中心機構持有資金或控制訪問</li>
+            <li><strong>偽匿名性：</strong>地址與現實身份並非一一對應</li>
+            <li><strong>不可逆性：</strong>交易一旦被打包，就無法撤銷</li>
+          </ul>
+
+          <h2>最佳實踐 #1：鏈上執行</h2>
+
+          <p>最穩健的方案是將制裁篩查直接嵌入智能合約。這確保了：</p>
+
+          <ol>
+            <li><strong>確定性：</strong>每筆交易都在相同規則下接受篩查</li>
+            <li><strong>不可繞過：</strong>即使直接調用合約也會觸發合規檢查</li>
+            <li><strong>可審計性：</strong>篩查決策永久記錄在鏈上</li>
+            <li><strong>可用性：</strong>不依賴可能失效的外部 API</li>
+          </ol>
+
+          <h2>最佳實踐 #2：風險分級，而非簡單二元阻斷</h2>
+
+          <p>成熟的方案使用風險分級而不是簡單的放行/阻斷：</p>
+
+          <ul>
+            <li><strong>UNKNOWN：</strong>無歷史的新地址——需要額外驗證</li>
+            <li><strong>LOW：</strong>未檢出標記——按標準限額放行</li>
+            <li><strong>MEDIUM：</strong>存在部分風險指標——加強監控</li>
+            <li><strong>HIGH：</strong>顯著風險——隔離並轉入人工審查</li>
+            <li><strong>CRITICAL：</strong>命中制裁名單——阻斷並告警</li>
+          </ul>
+
+          <h2>最佳實踐 #3：保持資料新鮮</h2>
+
+          <p>OFAC 會定期更新 SDN 名單。鏈上註冊表必須自主更新。FidesOrigin 透過 Chainlink Functions 實現風險畫像的自動同步，確保協議始終使用最新資料。</p>
+
+          <h2>最佳實踐 #4：隔離優於阻斷</h2>
+
+          <p>與其直接阻斷交易（可能造成體驗問題和誤傷），不如考慮隔離方案：</p>
+
+          <blockquote>「隔離金庫將可疑資金暫扣待審，而不是直接拒絕。這既保留了合規性，又不懲罰無辜用戶。」</blockquote>
+
+          <h2>結語</h2>
+
+          <p>區塊鏈上的 OFAC 合規不是可選項——它是任何觸及美國市場協議的法定要求。將篩查內建於協議層的項目，將在監管確定性上佔據先機。</p>
+        </div>
+
+        <div class="blog-nav reveal">
+          <a href="/tw/blog/">← All Articles</a>
+          <a href="/tw/blog/hong-kong-stablecoin-license.html">Next: HK License →</a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="/brand/logo-dark-icon.png" alt="" width="24" height="24" style="border-radius:5px">
+          <span>FidesOrigin</span>
+        </div>
+        <p class="footer-desc">面向代幣化資產和DeFi的鏈上合規協議。</p>
+      </div>
+      <div class="footer-col">
+        <h4>產品</h4>
+        <a href="/tw/">風險雷達</a>
+        <a href="/tw/">策略引擎</a>
+        <a href="/tw/">審計盾</a>
+        <a href="/tw/address-check.html">地址檢查</a>
+        <a href="/tw/pricing.html">定價</a>
+      </div>
+      <div class="footer-col">
+        <h4>開發者</h4>
+        <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a>
+        <a href="/tw/docs/">文件</a>
+        <a href="/tw/docs/api">API參考</a>
+        <a href="/tw/changelog.html">更新日誌</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="/tw/about.html">關於</a>
+        <a href="/tw/case-studies.html">案例研究</a>
+        <a href="mailto:contact@fidesorigin.com">聯繫</a>
+        <a href="/tw/privacy.html">隱私</a>
+        <a href="/tw/terms.html">條款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 FidesOrigin. MIT授權條款。</span>
+      <span>香港 &middot; 新加坡 &middot; 舊金山</span>
+    </div>
+  </div>
+</footer>
+
+  <script src="/wallet-connect.js"></script>
+  <script>
+    (function() {
+      var reveals = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function(el) { observer.observe(el); });
+    })();
+  </script>
+  <script src="/assets/lang-switch.js" defer></script>
 </body>
 </html>
