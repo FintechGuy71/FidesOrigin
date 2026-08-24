@@ -48,6 +48,7 @@ OFAC/OpenSanctions/MetaMask 名单
 ## 链上部署 — Sepolia（v3.1.0，2026-08-23）
 
 审计修复后的全新部署（因存储布局变更不可原地升级，旧 v3.0.4 合约弃用）。
+**全部 14 个合约已通过 Etherscan 源码验证**（2026-08-24，含 Diamond 及全部 facets）。
 部署脚本：`apps/contracts/scripts/deploy-full.js`；部署记录：`apps/contracts/deployments/sepolia-latest.json`。
 
 | 合约 | 地址 | 类型 |

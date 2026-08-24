@@ -93,11 +93,6 @@ module.exports = {
     },
   },
   networks: CHAINS,
-  // [CI-FIX-2026-08-24] Etherscan 源码验证支持（scripts/verify-v3.1.0-sepolia.js）。
-  // API key 经环境变量/CI secret 注入，不落盘。
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || '',
-  },
   paths: {
     sources: './contracts',
     tests: './test',
