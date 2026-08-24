@@ -528,7 +528,11 @@ async function deleteRule(id) {
   return true;
 }
 
-function initDefaultRules() {
+// [H-5 FIX R3] 默认规则初始化改为 KV 感知的异步流程：
+// 原实现仅检查实例内存（冷实例必为空），导致每个冷启动都把 3 条默认规则
+// 异步写回 KV，覆盖已持久化的自定义规则（与 deleteRule 的 _loadRules 竞态）。
+async function initDefaultRules() {
+  await _loadRules();
   if (memoryRulesStore.rules.length === 0) {
     const now = new Date().toISOString();
     memoryRulesStore.rules.push(

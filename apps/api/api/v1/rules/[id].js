@@ -22,7 +22,7 @@ async function handler(req, res) {
     return;
   }
 
-  initDefaultRules();
+  await initDefaultRules();
 
   const { id } = req.query || {};
   if (!id) {

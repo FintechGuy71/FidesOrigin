@@ -23,8 +23,7 @@ async function handler(req, res) {
   // [H-4 FIX] 写操作强制 WRITE 作用域（RULES_ADMIN_API_KEY）
   if (req.method === 'POST' && !checkApiKey(req, res, SCOPE.WRITE)) return;
 
-  initDefaultRules();
-
+  await initDefaultRules();
   if (req.method === 'GET') {
     return handleList(req, res);
   }
