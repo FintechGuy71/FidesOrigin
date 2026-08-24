@@ -7,7 +7,7 @@ const {
   addRule,
   generateRuleId,
   initDefaultRules,
-} = require('../../../lib/utils');
+} = require('../lib/utils');
 
 // [H-4/H-5 FIX R2-FULL] 重构说明：
 //   1. 鉴权：写操作要求 RULES_ADMIN_API_KEY（作用域强制），读操作接受只读或管理 Key

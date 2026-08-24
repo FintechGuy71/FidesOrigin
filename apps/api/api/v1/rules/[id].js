@@ -7,7 +7,7 @@ const {
   updateRule,
   deleteRule,
   initDefaultRules,
-} = require('../../../lib/utils');
+} = require('../../lib/utils');
 
 // [H-4/H-5 FIX R2-FULL] 见 rules.js 重构说明：写操作强制 RULES_ADMIN_API_KEY，
 // 规则存储接入 Vercel KV（实例内存仅作降级快照）。

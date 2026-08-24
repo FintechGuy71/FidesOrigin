@@ -4,7 +4,7 @@ const {
   sendError,
   getRiskData,
   buildAddressRisk,
-} = require('../../../../lib/utils');
+} = require('../../../lib/utils');
 
 // GET /v1/risk/address/:address
 async function handler(req, res) {

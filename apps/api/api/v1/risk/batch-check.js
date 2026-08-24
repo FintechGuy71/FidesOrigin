@@ -5,7 +5,7 @@ const {
   sendError,
   getRiskData,
   buildAddressRisk,
-} = require('../../../../lib/utils');
+} = require('../../lib/utils');
 
 // POST /v1/risk/batch-check
 // Body: { addresses: string[], chainId?: number | string, amount?: string }

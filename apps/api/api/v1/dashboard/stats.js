@@ -1,8 +1,8 @@
 const {
   withMiddleware,
   sendError,
-} = require('../../../lib/utils');
-const { proxyToBackend } = require('../../../lib/proxy');
+} = require('../../lib/utils');
+const { proxyToBackend } = require('../../lib/proxy');
 
 // GET /v1/dashboard/stats
 // Proxies to Python backend: /api/v1/dashboard/summary

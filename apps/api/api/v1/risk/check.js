@@ -1,10 +1,10 @@
-const { proxyToBackend } = require('../../../lib/proxy');
+const { proxyToBackend } = require('../../lib/proxy');
 const {
   withMiddleware,
   isValidEthereumAddress,
   isValidChainId,
   sendError,
-} = require('../../../lib/utils');
+} = require('../../lib/utils');
 
 // GET /v1/risk/check
 // Proxies to Python backend: /api/v1/address/{address}/risk

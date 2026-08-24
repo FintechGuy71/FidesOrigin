@@ -7,7 +7,9 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "@vercel/node": "^3.0.0"
+    "@vercel/kv": "^3.0.0",
+    "@vercel/node": "^3.0.0",
+    "ioredis": "^5.4.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
