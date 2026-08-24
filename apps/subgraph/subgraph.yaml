@@ -111,7 +111,7 @@ dataSources:
     source:
       abi: FidesCompliance
       address: "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5"
-      startBlock: 7800000
+      startBlock: 11550000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -151,8 +151,8 @@ dataSources:
     network: sepolia
     source:
       abi: CompliantStableCoin
-      address: "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A"
-      startBlock: 7800000
+      address: "0x2245A8FCf6aca017327eA8950Ba510e9596595E9"
+      startBlock: 11550000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

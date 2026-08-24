@@ -139,7 +139,7 @@ npx hardhat run scripts/demo-e2e.js --network localhost
 
 | 素材 | 链接 |
 |------|------|
-| Sepolia fUSD 合约 | https://sepolia.etherscan.io/address/0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A |
+| Sepolia fUSD 合约 | https://sepolia.etherscan.io/address/0x2245A8FCf6aca017327eA8950Ba510e9596595E9 |
 | Admin 后台 | `fidesorigin-demo/admin/index.html`（本地打开） |
 | The Graph Studio | https://thegraph.com/studio/subgraph/fidesorigin-sepolia |
 | 白皮书 | `WHITEPAPER-v0.5.0.md` |

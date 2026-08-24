@@ -20,4 +20,4 @@ export const DEFAULT_SEPOLIA_RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.
 
 /** Default risk registry contract address (Sepolia) */
 export const DEFAULT_RISK_REGISTRY_ADDRESS =
-  '0x7a41abE5B170085fDe9d4e0a3BaD47A70bAC52bc';
+  '0x953f985f38f94d6159c0600d1f15D543895cE896';

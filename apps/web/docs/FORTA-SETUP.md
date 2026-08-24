@@ -48,9 +48,9 @@ import {
 
 // Sepolia 合约地址
 const ADDRESSES = {
-  ComplianceEngine: "0xd978f3246c56d7E3c3fF326e9fDe539f91F39ACa",
-  RiskRegistry: "0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3",
-  PolicyEngine: "0xF8f89120f5628aE3De747f55e7d00D79633002c4",
+  ComplianceEngine: "0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E",
+  RiskRegistry: "0x953f985f38f94d6159c0600d1f15D543895cE896",
+  PolicyEngine: "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA",
   TimelockController: "0x...",  // 需填入实际地址
 };
 

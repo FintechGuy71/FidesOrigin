@@ -1,5 +1,7 @@
 # FidesOrigin 合约部署状态报告
 
+> ⚠️ **已被取代 (2026-08-25)**：本文档为 2026-06-22 的历史快照（内容涉及 v1.0-v3.0.x 各代）。当前权威部署状态见 **DEPLOYED.md**（v3.1.0），机器可读注册表见 `packages/config/deployments.json`。
+
 **检查时间**: 2026-06-22 23:50 GMT+8
 **网络**: Sepolia Testnet (Chain ID: 11155111)
 **部署者**: `0x5F6Ae278e7a62E64F9F467a91B693f372b84a374`
