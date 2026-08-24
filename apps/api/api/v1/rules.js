@@ -7,7 +7,7 @@ const {
   addRule,
   generateRuleId,
   initDefaultRules,
-} = require('../../../lib/utils');
+} = require('../lib/utils');
 
 // [H-4/H-5 FIX R2-FULL] 重构说明：
 //   1. 鉴权：写操作要求 RULES_ADMIN_API_KEY（作用域强制），读操作接受只读或管理 Key
@@ -23,8 +23,7 @@ async function handler(req, res) {
   // [H-4 FIX] 写操作强制 WRITE 作用域（RULES_ADMIN_API_KEY）
   if (req.method === 'POST' && !checkApiKey(req, res, SCOPE.WRITE)) return;
 
-  initDefaultRules();
-
+  await initDefaultRules();
   if (req.method === 'GET') {
     return handleList(req, res);
   }
