@@ -123,9 +123,13 @@ app = FastAPI(
 
 # 1. 受信任主机中间件（生产环境）
 if settings.is_production:
+    # [Deploy Fix] 支持通过 ALLOWED_HOSTS 环境变量追加可信主机（逗号分隔），
+    # 用于 Render/Railway 等平台分配的默认域名（如 xxx.onrender.com）。
+    _default_hosts = ["fidesorigin.com", "www.fidesorigin.com", "api.fidesorigin.com"]
+    _extra_hosts = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["fidesorigin.com", "www.fidesorigin.com", "api.fidesorigin.com"]
+        allowed_hosts=_default_hosts + _extra_hosts
     )
 
 # 2. CORS
