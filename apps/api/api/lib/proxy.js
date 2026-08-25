@@ -6,6 +6,8 @@
  */
 
 const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
+// [B-C 合龙] 后端要求 X-API-Key 鉴权（DB 校验），由服务端注入，不透传客户端凭证
+const BACKEND_API_KEY = process.env.BACKEND_API_KEY || '';
 
 /**
  * Proxy a request to the Python backend
@@ -19,6 +21,7 @@ async function proxyToBackend(backendPath, options = {}) {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(BACKEND_API_KEY ? { 'X-API-Key': BACKEND_API_KEY } : {}),
         ...(options.headers || {}),
       },
     });
