@@ -3,7 +3,6 @@ FidesOrigin 依赖注入容器（重构版）
 统一管理所有服务的生命周期和依赖关系
 """
 import os
-from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
 from fastapi import Depends
@@ -209,12 +208,14 @@ async def shutdown_container() -> None:
 
 # ==================== FastAPI 依赖函数 ====================
 
-@asynccontextmanager
+# [Deploy Fix] 不得加 @asynccontextmanager：FastAPI 只识别原生 async generator
+# 依赖；加了装饰器后 Depends(get_db) 注入的是未进入的 ContextManager，
+# 业务侧 db.execute 直接 AttributeError（生产 500 根因）。
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     获取数据库会话（FastAPI 依赖）
-    
-    使用 asynccontextmanager 确保会话正确关闭
+
+    原生 async generator：FastAPI 自动进入/退出，确保会话正确提交与关闭
     """
     from app.database import get_async_session_maker
     session = get_async_session_maker()()
