@@ -4,6 +4,8 @@
 # Web Framework
 fastapi==0.110.0
 uvicorn[standard]==0.27.1
+# [Deploy Fix] Dockerfile CMD 依赖 gunicorn 启动（原遗漏导致容器秒退 128）
+gunicorn==22.0.0
 
 # Database
 sqlalchemy[asyncio]==2.0.27
