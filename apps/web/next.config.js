@@ -3,7 +3,9 @@ const path = require('path');
 
 const nextConfig = {
   output: 'export',
-  distDir: 'dist',
+  // [Deploy Fix] 移除 distDir: 'dist'——export 构建不在 distDir 生成
+  // routes-manifest.json，Vercel Next builder 会报缺文件；恢复默认 .next，
+  // 静态站点产物固定输出到 out/，由 Vercel 零配置自动识别。
   images: {
     // [H-8 Fix] Removed unoptimized: true to enable Next.js image optimization
     // unoptimized: true,
