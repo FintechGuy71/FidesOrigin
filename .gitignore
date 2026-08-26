@@ -2,7 +2,10 @@
 /build/
 /dist/
 **/dist/
-!apps/web/dist/
+# [Deploy Fix] 移除 !apps/web/dist/ 例外——提交的过期构建产物会让
+# Vercel Next.js builder 找不到 dist/routes-manifest.json；静态导出产物
+#（out/）属于构建产物，一律不进版本库。
+apps/web/out/
 *.tsbuildinfo
 
 # Dependencies
