@@ -41,8 +41,11 @@ class CacheService:
         if self._redis is None:
             _settings = get_settings()
             # [LOW Fix #2] 启用 SSL 证书验证（如果配置了 SSL）
+            # [Deploy Fix] 必须同时传 ssl=True——只设 ssl_cert_reqs 不会启用 TLS，
+            # 明文直连 Upstash TLS 端口会在 AUTH 阶段被服务端断开（SERVER_CLOSED_CONNECTION_ERROR）
             ssl_kwargs = {}
             if _settings.REDIS_SSL:
+                ssl_kwargs["ssl"] = True
                 ssl_kwargs["ssl_cert_reqs"] = "required"
             
             # Redis 8.0+ 直接使用 Redis 类创建连接
