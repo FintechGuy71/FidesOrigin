@@ -100,7 +100,7 @@ export default function HeroHome() {
                 style={{ background: "var(--fio-gold)", boxShadow: "0 0 6px rgba(201,169,110,0.4)" }}
               />
               <span className="fio-caption" style={{ color: "var(--fio-gold)" }}>
-                v1.0 — 香港稳定币法案合规就绪
+                v1.0 — HK Stablecoin Ordinance Ready
               </span>
             </div>
 
@@ -121,7 +121,7 @@ export default function HeroHome() {
               className="fio-animate-fade-up fio-delay-3 mt-6 max-w-lg text-base leading-relaxed"
               style={{ color: "var(--fio-text-2)" }}
             >
-              实时风控、策略执行、审计追踪 — 为稳定币与 DeFi 而生。
+              Real-time risk screening, policy execution, and audit trails — built for stablecoins and DeFi.
             </p>
 
             {/* Divider */}
@@ -150,12 +150,10 @@ export default function HeroHome() {
                 </svg>
               </a>
               <a
-                href="https://github.com/FintechGuy71/FidesOrigin"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/admin/"
                 className="fio-btn fio-btn-ghost"
               >
-                View Documentation
+                Live Dashboard
               </a>
             </div>
           </div>
