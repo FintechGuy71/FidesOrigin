@@ -9,6 +9,11 @@
       "source": "/whitepaper.html",
       "destination": "/docs/",
       "permanent": true
+    },
+    {
+      "source": "/:path*.html",
+      "destination": "/:path*",
+      "permanent": true
     }
   ],
   "headers": [
