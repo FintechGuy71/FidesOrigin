@@ -47,7 +47,7 @@ export default function Footer() {
           {/* Center links */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <a
-              href="/pricing.html"
+              href="/pricing"
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
