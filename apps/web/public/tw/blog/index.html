@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,18 +9,18 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
   <meta name="theme-color" content="#0a0a0a">
-  <title>FidesOrigin Blog — Insights on On-Chain Compliance</title>
-  <meta name="description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
+  <title>FidesOrigin 博客 — 鏈上合規深度洞察</title>
+  <meta name="description" content="風險引擎、DeFi 監管與確定性合規架構的深度解析。">
   <meta name="author" content="FidesOrigin">
-  <meta property="og:title" content="FidesOrigin Blog — Insights on On-Chain Compliance">
-  <meta property="og:description" content="Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation.">
+  <meta property="og:title" content="FidesOrigin 博客 — 鏈上合規深度洞察">
+  <meta property="og:description" content="風險引擎、DeFi 監管與確定性合規架構的深度解析。">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://fidesorigin.com/blog/">
+  <meta property="og:url" content="https://fidesorigin.com/tw/blog/">
   <meta property="og:image" content="https://fidesorigin.com/brand/og-image.png">
   <meta name="twitter:site" content="@fidesorigin">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://fidesorigin.com/brand/og-image.png">
-  <link rel="canonical" href="https://fidesorigin.com/blog/">
+  <link rel="canonical" href="https://fidesorigin.com/tw/blog/">
   <link rel="alternate" hreflang="en" href="https://fidesorigin.com/blog/">
   <link rel="alternate" hreflang="zh-CN" href="https://fidesorigin.com/cn/blog/">
   <link rel="alternate" hreflang="zh-TW" href="https://fidesorigin.com/tw/blog/">
@@ -28,9 +28,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css">
-  <link rel="icon" href="../brand/logo-dark-icon.png">
-  <link rel="apple-touch-icon" href="../brand/logo-dark-icon.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/brand/logo-dark-icon.png">
+  <link rel="apple-touch-icon" href="/brand/logo-dark-icon.png">
   <style>
     /* Blog page-specific styles */
     .blog-hero {
@@ -120,53 +120,40 @@
       color: var(--text-muted);
       flex-shrink: 0;
     }
-    .blog-cta {
-      text-align: center;
-      padding: 80px 40px;
-    }
-    .blog-cta .btn-primary {
-      background: var(--accent);
-      color: var(--bg);
-      box-shadow: none;
-    }
-    .blog-cta .btn-primary:hover {
-      background: var(--gold);
-      transform: translateY(-1px);
-    }
     @media (max-width: 640px) {
       .blog-card { flex-direction: column; align-items: flex-start; }
       .blog-hero { padding: 120px 0 40px; }
     }
-  
+
     .blog-card:focus, .blog-card:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
       border-radius: 12px;
     }
-    
   </style>
   <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
-  <a href="#main-content" class="skip-link">Skip to content</a>
+  <a href="#main-content" class="skip-link">跳至正文</a>
 
   <!-- Navigation -->
-  <nav class="nav" aria-label="Main navigation">
+  <nav class="nav" aria-label="主導航">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">
-        <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+      <a href="/tw/" class="nav-logo">
+        <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
         FidesOrigin
       </a>
       <div class="nav-left">
-        <a href="/#features">Features</a>
-        <a href="/#capabilities">How It Works</a>
-        <a href="/security.html">Security</a>
-        <a href="/docs/">Docs</a>
+        <a href="/tw/#features">功能</a>
+        <a href="/tw/#how-it-works">工作原理</a>
+        <a href="/tw/#security">安全</a>
+        <a href="/tw/docs/">文檔</a>
+        <a href="/tw/pricing.html">定價</a>
       </div>
       <div class="nav-actions">
         <div class="lang-dropdown">
-          <button id="langToggleBtn" aria-label="Language">
-            EN
+          <button id="langToggleBtn" aria-label="語言">
+            TW
             <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div id="langMenu">
@@ -178,19 +165,19 @@
         </div>
         <div class="nav-divider"></div>
         <div class="wallet-connect-wrap">
-          <button class="wallet-btn" id="wallet-btn" aria-label="Connect">
+          <button class="wallet-btn" id="wallet-btn" aria-label="連接">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
-            Connect
+            連接
           </button>
           <div class="wallet-connected" id="wallet-connected">
             <div class="wallet-info">
               <span class="wallet-address" id="wallet-address"></span>
               <span class="wallet-network-badge" id="wallet-network">Sepolia</span>
             </div>
-            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="Disconnect">Disconnect</button>
+            <button class="wallet-disconnect" id="wallet-disconnect" aria-label="斷開">斷開</button>
           </div>
         </div>
-        <a href="/contact.html" class="nav-cta">Get Started</a>
+        <a href="/tw/#contact" class="nav-cta">開始使用</a>
       </div>
       <button class="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -199,14 +186,15 @@
   </nav>
 
   <!-- Mobile Menu -->
-  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
-    <button type="button" class="mobile-menu-close" aria-label="Close menu">
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="移動端導航">
+    <button type="button" class="mobile-menu-close" aria-label="關閉選單">
       <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg>
     </button>
-    <a href="/#features">Features</a>
-    <a href="/#capabilities">How It Works</a>
-    <a href="/security.html">Security</a>
-    <a href="/docs/">Docs</a>
+    <a href="/tw/#features">功能</a>
+    <a href="/tw/#how-it-works">工作原理</a>
+    <a href="/tw/#security">安全</a>
+    <a href="/tw/docs/">文檔</a>
+    <a href="/tw/pricing.html">定價</a>
     <div class="lang-row">
       <a href="/blog/">EN</a>
       <a href="/cn/blog/">CN</a>
@@ -215,11 +203,11 @@
     </div>
     <div class="mobile-wallet-area" id="mobile-wallet-connected">
       <span id="mobile-wallet-address"></span>
-      <button id="mobile-wallet-disconnect" aria-label="Disconnect">Disconnect</button>
+      <button id="mobile-wallet-disconnect" aria-label="斷開">斷開</button>
     </div>
-    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="Connect">
+    <button class="wallet-btn" id="mobile-wallet-btn" aria-label="連接">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7h1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h13v2M19 7V5M19 7h-5.5a1.5 1.5 0 0 0 0 3H19"/></svg>
-      Connect
+      連接
     </button>
   </div>
 
@@ -229,9 +217,9 @@
       <div class="glow glow-1"></div>
       <div class="container blog-hero-content">
         <div class="reveal">
-          <p class="micro">Blog</p>
-          <h1 class="display">Insights on programmable<br><span>on-chain compliance</span></h1>
-          <p class="lead" style="max-width: 600px; margin-top: 20px;">Deep dives into risk engines, DeFi regulation, and the architecture of deterministic compliance.</p>
+          <p class="micro">博客</p>
+          <h1 class="display">可編程鏈上合規的<br><span>深度洞察</span></h1>
+          <p class="lead" style="max-width: 600px; margin-top: 20px;">風險引擎、DeFi 監管與確定性合規架構的深度解析。</p>
         </div>
       </div>
     </section>
@@ -242,42 +230,28 @@
     <section class="section" style="padding-top: 60px;">
       <div class="container">
         <div class="reveal">
-          <a href="hong-kong-stablecoin-license.html" class="blog-card">
-            <div>
-              <div style="margin-bottom: 8px;">
-                <span class="tag">Regulation</span>
-                <span class="date">July 2026</span>
-              </div>
-              <h2>Hong Kong Stablecoin License: Compliance Requirements</h2>
-              <p>Guide to Hong Kong's stablecoin issuer licensing regime. HKMA requirements, reserve management, and on-chain compliance for VASPs.</p>
-            </div>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-
-        <div class="reveal" style="margin-top: 16px;">
-          <a href="mica-stablecoin-compliance.html" class="blog-card">
-            <div>
-              <div style="margin-bottom: 8px;">
-                <span class="tag">Regulation</span>
-                <span class="date">July 2026</span>
-              </div>
-              <h2>MiCA Compliance for Stablecoins: A Technical Guide</h2>
-              <p>Technical guide to EU MiCA compliance for stablecoin issuers. On-chain reserve attestations, transaction screening, and regulatory reporting.</p>
-            </div>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-
-        <div class="reveal" style="margin-top: 16px;">
           <a href="why-on-chain-compliance.html" class="blog-card">
             <div>
               <div style="margin-bottom: 8px;">
-                <span class="tag">Category Definition</span>
-                <span class="date">June 2026</span>
+                <span class="tag">概念定義</span>
+                <span class="date">2026 年 6 月</span>
               </div>
-              <h2>Why On-Chain: The End of API-Based Compliance</h2>
-              <p>Why screening transactions through off-chain APIs is structurally broken — and what "on-chain risk enforcement" means for digital asset infrastructure.</p>
+              <h2>為何鏈上：API 合規模式的終結</h2>
+              <p>基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <div class="reveal" style="margin-top: 16px;">
+          <a href="/blog/" class="blog-card">
+            <div>
+              <div style="margin-bottom: 8px;">
+                <span class="tag">English</span>
+                <span class="date">2026 年 7 月</span>
+              </div>
+              <h2>更多文章（英文版）</h2>
+              <p>香港穩定幣牌照合規要求、MiCA 穩定幣合規技術指南等更多深度文章，請訪問英文博客。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
           </a>
@@ -291,42 +265,43 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="/" class="nav-logo">
-            <img src="../brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28">
+          <a href="/tw/" class="nav-logo">
+            <img src="/brand/logo-dark-icon.png" alt="FidesOrigin" class="nav-logo-icon" width="28" height="28" loading="lazy">
             FidesOrigin
           </a>
-          <p>Programmable on-chain compliance for the future of finance.</p>
+          <p>為代幣化資產、穩定幣和 AI 智能體提供即時鏈上合規。</p>
         </div>
         <div class="footer-col">
-          <h4>Product</h4>
-          <a href="/#features">Features</a>
-          <a href="/#capabilities">How It Works</a>
-          <a href="/security.html">Security</a>
-          <a href="/admin/">Dashboard</a>
+          <h4>產品</h4>
+          <a href="/tw/#features">功能</a>
+          <a href="/tw/#how-it-works">工作原理</a>
+          <a href="/tw/#security">安全</a>
+          <a href="/tw/pricing.html">定價</a>
+          <a href="/admin/">儀表盤</a>
         </div>
         <div class="footer-col">
-          <h4>Developers</h4>
-          <a href="/docs/" target="_blank" rel="noopener">Documentation</a>
-          <a href="/docs/api.html" target="_blank" rel="noopener">API Reference</a>
-          <a href="/docs/sdk.html" target="_blank" rel="noopener">SDK</a>
+          <h4>開發者</h4>
+          <a href="/tw/docs/">文檔</a>
+          <a href="/tw/docs/api.html">API 參考</a>
+          <a href="/tw/docs/sdk.html">SDK</a>
           <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">GitHub</a>
         </div>
         <div class="footer-col">
-          <h4>Company</h4>
-          <a href="mailto:contact@fidesorigin.com">Contact</a>
-          <a href="/blog/">Blog</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/terms.html">Terms</a>
+          <h4>公司</h4>
+          <a href="mailto:contact@fidesorigin.com">聯繫</a>
+          <a href="/tw/blog/">博客</a>
+          <a href="/tw/privacy.html">隱私政策</a>
+          <a href="/tw/terms.html">服務條款</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 FidesOrigin. All rights reserved.</p>
-        <p>Built with &hearts; for the on-chain financial world.</p>
+        <p>&copy; 2026 FidesOrigin. 保留所有權利。</p>
+        <p>為鏈上金融世界而構建</p>
       </div>
     </div>
   </footer>
 
-  <script src="../wallet-connect.js"></script>
+  <script src="/wallet-connect.js"></script>
   <script src="/blog-scripts.js"></script>
 </body>
 </html>

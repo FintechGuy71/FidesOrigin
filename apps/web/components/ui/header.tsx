@@ -10,12 +10,23 @@ import Link from "next/link";
 
 const navLinks = [
   { href: "#capabilities", label: "Capabilities" },
-  { href: "#features", label: "Features" },
+  { href: "/pricing.html", label: "Pricing" },
+  { href: "/docs/", label: "Docs" },
+  { href: "/blog/", label: "Blog" },
+  { href: "/demo", label: "Demo" },
   { href: "https://github.com/FintechGuy71/FidesOrigin", label: "GitHub", external: true },
+];
+
+const langLinks = [
+  { href: "/", label: "English", short: "EN" },
+  { href: "/cn/", label: "简体中文", short: "CN" },
+  { href: "/tw/", label: "繁體中文", short: "TW" },
+  { href: "/jp/", label: "日本語", short: "JP" },
 ];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const mobileMenuId = "mobile-menu";
 
   return (
@@ -83,6 +94,44 @@ export default function Header() {
               </a>
             )
           )}
+          {/* Language dropdown */}
+          <div className="relative ml-2">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              aria-label="Language"
+              aria-expanded={langOpen}
+              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+              style={{ color: "var(--fio-text-2)" }}
+            >
+              EN
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {langOpen && (
+              <div
+                className="absolute right-0 top-full mt-1 min-w-[120px] rounded-md border py-1"
+                style={{
+                  background: "rgba(7,8,16,0.97)",
+                  borderColor: "rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(12px)",
+                }}
+              >
+                {langLinks.map((l) => (
+                  <a
+                    key={l.short}
+                    href={l.href}
+                    className="block px-4 py-2 text-sm transition-colors hover:bg-white/5"
+                    style={{ color: "var(--fio-text-2)" }}
+                    onClick={() => setLangOpen(false)}
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
           <a
             href="/admin/dashboard"
             className="ml-3 rounded-md px-4 py-1.5 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
@@ -153,6 +202,22 @@ export default function Header() {
           >
             Dashboard →
           </a>
+          <div
+            className="mt-3 flex items-center gap-1 border-t pt-3"
+            style={{ borderColor: "rgba(255,255,255,0.06)" }}
+          >
+            {langLinks.map((l) => (
+              <a
+                key={l.short}
+                href={l.href}
+                className="rounded-md px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+                style={{ color: "var(--fio-text-3)" }}
+                onClick={() => setMobileOpen(false)}
+              >
+                {l.short}
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </header>

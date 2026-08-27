@@ -45,7 +45,35 @@ export default function Footer() {
           </div>
 
           {/* Center links */}
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <a
+              href="/pricing.html"
+              className="text-sm transition-colors hover-text-2"
+              style={{ color: "var(--fio-text-3)" }}
+            >
+              Pricing
+            </a>
+            <a
+              href="/docs/"
+              className="text-sm transition-colors hover-text-2"
+              style={{ color: "var(--fio-text-3)" }}
+            >
+              Docs
+            </a>
+            <a
+              href="/blog/"
+              className="text-sm transition-colors hover-text-2"
+              style={{ color: "var(--fio-text-3)" }}
+            >
+              Blog
+            </a>
+            <a
+              href="/demo"
+              className="text-sm transition-colors hover-text-2"
+              style={{ color: "var(--fio-text-3)" }}
+            >
+              Demo
+            </a>
             <a
               href="https://github.com/FintechGuy71/FidesOrigin"
               target="_blank"

@@ -66,6 +66,14 @@
   <url><loc>https://fidesorigin.com/blog/hong-kong-stablecoin-license.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://fidesorigin.com/blog/ofac-sanctions-screening-blockchain.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
 
+  <!-- Localized Blog -->
+  <url><loc>https://fidesorigin.com/cn/blog/</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://fidesorigin.com/tw/blog/</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://fidesorigin.com/jp/blog/</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://fidesorigin.com/cn/blog/why-on-chain-compliance.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://fidesorigin.com/tw/blog/why-on-chain-compliance.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://fidesorigin.com/jp/blog/why-on-chain-compliance.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+
   <!-- Admin -->
   <url><loc>https://fidesorigin.com/admin/</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
 
