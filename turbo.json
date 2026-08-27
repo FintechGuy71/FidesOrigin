@@ -13,7 +13,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**", "build/**", "artifacts/**", "generated/**"]
+      "outputs": [".next/**", "dist/**", "build/**", "out/**", "artifacts/**", "generated/**"]
     },
     "dev": {
       "cache": false,
