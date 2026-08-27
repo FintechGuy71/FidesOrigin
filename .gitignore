@@ -2,6 +2,9 @@
 /build/
 /dist/
 **/dist/
+# [Cleanup 2026-08-27] 根 public/ 是旧 Cloudflare Worker 直出的过期静态快照，
+# 已随 deploy.yml / deploy-cloudflare.yml 一并退役，防止再次提交进库。
+/public/
 # [Deploy Fix] 移除 !apps/web/dist/ 例外——提交的过期构建产物会让
 # Vercel Next.js builder 找不到 dist/routes-manifest.json；静态导出产物
 #（out/）属于构建产物，一律不进版本库。
