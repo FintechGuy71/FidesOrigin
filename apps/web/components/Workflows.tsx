@@ -1,16 +1,17 @@
 "use client";
 
+import type { Dict } from "@/i18n/dictionaries/en";
+
 /* ================================================================
    WORKFLOWS v3 — System architecture diagram. One visual, one story.
    ================================================================ */
 
-const flowSteps = [
-  { id: "risk", label: "Risk Data", sub: "Chainalysis · Elliptic · OFAC", icon: "◎" },
-  { id: "engine", label: "FidesOrigin Engine", sub: "Policy · Risk · Execution", icon: "◈" },
-  { id: "chain", label: "On-Chain Action", sub: "Smart Contract · Wallet", icon: "◇" },
-];
-
-export default function Workflows() {
+export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
+  const flowSteps = [
+    { id: "risk", label: d.step1Label, sub: d.step1Sub, icon: "◎" },
+    { id: "engine", label: d.step2Label, sub: d.step2Sub, icon: "◈" },
+    { id: "chain", label: d.step3Label, sub: d.step3Sub, icon: "◇" },
+  ];
   return (
     <section id="capabilities" style={{ background: "var(--fio-ink)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -18,7 +19,7 @@ export default function Workflows() {
           {/* Section header */}
           <div className="mx-auto max-w-2xl pb-20 text-center md:pb-28">
             <div className="fio-caption mb-4" data-aos="fade-up">
-              How It Works
+              {d.caption}
             </div>
             <h2
               className="fio-heading-lg mb-5"
@@ -26,15 +27,14 @@ export default function Workflows() {
               data-aos="fade-up"
               data-aos-delay={100}
             >
-              Risk Data → Engine → On-Chain Action
+              {d.title}
             </h2>
             <p
               className="fio-body-lg"
               data-aos="fade-up"
               data-aos-delay={200}
             >
-              FidesOrigin 将链外风险数据与链上执行无缝连接，
-              实现从检测到拦截的端到端自动化。
+              {d.body}
             </p>
           </div>
 
@@ -134,11 +134,11 @@ export default function Workflows() {
           >
             <div className="mb-4 flex items-center justify-between">
               <span className="text-xs font-mono uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
-                Real-Time Data Flow
+                {d.flowLabel}
               </span>
               <span className="flex items-center gap-1.5 text-[0.65rem] font-mono" style={{ color: "var(--fio-gold)" }}>
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--fio-gold)" }} />
-                Live
+                {d.flowLive}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono" style={{ color: "var(--fio-text-2)" }}>

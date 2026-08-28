@@ -1,7 +1,5 @@
 import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 
-import Header from "@/components/ui/header";
-
 import LangSetter from "./components/LangSetter";
 import "../css/style.css";
 
@@ -85,23 +83,9 @@ export default function RootLayout({
       </head>
       <body
         className={`${spaceGrotesk.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} font-sans antialiased`}
-        style={{
-          background: "var(--fio-ink, #0a0e1a)",
-          color: "var(--fio-text, #f1f5f9)",
-        }}
       >
-        {/* Skip to main content link for accessibility */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        >
-          Skip to main content
-        </a>
-        <div id="main-content" className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
-          <LangSetter />
-          <Header />
-          {children}
-        </div>
+        <LangSetter />
+        {children}
       </body>
     </html>
   );

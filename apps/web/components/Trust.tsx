@@ -1,19 +1,20 @@
 "use client";
 
+import type { Dict } from "@/i18n/dictionaries/en";
+
 /* ================================================================
-   TRUST — Social proof, credibility anchors.
+   TRUST — Social proof, credibility anchors. (#security anchor)
    ================================================================ */
 
-const badges = [
-  { label: "Hong Kong Stablecoin License", status: "Ready" },
-  { label: "Open Source", status: "MIT License" },
-  { label: "Multi-Chain", status: "6 Networks" },
-  { label: "Real-Time", status: "<50ms" },
-];
-
-export default function Trust() {
+export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
+  const badges = [
+    { label: d.badge1Label, status: d.badge1Status },
+    { label: d.badge2Label, status: d.badge2Status },
+    { label: d.badge3Label, status: d.badge3Status },
+    { label: d.badge4Label, status: d.badge4Status },
+  ];
   return (
-    <section style={{ background: "var(--fio-ink)" }}>
+    <section id="security" style={{ background: "var(--fio-ink)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="border-t py-20 md:py-28" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
           {/* Badges row */}
@@ -65,8 +66,7 @@ export default function Trust() {
               className="mb-8 text-xl leading-relaxed italic sm:text-2xl"
               style={{ color: "var(--fio-text)", fontFamily: "var(--font-serif)" }}
             >
-              The intersection of compliance and DeFi is where the next
-              trillion dollars of institutional capital will enter.
+              {d.quote}
             </p>
             <div className="flex items-center justify-center gap-3">
               <div
@@ -78,10 +78,10 @@ export default function Trust() {
               />
               <div className="text-left">
                 <div className="text-sm font-medium" style={{ color: "var(--fio-text)" }}>
-                  David Park
+                  {d.quoteName}
                 </div>
                 <div className="text-xs" style={{ color: "var(--fio-text-3)" }}>
-                  Head of Compliance, Helios Stablecoin
+                  {d.quoteRole}
                 </div>
               </div>
             </div>

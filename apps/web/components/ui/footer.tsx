@@ -1,10 +1,20 @@
 "use client";
 
+import type { Dict } from "@/i18n/dictionaries/en";
+import { localize, type Locale } from "@/i18n/locales";
+
 /* ================================================================
    FOOTER v2 — Minimal, institutional, quietly authoritative.
+   Dictionary-driven; locale-aware links on localized homepages.
    ================================================================ */
 
-export default function Footer() {
+export default function Footer({
+  lang,
+  d,
+}: {
+  lang: Locale;
+  d: Dict["home"]["chrome"];
+}) {
   return (
     <footer
       style={{
@@ -47,32 +57,32 @@ export default function Footer() {
           {/* Center links */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <a
-              href="/pricing"
+              href={localize("/pricing", lang)}
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
-              Pricing
+              {d.pricing}
             </a>
             <a
-              href="/docs/"
+              href={`${localize("/docs", lang)}/`}
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
-              Docs
+              {d.docs}
             </a>
             <a
-              href="/blog/"
+              href={`${localize("/blog", lang)}/`}
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
-              Blog
+              {d.blog}
             </a>
             <a
-              href="/demo"
+              href={localize("/demo", lang)}
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
-              Demo
+              {d.demo}
             </a>
             <a
               href="https://github.com/FintechGuy71/FidesOrigin"
@@ -81,14 +91,14 @@ export default function Footer() {
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
-              GitHub
+              {d.github}
             </a>
             <a
               href="mailto:contact@fidesorigin.com"
               className="text-sm transition-colors hover-text-2"
               style={{ color: "var(--fio-text-3)" }}
             >
-              Contact
+              {d.contact}
             </a>
           </div>
 
@@ -97,7 +107,7 @@ export default function Footer() {
             className="text-xs"
             style={{ color: "var(--fio-text-4)", fontFamily: "var(--font-mono)" }}
           >
-            © 2026 FidesOrigin. MIT License.
+            {d.rights}
           </div>
         </div>
       </div>
