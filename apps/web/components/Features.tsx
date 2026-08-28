@@ -1,5 +1,7 @@
 "use client";
 
+import type { Dict } from "@/i18n/dictionaries/en";
+
 // 动画和视觉常量
 const AOS_DELAY_MULTIPLIER = 150;
 const MIN_HEIGHT_PX = 280;
@@ -18,39 +20,23 @@ const SVG_VIEWBOX = 200;
    FEATURES v3 — Three core capabilities, each with visual anchor.
    ================================================================ */
 
-const features = [
-  {
-    num: "01",
-    title: "Risk Intelligence",
-    subtitle: "风险情报",
-    desc: "多源风险数据实时聚合，Sub-50ms 地址评分。",
-    tags: ["Chainalysis", "Elliptic", "OFAC"],
-    visual: "radar",
-  },
-  {
-    num: "02",
-    title: "Policy Engine",
-    subtitle: "策略引擎",
-    desc: "可编程合规规则链，链上自动执行。",
-    tags: ["KYC/AML", "Tx Limits", "Timelock"],
-    visual: "chain",
-  },
-  {
-    num: "03",
-    title: "Audit & Compliance",
-    subtitle: "审计与合规",
-    desc: "不可篡改审计日志，一键生成合规报告。",
-    tags: ["SEC", "HKMA", "MiCA"],
-    visual: "shield",
-  },
-];
+type FeatureItem = {
+  num: string;
+  title: string;
+  subtitle: string;
+  desc: string;
+  tags: string[];
+  visual: string;
+};
 
 function FeatureCard({
   feature,
   index,
+  d,
 }: {
-  feature: (typeof features)[0];
+  feature: FeatureItem;
   index: number;
+  d: Dict["home"]["features"];
 }) {
   return (
     <div
@@ -112,7 +98,7 @@ function FeatureCard({
               className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-sm px-2 py-1 text-[0.6rem] font-mono"
               style={{ background: "rgba(7,8,16,0.9)", color: "var(--fio-text-3)", border: "1px solid rgba(255,255,255,0.06)" }}
             >
-              Risk Radar — Real-time Intelligence
+              {d.radarCaption}
             </div>
           </div>
         )}
@@ -148,7 +134,7 @@ function FeatureCard({
               className="mt-2 text-center text-[0.6rem] font-mono"
               style={{ color: "var(--fio-text-3)" }}
             >
-              Policy Chain — On-chain Execution
+              {d.policyCaption}
             </div>
           </div>
         )}
@@ -185,7 +171,7 @@ function FeatureCard({
               className="mt-3 rounded-sm px-2 py-1 text-[0.6rem] font-mono"
               style={{ background: "rgba(7,8,16,0.9)", color: "var(--fio-text-3)", border: "1px solid rgba(255,255,255,0.06)" }}
             >
-              Audit Shield — Immutable Trail
+              {d.shieldCaption}
             </div>
           </div>
         )}
@@ -243,7 +229,33 @@ function FeatureCard({
   );
 }
 
-export default function Features() {
+export default function Features({ d }: { d: Dict["home"]["features"] }) {
+  const features: FeatureItem[] = [
+    {
+      num: "01",
+      title: d.f1Title,
+      subtitle: d.f1Sub,
+      desc: d.f1Desc,
+      tags: ["Chainalysis", "Elliptic", "OFAC"],
+      visual: "radar",
+    },
+    {
+      num: "02",
+      title: d.f2Title,
+      subtitle: d.f2Sub,
+      desc: d.f2Desc,
+      tags: ["KYC/AML", "Tx Limits", "Timelock"],
+      visual: "chain",
+    },
+    {
+      num: "03",
+      title: d.f3Title,
+      subtitle: d.f3Sub,
+      desc: d.f3Desc,
+      tags: ["SEC", "HKMA", "MiCA"],
+      visual: "shield",
+    },
+  ];
   return (
     <section
       id="features"
@@ -257,7 +269,7 @@ export default function Features() {
           {/* Header */}
           <div className="mx-auto max-w-2xl pb-24 text-center md:pb-32">
             <div className="fio-caption mb-4" data-aos="fade-up">
-              Core Capabilities
+              {d.caption}
             </div>
             <h2
               className="fio-heading-lg mb-5"
@@ -265,17 +277,17 @@ export default function Features() {
               data-aos="fade-up"
               data-aos-delay={100}
             >
-              Three Layers of Institutional Protection
+              {d.title}
             </h2>
             <p className="fio-body-lg" data-aos="fade-up" data-aos-delay={200}>
-              从风险情报到策略执行，再到审计追踪 — 三层防护，缺一不可。
+              {d.body}
             </p>
           </div>
 
           {/* Feature blocks */}
           <div className="space-y-0">
             {features.map((f, i) => (
-              <FeatureCard key={f.num} feature={f} index={i} />
+              <FeatureCard key={f.num} feature={f} index={i} d={d} />
             ))}
           </div>
         </div>

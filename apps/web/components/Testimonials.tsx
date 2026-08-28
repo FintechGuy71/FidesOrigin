@@ -1,44 +1,25 @@
 "use client";
 
+import type { Dict } from "@/i18n/dictionaries/en";
+
 /* ================================================================
    TESTIMONIALS v3 — One deep case study. A user's journey.
    ================================================================ */
 
-const journeySteps = [
-  {
-    step: "01",
-    title: "KYC Onboarding",
-    desc: "身份验证与风险分级。",
-    detail: "Identity verified · Risk tier assigned",
-  },
-  {
-    step: "02",
-    title: "Real-Time Risk Scan",
-    desc: "每笔交易实时风控。",
-    detail: "Chainalysis · Elliptic · OFAC",
-  },
-  {
-    step: "03",
-    title: "Policy Execution",
-    desc: "合规策略自动执行。",
-    detail: "KYC/AML · Tx Limits · Geo-fencing",
-  },
-  {
-    step: "04",
-    title: "On-Chain Settlement",
-    desc: "智能合约自动转账。",
-    detail: "Immutable audit log",
-  },
-];
-
-export default function Testimonials() {
+export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
+  const journeySteps = [
+    { step: "01", title: d.j1Title, desc: d.j1Desc, detail: d.j1Detail },
+    { step: "02", title: d.j2Title, desc: d.j2Desc, detail: d.j2Detail },
+    { step: "03", title: d.j3Title, desc: d.j3Desc, detail: d.j3Detail },
+    { step: "04", title: d.j4Title, desc: d.j4Desc, detail: d.j4Detail },
+  ];
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <div className="border-t py-28 md:py-36" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
         {/* Section header */}
         <div className="mx-auto max-w-2xl pb-20 text-center md:pb-28">
           <div className="fio-caption mb-4" data-aos="fade-up">
-            Use Case
+            {d.caption}
           </div>
           <h2
             className="fio-heading-lg mb-5"
@@ -46,14 +27,14 @@ export default function Testimonials() {
             data-aos="fade-up"
             data-aos-delay={100}
           >
-            A Stablecoin Issuer&apos;s Journey
+            {d.title}
           </h2>
           <p
             className="fio-body-lg"
             data-aos="fade-up"
             data-aos-delay={200}
           >
-            一家香港合规稳定币发行商，如何使用 FidesOrigin 实现从 KYC 到监管报告的全链路自动化。
+            {d.body}
           </p>
         </div>
 
@@ -126,15 +107,14 @@ export default function Testimonials() {
             className="text-lg leading-relaxed italic"
             style={{ color: "var(--fio-text)", fontFamily: "var(--font-serif)" }}
           >
-            FidesOrigin 让我们从手工合规审查转向全自动执行，
-            风控延迟从小时级降到毫秒级。
+            {d.quote}
           </p>
           <div className="mt-6">
             <div className="text-sm font-medium" style={{ color: "var(--fio-text)" }}>
-              Chief Compliance Officer
+              {d.quoteName}
             </div>
             <div className="text-xs" style={{ color: "var(--fio-text-3)" }}>
-              Hong Kong Licensed Stablecoin Issuer
+              {d.quoteRole}
             </div>
           </div>
         </div>

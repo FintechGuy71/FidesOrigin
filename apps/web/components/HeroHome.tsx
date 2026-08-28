@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
    HERO v3 — Product-first layout. Left story, right product.
    ================================================================ */
 
-export default function HeroHome() {
+export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   /* ---- Subtle grid + scan line animation ---- */
@@ -79,7 +80,7 @@ export default function HeroHome() {
         ref={canvasRef}
         className="pointer-events-none absolute inset-0 z-0"
         style={{ width: "100%", height: "100%" }}
-        aria-label="Background grid and scan line animation"
+        aria-label={d.canvasLabel}
         role="img"
       />
 
@@ -100,7 +101,7 @@ export default function HeroHome() {
                 style={{ background: "var(--fio-gold)", boxShadow: "0 0 6px rgba(201,169,110,0.4)" }}
               />
               <span className="fio-caption" style={{ color: "var(--fio-gold)" }}>
-                v1.0 — HK Stablecoin Ordinance Ready
+                {d.badge}
               </span>
             </div>
 
@@ -109,10 +110,10 @@ export default function HeroHome() {
               className="fio-animate-fade-up fio-delay-2 fio-heading-xl"
               style={{ color: "var(--fio-text)" }}
             >
-              On-Chain Compliance,
+              {d.titlePre}
               <br />
               <span style={{ color: "var(--fio-accent)", fontStyle: "italic" }}>
-                Executed in Real-Time
+                {d.titleEm}
               </span>
             </h1>
 
@@ -121,7 +122,7 @@ export default function HeroHome() {
               className="fio-animate-fade-up fio-delay-3 mt-6 max-w-lg text-base leading-relaxed"
               style={{ color: "var(--fio-text-2)" }}
             >
-              Real-time risk screening, policy execution, and audit trails — built for stablecoins and DeFi.
+              {d.sub}
             </p>
 
             {/* Divider */}
@@ -138,7 +139,7 @@ export default function HeroHome() {
                 href="mailto:contact@fidesorigin.com"
                 className="fio-btn fio-btn-primary group"
               >
-                Request Demo
+                {d.ctaPrimary}
                 <svg
                   className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
                   fill="none"
@@ -153,7 +154,7 @@ export default function HeroHome() {
                 href="/admin/"
                 className="fio-btn fio-btn-ghost"
               >
-                Live Dashboard
+                {d.ctaGhost}
               </a>
             </div>
           </div>
@@ -190,9 +191,9 @@ export default function HeroHome() {
                 {/* Stats row */}
                 <div className="mb-5 grid grid-cols-3 gap-3">
                   {[
-                    { label: "Risk Score", value: "Low", color: "var(--fio-gold)" },
-                    { label: "Tx Monitored", value: "12,847", color: "var(--fio-accent)" },
-                    { label: "Alerts", value: "3", color: "var(--fio-danger)" },
+                    { label: d.statRisk, value: d.statRiskValue, color: "var(--fio-gold)" },
+                    { label: d.statTx, value: "12,847", color: "var(--fio-accent)" },
+                    { label: d.statAlerts, value: "3", color: "var(--fio-danger)" },
                   ].map((s) => (
                     <div
                       key={s.label}
@@ -212,8 +213,8 @@ export default function HeroHome() {
                 {/* Scanning animation bar */}
                 <div className="mb-4">
                   <div className="mb-1.5 flex items-center justify-between text-[0.65rem] font-mono" style={{ color: "var(--fio-text-3)" }}>
-                    <span>Live Risk Scan</span>
-                    <span style={{ color: "var(--fio-gold)" }}>ACTIVE</span>
+                    <span>{d.scanLabel}</span>
+                    <span style={{ color: "var(--fio-gold)" }}>{d.scanActive}</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.03)" }}>
                     <div
@@ -229,9 +230,9 @@ export default function HeroHome() {
                 {/* Transaction list mock */}
                 <div className="space-y-2">
                   {[
-                    { addr: "0x7a2f...9e3d", status: "Cleared", risk: "Low" },
-                    { addr: "0x3b1c...7a2e", status: "Flagged", risk: "High" },
-                    { addr: "0x9f4d...2c1b", status: "Cleared", risk: "Low" },
+                    { addr: "0x7a2f...9e3d", status: d.statusCleared, risk: "Low" },
+                    { addr: "0x3b1c...7a2e", status: d.statusFlagged, risk: "High" },
+                    { addr: "0x9f4d...2c1b", status: d.statusCleared, risk: "Low" },
                   ].map((tx, i) => (
                     <div
                       key={i}
@@ -276,7 +277,7 @@ export default function HeroHome() {
             >
               <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "var(--fio-gold)" }} />
               <span className="text-[0.65rem] font-mono" style={{ color: "var(--fio-gold)" }}>
-                HKMA License Ready
+                {d.floatBadge}
               </span>
             </div>
           </div>

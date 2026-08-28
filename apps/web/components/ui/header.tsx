@@ -4,27 +4,38 @@ import { useState } from "react";
 
 import Link from "next/link";
 
+import type { Dict } from "@/i18n/dictionaries/en";
+import { langPrefix, localize, type Locale } from "@/i18n/locales";
+
 /* ================================================================
    HEADER v2 — Minimal, institutional, with quiet confidence.
+   Dictionary-driven; locale-aware links on localized homepages.
    ================================================================ */
 
-const navLinks = [
-  { href: "#capabilities", label: "Capabilities" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/docs/", label: "Docs" },
-  { href: "/blog/", label: "Blog" },
-  { href: "/demo", label: "Demo" },
-  { href: "https://github.com/FintechGuy71/FidesOrigin", label: "GitHub", external: true },
-];
+export default function Header({
+  lang,
+  d,
+}: {
+  lang: Locale;
+  d: Dict["home"]["chrome"];
+}) {
+  const prefix = langPrefix(lang);
+  const navLinks = [
+    { href: `${prefix}/#capabilities`, label: d.capabilities },
+    { href: localize("/pricing", lang), label: d.pricing },
+    { href: `${localize("/docs", lang)}/`, label: d.docs },
+    { href: `${localize("/blog", lang)}/`, label: d.blog },
+    { href: localize("/demo", lang), label: d.demo },
+    { href: "https://github.com/FintechGuy71/FidesOrigin", label: d.github, external: true },
+  ];
 
-const langLinks = [
-  { href: "/", label: "English", short: "EN" },
-  { href: "/cn/", label: "简体中文", short: "CN" },
-  { href: "/tw/", label: "繁體中文", short: "TW" },
-  { href: "/jp/", label: "日本語", short: "JP" },
-];
+  const langLinks = [
+    { href: "/", label: "English", short: "EN" },
+    { href: "/cn/", label: "简体中文", short: "CN" },
+    { href: "/tw/", label: "繁體中文", short: "TW" },
+    { href: "/jp/", label: "日本語", short: "JP" },
+  ];
 
-export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const mobileMenuId = "mobile-menu";
@@ -41,7 +52,7 @@ export default function Header() {
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href={`${prefix}/`} className="flex items-center gap-2.5">
           <img
             src="/brand/logo-dark-icon.png"
             alt="FidesOrigin"
@@ -103,7 +114,7 @@ export default function Header() {
               className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
               style={{ color: "var(--fio-text-2)" }}
             >
-              EN
+              {lang.toUpperCase()}
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                 <path d="M6 9l6 6 6-6" />
               </svg>
@@ -147,7 +158,7 @@ export default function Header() {
               e.currentTarget.style.background = "rgba(201,169,110,0.06)";
             }}
           >
-            Dashboard
+            {d.dashboard}
           </a>
         </nav>
 
@@ -156,7 +167,7 @@ export default function Header() {
           className="flex h-8 w-8 items-center justify-center rounded-md md:hidden focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           style={{ color: "var(--fio-text-2)", minHeight: "44px", minWidth: "44px" }}
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
+          aria-label={d.toggleMenu}
           aria-expanded={mobileOpen}
           aria-controls={mobileMenuId}
         >
@@ -200,7 +211,7 @@ export default function Header() {
             style={{ color: "var(--fio-gold)" }}
             onClick={() => setMobileOpen(false)}
           >
-            Dashboard →
+            {d.dashboard} →
           </a>
           <div
             className="mt-3 flex items-center gap-1 border-t pt-3"
