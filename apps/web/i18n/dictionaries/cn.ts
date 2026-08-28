@@ -45,7 +45,7 @@ const cn: Dict = {
     micro: "演示",
     titlePre: "Try it",
     titleEm: "实时演示",
-    lead: "在 Sepolia 测试网上与 FidesOrigin 合规引擎交互，基础检查无需连接钱包。",
+    lead: "在 Sepolia 测试网上与 FidesOrigin 合规引擎交互，基础检查无需连接钱包。演示结果为模拟数据。",
     tabScreen: "地址筛查",
     tabRisk: "风险评分",
     tabPolicy: "策略检查",

@@ -43,7 +43,7 @@ const en = {
     micro: "Demo",
     titlePre: "Try it",
     titleEm: "live",
-    lead: "Interact with FidesOrigin's compliance engine on Sepolia testnet. No wallet required for basic checks.",
+    lead: "Interact with FidesOrigin's compliance engine on Sepolia testnet. No wallet required for basic checks. Results are simulated for illustration.",
     tabScreen: "Address Screening",
     tabRisk: "Risk Score",
     tabPolicy: "Policy Check",

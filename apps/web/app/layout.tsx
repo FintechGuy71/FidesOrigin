@@ -1,4 +1,5 @@
 import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 
 import LangSetter from "./components/LangSetter";
 import "../css/style.css";
@@ -22,6 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://fidesorigin.com"),
   title: "FidesOrigin — Programmable On-Chain Compliance",
   description:
     "Execution-grade programmable compliance protocol for tokenized assets, stablecoins, and DeFi. Real-time risk control, autonomous policy enforcement, immutable audit trails.",
@@ -30,6 +32,12 @@ export const metadata = {
     description:
       "Execution-grade programmable compliance protocol for on-chain finance.",
     type: "website",
+    images: ["https://fidesorigin.com/brand/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@fidesorigin",
+    images: ["https://fidesorigin.com/brand/og-image.png"],
   },
 };
 
@@ -86,6 +94,13 @@ export default function RootLayout({
       >
         <LangSetter />
         {children}
+        {/* Privacy-friendly analytics (CSP already allows plausible.io) */}
+        <Script
+          defer
+          data-domain="fidesorigin.com"
+          src="https://plausible.io/js/script.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

@@ -51,15 +51,6 @@ const API_KEY = (typeof window !== "undefined" && (window as any).FIDESORIGIN_AP
 
 type D = Dict["addressCheck"];
 
-type AddressEntry = {
-  address: string;
-  riskScore?: number | string;
-  riskTier?: string;
-  source?: string;
-  tags?: string[];
-  entity?: string;
-};
-
 type Result = {
   badgeClass: "risk-black" | "risk-grey" | "risk-safe";
   badgeText: string;
@@ -81,7 +72,6 @@ export default function AddressCheck({ dict }: { dict: D }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "error" | "info" } | null>(null);
-  const addressMap = useRef<Map<string, AddressEntry>>(new Map());
   const csrfToken = useRef("");
 
   const showToast = (message: string, type: "error" | "info" = "error") => {
@@ -143,39 +133,13 @@ export default function AddressCheck({ dict }: { dict: D }) {
         });
       }
     } catch {
-      if (addressMap.current.size > 0) {
-        let black = 0,
-          grey = 0;
-        addressMap.current.forEach((e) => {
-          if (e.riskTier === "BLACK") black++;
-          else if (e.riskTier === "GREY") grey++;
-        });
-        setStats({
-          total: addressMap.current.size.toLocaleString(),
-          black: black.toLocaleString(),
-          grey: grey.toLocaleString(),
-        });
-      }
+      /* stats stay at -- */
     }
   };
 
-  // Load local address-label cache (absolute path — no locale-relative hacks needed)
+  // Load stats on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const response = await fetch("/data-sync/cache/address-labels-v11.json");
-        if (!response.ok) return;
-        const db = await response.json();
-        if (db && db.addressLabels) {
-          for (const entry of db.addressLabels) {
-            addressMap.current.set(entry.address.toLowerCase(), entry);
-          }
-        }
-        loadStatsFromSubgraph();
-      } catch {
-        /* subgraph-only mode */
-      }
-    })();
+    loadStatsFromSubgraph();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -265,11 +229,10 @@ export default function AddressCheck({ dict }: { dict: D }) {
 
     const apiData = await fetchBackendRisk(value);
     let subgraphData: any = null;
-    const entry = addressMap.current.get(value);
 
     if (!apiData) {
       subgraphData = await fetchSubgraphRisk(value);
-      if (!subgraphData && !entry) {
+      if (!subgraphData) {
         showToast(dict.backendUnavailable, "info");
       }
     }
@@ -313,18 +276,6 @@ export default function AddressCheck({ dict }: { dict: D }) {
         source: dict.subgraphSource,
         tags: tags.join(", ") || "-",
         entity: subgraphData.isSanctioned ? dict.sanctioned : "-",
-      });
-    } else if (entry) {
-      setResult({
-        badgeClass: entry.riskTier === "BLACK" ? "risk-black" : "risk-grey",
-        badgeText:
-          entry.riskTier === "BLACK" ? `⚠️ ${dict.highRisk}` : `⚡ ${dict.mediumRisk}`,
-        address: value,
-        score: String(entry.riskScore ?? "N/A"),
-        tier: entry.riskTier || "N/A",
-        source: entry.source || dict.localSource,
-        tags: (entry.tags || []).join(", ") || "-",
-        entity: entry.entity || "-",
       });
     } else {
       setResult({

@@ -11,6 +11,81 @@
       "permanent": true
     },
     {
+      "source": "/cn/contact",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/tw/contact",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/jp/contact",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/cn/case-studies",
+      "destination": "/case-studies",
+      "permanent": true
+    },
+    {
+      "source": "/tw/case-studies",
+      "destination": "/case-studies",
+      "permanent": true
+    },
+    {
+      "source": "/jp/case-studies",
+      "destination": "/case-studies",
+      "permanent": true
+    },
+    {
+      "source": "/cn/blog/mica-stablecoin-compliance",
+      "destination": "/blog/mica-stablecoin-compliance",
+      "permanent": true
+    },
+    {
+      "source": "/tw/blog/mica-stablecoin-compliance",
+      "destination": "/blog/mica-stablecoin-compliance",
+      "permanent": true
+    },
+    {
+      "source": "/jp/blog/mica-stablecoin-compliance",
+      "destination": "/blog/mica-stablecoin-compliance",
+      "permanent": true
+    },
+    {
+      "source": "/cn/blog/ofac-sanctions-screening-blockchain",
+      "destination": "/blog/ofac-sanctions-screening-blockchain",
+      "permanent": true
+    },
+    {
+      "source": "/tw/blog/ofac-sanctions-screening-blockchain",
+      "destination": "/blog/ofac-sanctions-screening-blockchain",
+      "permanent": true
+    },
+    {
+      "source": "/jp/blog/ofac-sanctions-screening-blockchain",
+      "destination": "/blog/ofac-sanctions-screening-blockchain",
+      "permanent": true
+    },
+    {
+      "source": "/cn/blog/hong-kong-stablecoin-license",
+      "destination": "/blog/hong-kong-stablecoin-license",
+      "permanent": true
+    },
+    {
+      "source": "/tw/blog/hong-kong-stablecoin-license",
+      "destination": "/blog/hong-kong-stablecoin-license",
+      "permanent": true
+    },
+    {
+      "source": "/jp/blog/hong-kong-stablecoin-license",
+      "destination": "/blog/hong-kong-stablecoin-license",
+      "permanent": true
+    },
+    {
       "source": "/:path*.html",
       "destination": "/:path*",
       "permanent": true

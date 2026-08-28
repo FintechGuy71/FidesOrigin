@@ -45,7 +45,7 @@ const jp: Dict = {
     micro: "デモ",
     titlePre: "Try it",
     titleEm: "ライブ",
-    lead: "Sepolia テストネット上で FidesOrigin のコンプライアンスエンジンを操作できます。基本チェックにウォレットは不要です。",
+    lead: "Sepolia テストネット上で FidesOrigin のコンプライアンスエンジンを操作できます。基本チェックにウォレットは不要です。結果はデモ用のシミュレーションです。",
     tabScreen: "アドレススクリーニング",
     tabRisk: "リスクスコア",
     tabPolicy: "ポリシーチェック",

@@ -48,6 +48,18 @@ export async function generateMetadata({
       canonical: canonicalUrl("/", lang),
       languages: hreflangAlternates("/"),
     },
+    openGraph: {
+      title: m.title,
+      description: m.description,
+      type: "website",
+      url: canonicalUrl("/", lang),
+      images: ["https://fidesorigin.com/brand/og-image.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@fidesorigin",
+      images: ["https://fidesorigin.com/brand/og-image.png"],
+    },
   };
 }
 
