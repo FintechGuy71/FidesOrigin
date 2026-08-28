@@ -15,6 +15,9 @@ export function generateMetadata(): Metadata {
       canonical: canonicalUrl("/", "en"),
       languages: hreflangAlternates("/"),
     },
+    openGraph: {
+      url: canonicalUrl("/", "en"),
+    },
   };
 }
 

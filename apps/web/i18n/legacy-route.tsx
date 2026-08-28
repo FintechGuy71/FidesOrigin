@@ -17,12 +17,25 @@ export function legacyMetadata(locale: Locale, slugParts: string[]): Metadata {
   const def = pageDefs[slug];
   if (!def || !def.available.includes(locale)) return {};
   const m = def.meta[locale] ?? def.meta.en ?? { title: "FidesOrigin", description: "" };
+  const url = canonicalUrl(`/${slug}`, locale);
   return {
     title: m.title,
     description: m.description,
     alternates: {
-      canonical: canonicalUrl(`/${slug}`, locale),
+      canonical: url,
       languages: hreflangAlternates(`/${slug}`, def.available),
+    },
+    openGraph: {
+      title: m.title,
+      description: m.description,
+      type: "website",
+      url,
+      images: ["https://fidesorigin.com/brand/og-image.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@fidesorigin",
+      images: ["https://fidesorigin.com/brand/og-image.png"],
     },
   };
 }
