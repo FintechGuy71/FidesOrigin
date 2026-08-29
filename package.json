@@ -14,7 +14,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sol,py}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,sol,py}\"",
     "lint:py": "cd backend && ruff check . && ruff format --check . && mypy .",
-    "postinstall": "turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config",
+    "postinstall": "node -e \"if(!process.env.VERCEL&&!process.env.CI){try{require('child_process').execSync('turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config',{stdio:'inherit'})}catch(e){console.warn('[postinstall] turbo build skipped:',e.message)}}else{console.log('[postinstall] skipped on Vercel/CI')}\"",
     "prepare": "husky"
   },
   "devDependencies": {
