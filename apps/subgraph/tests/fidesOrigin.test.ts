@@ -1,4 +1,5 @@
 import { assert, describe, test, clearStore, beforeAll, afterEach } from "matchstick-as/assembly/index";
+import { newMockEvent } from "matchstick-as";
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { handleRiskProfileUpdated, handleAddressTagged, handleSanctionAdded, handleSanctionRemoved } from "../src/mappings/riskRegistry";
 import { handleComplianceCheckPerformed, handleTransactionBlocked, handleTransactionQuarantined, handleQuarantineReleased } from "../src/mappings/complianceEngine";
@@ -6,35 +7,8 @@ import { RiskProfileUpdated, AddressTagged, SanctionAdded, SanctionRemoved } fro
 import { ComplianceCheckPerformed, TransactionBlocked, TransactionQuarantined, QuarantineReleased } from "../generated/ComplianceEngine/ComplianceEngine";
 
 function createMockEvent<T>(): T {
-  let event = changetype<T>(new ethereum.Event());
+  let event = changetype<T>(newMockEvent());
   event.address = Address.fromString("0x953f985f38f94d6159c0600d1f15D543895cE896");
-  event.block = new ethereum.Block(
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    Address.zero(),
-    Address.zero(),
-    Address.zero(),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    new ethereum.Block(),
-    new ethereum.Block()
-  );
-  event.transaction = new ethereum.Transaction(
-    Bytes.fromHexString("0x1234") as Bytes,
-    BigInt.fromI32(1),
-    Address.zero(),
-    Address.zero(),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    Bytes.empty(),
-    BigInt.fromI32(1)
-  );
   event.logIndex = BigInt.fromI32(0);
   return event;
 }

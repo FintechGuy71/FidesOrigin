@@ -9,6 +9,7 @@ import {
   handleRuleUnpaused,
 } from "../src/mappings/complianceEngine";
 import {
+import { newMockEvent } from "matchstick-as";
   ComplianceCheckPerformed,
   TransactionBlocked,
   TransactionQuarantined,
@@ -24,12 +25,7 @@ function createComplianceCheckEvent(
   isCompliant: boolean,
   checkType: Bytes
 ): ComplianceCheckPerformed {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as ComplianceCheckPerformed;
+  let mockEvent = changetype<ComplianceCheckPerformed>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -49,12 +45,7 @@ function createTransactionBlockedEvent(
   token: Address,
   reason: string
 ): TransactionBlocked {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as TransactionBlocked;
+  let mockEvent = changetype<TransactionBlocked>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -75,12 +66,7 @@ function createTransactionQuarantinedEvent(
   token: Address,
   quarantineId: Bytes
 ): TransactionQuarantined {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as TransactionQuarantined;
+  let mockEvent = changetype<TransactionQuarantined>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -98,12 +84,7 @@ function createQuarantineReleasedEvent(
   quarantineId: Bytes,
   operator: Address
 ): QuarantineReleased {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as QuarantineReleased;
+  let mockEvent = changetype<QuarantineReleased>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(2000);
   mockEvent.block.number = BigInt.fromI32(2);
   mockEvent.transaction.hash = Bytes.fromHexString("0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890") as Bytes;
@@ -115,12 +96,7 @@ function createQuarantineReleasedEvent(
 }
 
 function createRulePausedEvent(ruleId: Bytes): RulePaused {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as RulePaused;
+  let mockEvent = changetype<RulePaused>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -131,12 +107,7 @@ function createRulePausedEvent(ruleId: Bytes): RulePaused {
 }
 
 function createRuleUnpausedEvent(ruleId: Bytes): RuleUnpaused {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as RuleUnpaused;
+  let mockEvent = changetype<RuleUnpaused>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;

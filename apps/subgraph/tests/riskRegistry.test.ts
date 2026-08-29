@@ -8,6 +8,7 @@ import {
   handleContractRegistered,
 } from "../src/mappings/riskRegistry";
 import {
+import { newMockEvent } from "matchstick-as";
   RiskProfileUpdated,
   AddressTagged,
   SanctionAdded,
@@ -22,12 +23,7 @@ function createRiskProfileUpdatedEvent(
   tier: i32,
   isSanctioned: boolean
 ): RiskProfileUpdated {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as RiskProfileUpdated;
+  let mockEvent = changetype<RiskProfileUpdated>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -41,12 +37,7 @@ function createRiskProfileUpdatedEvent(
 }
 
 function createAddressTaggedEvent(account: Address, tag: Bytes): AddressTagged {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as AddressTagged;
+  let mockEvent = changetype<AddressTagged>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -58,12 +49,7 @@ function createAddressTaggedEvent(account: Address, tag: Bytes): AddressTagged {
 }
 
 function createSanctionAddedEvent(account: Address, reason: string): SanctionAdded {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as SanctionAdded;
+  let mockEvent = changetype<SanctionAdded>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
@@ -75,12 +61,7 @@ function createSanctionAddedEvent(account: Address, reason: string): SanctionAdd
 }
 
 function createSanctionRemovedEvent(account: Address): SanctionRemoved {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as SanctionRemoved;
+  let mockEvent = changetype<SanctionRemoved>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(2000);
   mockEvent.block.number = BigInt.fromI32(2);
   mockEvent.transaction.hash = Bytes.fromHexString("0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890") as Bytes;
@@ -95,12 +76,7 @@ function createContractRegisteredEvent(
   contractType: Bytes,
   verified: boolean
 ): ContractRegistered {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as ContractRegistered;
+  let mockEvent = changetype<ContractRegistered>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
