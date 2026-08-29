@@ -9,7 +9,6 @@ import {
   handleRuleUnpaused,
 } from "../src/mappings/complianceEngine";
 import {
-import { newMockEvent } from "matchstick-as";
   ComplianceCheckPerformed,
   TransactionBlocked,
   TransactionQuarantined,
@@ -17,6 +16,7 @@ import { newMockEvent } from "matchstick-as";
   RulePaused,
   RuleUnpaused,
 } from "../generated/ComplianceEngine/ComplianceEngine";
+import { newMockEvent } from "matchstick-as";
 
 // Helper functions
 function createComplianceCheckEvent(

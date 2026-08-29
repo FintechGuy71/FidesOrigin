@@ -8,13 +8,13 @@ import {
   handleContractRegistered,
 } from "../src/mappings/riskRegistry";
 import {
-import { newMockEvent } from "matchstick-as";
   RiskProfileUpdated,
   AddressTagged,
   SanctionAdded,
   SanctionRemoved,
   ContractRegistered,
 } from "../generated/RiskRegistry/RiskRegistry";
+import { newMockEvent } from "matchstick-as";
 
 // Helper to create mock event
 function createRiskProfileUpdatedEvent(
