@@ -69,7 +69,7 @@ describe("RiskRegistry handlers", () => {
     ];
     handleAddressTagged(tagEvent);
 
-    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[exchange]");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[0x65786368616e6765000000000000000000000000000000000000000000000000]");
   });
 
   test("handleSanctionAdded marks address as sanctioned", () => {
