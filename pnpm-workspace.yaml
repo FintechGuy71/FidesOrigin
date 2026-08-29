@@ -4,6 +4,17 @@ packages:
 
 allowBuilds:
   msw: true
+  # pnpm v11.6 起以 allowBuilds 为准(onlyBuiltDependencies 已废弃)。
+  # 以下原生构建在本仓库本就不需要(CI 与 website 生产均以
+  # --ignore-scripts 全跳过运行, 二进制随包预置), 显式拒绝以避免
+  # ERR_PNPM_IGNORED_BUILDS 使 plain pnpm install 退出 1。
+  "@arbitrum/nitro-contracts": false
+  esbuild: false
+  keccak: false
+  protobufjs: false
+  secp256k1: false
+  sharp: false
+  unrs-resolver: false
 
 onlyBuiltDependencies:
   - sharp
