@@ -2,12 +2,12 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# pnpm v11.6 唯一生效的构建审批配置（onlyBuiltDependencies 已废弃并移除）。
+# true = 允许构建；false = 显式拒绝（避免 ERR_PNPM_IGNORED_BUILDS 使
+# plain pnpm install 退出 1）。以下原生构建本仓库并不需要——CI 与
+# website 生产均以 --ignore-scripts 全跳过运行，二进制随包预置。
 allowBuilds:
   msw: true
-  # pnpm v11.6 起以 allowBuilds 为准(onlyBuiltDependencies 已废弃)。
-  # 以下原生构建在本仓库本就不需要(CI 与 website 生产均以
-  # --ignore-scripts 全跳过运行, 二进制随包预置), 显式拒绝以避免
-  # ERR_PNPM_IGNORED_BUILDS 使 plain pnpm install 退出 1。
   "@arbitrum/nitro-contracts": false
   esbuild: false
   keccak: false
@@ -16,23 +16,9 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 
-onlyBuiltDependencies:
-  - sharp
-  - "@napi-rs/canvas"
-  - secp256k1
-  - keccak
-  - bcrypt
-  - esbuild
-  - protobufjs
-  - msw
-
 overrides:
   "@chainlink/contracts": "1.3.0"
 
 settings:
   fetchTimeout: 600000
   networkConcurrency: 3
-  # pnpm v11.6 默认阻断未批准的构建脚本(ERR_PNPM_IGNORED_BUILDS 退出 1)。
-  # 本仓库 CI 与 website 生产均以 --ignore-scripts 全跳过运行(二进制随包预置),
-  # 因此全局关闭该阻断, 与既有工作方式保持一致。
-  blockExoticSubdeps: false

@@ -109,20 +109,21 @@ function getClientIp(req) {
 }
 
 // ── Sliding window logic (Redis) ─────────────────────────────────────────
-async function checkRateLimitRedis(ip, now) {
+async function checkRateLimitRedis(ip, now, opts) {
   const client = getRedisClient();
   if (!client || !redisAvailable) return null; // let caller fall back
 
-  const windowStart = Math.floor(now / 1000 / RATE_LIMIT_WINDOW) * RATE_LIMIT_WINDOW;
-  const key = `ratelimit:${ip}:${windowStart}`;
+  const { max, window, prefix } = opts;
+  const windowStart = Math.floor(now / 1000 / window) * window;
+  const key = `${prefix}:${ip}:${windowStart}`;
   const pipeline = client.pipeline();
   pipeline.incr(key);
-  pipeline.expire(key, RATE_LIMIT_WINDOW + 1); // +1s buffer for clock skew
+  pipeline.expire(key, window + 1); // +1s buffer for clock skew
 
   try {
     const results = await pipeline.exec();
     const count = results[0][1]; // result of incr
-    if (count > RATE_LIMIT_MAX) {
+    if (count > max) {
       return { allowed: false, count };
     }
     return { allowed: true, count };
@@ -133,50 +134,56 @@ async function checkRateLimitRedis(ip, now) {
 }
 
 // ── Sliding window logic (Memory) ──────────────────────────────────────────
-function checkRateLimitMemory(ip, now) {
-  const record = memoryStore.get(ip);
+function checkRateLimitMemory(ip, now, opts) {
+  const { max, window, prefix } = opts;
+  const key = `${prefix}:${ip}`;
+  const record = memoryStore.get(key);
   if (!record || now > record.resetTime) {
     // First request in a new window
-    memoryStore.set(ip, {
+    memoryStore.set(key, {
       count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW * 1000,
+      resetTime: now + window * 1000,
     });
     return { allowed: true, count: 1 };
   }
   record.count++;
-  if (record.count > RATE_LIMIT_MAX) {
+  if (record.count > max) {
     return { allowed: false, count: record.count };
   }
   return { allowed: true, count: record.count };
 }
 
 // ── Public API: checkRateLimit ────────────────────────────────────────────
-async function checkRateLimit(req, res) {
+// opts: { max, window(秒), prefix } — 端点可施加比全局更严的独立配额
+// （独立 prefix = 独立计数桶；Redis 后端跨实例一致，内存降级仅单实例）
+async function checkRateLimit(req, res, opts = {}) {
+  const { max = RATE_LIMIT_MAX, window = RATE_LIMIT_WINDOW, prefix = 'ratelimit' } = opts;
   const ip = getClientIp(req);
   const now = Date.now();
+  const o = { max, window, prefix };
 
   // Try Redis first
-  let result = await checkRateLimitRedis(ip, now);
+  let result = await checkRateLimitRedis(ip, now, o);
   if (result === null) {
     // Fallback to memory
-    result = checkRateLimitMemory(ip, now);
+    result = checkRateLimitMemory(ip, now, o);
   }
 
   if (!result.allowed) {
-    const retryAfter = Math.ceil(RATE_LIMIT_WINDOW - ((now / 1000) % RATE_LIMIT_WINDOW));
+    const retryAfter = Math.ceil(window - ((now / 1000) % window));
     res.setHeader('Retry-After', retryAfter);
     res.status(429).json({
       error: 'Rate limit exceeded. Try again later.',
       retryAfter,
-      limit: RATE_LIMIT_MAX,
-      window: RATE_LIMIT_WINDOW,
+      limit: max,
+      window,
     });
     return false;
   }
 
   // Optional: expose rate-limit headers for client awareness
-  res.setHeader('X-RateLimit-Limit', RATE_LIMIT_MAX);
-  res.setHeader('X-RateLimit-Remaining', Math.max(0, RATE_LIMIT_MAX - result.count));
+  res.setHeader('X-RateLimit-Limit', max);
+  res.setHeader('X-RateLimit-Remaining', Math.max(0, max - result.count));
   return true;
 }
 

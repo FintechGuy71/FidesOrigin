@@ -238,22 +238,6 @@ async function fetchMetamaskPhishing() {
 function getPresetAddresses() {
   return [
     {
-      address: '0x1234567890123456789012345678901234567890'.toLowerCase(),
-      tag: 'Test_Blacklist',
-      source: 'FidesOrigin',
-      risk: 'CRITICAL',
-      category: 'Sanctions',
-      metadata: { reason: 'Test address for development' },
-    },
-    {
-      address: '0xab5801a7d398351b8be11c439e05c5b3259aec9b'.toLowerCase(),
-      tag: 'Known_Hacker',
-      source: 'FidesOrigin',
-      risk: 'CRITICAL',
-      category: 'Hack',
-      metadata: { reason: 'Known exploit contract' },
-    },
-    {
       address: '0xdac17f958d2ee523a2206206994597c13d831ec7'.toLowerCase(),
       tag: 'USDT_Contract',
       source: 'FidesOrigin',

@@ -65,16 +65,5 @@
     "immer": "^11.1.8",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
-  },
-  "pnpm": {
-    "ignoredBuiltDependencies": [
-      "@arbitrum/nitro-contracts",
-      "esbuild",
-      "keccak",
-      "protobufjs",
-      "secp256k1",
-      "sharp",
-      "unrs-resolver"
-    ]
   }
 }
