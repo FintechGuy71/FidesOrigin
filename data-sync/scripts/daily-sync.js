@@ -38,7 +38,7 @@ const CONFIG = {
 
 // RiskRegistry ABI (只需要 update 相关函数)
 const RISK_REGISTRY_ABI = [
-  'function batchUpdateRiskProfiles(address[] calldata accounts, uint8[] calldata riskScores, uint8[] calldata tiers, bool[] calldata isSanctionedList) external',
+  'function batchUpdateRiskProfiles(address[] calldata accounts, uint8[] calldata riskScores, uint8[] calldata tiers, bool[] calldata isSanctionedList, bytes32[][] calldata tags) external',
   'function emergencySanction(address[] calldata accounts, string calldata reason) external',
   'function getRiskProfile(address account) external view returns (tuple(uint8 riskScore, uint8 tier, uint256 lastUpdated, bool isSanctioned))',
   'function isSanctioned(address account) external view returns (bool)',
@@ -320,16 +320,18 @@ class DailySyncService {
       const riskScores = batch.map(a => a.riskScore);
       const tiers = batch.map(a => a.tier);
       const sanctioned = batch.map(() => true);
+      // 合约签名第 5 参：每地址的 tags 数组（当前为空集合，后续可挂来源标签）
+      const tags = batch.map(() => []);
       
       try {
         // 检查 gas
         const gasEstimate = await this.contract.batchUpdateRiskProfiles.estimateGas(
-          accounts, riskScores, tiers, sanctioned
+          accounts, riskScores, tiers, sanctioned, tags
         );
         console.log(`      ⛽ Gas estimate: ${gasEstimate}`);
         
         const tx = await this.contract.batchUpdateRiskProfiles(
-          accounts, riskScores, tiers, sanctioned,
+          accounts, riskScores, tiers, sanctioned, tags,
           { gasLimit: gasEstimate * 12n / 10n } // +20% buffer
         );
         
