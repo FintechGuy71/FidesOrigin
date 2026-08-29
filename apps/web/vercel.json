@@ -86,6 +86,21 @@
       "permanent": true
     },
     {
+      "source": "/cn/blog/travel-rule-on-chain",
+      "destination": "/blog/travel-rule-on-chain",
+      "permanent": true
+    },
+    {
+      "source": "/tw/blog/travel-rule-on-chain",
+      "destination": "/blog/travel-rule-on-chain",
+      "permanent": true
+    },
+    {
+      "source": "/jp/blog/travel-rule-on-chain",
+      "destination": "/blog/travel-rule-on-chain",
+      "permanent": true
+    },
+    {
       "source": "/:path*.html",
       "destination": "/:path*",
       "permanent": true
