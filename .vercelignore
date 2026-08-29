@@ -16,3 +16,7 @@ data-sync/cache/
 scripts/debug/
 .gas-report.txt
 coverage.json
+
+# 屏蔽 Vercel 的 turbo monorepo 探测（framework=null 项目会被强制 root install 并覆盖 installCommand）
+# website(framework=nextjs) 与 CI 不经过 .vercelignore，不受影响
+/turbo.json
