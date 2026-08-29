@@ -42,7 +42,7 @@ jobs:
         env:
           RPC_URL: ${{ secrets.SEPOLIA_RPC }}
           PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          RISK_REGISTRY_ADDRESS: 0x953f985f38f94d6159c0600d1f15D543895cE896
+          RISK_REGISTRY_ADDRESS: "0x953f985f38f94d6159c0600d1f15D543895cE896"
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
