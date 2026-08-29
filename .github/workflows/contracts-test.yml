@@ -67,6 +67,10 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
+        # 注意：matchstick 二进制按真实路径解析 assemblyscript，pnpm 的符号链接
+        # 布局会让 asc 找不到（os error 2）——本 job 必须用 npm 安装（扁平布局）。
+        # apps/subgraph/package-lock.json 为 npm 锁（仅此 job 使用）；根 pnpm-lock.yaml
+        # 也含 matchstick-as 供 Deploy Subgraph 的 frozen install 使用。
         working-directory: apps/subgraph
         run: npm ci --ignore-scripts
 
