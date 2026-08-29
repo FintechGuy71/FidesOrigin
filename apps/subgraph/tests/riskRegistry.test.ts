@@ -29,10 +29,12 @@ function createRiskProfileUpdatedEvent(
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.account = account;
-  mockEvent.params.riskScore = riskScore;
-  mockEvent.params.tier = tier;
-  mockEvent.params.isSanctioned = isSanctioned;
+  mockEvent.parameters = [
+    new ethereum.EventParam("account", ethereum.Value.fromAddress(account)),
+    new ethereum.EventParam("riskScore", ethereum.Value.fromI32(riskScore)),
+    new ethereum.EventParam("tier", ethereum.Value.fromI32(tier)),
+    new ethereum.EventParam("isSanctioned", ethereum.Value.fromBoolean(isSanctioned))
+  ];
   return mockEvent;
 }
 
@@ -43,8 +45,10 @@ function createAddressTaggedEvent(account: Address, tag: Bytes): AddressTagged {
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.account = account;
-  mockEvent.params.tag = tag;
+  mockEvent.parameters = [
+    new ethereum.EventParam("account", ethereum.Value.fromAddress(account)),
+    new ethereum.EventParam("tag", ethereum.Value.fromBytes(tag))
+  ];
   return mockEvent;
 }
 
@@ -55,8 +59,10 @@ function createSanctionAddedEvent(account: Address, reason: string): SanctionAdd
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.account = account;
-  mockEvent.params.reason = reason;
+  mockEvent.parameters = [
+    new ethereum.EventParam("account", ethereum.Value.fromAddress(account)),
+    new ethereum.EventParam("reason", ethereum.Value.fromString(reason))
+  ];
   return mockEvent;
 }
 
@@ -67,7 +73,9 @@ function createSanctionRemovedEvent(account: Address): SanctionRemoved {
   mockEvent.transaction.hash = Bytes.fromHexString("0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.account = account;
+  mockEvent.parameters = [
+    new ethereum.EventParam("account", ethereum.Value.fromAddress(account))
+  ];
   return mockEvent;
 }
 
@@ -82,9 +90,11 @@ function createContractRegisteredEvent(
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.contractAddr = contractAddr;
-  mockEvent.params.contractType = contractType;
-  mockEvent.params.verified = verified;
+  mockEvent.parameters = [
+    new ethereum.EventParam("contractAddr", ethereum.Value.fromAddress(contractAddr)),
+    new ethereum.EventParam("contractType", ethereum.Value.fromBytes(contractType)),
+    new ethereum.EventParam("verified", ethereum.Value.fromBoolean(verified))
+  ];
   return mockEvent;
 }
 

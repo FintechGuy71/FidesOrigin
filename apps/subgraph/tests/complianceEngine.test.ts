@@ -31,10 +31,9 @@ function createComplianceCheckEvent(
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.addr = addr;
-  mockEvent.params.riskScore = riskScore;
-  mockEvent.params.isCompliant = isCompliant;
-  mockEvent.params.checkType = checkType;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(Bytes.empty()))
+  ];
   return mockEvent;
 }
 
@@ -51,11 +50,9 @@ function createTransactionBlockedEvent(
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.from = from;
-  mockEvent.params.to = to;
-  mockEvent.params.amount = amount;
-  mockEvent.params.token = token;
-  mockEvent.params.reason = reason;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(Bytes.empty()))
+  ];
   return mockEvent;
 }
 
@@ -72,11 +69,9 @@ function createTransactionQuarantinedEvent(
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.from = from;
-  mockEvent.params.to = to;
-  mockEvent.params.amount = amount;
-  mockEvent.params.token = token;
-  mockEvent.params.quarantineId = quarantineId;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(Bytes.empty()))
+  ];
   return mockEvent;
 }
 
@@ -90,8 +85,9 @@ function createQuarantineReleasedEvent(
   mockEvent.transaction.hash = Bytes.fromHexString("0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.quarantineId = quarantineId;
-  mockEvent.params.operator = operator;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(Bytes.empty()))
+  ];
   return mockEvent;
 }
 
@@ -102,7 +98,9 @@ function createRulePausedEvent(ruleId: Bytes): RulePaused {
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.ruleId = ruleId;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(ruleId))
+  ];
   return mockEvent;
 }
 
@@ -113,7 +111,9 @@ function createRuleUnpausedEvent(ruleId: Bytes): RuleUnpaused {
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.ruleId = ruleId;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(ruleId))
+  ];
   return mockEvent;
 }
 
