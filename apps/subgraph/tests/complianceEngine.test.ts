@@ -123,7 +123,7 @@ describe("ComplianceEngine Handlers", () => {
   });
 
   test("handleComplianceCheckPerformed creates ComplianceCheck entity for ALLOW", () => {
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
     let event = createComplianceCheckEvent(addr, BigInt.fromI32(30), true, checkType);
     handleComplianceCheckPerformed(event);
@@ -138,7 +138,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleComplianceCheckPerformed creates ComplianceCheck entity for BLOCK", () => {
     clearStore();
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
     let event = createComplianceCheckEvent(addr, BigInt.fromI32(90), false, checkType);
     handleComplianceCheckPerformed(event);
@@ -150,7 +150,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleTransactionBlocked creates ComplianceCheck with BLOCK decision", () => {
     clearStore();
-    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let to = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
     let event = createTransactionBlockedEvent(from, to, BigInt.fromI32(1000000), Address.zero(), "High risk");
     handleTransactionBlocked(event);
@@ -161,7 +161,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleTransactionQuarantined creates HoldRecord and updates stats", () => {
     clearStore();
-    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let to = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
     let quarantineId = Bytes.fromHexString("0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678") as Bytes;
     let event = createTransactionQuarantinedEvent(from, to, BigInt.fromI32(500000), Address.zero(), quarantineId);
@@ -174,7 +174,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleQuarantineReleased updates HoldRecord and decrements stats", () => {
     clearStore();
-    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let to = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
     let quarantineId = Bytes.fromHexString("0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678") as Bytes;
     let operator = Address.fromString("0x0000000000000000000000000000000000000002");
@@ -212,7 +212,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("DailyStats tracks unique addresses correctly", () => {
     clearStore();
-    let addr1 = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr1 = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let addr2 = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
 
@@ -229,7 +229,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("ProtocolStats race condition - concurrent updates maintain consistency", () => {
     clearStore();
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
 
     // Multiple checks in same block
@@ -245,7 +245,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("Data consistency - ComplianceCheck and ProtocolStats alignment", () => {
     clearStore();
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
 
     let event = createComplianceCheckEvent(addr, BigInt.fromI32(50), false, checkType);

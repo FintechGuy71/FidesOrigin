@@ -104,7 +104,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleRiskProfileUpdated creates RiskProfile entity", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event = createRiskProfileUpdatedEvent(account, 50, 1, false);
     handleRiskProfileUpdated(event);
 
@@ -116,7 +116,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleRiskProfileUpdated updates existing RiskProfile", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event1 = createRiskProfileUpdatedEvent(account, 50, 1, false);
     handleRiskProfileUpdated(event1);
 
@@ -130,7 +130,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleRiskProfileUpdated creates SanctionedAddress when sanctioned", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event = createRiskProfileUpdatedEvent(account, 90, 3, true);
     handleRiskProfileUpdated(event);
 
@@ -141,7 +141,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleRiskProfileUpdated deactivates SanctionedAddress when unsanctioned", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event1 = createRiskProfileUpdatedEvent(account, 90, 3, true);
     handleRiskProfileUpdated(event1);
 
@@ -154,7 +154,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleRiskProfileUpdated creates RiskProfileUpdate audit record", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event = createRiskProfileUpdatedEvent(account, 50, 1, false);
     handleRiskProfileUpdated(event);
 
@@ -162,7 +162,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleAddressTagged adds tag to RiskProfile", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let tag = Bytes.fromHexString("0x65786368616e6765000000000000000000000000000000000000000000000000") as Bytes;
     let event = createAddressTaggedEvent(account, tag);
     handleAddressTagged(event);
@@ -172,7 +172,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleSanctionAdded creates SanctionedAddress", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event = createSanctionAddedEvent(account, "OFAC sanctions");
     handleSanctionAdded(event);
 
@@ -183,7 +183,7 @@ describe("RiskRegistry Handlers", () => {
   });
 
   test("handleSanctionRemoved deactivates SanctionedAddress", () => {
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let addEvent = createSanctionAddedEvent(account, "OFAC sanctions");
     handleSanctionAdded(addEvent);
 
@@ -208,7 +208,7 @@ describe("RiskRegistry Handlers", () => {
 
   test("ProtocolStats counter increments correctly on sanction", () => {
     clearStore();
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event = createRiskProfileUpdatedEvent(account, 90, 3, true);
     handleRiskProfileUpdated(event);
 
@@ -218,7 +218,7 @@ describe("RiskRegistry Handlers", () => {
 
   test("ProtocolStats counter decrements correctly on unsanction", () => {
     clearStore();
-    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let account = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let event1 = createRiskProfileUpdatedEvent(account, 90, 3, true);
     handleRiskProfileUpdated(event1);
 

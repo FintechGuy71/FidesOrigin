@@ -31,8 +31,8 @@ describe("RiskRegistry handlers", () => {
     handleRiskProfileUpdated(event);
 
     assert.entityCount("RiskProfile", 1);
-    assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "riskScore", "75");
-    assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "tier", "MEDIUM");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "riskScore", "75");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tier", "MEDIUM");
   });
 
   test("handleRiskProfileUpdated creates SanctionedAddress when sanctioned", () => {
@@ -47,7 +47,7 @@ describe("RiskRegistry handlers", () => {
     handleRiskProfileUpdated(event);
 
     assert.entityCount("SanctionedAddress", 1);
-    assert.fieldEquals("SanctionedAddress", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "isActive", "true");
+    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "isActive", "true");
   });
 
   test("handleAddressTagged adds tag to RiskProfile", () => {
@@ -69,7 +69,7 @@ describe("RiskRegistry handlers", () => {
     ];
     handleAddressTagged(tagEvent);
 
-    assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "tags", "[exchange]");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[exchange]");
   });
 
   test("handleSanctionAdded marks address as sanctioned", () => {
@@ -82,7 +82,7 @@ describe("RiskRegistry handlers", () => {
     handleSanctionAdded(event);
 
     assert.entityCount("SanctionedAddress", 1);
-    assert.fieldEquals("SanctionedAddress", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "reason", "OFAC list");
+    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "reason", "OFAC list");
   });
 
   test("handleSanctionRemoved deactivates sanction", () => {
@@ -101,7 +101,7 @@ describe("RiskRegistry handlers", () => {
     ];
     handleSanctionRemoved(removeEvent);
 
-    assert.fieldEquals("SanctionedAddress", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "isActive", "false");
+    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "isActive", "false");
   });
 });
 
