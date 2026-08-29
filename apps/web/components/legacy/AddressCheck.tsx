@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
@@ -42,12 +42,11 @@ const AC_CSS = `
 .toast-info { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
 `;
 
+// 公开只读风险查询端点（apps/api 的 SCOPE.PUBLIC 通道，免 key，CORS+双限流保护）
+const PUBLIC_RISK_CHECK_URL = "https://fidesorigin-api.vercel.app/v1/public/risk-check";
 // [H-6 Fix] Subgraph URL from runtime config — no hardcoded URLs
 const SUBGRAPH_URL =
   (typeof window !== "undefined" && (window as any).FIDESORIGIN_SUBGRAPH_URL) || "";
-const BACKEND_API =
-  (typeof window !== "undefined" && (window as any).FIDESORIGIN_BACKEND_URL) || "";
-const API_KEY = (typeof window !== "undefined" && (window as any).FIDESORIGIN_API_KEY) || "";
 
 type D = Dict["addressCheck"];
 
@@ -72,31 +71,35 @@ export default function AddressCheck({ dict }: { dict: D }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "error" | "info" } | null>(null);
-  const csrfToken = useRef("");
 
   const showToast = (message: string, type: "error" | "info" = "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 5000);
   };
 
-  // [H-7 Fix] CSRF token for backend calls
+  // Load stats on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/csrf-token", {
-          method: "GET",
-          credentials: "same-origin",
-          headers: { Accept: "application/json" },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          csrfToken.current = data.csrfToken || "";
-        }
-      } catch {
-        /* backend not present — fine */
-      }
-    })();
+    loadStatsFromSubgraph();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const fetchBackendRisk = async (address: string) => {
+    const url = `${PUBLIC_RISK_CHECK_URL}?address=${encodeURIComponent(address)}&chainId=11155111`;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  };
 
   const loadStatsFromSubgraph = async () => {
     if (!SUBGRAPH_URL) return;
@@ -134,43 +137,6 @@ export default function AddressCheck({ dict }: { dict: D }) {
       }
     } catch {
       /* stats stay at -- */
-    }
-  };
-
-  // Load stats on mount
-  useEffect(() => {
-    loadStatsFromSubgraph();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const getCsrfHeaders = (): Record<string, string> => {
-    const headers: Record<string, string> = {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    };
-    if (API_KEY) headers["X-API-Key"] = API_KEY;
-    if (csrfToken.current) headers["X-CSRF-Token"] = csrfToken.current;
-    return headers;
-  };
-
-  const fetchBackendRisk = async (address: string) => {
-    const apiBase = BACKEND_API || window.location.origin;
-    const url = `${apiBase}/api/v1/address/${address}/risk`;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const res = await fetch(url, {
-        method: "GET",
-        headers: getCsrfHeaders(),
-        signal: controller.signal,
-        credentials: "same-origin",
-      });
-      clearTimeout(timeoutId);
-      if (res.status === 401 || res.status === 403) throw new Error("API key required or invalid");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch {
-      return null;
     }
   };
 
