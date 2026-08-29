@@ -17,6 +17,7 @@ import p_blog_jp from "@/components/legacy/pages/blog.jp";
 import p_blog_hong_kong_stablecoin_license_en from "@/components/legacy/pages/blog-hong-kong-stablecoin-license.en";
 import p_blog_mica_stablecoin_compliance_en from "@/components/legacy/pages/blog-mica-stablecoin-compliance.en";
 import p_blog_ofac_sanctions_screening_blockchain_en from "@/components/legacy/pages/blog-ofac-sanctions-screening-blockchain.en";
+import p_blog_travel_rule_on_chain_en from "@/components/legacy/pages/blog-travel-rule-on-chain.en";
 import p_blog_why_on_chain_compliance_en from "@/components/legacy/pages/blog-why-on-chain-compliance.en";
 import p_blog_why_on_chain_compliance_cn from "@/components/legacy/pages/blog-why-on-chain-compliance.cn";
 import p_blog_why_on_chain_compliance_tw from "@/components/legacy/pages/blog-why-on-chain-compliance.tw";
@@ -129,6 +130,13 @@ export const pageDefs: Record<string, PageDef> = {
       wallet: false,
       meta: {
       en: { title: "OFAC Sanctions Screening on Blockchain: Best Practices — FidesOrigin Blog", description: "Best practices for OFAC sanctions screening on blockchain. How to implement SDN list checks at the smart contract level for stablecoins and DeFi protocols." },
+      },
+    },
+    "blog/travel-rule-on-chain": {
+      available: ["en"] as unknown as readonly Locale[],
+      wallet: false,
+      meta: {
+      en: { title: "The Travel Rule On-Chain: What FATF Requires from Stablecoin Transfers — FidesOrigin Blog", description: "FATF Travel Rule requirements for stablecoin transfers in 2026, and why on-chain enforcement beats API-centric screening for pre-settlement compliance." },
       },
     },
     "blog/why-on-chain-compliance": {
@@ -284,6 +292,7 @@ export const pageContent: Record<string, Partial<Record<Locale, ComponentType>>>
     "blog/hong-kong-stablecoin-license": { en: p_blog_hong_kong_stablecoin_license_en },
     "blog/mica-stablecoin-compliance": { en: p_blog_mica_stablecoin_compliance_en },
     "blog/ofac-sanctions-screening-blockchain": { en: p_blog_ofac_sanctions_screening_blockchain_en },
+    "blog/travel-rule-on-chain": { en: p_blog_travel_rule_on_chain_en },
     "blog/why-on-chain-compliance": { en: p_blog_why_on_chain_compliance_en, cn: p_blog_why_on_chain_compliance_cn, tw: p_blog_why_on_chain_compliance_tw, jp: p_blog_why_on_chain_compliance_jp },
     "case-studies": { en: p_case_studies_en },
     "changelog": { en: p_changelog_en, cn: p_changelog_cn, tw: p_changelog_tw, jp: p_changelog_jp },
