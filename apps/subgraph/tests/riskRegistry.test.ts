@@ -1,4 +1,4 @@
-import { assert, describe, test, beforeAll, clearStore } from "matchstick-as/assembly/index";
+import { assert, describe, test, beforeAll, afterEach, clearStore } from "matchstick-as/assembly/index";
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   handleRiskProfileUpdated,
@@ -99,6 +99,9 @@ function createContractRegisteredEvent(
 }
 
 describe("RiskRegistry Handlers", () => {
+  afterEach(() => {
+    clearStore();
+  });
   beforeAll(() => {
     clearStore();
   });
