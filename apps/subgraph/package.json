@@ -14,7 +14,7 @@
     "clean": "rm -rf build generated",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "graph test"
+    "test:matchstick": "graph test"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.88.0",
