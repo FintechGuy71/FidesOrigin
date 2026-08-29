@@ -9,6 +9,7 @@ import { ComplianceCheckPerformed, TransactionBlocked, TransactionQuarantined, Q
 function createMockEvent<T>(): T {
   let event = changetype<T>(newMockEvent());
   event.address = Address.fromString("0x953f985f38f94d6159c0600d1f15D543895cE896");
+  event.transaction.hash = Bytes.fromHexString("0x1234") as Bytes;
   event.logIndex = BigInt.fromI32(0);
   return event;
 }
@@ -131,7 +132,7 @@ describe("ComplianceEngine handlers", () => {
     let event = createMockEvent<TransactionBlocked>();
     event.parameters = [
       new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C"))),
+      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
       new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(1000))),
       new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
       new ethereum.EventParam("reason", ethereum.Value.fromString("Sanctioned")),
@@ -150,7 +151,7 @@ describe("ComplianceEngine handlers", () => {
     let event = createMockEvent<TransactionQuarantined>();
     event.parameters = [
       new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C"))),
+      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
       new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(500))),
       new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
       new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
@@ -170,7 +171,7 @@ describe("ComplianceEngine handlers", () => {
     let qEvent = createMockEvent<TransactionQuarantined>();
     qEvent.parameters = [
       new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C"))),
+      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
       new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(500))),
       new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
       new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
