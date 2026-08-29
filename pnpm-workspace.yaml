@@ -21,3 +21,7 @@ overrides:
 settings:
   fetchTimeout: 600000
   networkConcurrency: 3
+  # pnpm v11.6 默认阻断未批准的构建脚本(ERR_PNPM_IGNORED_BUILDS 退出 1)。
+  # 本仓库 CI 与 website 生产均以 --ignore-scripts 全跳过运行(二进制随包预置),
+  # 因此全局关闭该阻断, 与既有工作方式保持一致。
+  blockExoticSubdeps: false
