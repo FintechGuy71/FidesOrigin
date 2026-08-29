@@ -136,6 +136,20 @@ export default function ContentBlogEN() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
+          <a href="/blog/travel-rule-on-chain" className="blog-card">
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">Regulation</span>
+                <span className="date">August 2026</span>
+              </div>
+              <h2>The Travel Rule On-Chain: What FATF Requires from Stablecoin Transfers</h2>
+              <p>FATF Travel Rule requirements for stablecoin transfers in 2026, and why on-chain enforcement beats API-centric screening.</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </a>
+        </div>
+
+        <div className="reveal" style={{ "marginTop": "16px" }}>
           <a href="/blog/hong-kong-stablecoin-license" className="blog-card">
             <div>
               <div style={{ "marginBottom": "8px" }}>
