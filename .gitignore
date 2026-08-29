@@ -132,3 +132,4 @@ compile-out.txt
 compile-out.trash
 tscheck.json.trash
 *.trash
+__pycache__/
