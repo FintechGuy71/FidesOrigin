@@ -1,4 +1,4 @@
-import { assert, describe, test, beforeAll, clearStore } from "matchstick-as/assembly/index";
+import { assert, describe, test, beforeAll, afterEach, clearStore } from "matchstick-as/assembly/index";
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   handleComplianceCheckPerformed,
@@ -16,6 +16,7 @@ import {
   RulePaused,
   RuleUnpaused,
 } from "../generated/ComplianceEngine/ComplianceEngine";
+import { newMockEvent } from "matchstick-as";
 
 // Helper functions
 function createComplianceCheckEvent(
@@ -24,21 +25,20 @@ function createComplianceCheckEvent(
   isCompliant: boolean,
   checkType: Bytes
 ): ComplianceCheckPerformed {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as ComplianceCheckPerformed;
+  let mockEvent = changetype<ComplianceCheckPerformed>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.addr = addr;
-  mockEvent.params.riskScore = riskScore;
-  mockEvent.params.isCompliant = isCompliant;
-  mockEvent.params.checkType = checkType;
+  mockEvent.parameters = [
+    new ethereum.EventParam("addr", ethereum.Value.fromAddress(addr)),
+    new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(riskScore)),
+    new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(isCompliant)),
+    new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(mockEvent.block.timestamp)),
+    new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(mockEvent.block.number)),
+    new ethereum.EventParam("checkType", ethereum.Value.fromBytes(checkType))
+  ];
   return mockEvent;
 }
 
@@ -49,22 +49,21 @@ function createTransactionBlockedEvent(
   token: Address,
   reason: string
 ): TransactionBlocked {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as TransactionBlocked;
+  let mockEvent = changetype<TransactionBlocked>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.from = from;
-  mockEvent.params.to = to;
-  mockEvent.params.amount = amount;
-  mockEvent.params.token = token;
-  mockEvent.params.reason = reason;
+  mockEvent.parameters = [
+    new ethereum.EventParam("from", ethereum.Value.fromAddress(from)),
+    new ethereum.EventParam("to", ethereum.Value.fromAddress(to)),
+    new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount)),
+    new ethereum.EventParam("token", ethereum.Value.fromAddress(token)),
+    new ethereum.EventParam("reason", ethereum.Value.fromString(reason)),
+    new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(mockEvent.block.timestamp)),
+    new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(mockEvent.block.number))
+  ];
   return mockEvent;
 }
 
@@ -75,22 +74,21 @@ function createTransactionQuarantinedEvent(
   token: Address,
   quarantineId: Bytes
 ): TransactionQuarantined {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as TransactionQuarantined;
+  let mockEvent = changetype<TransactionQuarantined>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.from = from;
-  mockEvent.params.to = to;
-  mockEvent.params.amount = amount;
-  mockEvent.params.token = token;
-  mockEvent.params.quarantineId = quarantineId;
+  mockEvent.parameters = [
+    new ethereum.EventParam("from", ethereum.Value.fromAddress(from)),
+    new ethereum.EventParam("to", ethereum.Value.fromAddress(to)),
+    new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount)),
+    new ethereum.EventParam("token", ethereum.Value.fromAddress(token)),
+    new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(quarantineId)),
+    new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(mockEvent.block.timestamp)),
+    new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(mockEvent.block.number))
+  ];
   return mockEvent;
 }
 
@@ -98,61 +96,56 @@ function createQuarantineReleasedEvent(
   quarantineId: Bytes,
   operator: Address
 ): QuarantineReleased {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as QuarantineReleased;
+  let mockEvent = changetype<QuarantineReleased>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(2000);
   mockEvent.block.number = BigInt.fromI32(2);
   mockEvent.transaction.hash = Bytes.fromHexString("0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.quarantineId = quarantineId;
-  mockEvent.params.operator = operator;
+  mockEvent.parameters = [
+    new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(quarantineId)),
+    new ethereum.EventParam("operator", ethereum.Value.fromAddress(operator)),
+    new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(mockEvent.block.timestamp))
+  ];
   return mockEvent;
 }
 
 function createRulePausedEvent(ruleId: Bytes): RulePaused {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as RulePaused;
+  let mockEvent = changetype<RulePaused>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.ruleId = ruleId;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(ruleId))
+  ];
   return mockEvent;
 }
 
 function createRuleUnpausedEvent(ruleId: Bytes): RuleUnpaused {
-  let mockEvent = new ethereum.Event(
-    Address.fromString("0x0000000000000000000000000000000000000000"),
-    BigInt.fromI32(0),
-    BigInt.fromI32(0),
-    new Bytes(0)
-  ) as RuleUnpaused;
+  let mockEvent = changetype<RuleUnpaused>(newMockEvent());
   mockEvent.block.timestamp = BigInt.fromI32(1000);
   mockEvent.block.number = BigInt.fromI32(1);
   mockEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") as Bytes;
   mockEvent.transaction.from = Address.fromString("0x0000000000000000000000000000000000000001");
   mockEvent.logIndex = BigInt.fromI32(0);
-  mockEvent.params.ruleId = ruleId;
+  mockEvent.parameters = [
+    new ethereum.EventParam("ruleId", ethereum.Value.fromBytes(ruleId))
+  ];
   return mockEvent;
 }
 
 describe("ComplianceEngine Handlers", () => {
+  afterEach(() => {
+    clearStore();
+  });
   beforeAll(() => {
     clearStore();
   });
 
   test("handleComplianceCheckPerformed creates ComplianceCheck entity for ALLOW", () => {
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
     let event = createComplianceCheckEvent(addr, BigInt.fromI32(30), true, checkType);
     handleComplianceCheckPerformed(event);
@@ -167,7 +160,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleComplianceCheckPerformed creates ComplianceCheck entity for BLOCK", () => {
     clearStore();
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
     let event = createComplianceCheckEvent(addr, BigInt.fromI32(90), false, checkType);
     handleComplianceCheckPerformed(event);
@@ -179,8 +172,8 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleTransactionBlocked creates ComplianceCheck with BLOCK decision", () => {
     clearStore();
-    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
-    let to = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
+    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
+    let to = Address.fromString("0x1111111111111111111111111111111111111111");
     let event = createTransactionBlockedEvent(from, to, BigInt.fromI32(1000000), Address.zero(), "High risk");
     handleTransactionBlocked(event);
 
@@ -190,8 +183,8 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleTransactionQuarantined creates HoldRecord and updates stats", () => {
     clearStore();
-    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
-    let to = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
+    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
+    let to = Address.fromString("0x1111111111111111111111111111111111111111");
     let quarantineId = Bytes.fromHexString("0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678") as Bytes;
     let event = createTransactionQuarantinedEvent(from, to, BigInt.fromI32(500000), Address.zero(), quarantineId);
     handleTransactionQuarantined(event);
@@ -203,8 +196,8 @@ describe("ComplianceEngine Handlers", () => {
 
   test("handleQuarantineReleased updates HoldRecord and decrements stats", () => {
     clearStore();
-    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
-    let to = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
+    let from = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
+    let to = Address.fromString("0x1111111111111111111111111111111111111111");
     let quarantineId = Bytes.fromHexString("0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678") as Bytes;
     let operator = Address.fromString("0x0000000000000000000000000000000000000002");
 
@@ -241,8 +234,8 @@ describe("ComplianceEngine Handlers", () => {
 
   test("DailyStats tracks unique addresses correctly", () => {
     clearStore();
-    let addr1 = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
-    let addr2 = Address.fromString("0x8ba1f109551bd432803012645hac136c82c3e8c");
+    let addr1 = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
+    let addr2 = Address.fromString("0x1111111111111111111111111111111111111111");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
 
     let event1 = createComplianceCheckEvent(addr1, BigInt.fromI32(30), true, checkType);
@@ -258,7 +251,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("ProtocolStats race condition - concurrent updates maintain consistency", () => {
     clearStore();
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
 
     // Multiple checks in same block
@@ -274,7 +267,7 @@ describe("ComplianceEngine Handlers", () => {
 
   test("Data consistency - ComplianceCheck and ProtocolStats alignment", () => {
     clearStore();
-    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bEb");
+    let addr = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
     let checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
 
     let event = createComplianceCheckEvent(addr, BigInt.fromI32(50), false, checkType);

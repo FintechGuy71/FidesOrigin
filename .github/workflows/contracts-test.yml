@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/contracts/**'
+      - 'apps/subgraph/**'
       - '.github/workflows/contracts-test.yml'
   pull_request:
   workflow_dispatch:
@@ -51,3 +52,28 @@ jobs:
         working-directory: apps/contracts
         run: |
           grep -E "^\s+[0-9]+\) |Error:|AssertionError|reverted" hardhat-test.log | head -20 | while IFS= read -r line; do echo "::error::${line:0:300}"; done
+
+  # [T-1 FIX] subgraph mapping 测试（matchstick 仅支持 linux/macOS，必须在 CI 跑；
+  # 二进制仅发布到 ubuntu-22.04，24.04 会报 "Unsupported platform: Linux x64 24"）
+  subgraph:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [INFO-4 FIX: pin]
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [INFO-4 FIX: pin]
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: apps/subgraph
+        run: npm ci --ignore-scripts
+
+      - name: Codegen
+        working-directory: apps/subgraph
+        run: npx graph codegen
+
+      - name: Run subgraph tests
+        working-directory: apps/subgraph
+        run: npx graph test

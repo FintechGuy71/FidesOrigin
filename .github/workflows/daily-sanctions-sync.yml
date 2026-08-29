@@ -1,0 +1,63 @@
+name: Daily Sanctions Sync
+
+# 每日从 OFAC 官方 SDN_ADVANCED.XML 拉取最新 ETH 制裁名单，
+# 构建 Merkle Tree，并批量更新链上 RiskRegistry 风险档案。
+# 手动触发：Actions → Daily Sanctions Sync → Run workflow（可选 dry-run）。
+
+on:
+  schedule:
+    # 每日 03:47 UTC（避开整点/半点拥塞）
+    - cron: '47 3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '只拉取+建树，不写链（true/false）'
+        required: false
+        default: 'false'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [INFO-4 FIX: pin]
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [INFO-4 FIX: pin]
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: data-sync/package-lock.json
+
+      - name: Install dependencies
+        working-directory: data-sync
+        run: npm ci --ignore-scripts
+
+      - name: Run daily sync
+        working-directory: data-sync
+        env:
+          RPC_URL: ${{ secrets.SEPOLIA_RPC }}
+          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          RISK_REGISTRY_ADDRESS: 0x953f985f38f94d6159c0600d1f15D543895cE896
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            node scripts/daily-sync.js --dry-run
+          else
+            node scripts/daily-sync.js
+          fi
+
+      - name: Upload sync logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 [INFO-4 FIX: pin]
+        with:
+          name: sanctions-sync-logs-${{ github.run_number }}
+          path: |
+            data-sync/logs/
+            data-sync/cache/merkle-root-latest.txt
+            data-sync/cache/merkle-tree.json
+          retention-days: 30

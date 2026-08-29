@@ -1,4 +1,5 @@
 import { assert, describe, test, clearStore, beforeAll, afterEach } from "matchstick-as/assembly/index";
+import { newMockEvent } from "matchstick-as";
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { handleRiskProfileUpdated, handleAddressTagged, handleSanctionAdded, handleSanctionRemoved } from "../src/mappings/riskRegistry";
 import { handleComplianceCheckPerformed, handleTransactionBlocked, handleTransactionQuarantined, handleQuarantineReleased } from "../src/mappings/complianceEngine";
@@ -6,35 +7,9 @@ import { RiskProfileUpdated, AddressTagged, SanctionAdded, SanctionRemoved } fro
 import { ComplianceCheckPerformed, TransactionBlocked, TransactionQuarantined, QuarantineReleased } from "../generated/ComplianceEngine/ComplianceEngine";
 
 function createMockEvent<T>(): T {
-  let event = changetype<T>(new ethereum.Event());
+  let event = changetype<T>(newMockEvent());
   event.address = Address.fromString("0x953f985f38f94d6159c0600d1f15D543895cE896");
-  event.block = new ethereum.Block(
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    Address.zero(),
-    Address.zero(),
-    Address.zero(),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    new ethereum.Block(),
-    new ethereum.Block()
-  );
-  event.transaction = new ethereum.Transaction(
-    Bytes.fromHexString("0x1234") as Bytes,
-    BigInt.fromI32(1),
-    Address.zero(),
-    Address.zero(),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    BigInt.fromI32(1),
-    Bytes.empty(),
-    BigInt.fromI32(1)
-  );
+  event.transaction.hash = Bytes.fromHexString("0x1234") as Bytes;
   event.logIndex = BigInt.fromI32(0);
   return event;
 }
@@ -46,73 +21,87 @@ describe("RiskRegistry handlers", () => {
 
   test("handleRiskProfileUpdated creates RiskProfile", () => {
     let event = createMockEvent<RiskProfileUpdated>();
-    event.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.riskScore = 75;
-    event.params.tier = 2;
-    event.params.isSanctioned = false;
+    event.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromI32(75)),
+      new ethereum.EventParam("tier", ethereum.Value.fromI32(2)),
+      new ethereum.EventParam("isSanctioned", ethereum.Value.fromBoolean(false))
+    ];
 
     handleRiskProfileUpdated(event);
 
     assert.entityCount("RiskProfile", 1);
-    assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "riskScore", "75");
-    assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "tier", "MEDIUM");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "riskScore", "75");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tier", "MEDIUM");
   });
 
   test("handleRiskProfileUpdated creates SanctionedAddress when sanctioned", () => {
     let event = createMockEvent<RiskProfileUpdated>();
-    event.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.riskScore = 95;
-    event.params.tier = 4;
-    event.params.isSanctioned = true;
+    event.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromI32(95)),
+      new ethereum.EventParam("tier", ethereum.Value.fromI32(4)),
+      new ethereum.EventParam("isSanctioned", ethereum.Value.fromBoolean(true))
+    ];
 
     handleRiskProfileUpdated(event);
 
     assert.entityCount("SanctionedAddress", 1);
-    assert.fieldEquals("SanctionedAddress", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "isActive", "true");
+    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "isActive", "true");
   });
 
   test("handleAddressTagged adds tag to RiskProfile", () => {
     // First create a profile
     let profileEvent = createMockEvent<RiskProfileUpdated>();
-    profileEvent.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    profileEvent.params.riskScore = 50;
-    profileEvent.params.tier = 1;
-    profileEvent.params.isSanctioned = false;
+    profileEvent.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromI32(50)),
+      new ethereum.EventParam("tier", ethereum.Value.fromI32(1)),
+      new ethereum.EventParam("isSanctioned", ethereum.Value.fromBoolean(false))
+    ];
     handleRiskProfileUpdated(profileEvent);
 
     // Then tag it
     let tagEvent = createMockEvent<AddressTagged>();
-    tagEvent.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    tagEvent.params.tag = Bytes.fromHexString("0x65786368616e6765000000000000000000000000000000000000000000000000") as Bytes;
+    tagEvent.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("tag", ethereum.Value.fromBytes(Bytes.fromHexString("0x65786368616e6765000000000000000000000000000000000000000000000000") as Bytes))
+    ];
     handleAddressTagged(tagEvent);
 
-    let profile = assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "tags", "[exchange]");
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[0x65786368616e6765000000000000000000000000000000000000000000000000]");
   });
 
   test("handleSanctionAdded marks address as sanctioned", () => {
     let event = createMockEvent<SanctionAdded>();
-    event.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.reason = "OFAC list";
+    event.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("reason", ethereum.Value.fromString("OFAC list"))
+    ];
 
     handleSanctionAdded(event);
 
     assert.entityCount("SanctionedAddress", 1);
-    assert.fieldEquals("SanctionedAddress", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "reason", "OFAC list");
+    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "reason", "OFAC list");
   });
 
   test("handleSanctionRemoved deactivates sanction", () => {
     // First add sanction
     let addEvent = createMockEvent<SanctionAdded>();
-    addEvent.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    addEvent.params.reason = "Test";
+    addEvent.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("reason", ethereum.Value.fromString("Test"))
+    ];
     handleSanctionAdded(addEvent);
 
     // Then remove
     let removeEvent = createMockEvent<SanctionRemoved>();
-    removeEvent.params.account = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
+    removeEvent.parameters = [
+      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee")))
+    ];
     handleSanctionRemoved(removeEvent);
 
-    assert.fieldEquals("SanctionedAddress", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "isActive", "false");
+    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "isActive", "false");
   });
 });
 
@@ -123,10 +112,14 @@ describe("ComplianceEngine handlers", () => {
 
   test("handleComplianceCheckPerformed creates ComplianceCheck", () => {
     let event = createMockEvent<ComplianceCheckPerformed>();
-    event.params.addr = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.riskScore = BigInt.fromI32(50);
-    event.params.isCompliant = true;
-    event.params.checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
+    event.parameters = [
+      new ethereum.EventParam("addr", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(50))),
+      new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(true)),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("checkType", ethereum.Value.fromBytes(Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes))
+    ];
 
     handleComplianceCheckPerformed(event);
 
@@ -137,11 +130,15 @@ describe("ComplianceEngine handlers", () => {
 
   test("handleTransactionBlocked creates blocked check", () => {
     let event = createMockEvent<TransactionBlocked>();
-    event.params.from = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.to = Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C");
-    event.params.amount = BigInt.fromI32(1000);
-    event.params.reason = "Sanctioned";
-    event.params.token = Address.zero();
+    event.parameters = [
+      new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
+      new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(1000))),
+      new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
+      new ethereum.EventParam("reason", ethereum.Value.fromString("Sanctioned")),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
+    ];
 
     handleTransactionBlocked(event);
 
@@ -152,11 +149,15 @@ describe("ComplianceEngine handlers", () => {
 
   test("handleTransactionQuarantined creates HoldRecord", () => {
     let event = createMockEvent<TransactionQuarantined>();
-    event.params.from = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.to = Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C");
-    event.params.amount = BigInt.fromI32(500);
-    event.params.token = Address.zero();
-    event.params.quarantineId = Bytes.fromHexString("0xabcd") as Bytes;
+    event.parameters = [
+      new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
+      new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(500))),
+      new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
+      new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
+    ];
 
     handleTransactionQuarantined(event);
 
@@ -168,17 +169,24 @@ describe("ComplianceEngine handlers", () => {
   test("handleQuarantineReleased updates HoldRecord", () => {
     // First quarantine
     let qEvent = createMockEvent<TransactionQuarantined>();
-    qEvent.params.from = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    qEvent.params.to = Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C");
-    qEvent.params.amount = BigInt.fromI32(500);
-    qEvent.params.token = Address.zero();
-    qEvent.params.quarantineId = Bytes.fromHexString("0xabcd") as Bytes;
+    qEvent.parameters = [
+      new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
+      new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(500))),
+      new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
+      new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
+    ];
     handleTransactionQuarantined(qEvent);
 
     // Then release
     let rEvent = createMockEvent<QuarantineReleased>();
-    rEvent.params.quarantineId = Bytes.fromHexString("0xabcd") as Bytes;
-    rEvent.params.operator = Address.fromString("0x1111111111111111111111111111111111111111");
+    rEvent.parameters = [
+      new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
+      new ethereum.EventParam("operator", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
+    ];
     handleQuarantineReleased(rEvent);
 
     assert.fieldEquals("HoldRecord", "0xabcd", "released", "true");
@@ -193,10 +201,14 @@ describe("ProtocolStats race conditions", () => {
   test("multiple compliance checks update stats correctly", () => {
     for (let i = 0; i < 5; i++) {
       let event = createMockEvent<ComplianceCheckPerformed>();
-      event.params.addr = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-      event.params.riskScore = BigInt.fromI32(50);
-      event.params.isCompliant = i % 2 === 0;
-      event.params.checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
+      event.parameters = [
+        new ethereum.EventParam("addr", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+        new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(50))),
+        new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(i % 2 === 0)),
+        new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+        new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+        new ethereum.EventParam("checkType", ethereum.Value.fromBytes(Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes))
+      ];
       event.logIndex = BigInt.fromI32(i);
       handleComplianceCheckPerformed(event);
     }
@@ -207,10 +219,14 @@ describe("ProtocolStats race conditions", () => {
 
   test("data consistency between ComplianceCheck and ProtocolStats", () => {
     let event = createMockEvent<ComplianceCheckPerformed>();
-    event.params.addr = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
-    event.params.riskScore = BigInt.fromI32(85);
-    event.params.isCompliant = false;
-    event.params.checkType = Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes;
+    event.parameters = [
+      new ethereum.EventParam("addr", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(85))),
+      new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(false)),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("checkType", ethereum.Value.fromBytes(Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes))
+    ];
 
     handleComplianceCheckPerformed(event);
 

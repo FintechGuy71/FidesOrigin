@@ -56,6 +56,9 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
       sanctioned.isActive = true;
       sanctioned.reason = 'Oracle update - HIGH risk';
       sanctioned.addedBy = event.transaction.from.toHexString();
+      // [FIX] 缺失的持久化：此前只建实体未保存，SanctionedAddress 永不落库
+      // （riskRegistry 测试 handleRiskProfileUpdated/creates SanctionedAddress 捕获）
+      sanctioned.save();
 
       let stats = getOrCreateStats();
       stats.totalSanctioned += 1;

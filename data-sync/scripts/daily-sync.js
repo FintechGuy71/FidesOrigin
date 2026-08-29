@@ -87,30 +87,88 @@ class DailySyncService {
    */
   async fetchOFAC() {
     console.log('📥 Loading OFAC crypto sanctions...');
-    
-    // 1. 加载本地静态列表（主要来源）
-    const staticFile = path.join(CONFIG.cacheDir, 'ofac-crypto-sanctions.json');
     let addresses = [];
-    
+
+    // 0. 主源：OFAC 官方 SDN_ADVANCED.XML（每日更新，Feature/VersionDetail 内含链上地址）
+    const advUrl = process.env.OFAC_ADVANCED_URL
+      || 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML';
+    try {
+      const response = await axios.get(advUrl, {
+        timeout: 120000,
+        responseType: 'text',
+        maxContentLength: 200 * 1024 * 1024,
+        maxBodyLength: 200 * 1024 * 1024,
+      });
+      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
+      const unique = [...new Set(matches.map(a => a.toLowerCase()))];
+      if (unique.length > 0) {
+        console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} ETH addresses (official, daily-fresh)`);
+        for (const addr of unique) {
+          addresses.push({
+            address: addr,
+            source: 'OFAC_SDN_ADVANCED',
+            riskScore: 100,
+            tier: 3,
+            reason: 'OFAC Sanctioned',
+          });
+        }
+      }
+    } catch (e) {
+      console.log(`   ⚠️ SDN_ADVANCED fetch failed: ${e.message} — falling back to static sources`);
+    }
+
+    // 1. 加载本地静态列表（后备来源：ofac-crypto-sanctions.json 或 ofac-eth-source.txt）
+    const staticFile = path.join(CONFIG.cacheDir, 'ofac-crypto-sanctions.json');
+    const txtSourceFile = path.join(CONFIG.cacheDir, 'ofac-eth-source.txt');
+
     if (fs.existsSync(staticFile)) {
       try {
         const data = JSON.parse(fs.readFileSync(staticFile, 'utf8'));
-        addresses = Array.isArray(data) ? data : data.addresses || [];
-        console.log(`   📦 Static cache: ${addresses.length} addresses`);
+        const cached = Array.isArray(data) ? data : data.addresses || [];
+        console.log(`   📦 Static cache: ${cached.length} addresses`);
+        for (const entry of cached) {
+          const addr = (entry.address || entry).toLowerCase();
+          if (!addresses.find(a => a.address === addr)) {
+            addresses.push({
+              address: addr,
+              source: entry.source || 'STATIC_CACHE',
+              riskScore: entry.riskScore ?? 100,
+              tier: entry.tier ?? 3,
+              reason: entry.reason || 'OFAC Sanctioned',
+            });
+          }
+        }
       } catch (e) {
         console.warn('   ⚠️ Failed to load static OFAC cache');
       }
+    } else if (fs.existsSync(txtSourceFile)) {
+      // ofac-eth-source.txt：每行一个地址的既有快照
+      const lines = fs.readFileSync(txtSourceFile, 'utf8').split('\n')
+        .map(l => l.trim().toLowerCase())
+        .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+      console.log(`   📦 Static snapshot (ofac-eth-source.txt): ${lines.length} addresses`);
+      for (const addr of lines) {
+        if (!addresses.find(a => a.address === addr)) {
+          addresses.push({
+            address: addr,
+            source: 'STATIC_SNAPSHOT',
+            riskScore: 100,
+            tier: 3,
+            reason: 'OFAC Sanctioned',
+          });
+        }
+      }
     }
-    
+
     // 2. 尝试下载 OFAC sdnlist.txt 补充（通常没有加密地址，但试试）
     try {
       const txtUrl = 'https://www.treasury.gov/ofac/downloads/sdnlist.txt';
       const response = await axios.get(txtUrl, { timeout: 15000, responseType: 'text' });
       const text = response.data;
-      
+
       const ethMatches = text.match(/0x[a-fA-F0-9]{40}/g) || [];
       const unique = [...new Set(ethMatches.map(a => a.toLowerCase()))];
-      
+
       if (unique.length > 0) {
         console.log(`   📥 Download supplement: ${unique.length} addresses`);
         for (const addr of unique) {
@@ -128,7 +186,7 @@ class DailySyncService {
     } catch (e) {
       console.log(`   ⏭️ TXT download skipped: ${e.message}`);
     }
-    
+
     console.log(`   ✅ OFAC total: ${addresses.length} addresses`);
     return addresses;
   }
