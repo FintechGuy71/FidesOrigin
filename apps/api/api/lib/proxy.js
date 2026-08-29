@@ -21,8 +21,10 @@ async function proxyToBackend(backendPath, options = {}) {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...(BACKEND_API_KEY ? { 'X-API-Key': BACKEND_API_KEY } : {}),
+        // [F-7 FIX] 调用方 headers 先展开，注入的后端密钥最后写入——
+        // 防止调用方通过同名头覆盖服务端凭证
         ...(options.headers || {}),
+        ...(BACKEND_API_KEY ? { 'X-API-Key': BACKEND_API_KEY } : {}),
       },
     });
     return response;

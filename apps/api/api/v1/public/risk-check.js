@@ -2,9 +2,12 @@
 //
 // 面向 fidesorigin.com 前端（address-check 页）的免 key 公开端点。
 // 防护组合：CORS 白名单（withMiddleware）+ 全局 60/min/IP 限流（withMiddleware）
-//           + 本端点自带 20/min/IP 更严限流 + 强制 GET-only + 参数严格校验。
+//           + 本端点 20/min/IP 更严限流（共享 middleware/rateLimit.js ——
+//             Redis 后端跨实例一致，IP 提取走 TRUST_PROXY 语义）
+//           + 强制 GET-only + 参数严格校验。
 // 只读代理到后端 /api/v1/address/{address}/risk，不接受任何写操作。
 const { proxyToBackend } = require('../../lib/proxy');
+const { checkRateLimit } = require('../../middleware/rateLimit');
 const {
   withMiddleware,
   isValidEthereumAddress,
@@ -13,43 +16,16 @@ const {
   SCOPE,
 } = require('../../lib/utils');
 
-// ── 端点级限流（内存滑窗，20 req/min/IP）────────────────────────────
-const PUBLIC_RATE_MAX = 20;
-const PUBLIC_RATE_WINDOW_MS = 60 * 1000;
-const buckets = new Map(); // ip -> { windowStart, count }
-
-function publicRateLimitOk(req) {
-  const ip =
-    req.headers?.['x-real-ip'] ||
-    req.headers?.['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    'unknown';
-  const now = Date.now();
-  const windowStart = Math.floor(now / PUBLIC_RATE_WINDOW_MS) * PUBLIC_RATE_WINDOW_MS;
-  let bucket = buckets.get(ip);
-  if (!bucket || bucket.windowStart !== windowStart) {
-    bucket = { windowStart, count: 0 };
-    buckets.set(ip, bucket);
-  }
-  bucket.count += 1;
-  // 防止 Map 无界增长：周期性清理过期窗口
-  if (buckets.size > 10000) {
-    for (const [k, v] of buckets) {
-      if (v.windowStart !== windowStart) buckets.delete(k);
-    }
-  }
-  return bucket.count <= PUBLIC_RATE_MAX;
-}
+// 端点级配额：20 req/min/IP（与全局限流不同的独立计数桶）
+const PUBLIC_LIMIT = { max: 20, window: 60, prefix: 'ratelimit:public' };
 
 async function handler(req, res) {
   if (req.method !== 'GET') {
     return sendError(res, 405, 'BAD_REQUEST', 'Method not allowed');
   }
 
-  if (!publicRateLimitOk(req)) {
-    res.setHeader('Retry-After', 60);
-    return sendError(res, 429, 'RATE_LIMITED', 'Too many requests, try again later.');
-  }
+  // 端点级更严限流（Redis 后端；跨 serverless 实例一致）
+  if (!(await checkRateLimit(req, res, PUBLIC_LIMIT))) return;
 
   const { address, chainId } = req.query || {};
 
