@@ -102,6 +102,43 @@ paths:
         "429":
           description: Rate limited
 
+  /v1/public/risk-check:
+    get:
+      summary: Public Address Risk Check (keyless)
+      description: |
+        Keyless, read-only risk check for public web pages (e.g. fidesorigin.com/address-check).
+        GET-only, strict rate limiting (global 60/min/IP + endpoint 20/min/IP), CORS-whitelisted origins.
+      operationId: publicRiskCheck
+      tags:
+        - Risk Assessment
+      security: []
+      parameters:
+        - name: address
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Ethereum address to assess
+        - name: chainId
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "11155111"
+          description: Chain ID (defaults to Sepolia 11155111)
+      responses:
+        "200":
+          description: Risk assessment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskCheckResult"
+        "400":
+          description: Invalid input
+        "429":
+          description: Rate limited
+
   /v1/risk/address/{address}:
     get:
       summary: Get Address Risk Details

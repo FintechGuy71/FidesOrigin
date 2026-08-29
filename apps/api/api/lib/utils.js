@@ -101,6 +101,9 @@ function _timingSafeEqualStr(a, b) {
 const SCOPE = {
   READ: 'read',
   WRITE: 'write',
+  // 公开只读通道：免 key，仅用于显式声明为 public 的端点；
+  // 保护由 CORS 白名单 + 全局限流 + 端点内自带的更严限流 + GET-only 组成
+  PUBLIC: 'public',
 };
 
 function _extractToken(req) {
@@ -117,6 +120,9 @@ function _extractToken(req) {
  */
 function checkApiKey(req, res, requiredScope = SCOPE.READ) {
   if (!AUTH_REQUIRED) return true;
+  // 公开只读通道：免 key。仅允许显式声明 SCOPE.PUBLIC 的端点使用；
+  // 端点自身必须强制 GET-only 并施加更严的限流
+  if (requiredScope === SCOPE.PUBLIC) return true;
 
   const token = _extractToken(req);
   if (!token) {
