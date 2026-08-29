@@ -68,7 +68,7 @@ describe("RiskRegistry handlers", () => {
     ];
     handleAddressTagged(tagEvent);
 
-    let profile = assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "tags", "[exchange]");
+    assert.fieldEquals("RiskProfile", "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee", "tags", "[exchange]");
   });
 
   test("handleSanctionAdded marks address as sanctioned", () => {
@@ -113,10 +113,10 @@ describe("ComplianceEngine handlers", () => {
     let event = createMockEvent<ComplianceCheckPerformed>();
     event.parameters = [
       new ethereum.EventParam("addr", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("riskScore", ethereum.Value.fromBigInt(BigInt.fromI32(50))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(50))),
       new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(true)),
-      new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
-      new ethereum.EventParam("blockNumber", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
       new ethereum.EventParam("checkType", ethereum.Value.fromBytes(Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes))
     ];
 
@@ -132,11 +132,11 @@ describe("ComplianceEngine handlers", () => {
     event.parameters = [
       new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
       new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C"))),
-      new ethereum.EventParam("amount", ethereum.Value.fromBigInt(BigInt.fromI32(1000))),
+      new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(1000))),
       new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
       new ethereum.EventParam("reason", ethereum.Value.fromString("Sanctioned")),
-      new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
-      new ethereum.EventParam("blockNumber", ethereum.Value.fromBigInt(BigInt.fromI32(0)))
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
     ];
 
     handleTransactionBlocked(event);
@@ -151,11 +151,11 @@ describe("ComplianceEngine handlers", () => {
     event.parameters = [
       new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
       new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C"))),
-      new ethereum.EventParam("amount", ethereum.Value.fromBigInt(BigInt.fromI32(500))),
+      new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(500))),
       new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
       new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
-      new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
-      new ethereum.EventParam("blockNumber", ethereum.Value.fromBigInt(BigInt.fromI32(0)))
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
     ];
 
     handleTransactionQuarantined(event);
@@ -171,11 +171,11 @@ describe("ComplianceEngine handlers", () => {
     qEvent.parameters = [
       new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
       new ethereum.EventParam("to", ethereum.Value.fromAddress(Address.fromString("0x8ba1f109551bD432803012645Hac136c82C3e8C"))),
-      new ethereum.EventParam("amount", ethereum.Value.fromBigInt(BigInt.fromI32(500))),
+      new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(500))),
       new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.zero())),
       new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
-      new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
-      new ethereum.EventParam("blockNumber", ethereum.Value.fromBigInt(BigInt.fromI32(0)))
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
     ];
     handleTransactionQuarantined(qEvent);
 
@@ -184,7 +184,7 @@ describe("ComplianceEngine handlers", () => {
     rEvent.parameters = [
       new ethereum.EventParam("quarantineId", ethereum.Value.fromBytes(Bytes.fromHexString("0xabcd") as Bytes)),
       new ethereum.EventParam("operator", ethereum.Value.fromAddress(Address.fromString("0x1111111111111111111111111111111111111111"))),
-      new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0)))
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)))
     ];
     handleQuarantineReleased(rEvent);
 
@@ -202,10 +202,10 @@ describe("ProtocolStats race conditions", () => {
       let event = createMockEvent<ComplianceCheckPerformed>();
       event.parameters = [
         new ethereum.EventParam("addr", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-        new ethereum.EventParam("riskScore", ethereum.Value.fromBigInt(BigInt.fromI32(50))),
+        new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(50))),
         new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(i % 2 === 0)),
-        new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
-        new ethereum.EventParam("blockNumber", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
+        new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+        new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
         new ethereum.EventParam("checkType", ethereum.Value.fromBytes(Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes))
       ];
       event.logIndex = BigInt.fromI32(i);
@@ -220,10 +220,10 @@ describe("ProtocolStats race conditions", () => {
     let event = createMockEvent<ComplianceCheckPerformed>();
     event.parameters = [
       new ethereum.EventParam("addr", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("riskScore", ethereum.Value.fromBigInt(BigInt.fromI32(85))),
+      new ethereum.EventParam("riskScore", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(85))),
       new ethereum.EventParam("isCompliant", ethereum.Value.fromBoolean(false)),
-      new ethereum.EventParam("timestamp", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
-      new ethereum.EventParam("blockNumber", ethereum.Value.fromBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
+      new ethereum.EventParam("blockNumber", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0))),
       new ethereum.EventParam("checkType", ethereum.Value.fromBytes(Bytes.fromHexString("0x6164647265737300000000000000000000000000000000000000000000000000") as Bytes))
     ];
 

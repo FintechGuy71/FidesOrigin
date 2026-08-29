@@ -168,7 +168,7 @@ describe("RiskRegistry Handlers", () => {
     handleAddressTagged(event);
 
     let id = account.toHexString();
-    let profile = assert.fieldEquals("RiskProfile", id, "tags", "[0x65786368616e6765000000000000000000000000000000000000000000000000]");
+    assert.fieldEquals("RiskProfile", id, "tags", "[0x65786368616e6765000000000000000000000000000000000000000000000000]");
   });
 
   test("handleSanctionAdded creates SanctionedAddress", () => {
