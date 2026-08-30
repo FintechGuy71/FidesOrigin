@@ -211,29 +211,11 @@ function httpGet(url, headers = {}, retries = 3) {
 }
 
 // ==================== Data Sources ====================
-async function fetchMetamaskPhishing() {
-  try {
-    const data = await httpGet(
-      'https://raw.githubusercontent.com/MetaMask/eth-phishing-detect/master/src/config.json'
-    );
-    if (data.blacklist && Array.isArray(data.blacklist)) {
-      return data.blacklist
-        .filter((addr) => addr.startsWith('0x') && addr.length === 42)
-        .map((addr) => ({
-          address: addr.toLowerCase(),
-          tag: 'Phishing',
-          source: 'Metamask',
-          risk: 'HIGH',
-          category: 'Phishing',
-          metadata: { list: 'eth-phishing-detect' },
-        }));
-    }
-    return [];
-  } catch (error) {
-    console.error('Metamask fetch error:', error.message);
-    return [];
-  }
-}
+// [AUDIT-FIX] 移除 fetchMetamaskPhishing()：eth-phishing-detect 的 blacklist 是
+// 纯域名名单（实测 198,096 条中 0 个 ETH 地址，fuzzylist/whitelist 同样为域名），
+// 该函数恒返回空数组，却每次缓存过期都下载 ~5MB 的 config.json——纯开销零收益。
+// 历史上的链上地址风险数据实际只来自 getPresetAddresses()。
+// 若未来需要地址级钓鱼源，应接入真正含 0x 地址的数据集后再恢复。
 
 function getPresetAddresses() {
   return [
@@ -257,11 +239,7 @@ async function getRiskData(forceRefresh = false) {
   if (!forceRefresh && _riskDataCache && now - _riskDataFetchedAt < CACHE_TTL * 1000) {
     return _riskDataCache;
   }
-  const [metamask, presets] = await Promise.allSettled([fetchMetamaskPhishing(), Promise.resolve(getPresetAddresses())]);
-  const all = [
-    ...(metamask.status === 'fulfilled' ? metamask.value : []),
-    ...(presets.status === 'fulfilled' ? presets.value : []),
-  ];
+  const all = getPresetAddresses();
   const map = new Map();
   const riskPriority = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1, UNKNOWN: 0, WHITELIST: -1 };
   all.forEach((item) => {
@@ -504,7 +482,11 @@ async function updateRule(id, mutator) {
   await _loadRules();
   const idx = memoryRulesStore.rules.findIndex((r) => r.id === id);
   if (idx === -1) return null;
+  // [AUDIT-FIX] 写回 mutator 返回值：原实现仅取返回值不回写数组，
+  // 依赖调用方原地修改才生效——一旦写成不可变更新（r => ({...r, name})），
+  // 更新会静默丢失且仍返回 200。现在统一回写。
   const updated = mutator(memoryRulesStore.rules[idx]);
+  memoryRulesStore.rules[idx] = updated;
   await _persistRules();
   return updated;
 }
@@ -662,7 +644,6 @@ module.exports = {
   getChainName,
   sendError,
   httpGet,
-  fetchMetamaskPhishing,
   getPresetAddresses,
   getRiskData,
   computeRiskScore,

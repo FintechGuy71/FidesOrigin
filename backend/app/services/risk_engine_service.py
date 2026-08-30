@@ -71,7 +71,7 @@ class ReportedAddressStrategy(RiskRuleStrategy):
         
         if report_count > 0:
             condition = rule.condition or {}
-            weight = rule.risk_weight
+            weight = rule.risk_weight if rule.risk_weight is not None else 1.0
             impact = rule.risk_score_impact or 50
             # 每增加一个举报，增加一定分数（上限 100）
             score = min(report_count * impact, 100) * weight
@@ -115,7 +115,10 @@ class SanctionedListStrategy(RiskRuleStrategy):
 
         if hit:
             impact = float(rule.risk_score_impact or 100)
-            weight = float(rule.risk_weight)
+            # [AUDIT-FIX] risk_weight 为 NULL（手动建规则未填权重）时降级 1.0：
+            # None 传入 float() 抛 TypeError → 接口 500（实测 10/11 在册地址查询失败）。
+            # 同一缺口存在于全部策略与 RiskFactor 构造，此处统一加防御。
+            weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
             return min(impact, 100) * weight, "OFAC/SDN 官方制裁名单在册"
 
         return 0, ""
@@ -145,7 +148,7 @@ class TransactionPatternStrategy(RiskRuleStrategy):
         
         condition = rule.condition or {}
         max_tx_per_hour = condition.get("max_transactions_per_hour", 10)
-        weight = rule.risk_weight
+        weight = rule.risk_weight if rule.risk_weight is not None else 1.0
         
         threshold = max_tx_per_hour * 24
         if tx_count_24h > threshold:
@@ -178,7 +181,7 @@ class AddressAgeStrategy(RiskRuleStrategy):
                     
                     condition = rule.condition or {}
                     min_days = condition.get("min_days", 7)
-                    weight = rule.risk_weight
+                    weight = rule.risk_weight if rule.risk_weight is not None else 1.0
                     
                     if age_days < min_days:
                         impact = rule.risk_score_impact or 20
@@ -206,7 +209,7 @@ class LargeTransferStrategy(RiskRuleStrategy):
         condition = rule.condition or {}
         threshold_eth = condition.get("threshold_eth", 100)
         threshold_wei = int(threshold_eth * 10**18)
-        weight = rule.risk_weight
+        weight = rule.risk_weight if rule.risk_weight is not None else 1.0
         
         from sqlalchemy import cast, Numeric
         
@@ -304,7 +307,7 @@ class RiskEngineService:
         
         # 自定义规则：使用 risk_score_impact 累加
         impact = rule.risk_score_impact or 0
-        weight = rule.risk_weight
+        weight = rule.risk_weight if rule.risk_weight is not None else 1.0
         score = impact * weight
         return score, rule.description or ""
     
@@ -355,7 +358,7 @@ class RiskEngineService:
                     total_score += score
                     risk_factors.append(RiskFactor(
                         name=rule.name,
-                        weight=rule.risk_weight,
+                        weight=rule.risk_weight if rule.risk_weight is not None else 1.0,
                         score=score,
                         description=description or rule.description
                     ))

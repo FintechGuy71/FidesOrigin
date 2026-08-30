@@ -23,16 +23,15 @@ dataSources:
         - name: RiskRegistry
           file: ./abis/RiskRegistry.json
       eventHandlers:
-        - event: RiskProfileUpdated(indexed address,uint8,uint8,bool)
+        # [AUDIT-FIX] RiskProfileUpdated 第二参实为 uint256（合约 RiskRegistry.sol L97-102），
+        # 原签名 uint8 计算出的 topic0 与链上事件永不相等 → RiskProfile/SanctionedAddress
+        # 实体自部署起零索引。
+        - event: RiskProfileUpdated(indexed address,uint256,uint8,bool)
           handler: handleRiskProfileUpdated
         - event: AddressTagged(indexed address,indexed bytes32)
           handler: handleAddressTagged
-        - event: SanctionAdded(indexed address,string)
-          handler: handleSanctionAdded
-        - event: SanctionRemoved(indexed address)
-          handler: handleSanctionRemoved
-        - event: ContractRegistered(indexed address,bytes32,bool)
-          handler: handleContractRegistered
+        # [AUDIT-FIX] 删除 SanctionAdded / SanctionRemoved / ContractRegistered 订阅：
+        # v3.1.0 合约已无这些事件（旧版残留），链上永远匹配不到。
       file: ./src/mappings/riskRegistry.ts
   - kind: ethereum
     name: ComplianceEngine

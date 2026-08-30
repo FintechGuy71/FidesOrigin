@@ -1,9 +1,9 @@
 import { assert, describe, test, clearStore, beforeAll, afterEach } from "matchstick-as/assembly/index";
 import { newMockEvent } from "matchstick-as";
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { handleRiskProfileUpdated, handleAddressTagged, handleSanctionAdded, handleSanctionRemoved } from "../src/mappings/riskRegistry";
+import { handleRiskProfileUpdated, handleAddressTagged } from "../src/mappings/riskRegistry";
 import { handleComplianceCheckPerformed, handleTransactionBlocked, handleTransactionQuarantined, handleQuarantineReleased } from "../src/mappings/complianceEngine";
-import { RiskProfileUpdated, AddressTagged, SanctionAdded, SanctionRemoved } from "../generated/RiskRegistry/RiskRegistry";
+import { RiskProfileUpdated, AddressTagged } from "../generated/RiskRegistry/RiskRegistry";
 import { ComplianceCheckPerformed, TransactionBlocked, TransactionQuarantined, QuarantineReleased } from "../generated/ComplianceEngine/ComplianceEngine";
 
 function createMockEvent<T>(): T {
@@ -72,37 +72,6 @@ describe("RiskRegistry handlers", () => {
     assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[0x65786368616e6765000000000000000000000000000000000000000000000000]");
   });
 
-  test("handleSanctionAdded marks address as sanctioned", () => {
-    let event = createMockEvent<SanctionAdded>();
-    event.parameters = [
-      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("reason", ethereum.Value.fromString("OFAC list"))
-    ];
-
-    handleSanctionAdded(event);
-
-    assert.entityCount("SanctionedAddress", 1);
-    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "reason", "OFAC list");
-  });
-
-  test("handleSanctionRemoved deactivates sanction", () => {
-    // First add sanction
-    let addEvent = createMockEvent<SanctionAdded>();
-    addEvent.parameters = [
-      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee"))),
-      new ethereum.EventParam("reason", ethereum.Value.fromString("Test"))
-    ];
-    handleSanctionAdded(addEvent);
-
-    // Then remove
-    let removeEvent = createMockEvent<SanctionRemoved>();
-    removeEvent.parameters = [
-      new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee")))
-    ];
-    handleSanctionRemoved(removeEvent);
-
-    assert.fieldEquals("SanctionedAddress", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "isActive", "false");
-  });
 });
 
 describe("ComplianceEngine handlers", () => {
