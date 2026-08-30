@@ -405,7 +405,18 @@ class DailySyncService {
     
     // 4. 同步到链上
     const chainResult = await this.syncToChain(merged, dryRun);
-    
+
+    // 4b. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
+    if (!dryRun) {
+      const { pushToBackendDb } = require('./push-to-backend-db');
+      try {
+        await pushToBackendDb(merged);
+      } catch (e) {
+        // 后端库同步失败不阻断主流程（链上已是事实源），告警并继续
+        console.error('   ⚠️ Backend DB sync failed (chain 已是事实源，明日重试):', e.message);
+      }
+    }
+
     // 5. 保存
     this.saveDatabase(merged);
     

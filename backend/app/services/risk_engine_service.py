@@ -80,6 +80,47 @@ class ReportedAddressStrategy(RiskRuleStrategy):
         return 0, ""
 
 
+class SanctionedListStrategy(RiskRuleStrategy):
+    """制裁名单策略（OFAC/SDN 等官方名单）
+
+    数据由 data-sync 日更管道写入 address_risks.tags（含 OFAC 标记）。
+    命中即在册，给满分/高档——制裁名单是确定性事实，不做概率加权。
+    """
+
+    # 在册标记（含历史来源名）
+    MARKERS = ("OFAC", "sanctioned", "sdn", "STATIC_SNAPSHOT")
+
+    async def evaluate(
+        self,
+        address: str,
+        chain: str,
+        rule: RiskRule,
+        db: AsyncSession,
+        blockscout: BlockscoutService
+    ) -> Tuple[float, str]:
+        result = await db.execute(
+            select(AddressRisk.tags).where(
+                AddressRisk.address == address,
+                AddressRisk.chain == chain,
+            )
+        )
+        tags = result.scalar()
+        hit = False
+        if tags:
+            for t in tags:
+                ts = str(t)
+                if any(m in ts for m in self.MARKERS):
+                    hit = True
+                    break
+
+        if hit:
+            impact = float(rule.risk_score_impact or 100)
+            weight = float(rule.risk_weight)
+            return min(impact, 100) * weight, "OFAC/SDN 官方制裁名单在册"
+
+        return 0, ""
+
+
 class TransactionPatternStrategy(RiskRuleStrategy):
     """交易模式策略（高频交易）"""
     
@@ -220,6 +261,7 @@ class RiskEngineService:
         "high_frequency_transactions": TransactionPatternStrategy,
         "new_address": AddressAgeStrategy,
         "large_amount_transfer": LargeTransferStrategy,
+        "sanctioned_list": SanctionedListStrategy,
     }
     
     def __init__(
