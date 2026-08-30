@@ -44,6 +44,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           RISK_REGISTRY_ADDRESS: "0x953f985f38f94d6159c0600d1f15D543895cE896"
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          BACKEND_DATABASE_URL: ${{ secrets.BACKEND_DATABASE_URL }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
             node scripts/daily-sync.js --dry-run
