@@ -1,9 +1,12 @@
-// [Perf-Fix] Redis-backed sliding window rate limiter with in-memory fallback
+// [Perf-Fix] Redis-backed fixed-window rate limiter with in-memory fallback
 // ============================================================================
 // This module provides a rate-limiting middleware that can be plugged into
 // any Express / Vercel / Node.js HTTP handler.
 //
-// Algorithm: Sliding Window
+// Algorithm: Fixed Window (tumbling)
+//   [AUDIT-FIX] 修正注释：实现按 Math.floor(now/window)*window 取整到固定窗口
+//   计数，并非滑动窗口。窗口交界处存在 2x 突发的理论边界（固定窗口固有特性），
+//   如需精确滑动窗口应改用 ZSET + ZREMRANGEBYSCORE 方案。
 //   - Each IP has a counter bucket keyed by the current minute (or custom window).
 //   - Requests are counted per window; if the count exceeds the limit, the request
 //     is rejected with 429 Too Many Requests.
@@ -108,7 +111,7 @@ function getClientIp(req) {
   return remote.replace(/^::ffff:/, '');
 }
 
-// ── Sliding window logic (Redis) ─────────────────────────────────────────
+// ── Fixed-window counter logic (Redis) ────────────────────────────────────
 async function checkRateLimitRedis(ip, now, opts) {
   const client = getRedisClient();
   if (!client || !redisAvailable) return null; // let caller fall back
@@ -133,7 +136,7 @@ async function checkRateLimitRedis(ip, now, opts) {
   }
 }
 
-// ── Sliding window logic (Memory) ──────────────────────────────────────────
+// ── Fixed-window counter logic (Memory) ─────────────────────────────────────
 function checkRateLimitMemory(ip, now, opts) {
   const { max, window, prefix } = opts;
   const key = `${prefix}:${ip}`;
