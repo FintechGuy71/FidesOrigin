@@ -10,8 +10,11 @@
 data-sync/
 ├── sanctions-sync.js           # 制裁名单数据抓取与标准化
 ├── chainlink-automation.js     # Chainlink Functions 自动化
-├── risk-sync-master.js         # 主控模块
+├── scripts/daily-sync.js       # 每日同步主管道（GitHub Actions 日更，见下方）
 └── chainlink/
+
+> 注：旧主控 risk-sync-master.js 已删除（引用了不存在的方法，属废弃编排器）；
+> 现役管道为 scripts/daily-sync.js + .github/workflows/daily-sanctions-sync.yml。
     └── risk-functions-source.js # Chainlink Functions 源代码
 ```
 
@@ -93,8 +96,9 @@ node sanctions-sync.js
 ### 4. 执行完整同步
 
 ```bash
-# 获取数据 + 同步到链上
-node risk-sync-master.js --full
+# 获取数据 + 同步到链上（现役管道）
+node scripts/daily-sync.js          # 完整同步（写链）
+node scripts/daily-sync.js --dry-run  # 只拉取+建树，不写链
 ```
 
 ### 5. 触发 Chainlink Functions
@@ -118,8 +122,10 @@ node chainlink-automation.js --check [requestId]
 ### 使用 cron
 
 ```bash
-# 每天凌晨2点执行完整同步
-0 2 * * * cd /path/to/fidesorigin-demo && node data-sync/risk-sync-master.js --full >> /var/log/fidesorigin-sync.log 2>&1
+# 现役：GitHub Actions 每日 03:47 UTC 自动执行（.github/workflows/daily-sanctions-sync.yml）
+# 无需自建 cron/PM2；手动触发：Actions → Daily Sanctions Sync → Run workflow
+# 以下为历史参考（本地 cron 写法，已不推荐）：
+# 0 2 * * * cd /path/to/repo && node data-sync/scripts/daily-sync.js >> /var/log/fidesorigin-sync.log 2>&1
 
 # 每4小时检查一次待处理的 Chainlink 请求
 0 */4 * * * cd /path/to/fidesorigin-demo && node data-sync/chainlink-automation.js --check >> /var/log/fidesorigin-check.log 2>&1
@@ -136,7 +142,7 @@ cat > ecosystem.config.js << 'EOF'
 module.exports = {
   apps: [{
     name: 'fidesorigin-sync',
-    script: './data-sync/risk-sync-master.js',
+    script: './data-sync/scripts/daily-sync.js',
     args: '--full',
     cron_restart: '0 2 * * *',
     autorestart: false,

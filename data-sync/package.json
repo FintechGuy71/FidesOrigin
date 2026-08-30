@@ -2,10 +2,8 @@
   "name": "@fidesorigin/risk-sync",
   "version": "1.0.0",
   "description": "FidesOrigin Risk Data Synchronization System",
-  "main": "risk-sync-master.js",
+  "main": "scripts/daily-sync.js",
   "scripts": {
-    "sync": "node risk-sync-master.js --full",
-    "check": "node risk-sync-master.js --check",
     "sanctions": "node sanctions-sync.js",
     "cl:save": "node chainlink-automation.js --save-source",
     "cl:sync": "node chainlink-automation.js --sanctions",
