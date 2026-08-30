@@ -85,20 +85,49 @@ const DEMO_CSS = `
 }
 `;
 
-const SAMPLE_ADDRESS = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb";
+const SAMPLE_ADDRESS = "0x0330070fd38ec3bb94f58fa55d40368271e9e54a"; // OFAC 在册制裁地址（链上 sanctioned=true，演示即出真实 HIGH 结果）
+
+// 公开只读风险查询端点（apps/api SCOPE.PUBLIC，免 key）
+const PUBLIC_RISK_CHECK_URL = "https://fidesorigin-api.vercel.app/v1/public/risk-check";
 
 type D = Dict["demo"];
+
+type RiskApiResponse = {
+  risk_score?: number;
+  risk_level?: string;
+  risk_factors?: { name?: string; type?: string; severity?: string }[];
+  tags?: string[];
+  transactions_count?: number;
+  last_updated_at?: string | null;
+};
+
+async function fetchRisk(address: string): Promise<RiskApiResponse | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(
+      `${PUBLIC_RISK_CHECK_URL}?address=${encodeURIComponent(address)}&chainId=11155111`,
+      { headers: { Accept: "application/json" }, signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as RiskApiResponse;
+  } catch {
+    return null;
+  }
+}
 
 type ScreenState =
   | { kind: "idle" }
   | { kind: "checking" }
-  | { kind: "safe"; address: string; date: string }
-  | { kind: "danger"; address: string };
+  | { kind: "done"; address: string; safe: boolean; score: number; level: string; flags: string; date: string }
+  | { kind: "error" };
 
 type RiskState =
   | { kind: "idle" }
   | { kind: "analyzing" }
-  | { kind: "done"; score: number; age: number; txs: number };
+  | { kind: "done"; score: number; tier: string; factors: string[]; txs: number; updated: string }
+  | { kind: "error" };
 
 export default function DemoExperience({ dict }: { dict: D }) {
   const [activeTab, setActiveTab] = useState("screen");
@@ -107,29 +136,49 @@ export default function DemoExperience({ dict }: { dict: D }) {
   const [screen, setScreen] = useState<ScreenState>({ kind: "idle" });
   const [risk, setRisk] = useState<RiskState>({ kind: "idle" });
 
-  const runScreen = () => {
+  const runScreen = async () => {
+    const address = screenAddress.trim().toLowerCase();
     setScreen({ kind: "checking" });
-    const address = screenAddress;
-    setTimeout(() => {
-      const date = new Date().toISOString().slice(0, 10);
-      setScreen(
-        Math.random() > 0.3
-          ? { kind: "safe", address, date }
-          : { kind: "danger", address }
-      );
-    }, 800);
+    const data = await fetchRisk(address);
+    if (!data) {
+      setScreen({ kind: "error" });
+      return;
+    }
+    const score = data.risk_score ?? 0;
+    const level = data.risk_level || "UNKNOWN";
+    const sanctioned = (data.tags || []).length > 0 || level === "CRITICAL";
+    const safe = !(sanctioned || level === "HIGH" || score >= 80);
+    setScreen({
+      kind: "done",
+      address,
+      safe,
+      score,
+      level,
+      flags: (data.tags || []).join(", ") || dict.sanctionsNone,
+      date: (data.last_updated_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+    });
   };
 
-  const runRisk = () => {
+  const runRisk = async () => {
+    const address = riskAddress.trim().toLowerCase();
     setRisk({ kind: "analyzing" });
-    setTimeout(() => {
-      setRisk({
-        kind: "done",
-        score: Math.floor(Math.random() * 100),
-        age: Math.floor(Math.random() * 1000),
-        txs: Math.floor(Math.random() * 10000),
-      });
-    }, 1000);
+    const data = await fetchRisk(address);
+    if (!data) {
+      setRisk({ kind: "error" });
+      return;
+    }
+    const score = data.risk_score ?? 0;
+    const factors = (data.risk_factors || [])
+      .map((f) => f.name || f.type || "")
+      .filter(Boolean);
+    setRisk({
+      kind: "done",
+      score,
+      tier: data.risk_level || "UNKNOWN",
+      factors,
+      txs: data.transactions_count ?? 0,
+      updated: (data.last_updated_at || "").slice(0, 10),
+    });
   };
 
   const tabs = [
@@ -192,32 +241,35 @@ export default function DemoExperience({ dict }: { dict: D }) {
               {screen.kind !== "idle" && (
                 <div
                   className={`demo-result show${
-                    screen.kind === "safe" ? " safe" : screen.kind === "danger" ? " danger" : ""
+                    screen.kind === "done" ? (screen.safe ? " safe" : " danger") : ""
                   }`}
                 >
                   {screen.kind === "checking" && dict.checking}
-                  {screen.kind === "safe" && (
+                  {screen.kind === "error" && (
+                    <span style={{ color: "var(--warning)" }}>{dict.unavailable}</span>
+                  )}
+                  {screen.kind === "done" && screen.safe && (
                     <>
                       <span style={{ color: "var(--success)" }}>{dict.compliant}</span>
                       <br />
                       {dict.addressLabel}: {screen.address.slice(0, 20)}...
                       <br />
-                      {dict.riskScoreLabel}: {dict.tierLow} (12/100)
+                      {dict.riskScoreLabel}: {dict.tierLow} ({screen.score}/100)
                       <br />
                       {dict.sanctionsLabel}: {dict.sanctionsNone}
                       <br />
                       {dict.lastUpdatedLabel}: {screen.date}
                     </>
                   )}
-                  {screen.kind === "danger" && (
+                  {screen.kind === "done" && !screen.safe && (
                     <>
                       <span style={{ color: "var(--danger)" }}>{dict.highRiskResult}</span>
                       <br />
                       {dict.addressLabel}: {screen.address.slice(0, 20)}...
                       <br />
-                      {dict.riskScoreLabel}: {dict.tierHigh} (87/100)
+                      {dict.riskScoreLabel}: {dict.tierHigh} ({screen.score}/100)
                       <br />
-                      {dict.flagsLabel}: {dict.flagsValue}
+                      {dict.flagsLabel}: {screen.flags}
                       <br />
                       {dict.actionLabel}: {dict.actionBlocked}
                     </>
@@ -255,6 +307,9 @@ export default function DemoExperience({ dict }: { dict: D }) {
                   }`}
                 >
                   {risk.kind === "analyzing" && dict.analyzing}
+                  {risk.kind === "error" && (
+                    <span style={{ color: "var(--warning)" }}>{dict.unavailable}</span>
+                  )}
                   {risk.kind === "done" && (
                     <>
                       {dict.riskScoreLabel}:{" "}
@@ -269,19 +324,16 @@ export default function DemoExperience({ dict }: { dict: D }) {
                           fontWeight: 600,
                         }}
                       >
-                        {risk.score}/100 (
-                        {risk.score < 30 ? dict.tierLow : risk.score < 70 ? dict.tierMedium : dict.tierHigh})
+                        {risk.score}/100 ({risk.tier})
                       </span>
                       <br />
                       <br />
                       {dict.breakdownLabel}:
                       <br />
-                      • {dict.sanctionsLabel}: {risk.score > 50 ? dict.match : dict.clean}
+                      • {dict.sanctionsLabel}: {risk.factors.length > 0 ? risk.factors.join(", ") : dict.clean}
                       <br />
-                      • {dict.exposureLabel}: {risk.score > 40 ? dict.exposureHigh : dict.exposureLow}
-                      <br />
-                      • {dict.ageLabel}: {risk.age} {dict.daysUnit}
-                      <br />• {dict.txLabel}: {risk.txs}
+                      • {dict.txLabel}: {risk.txs}
+                      <br />• {dict.lastUpdatedLabel}: {risk.updated || "-"}
                     </>
                   )}
                 </div>
