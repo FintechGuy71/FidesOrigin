@@ -36,9 +36,9 @@ async function pushToBackendDb(entries) {
       const values = [];
       const params = [];
       chunk.forEach((e, idx) => {
-        const base = idx * 7;
+        const base = idx * 8;
         const level = TIER_TO_LEVEL[Math.min(Math.max(e.tier || 3, 0), 4)];
-        values.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`);
+        values.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`);
         params.push(
           e.address.toLowerCase(),
           'ethereum',
@@ -46,21 +46,23 @@ async function pushToBackendDb(entries) {
           level,
           JSON.stringify(e.sources && e.sources.length ? e.sources : ['OFAC', 'sanctioned']),
           'CONFIRMED',
-          new Date().toISOString()
+          new Date().toISOString(),
+          0 // report_count：DB 列无默认值，缺省会留 NULL 并使响应模型 int 校验 500
         );
       });
 
       await client.query(
-        `INSERT INTO address_risks (id, address, chain, risk_score, risk_level, tags, status, last_updated_at)
-         SELECT gen_random_uuid(), v.address, v.chain, v.risk_score::numeric, v.risk_level, v.tags::jsonb, v.status, v.last_updated_at::timestamptz
-         FROM (VALUES ${values.join(', ')}) AS v(address, chain, risk_score, risk_level, tags, status, last_updated_at)
+        `INSERT INTO address_risks (id, address, chain, risk_score, risk_level, tags, status, last_updated_at, report_count)
+         SELECT gen_random_uuid(), v.address, v.chain, v.risk_score::numeric, v.risk_level, v.tags::jsonb, v.status, v.last_updated_at::timestamptz, v.report_count::int
+         FROM (VALUES ${values.join(', ')}) AS v(address, chain, risk_score, risk_level, tags, status, last_updated_at, report_count)
          ON CONFLICT (address, chain)
          DO UPDATE SET
            risk_score = EXCLUDED.risk_score,
            risk_level = EXCLUDED.risk_level,
            tags = EXCLUDED.tags,
            status = EXCLUDED.status,
-           last_updated_at = EXCLUDED.last_updated_at`,
+           last_updated_at = EXCLUDED.last_updated_at,
+           report_count = EXCLUDED.report_count`,
         params
       );
       upserted += chunk.length;

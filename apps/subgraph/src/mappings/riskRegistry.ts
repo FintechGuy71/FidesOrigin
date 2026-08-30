@@ -7,9 +7,6 @@ import {
 import {
   RiskProfileUpdated,
   AddressTagged,
-  SanctionAdded,
-  SanctionRemoved,
-  ContractRegistered,
 } from '../../generated/RiskRegistry/RiskRegistry';
 import { ethereum, BigInt, Address, Bytes, log } from '@graphprotocol/graph-ts';
 import { getRiskTier } from './shared/riskTier';
@@ -32,6 +29,8 @@ function getOrCreateStats(): ProtocolStats {
 
 export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
   let account = event.params.account.toHexString();
+  // [AUDIT-FIX] 事件签名对齐合约后 riskScore 为 BigInt（原 uint8 误写导致该 handler
+  // 从未被链上事件触发过），直接赋值，不再经 BigInt.fromI32 转换。
   let riskScore = event.params.riskScore;
   let tier = getRiskTier(event.params.tier as i32);
   let isSanctioned = event.params.isSanctioned;
@@ -42,7 +41,7 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
     profile.tags = [];
   }
 
-  profile.riskScore = BigInt.fromI32(riskScore);
+  profile.riskScore = riskScore;
   profile.tier = tier;
   profile.lastUpdated = event.block.timestamp;
   profile.isSanctioned = isSanctioned;
@@ -90,7 +89,7 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
   let updateId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let update = new RiskProfileUpdate(updateId);
   update.account = account;
-  update.riskScore = BigInt.fromI32(riskScore);
+  update.riskScore = riskScore;
   update.tier = tier;
   update.tags = profile.tags;
   update.timestamp = event.block.timestamp;
@@ -149,110 +148,5 @@ export function handleAddressTagged(event: AddressTagged): void {
   log.info('[handleAddressTagged] account={} tag={}', [account, tag]);
 }
 
-export function handleSanctionAdded(event: SanctionAdded): void {
-  let account = event.params.account.toHexString();
-  let reason = event.params.reason;
 
-  let profile = RiskProfile.load(account);
-  if (profile) {
-    profile.isSanctioned = true;
-    profile.sanctionedAt = event.block.timestamp;
-    profile.sanctionReason = reason;
-    profile.save();
-  }
 
-  let sanctioned = SanctionedAddress.load(account);
-  if (!sanctioned) {
-    sanctioned = new SanctionedAddress(account);
-    sanctioned.account = account;
-    sanctioned.addedAt = event.block.timestamp;
-    sanctioned.isActive = true;
-    sanctioned.addedBy = event.transaction.from.toHexString();
-
-    let stats = getOrCreateStats();
-    stats.totalSanctioned += 1;
-    stats.lastUpdated = event.block.timestamp;
-    stats.save();
-  }
-  sanctioned.reason = reason;
-  sanctioned.save();
-
-  log.info('[handleSanctionAdded] account={} reason={}', [account, reason]);
-}
-
-export function handleSanctionRemoved(event: SanctionRemoved): void {
-  let account = event.params.account.toHexString();
-
-  let profile = RiskProfile.load(account);
-  if (profile) {
-    profile.isSanctioned = false;
-    profile.save();
-  }
-
-  let sanctioned = SanctionedAddress.load(account);
-  if (sanctioned) {
-    sanctioned.isActive = false;
-    sanctioned.removedAt = event.block.timestamp;
-    sanctioned.save();
-
-    let stats = getOrCreateStats();
-    if (stats.totalSanctioned > 0) {
-      stats.totalSanctioned -= 1;
-    } else {
-      log.warning('[handleSanctionRemoved] totalSanctioned already 0, skipping decrement', []);
-    }
-    stats.lastUpdated = event.block.timestamp;
-    stats.save();
-  }
-
-  log.info('[handleSanctionRemoved] account={}', [account]);
-}
-
-export function handleContractRegistered(event: ContractRegistered): void {
-  let contractAddr = event.params.contractAddr.toHexString();
-  let contractType = event.params.contractType.toHexString();
-  let isVerified = event.params.verified;
-
-  // [High Fix #25] Ensure RiskProfile entity has all fields populated.
-  let profile = RiskProfile.load(contractAddr);
-  if (!profile) {
-    profile = new RiskProfile(contractAddr);
-    profile.tags = [];
-    profile.riskScore = BigInt.zero();
-    profile.tier = 'UNKNOWN';
-    profile.isSanctioned = false;
-  }
-
-  profile.lastUpdated = event.block.timestamp;
-  let tags = profile.tags;
-  if (!tags.includes(contractType)) {
-    tags.push(contractType);
-  }
-  if (isVerified && !tags.includes('verified')) {
-    tags.push('verified');
-  }
-  profile.tags = tags;
-  profile.save();
-
-  // [High Fix #25] Create RiskProfileUpdate for audit trail.
-  let updateId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
-  let update = RiskProfileUpdate.load(updateId);
-  if (!update) {
-    update = new RiskProfileUpdate(updateId);
-    update.account = contractAddr;
-    update.riskScore = profile.riskScore;
-    update.tier = profile.tier;
-    update.tags = tags;
-    update.timestamp = event.block.timestamp;
-    update.blockNumber = event.block.number;
-    update.transactionHash = event.transaction.hash.toHexString();
-    update.oracle = event.transaction.from.toHexString();
-    update.save();
-  }
-
-  log.info('[handleContractRegistered] contract={} type={} verified={}', [
-    contractAddr,
-    contractType,
-    isVerified ? 'true' : 'false',
-  ]);
-}

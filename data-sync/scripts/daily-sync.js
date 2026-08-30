@@ -11,14 +11,14 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 /**
  * @title DailySyncService
  * @notice 每日风险数据同步服务
- * @dev 1. 抓取 OFAC SDN XML
+ * @dev 1. 抓取 OFAC SDN_ADVANCED.XML（主源，Feature/VersionDetail 内含链上地址）
  *    2. 合并本地缓存 + Chainalysis 数据
  *    3. 构建 Merkle Tree
  *    4. 更新链上 RiskRegistry
- * 
+ *
  * 运行: node data-sync/scripts/daily-sync.js [--dry-run]
  * 环境变量:
- *   - OFAC_URL: OFAC SDN XML URL (默认 Treasury 官方)
+ *   - OFAC_ADVANCED_URL: OFAC SDN_ADVANCED.XML 主源（fetchOFAC 内读取）
  *   - CHAINALYSIS_API_KEY: Chainalysis API Key
  *   - RPC_URL: 链节点
  *   - PRIVATE_KEY: 部署/更新钱包私钥
@@ -26,7 +26,6 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
  */
 
 const CONFIG = {
-  ofacUrl: process.env.OFAC_URL || 'https://www.treasury.gov/ofac/downloads/sdn.xml',
   chainalysisApiKey: process.env.CHAINALYSIS_API_KEY,
   rpcUrl: process.env.RPC_URL || 'https://rpc.sepolia.org',
   privateKey: process.env.SYNC_PRIVATE_KEY || process.env.PRIVATE_KEY,
@@ -36,13 +35,18 @@ const CONFIG = {
   logDir: path.join(__dirname, '../logs'),
 };
 
-// RiskRegistry ABI (只需要 update 相关函数)
+// RiskRegistry ABI（与链上 v3.1.0 合约签名对齐）
+// [AUDIT-FIX] 三处历史漂移修正：
+//   1. getRiskProfile 真实返回 5 值（score/tier/tags/lastUpdated/sanctioned），原 4 字段 tuple 为旧版
+//   2. emergencySanction 在当前合约中不存在（来自旧版 ABI），删除
+//   3. RiskProfileUpdated 事件第二参为 uint256（原声明 uint8 导致 topic0 永远对不上）
 const RISK_REGISTRY_ABI = [
   'function batchUpdateRiskProfiles(address[] calldata accounts, uint8[] calldata riskScores, uint8[] calldata tiers, bool[] calldata isSanctionedList, bytes32[][] calldata tags) external',
-  'function emergencySanction(address[] calldata accounts, string calldata reason) external',
-  'function getRiskProfile(address account) external view returns (tuple(uint8 riskScore, uint8 tier, uint256 lastUpdated, bool isSanctioned))',
+  'function updateRiskProfile(address addr, uint8 riskScore, uint8 tier, bytes32[] calldata tags, bool sanctioned) external',
+  'function getRiskProfile(address account) external view returns (uint8 riskScore, uint8 tier, bytes32[] tags, uint256 lastUpdated, bool sanctioned)',
   'function isSanctioned(address account) external view returns (bool)',
-  'event RiskProfileUpdated(address indexed account, uint8 riskScore, uint8 tier, bool isSanctioned)',
+  'event RiskProfileUpdated(address indexed addr, uint256 riskScore, uint8 tier, bool isSanctioned)',
+  'event BatchUpdateCompleted(uint256 successCount, uint256 gasUsed)',
 ];
 
 class DailySyncService {
@@ -161,31 +165,9 @@ class DailySyncService {
     }
 
     // 2. 尝试下载 OFAC sdnlist.txt 补充（通常没有加密地址，但试试）
-    try {
-      const txtUrl = 'https://www.treasury.gov/ofac/downloads/sdnlist.txt';
-      const response = await axios.get(txtUrl, { timeout: 15000, responseType: 'text' });
-      const text = response.data;
-
-      const ethMatches = text.match(/0x[a-fA-F0-9]{40}/g) || [];
-      const unique = [...new Set(ethMatches.map(a => a.toLowerCase()))];
-
-      if (unique.length > 0) {
-        console.log(`   📥 Download supplement: ${unique.length} addresses`);
-        for (const addr of unique) {
-          if (!addresses.find(a => a.address === addr)) {
-            addresses.push({
-              address: addr,
-              source: 'OFAC_SDN_TXT',
-              riskScore: 100,
-              tier: 3,
-              reason: 'OFAC Sanctioned',
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.log(`   ⏭️ TXT download skipped: ${e.message}`);
-    }
+    // [AUDIT-FIX] 移除 sdnlist.txt 补充源：OFAC 已迁移下载端点，该 URL 现返回 404
+    // （2026-08-31 实测），且历史上的 SDN 文本版本就不含加密货币地址——每次运
+    // 行白等最长 15 秒超时。主源 SDN_ADVANCED.XML + 本地静态后备已完整覆盖。
 
     console.log(`   ✅ OFAC total: ${addresses.length} addresses`);
     return addresses;
@@ -300,7 +282,8 @@ class DailySyncService {
     console.log('\n⛓️ Syncing to chain...');
     
     if (dryRun) {
-      console.log('   [DRY RUN] Would sync ${addresses.length} addresses');
+      // [AUDIT-FIX] 原为单引号字符串内的 ${} 字面量（永不插值）
+      console.log(`   [DRY RUN] Would sync ${addresses.length} addresses`);
       return { dryRun: true, count: addresses.length };
     }
     
@@ -396,8 +379,13 @@ class DailySyncService {
     const merged = this.mergeData([ofacData, localData, chainalysisData]);
     
     if (merged.length === 0) {
-      console.log('\n⚠️ No data to sync');
-      return;
+      // [AUDIT-FIX] 0 条数据不再静默成功：主源 SDN_ADVANCED.XML 常态应有百余个
+      // 在册地址，归零几乎必然意味着全部数据源故障（端点迁移/网络问题）。
+      // 原实现静默 return（exit 0），GitHub Actions 显示 success，故障不可见。
+      // 静默跳过链上写入的同时，抛出让 workflow 反映 failure，提示排查数据源。
+      console.error('\n💥 No data to sync — all sources empty (SDN_ADVANCED + static caches).');
+      console.error('   This almost certainly indicates a data source failure, not an empty list.');
+      throw new Error('No sanction addresses collected from any source — aborting (suspected data source outage)');
     }
     
     // 3. 构建 Merkle Tree
@@ -459,11 +447,26 @@ class DailySyncService {
 // ========== CLI ==========
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
-  
+
   const service = new DailySyncService();
-  
+
   try {
     const result = await service.run(dryRun);
+
+    // [AUDIT-FIX] 写链失败不再被吞成 exit 0：
+    // 原实现 syncToChain 的每个 batch 失败被 try/catch 捕获后仅打印，
+    // main() 无条件 process.exit(0)——GitHub Actions 永远显示 success，
+    // 失败完全不可见（实证：run #15 三笔 tx 全 revert 仍 success）。
+    // 现在只要有 batch error，就以非零码退出，让 workflow conclusion=failure。
+    const failedBatches = (result?.chain?.results || []).filter((r) => r.error);
+    if (!dryRun && failedBatches.length > 0) {
+      console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
+      for (const f of failedBatches) {
+        console.error(`   Batch ${f.batch}: ${f.error}`);
+      }
+      process.exit(1);
+    }
+
     process.exit(0);
   } catch (e) {
     console.error('\n💥 Fatal error:', e);
