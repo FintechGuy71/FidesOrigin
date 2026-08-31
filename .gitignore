@@ -133,3 +133,6 @@ compile-out.trash
 tscheck.json.trash
 *.trash
 __pycache__/
+
+# H-1 一次性运维脚本（按设计本地持有，不入库）
+apps/contracts/scripts/h1-phase4-disable-emergency.js
