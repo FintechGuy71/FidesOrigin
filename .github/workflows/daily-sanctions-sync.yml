@@ -43,6 +43,8 @@ jobs:
           RPC_URL: ${{ secrets.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com' }}
           PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           RISK_REGISTRY_ADDRESS: "0x953f985f38f94d6159c0600d1f15D543895cE896"
+          # [D-1] Merkle 根上链目标合约（v3.1.0 MerkleRiskRegistry）。引号必须——YAML 会把 0x 开头解析成 int。
+          MERKLE_REGISTRY_ADDRESS: "0x31A034efbe22eDc1a78ceb37F52BA869D869c33B"
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           BACKEND_DATABASE_URL: ${{ secrets.BACKEND_DATABASE_URL }}
         run: |
