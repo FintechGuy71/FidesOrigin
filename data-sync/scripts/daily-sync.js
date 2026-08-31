@@ -30,6 +30,8 @@ const CONFIG = {
   rpcUrl: process.env.RPC_URL || 'https://rpc.sepolia.org',
   privateKey: process.env.SYNC_PRIVATE_KEY || process.env.PRIVATE_KEY,
   riskRegistryAddress: process.env.RISK_REGISTRY_ADDRESS || process.env.RISK_REGISTRY_CONTRACT,
+  // MerkleRiskRegistry（v3.1.0 现役）：管道建树后推根上链
+  merkleRegistryAddress: process.env.MERKLE_REGISTRY_ADDRESS || '0x31A034efbe22eDc1a78ceb37F52BA869D869c33B',
   batchSize: parseInt(process.env.BATCH_SIZE) || 50,
   cacheDir: path.join(__dirname, '../cache'),
   logDir: path.join(__dirname, '../logs'),
@@ -47,6 +49,14 @@ const RISK_REGISTRY_ABI = [
   'function isSanctioned(address account) external view returns (bool)',
   'event RiskProfileUpdated(address indexed addr, uint256 riskScore, uint8 tier, bool isSanctioned)',
   'event BatchUpdateCompleted(uint256 successCount, uint256 gasUsed)',
+];
+
+// MerkleRiskRegistry ABI（v3.1.0 现役）
+const MERKLE_REGISTRY_ABI = [
+  'function updateMerkleRoot(bytes32 newRoot) external',
+  'function merkleRoot() view returns (bytes32)',
+  'function lastOracleRootUpdate() view returns (uint256)',
+  'event MerkleRootUpdated(bytes32 indexed oldRoot, bytes32 indexed newRoot, uint256 timestamp, string version)',
 ];
 
 class DailySyncService {
@@ -79,6 +89,12 @@ class DailySyncService {
       const signer = this.wallet || this.provider;
       this.contract = new ethers.Contract(CONFIG.riskRegistryAddress, RISK_REGISTRY_ABI, signer);
       console.log(`📋 RiskRegistry: ${CONFIG.riskRegistryAddress}`);
+    }
+
+    if (CONFIG.merkleRegistryAddress) {
+      const signer = this.wallet || this.provider;
+      this.merkleContract = new ethers.Contract(CONFIG.merkleRegistryAddress, MERKLE_REGISTRY_ABI, signer);
+      console.log(`🌲 MerkleRiskRegistry: ${CONFIG.merkleRegistryAddress}`);
     }
     
     console.log('✅ Ready\n');
@@ -345,6 +361,55 @@ class DailySyncService {
     return { batches: results.length, results };
   }
 
+  // ========== 6b. 推 Merkle 根上链（D-1） ==========
+  // MerkleRiskRegistry.updateMerkleRoot 需 ADMIN_ROLE（deployer 持有）。
+  // 幂等：根未变化时跳过写链；失败返回 { error } 由 main() 转成非零退出码。
+  async syncMerkleRoot(tree, dryRun = false) {
+    if (!this.merkleContract || !this.wallet) {
+      console.log('\n⏭️ Skipping merkle root push (no wallet/merkle contract configured)');
+      return { skipped: true };
+    }
+
+    console.log('\n🌲 Pushing Merkle root on-chain...');
+
+    if (dryRun) {
+      console.log(`   [DRY RUN] Would push merkle root ${tree.root}`);
+      return { dryRun: true, root: tree.root };
+    }
+
+    try {
+      const onchainRoot = await this.merkleContract.merkleRoot();
+      console.log(`   🔎 On-chain root: ${onchainRoot}`);
+
+      if (onchainRoot.toLowerCase() === tree.root.toLowerCase()) {
+        console.log('   ✅ Root unchanged, skip');
+        return { unchanged: true, root: tree.root };
+      }
+
+      const gasEstimate = await this.merkleContract.updateMerkleRoot.estimateGas(tree.root);
+      console.log(`   ⛽ Gas estimate: ${gasEstimate}`);
+
+      const tx = await this.merkleContract.updateMerkleRoot(tree.root, {
+        gasLimit: gasEstimate * 12n / 10n, // +20% buffer，与批次写链一致
+      });
+      console.log(`   📝 TX: ${tx.hash}`);
+
+      const receipt = await tx.wait();
+      console.log(`   ✅ Root updated (block ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
+
+      return {
+        root: tree.root,
+        previousRoot: onchainRoot,
+        hash: receipt.hash,
+        block: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+      };
+    } catch (e) {
+      console.error(`   ❌ Merkle root push failed: ${e.message}`);
+      return { error: e.message, root: tree.root };
+    }
+  }
+
   // ========== 7. 保存最终数据库 ==========
   saveDatabase(addresses) {
     const dbFile = path.join(CONFIG.cacheDir, 'risk-database.json');
@@ -394,6 +459,9 @@ class DailySyncService {
     // 4. 同步到链上
     const chainResult = await this.syncToChain(merged, dryRun);
 
+    // 4a. 推 Merkle 根上链（D-1：MerkleRiskRegistry.updateMerkleRoot，幂等）
+    const merkleResult = await this.syncMerkleRoot(tree, dryRun);
+
     // 4b. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
     if (!dryRun) {
       const { pushToBackendDb } = require('./push-to-backend-db');
@@ -424,6 +492,7 @@ class DailySyncService {
         leaves: tree.count,
       },
       chain: chainResult,
+      merkleOnChain: merkleResult,
       duration: Date.now() - startTime,
     };
     
@@ -459,10 +528,16 @@ async function main() {
     // 失败完全不可见（实证：run #15 三笔 tx 全 revert 仍 success）。
     // 现在只要有 batch error，就以非零码退出，让 workflow conclusion=failure。
     const failedBatches = (result?.chain?.results || []).filter((r) => r.error);
-    if (!dryRun && failedBatches.length > 0) {
-      console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
-      for (const f of failedBatches) {
-        console.error(`   Batch ${f.batch}: ${f.error}`);
+    const merkleError = result?.merkleOnChain?.error;
+    if (!dryRun && (failedBatches.length > 0 || merkleError)) {
+      if (failedBatches.length > 0) {
+        console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
+        for (const f of failedBatches) {
+          console.error(`   Batch ${f.batch}: ${f.error}`);
+        }
+      }
+      if (merkleError) {
+        console.error(`\n❌ Merkle root push failed: ${merkleError}`);
       }
       process.exit(1);
     }
