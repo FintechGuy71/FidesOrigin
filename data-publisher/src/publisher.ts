@@ -9,7 +9,8 @@ import { MonitorServer } from './monitor';
 
 // RiskRegistry ABI (minimal — only the functions we need)
 const RISK_REGISTRY_ABI = [
-  'function updateRiskProfile(address addr, uint256 riskScore, uint8 tier, bytes32[] tags, bool isSanctioned)',
+  // [P0-3 FIX] riskScore 为 uint8（合约真实签名）；原 uint256 选择器 0xbf62f0b8 与合约 0x59ccf211 不匹配，调用必 revert
+  'function updateRiskProfile(address addr, uint8 riskScore, uint8 tier, bytes32[] tags, bool isSanctioned)',
   'function getRiskProfile(address addr) view returns (uint8 riskScore, uint8 tier, bytes32[] tags, uint256 lastUpdated, bool isSanctioned)',
   'function riskProfiles(address) view returns (uint256, address, uint32, uint8, uint8, bool, bool)',
   'function hasRole(bytes32 role, address account) view returns (bool)',

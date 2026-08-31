@@ -4,6 +4,38 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const xml2js = require('xml2js');
+const { scoreToTier } = require('../src/merkleBuilder');
+
+/**
+ * [P1-7 FIX] 从 SDN_ADVANCED.XML 结构化提取 EVM 制裁地址。
+ * 两步过滤：① 只取字典中名为「Digital Currency Address - *」的 Feature 块
+ * （ETH/USDT/USDC/BSC/ARB…——USDT/USDC 等 ERC-20 地址与 ETH 同地址空间，必须覆盖；
+ * 实证：OFAC 会把同一地址按币种拆成不同 FeatureTypeID，如 345=ETH、887=USDT）；
+ * ② 块内只捕 0x+40hex 形态（XBT/XMR/LTC 等非 EVM 币种天然被格式滤掉）。
+ * 原实现对 ~200MB 全文正则，任何 40 位 hex（参考编号/哈希）都会被当作制裁地址写链。
+ */
+function extractEvmAddresses(xml) {
+  // 1. 字典区：FeatureTypeID → 名称（<FeatureType ID="345" ...>Digital Currency Address - ETH</FeatureType>）
+  const typeNameById = new Map();
+  for (const m of xml.matchAll(/<FeatureType ID="(\d+)"[^>]*>([^<]*)<\/FeatureType>/g)) {
+    typeNameById.set(m[1], m[2].trim());
+  }
+  // 2. 逐 Feature 块过滤提取
+  const out = new Set();
+  const chunks = xml.split(/<Feature\s/i);
+  for (let i = 1; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const gt = chunk.indexOf('>');
+    if (gt < 0) continue;
+    const idMatch = chunk.slice(0, gt).match(/FeatureTypeID="(\d+)"/);
+    if (!idMatch) continue;
+    const name = typeNameById.get(idMatch[1]) || '';
+    if (!name.startsWith('Digital Currency Address')) continue;
+    const m = chunk.match(/0x[a-fA-F0-9]{40}/g);
+    if (m) for (const a of m) out.add(a.toLowerCase());
+  }
+  return [...out];
+}
 
 // Load environment variables from .env file
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -47,6 +79,7 @@ const RISK_REGISTRY_ABI = [
   'function updateRiskProfile(address addr, uint8 riskScore, uint8 tier, bytes32[] calldata tags, bool sanctioned) external',
   'function getRiskProfile(address account) external view returns (uint8 riskScore, uint8 tier, bytes32[] tags, uint256 lastUpdated, bool sanctioned)',
   'function isSanctioned(address account) external view returns (bool)',
+  'function getSanctionedAddresses() external view returns (address[] memory)',
   'event RiskProfileUpdated(address indexed addr, uint256 riskScore, uint8 tier, bool isSanctioned)',
   'event BatchUpdateCompleted(uint256 successCount, uint256 gasUsed)',
 ];
@@ -65,6 +98,8 @@ class DailySyncService {
     this.provider = null;
     this.wallet = null;
     this.contract = null;
+    // [P1-1] OFAC 主源（SDN_ADVANCED）是否成功产出：false 时禁止下架 diff（防数据源故障被误判为大面积下架）
+    this.primarySourceOk = false;
     
     // 确保目录存在
     [CONFIG.cacheDir, CONFIG.logDir].forEach(dir => {
@@ -119,19 +154,22 @@ class DailySyncService {
         maxContentLength: 200 * 1024 * 1024,
         maxBodyLength: 200 * 1024 * 1024,
       });
-      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
-      const unique = [...new Set(matches.map(a => a.toLowerCase()))];
-      if (unique.length > 0) {
-        console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} ETH addresses (official, daily-fresh)`);
-        for (const addr of unique) {
-          addresses.push({
-            address: addr,
-            source: 'OFAC_SDN_ADVANCED',
-            riskScore: 100,
-            tier: 3,
-            reason: 'OFAC Sanctioned',
-          });
-        }
+      // [P1-7 FIX] 结构化解析（「Digital Currency Address - *」特征块内提 0x 形态），替代全文档正则
+      const unique = extractEvmAddresses(response.data);
+      if (unique.length === 0) {
+        // 结构解析归零 = OFAC 格式变更（常态百余个 EVM 地址）。按数据源故障处理：
+        // 抛错走 catch 回退静态源，同时 primarySourceOk=false 会阻止下架 diff 误删
+        throw new Error('SDN_ADVANCED structured parse yielded 0 EVM addresses (OFAC format changed?)');
+      }
+      this.primarySourceOk = true;
+      console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} EVM addresses (official, daily-fresh)`);
+      for (const addr of unique) {
+        addresses.push({
+          address: addr,
+          source: 'OFAC_SDN_ADVANCED',
+          riskScore: 100,
+          reason: 'OFAC Sanctioned',
+        });
       }
     } catch (e) {
       console.log(`   ⚠️ SDN_ADVANCED fetch failed: ${e.message} — falling back to static sources`);
@@ -153,7 +191,6 @@ class DailySyncService {
               address: addr,
               source: entry.source || 'STATIC_CACHE',
               riskScore: entry.riskScore ?? 100,
-              tier: entry.tier ?? 3,
               reason: entry.reason || 'OFAC Sanctioned',
             });
           }
@@ -173,7 +210,6 @@ class DailySyncService {
             address: addr,
             source: 'STATIC_SNAPSHOT',
             riskScore: 100,
-            tier: 3,
             reason: 'OFAC Sanctioned',
           });
         }
@@ -226,7 +262,6 @@ class DailySyncService {
         address: (e.address || e).toLowerCase(),
         source: 'Chainalysis',
         riskScore: 95,
-        tier: 3,
         reason: e.category || 'Sanctions',
       }));
     } catch (e) {
@@ -250,7 +285,9 @@ class DailySyncService {
           merged.set(addr, {
             address: addr,
             riskScore: item.riskScore,
-            tier: item.tier,
+            // [P1-2 FIX] tier 统一由 score 推导（scoreToTier：100→4 CRITICAL），
+            // 消灭源端硬编码 tier:3 导致的链上档案/Merkle leaf/引擎语义三方漂移
+            tier: scoreToTier(item.riskScore),
             sources: existing ? [...existing.sources, item.source] : [item.source],
             reasons: existing ? [...existing.reasons, item.reason] : [item.reason],
           });
@@ -410,6 +447,62 @@ class DailySyncService {
     }
   }
 
+  // ========== 6c. 制裁下架传播（P1-1） ==========
+  // 管道原本只增不删：OFAC delist 后链上与后端库永久残留（误封 + 法律风险）。
+  // 策略：链上制裁全集 − 今日名单 = 下架集；逐地址 updateRiskProfile(0, UNKNOWN, [], false)
+  // （保留审计轨迹并触发 RiskProfileUpdated 供 subgraph 索引；合约内部自动从 sanctionedAddresses 移除）。
+  // 保护：仅在 OFAC 主源成功产出时执行 diff——主源故障走静态后备时，下架集必然是假的。
+  async syncDelisted(merged, dryRun = false) {
+    if (!this.contract || !this.wallet) {
+      return { skipped: true };
+    }
+    if (!this.primarySourceOk) {
+      console.log('\n⚠️ OFAC 主源未成功产出，跳过下架 diff（防数据源故障误判为大面积下架）');
+      return { skipped: true, reason: 'primary-source-down' };
+    }
+
+    console.log('\n🔎 Checking for delisted addresses...');
+
+    let onchain;
+    try {
+      onchain = await this.contract.getSanctionedAddresses();
+    } catch (e) {
+      // 读链失败不猜、不删：告警并跳过（下架是破坏性操作，宁缺毋滥）
+      console.error(`   ❌ 读取链上制裁名单失败：${e.message} —— 跳过下架步骤`);
+      return { skipped: true, reason: 'read-failed' };
+    }
+
+    const current = new Set(merged.map(a => a.address.toLowerCase()));
+    const delisted = onchain.map(a => a.toLowerCase()).filter(a => !current.has(a));
+
+    if (delisted.length === 0) {
+      console.log('   ✅ 无下架地址');
+      return { delisted: 0, addresses: [] };
+    }
+
+    console.log(`   🗑️ ${delisted.length} 个地址已不在最新名单，执行链上下架：`);
+
+    if (dryRun) {
+      for (const a of delisted) console.log(`      [DRY RUN] Would delist ${a}`);
+      return { dryRun: true, delisted: delisted.length, addresses: delisted };
+    }
+
+    const results = [];
+    for (const addr of delisted) {
+      try {
+        const tx = await this.contract.updateRiskProfile(addr, 0, 0, [], false);
+        const receipt = await tx.wait();
+        console.log(`      ✅ Delisted ${addr} (tx ${receipt.hash})`);
+        results.push({ address: addr, hash: receipt.hash, status: receipt.status });
+      } catch (e) {
+        console.error(`      ❌ Delist failed ${addr}: ${e.message}`);
+        results.push({ address: addr, error: e.message });
+      }
+    }
+
+    return { delisted: delisted.length, addresses: delisted, results };
+  }
+
   // ========== 7. 保存最终数据库 ==========
   saveDatabase(addresses) {
     const dbFile = path.join(CONFIG.cacheDir, 'risk-database.json');
@@ -437,7 +530,9 @@ class DailySyncService {
     
     // 1. 收集数据
     const ofacData = await this.fetchOFAC();
-    const localData = this.loadLocalCache();
+    // [P1-1] 主源健康时昨日快照不参与合并——它就是昨天的合并结果，
+    // 并入会让已下架地址自我复活；主源故障时它才作为后备参与。
+    const localData = this.primarySourceOk ? [] : this.loadLocalCache();
     const chainalysisData = this.loadChainalysisCache();
     
     // 2. 合并
@@ -462,11 +557,15 @@ class DailySyncService {
     // 4a. 推 Merkle 根上链（D-1：MerkleRiskRegistry.updateMerkleRoot，幂等）
     const merkleResult = await this.syncMerkleRoot(tree, dryRun);
 
-    // 4b. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
+    // 4b. 制裁下架传播（P1-1：链上制裁集 diff 今日名单，下架地址置 sanctioned=false）
+    const delistResult = await this.syncDelisted(merged, dryRun);
+
+    // 4c. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
     if (!dryRun) {
       const { pushToBackendDb } = require('./push-to-backend-db');
       try {
-        await pushToBackendDb(merged);
+        // 下架地址一并推送（置 score=0/清空 tags），DB 视角与链上同步移除
+        await pushToBackendDb(merged, delistResult.addresses || []);
       } catch (e) {
         // 后端库同步失败不阻断主流程（链上已是事实源），告警并继续
         console.error('   ⚠️ Backend DB sync failed (chain 已是事实源，明日重试):', e.message);
@@ -493,6 +592,7 @@ class DailySyncService {
       },
       chain: chainResult,
       merkleOnChain: merkleResult,
+      delist: delistResult,
       duration: Date.now() - startTime,
     };
     
@@ -529,7 +629,8 @@ async function main() {
     // 现在只要有 batch error，就以非零码退出，让 workflow conclusion=failure。
     const failedBatches = (result?.chain?.results || []).filter((r) => r.error);
     const merkleError = result?.merkleOnChain?.error;
-    if (!dryRun && (failedBatches.length > 0 || merkleError)) {
+    const delistFailures = (result?.delist?.results || []).filter((r) => r.error);
+    if (!dryRun && (failedBatches.length > 0 || merkleError || delistFailures.length > 0)) {
       if (failedBatches.length > 0) {
         console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
         for (const f of failedBatches) {
@@ -538,6 +639,12 @@ async function main() {
       }
       if (merkleError) {
         console.error(`\n❌ Merkle root push failed: ${merkleError}`);
+      }
+      if (delistFailures.length > 0) {
+        console.error(`\n❌ ${delistFailures.length} delist ops failed:`);
+        for (const f of delistFailures) {
+          console.error(`   ${f.address}: ${f.error}`);
+        }
       }
       process.exit(1);
     }

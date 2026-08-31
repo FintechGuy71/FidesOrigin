@@ -101,6 +101,31 @@ describe('RiskRegistry', function () {
       ).to.be.revertedWithCustomError(riskRegistry, 'LengthMismatch');
     });
 
+    it('should emit RiskProfileUpdated for each successful batch entry (P0-2: subgraph indexability)', async function () {
+      // 回归测试：批量路径必须逐条发 RiskProfileUpdated——subgraph 只订阅该事件，
+      // 缺失会导致管道写入的档案零索引（2026-09-01 链上实证的事故）
+      const accounts = [user1.address, user2.address];
+      const scores = [30, 80];
+      const tiers = [1, 3];
+      const sanctioned = [false, true];
+      const tags = [[], []];
+
+      const tx = await riskRegistry.connect(oracle).batchUpdateRiskProfiles(accounts, scores, tiers, sanctioned, tags);
+      const receipt = await tx.wait();
+
+      const events = receipt.logs
+        .map((log) => { try { return riskRegistry.interface.parseLog(log); } catch { return null; } })
+        .filter((e) => e && e.name === 'RiskProfileUpdated');
+
+      expect(events.length).to.equal(2);
+      expect(events[0].args.addr).to.equal(user1.address);
+      expect(events[0].args.riskScore).to.equal(30);
+      expect(events[0].args.tier).to.equal(1);
+      expect(events[0].args.isSanctioned).to.equal(false);
+      expect(events[1].args.addr).to.equal(user2.address);
+      expect(events[1].args.isSanctioned).to.equal(true);
+    });
+
     it('should reject batch > 100 addresses', async function () {
       const addresses = Array(101).fill(user1.address);
       await expect(

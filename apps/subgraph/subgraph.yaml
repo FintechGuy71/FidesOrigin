@@ -89,11 +89,12 @@ dataSources:
         - name: PolicyEngine
           file: ./abis/PolicyEngine.json
       eventHandlers:
-        - event: IssuerPolicySet(indexed address,(uint256,uint256,bool,bool,bool,bool,uint256))
+        # [P1-3 FIX] 订阅签名对齐 v3.1.0 合约（原 tuple 形态/不存在的 PolicyEvaluated 永不触发，已实证零索引）
+        - event: IssuerPolicySet(indexed address,uint256,uint256,bool,bool,uint256)
           handler: handleIssuerPolicySet
-        - event: WalletPolicySet(indexed address,(uint256,uint256,uint256,uint256,bool,bool,bool,address[],address[]))
+        - event: WalletPolicySet(indexed address)
           handler: handleWalletPolicySet
-        - event: PolicyEvaluated(indexed address,indexed address,indexed address,uint256,uint8,string)
+        - event: TransferEvaluated(indexed address,indexed address,uint256,uint8)
           handler: handleTransferEvaluated
         - event: RuleCreated(indexed bytes32,string,uint8)
           handler: handleRuleCreated

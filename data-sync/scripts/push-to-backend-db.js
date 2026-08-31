@@ -2,6 +2,7 @@
 // 唯一事实源：链上 RiskRegistry——本脚本把刚写链的同一批档案推给后端，
 // 让 demo/address-check（走后端视角的公开端点）与链上视角一致。
 // 幂等：ON CONFLICT (address, chain) DO UPDATE。
+// [P1-1] 支持下架：delistedAddresses 中的地址在 DB 置 score=0/清空 tags（与链上 sanctioned=false 同步）
 'use strict';
 
 const { Client } = require('pg');
@@ -11,14 +12,17 @@ const TIER_TO_LEVEL = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
 /**
  * @param {Array<{address:string, riskScore:number, tier:number, reason?:string, sources?:string[]}>} entries
+ * @param {string[]} [delistedAddresses] 已从名单移除的地址（DB 清零处理）
  */
-async function pushToBackendDb(entries) {
+async function pushToBackendDb(entries, delistedAddresses = []) {
   const url = process.env.BACKEND_DATABASE_URL || process.env.DATABASE_URL_SYNC_VALUE;
   if (!url) {
     console.log('\n⏭️ 后端库未配置（BACKEND_DATABASE_URL），跳过 DB 同步');
     return { skipped: true };
   }
-  if (!entries || entries.length === 0) {
+  const hasUpserts = entries && entries.length > 0;
+  const hasDelists = delistedAddresses.length > 0;
+  if (!hasUpserts && !hasDelists) {
     console.log('\n⏭️ 无数据需要同步到后端库');
     return { skipped: true, reason: 'empty' };
   }
@@ -68,8 +72,28 @@ async function pushToBackendDb(entries) {
       upserted += chunk.length;
       console.log(`   📤 ${upserted}/${entries.length} upserted`);
     }
-    console.log(`   ✅ Backend DB sync complete: ${upserted} profiles`);
-    return { upserted };
+
+    // [P1-1] 下架地址清零：score=0 + 清空 tags（引擎 SanctionedListStrategy 按 tags 判定，
+    // 必须清干净——任何残留 OFAC/SDN 字样都会继续被判满分）；保留行作审计轨迹
+    let delisted = 0;
+    if (delistedAddresses.length > 0) {
+      console.log(`   🗑️ Zeroing ${delistedAddresses.length} delisted addresses...`);
+      const now = new Date().toISOString();
+      for (const addr of delistedAddresses) {
+        await client.query(
+          `UPDATE address_risks
+             SET risk_score = 0, risk_level = 'LOW', tags = '[]'::jsonb,
+                 status = 'CONFIRMED', last_updated_at = $2
+           WHERE address = $1 AND chain = 'ethereum'`,
+          [addr.toLowerCase(), now]
+        );
+        delisted++;
+      }
+      console.log(`   ✅ ${delisted} delisted addresses zeroed`);
+    }
+
+    console.log(`   ✅ Backend DB sync complete: ${upserted} upserted, ${delisted} delisted`);
+    return { upserted, delisted };
   } finally {
     await client.end();
   }
