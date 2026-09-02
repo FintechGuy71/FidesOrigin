@@ -100,6 +100,11 @@ class DailySyncService {
     this.contract = null;
     // [P1-1] OFAC 主源（SDN_ADVANCED）是否成功产出：false 时禁止下架 diff（防数据源故障被误判为大面积下架）
     this.primarySourceOk = false;
+    // [HMT 接入] 次源（OFSI）健康位。下架 diff 的公式是「链上全集 − 今日名单」，
+    // 因此**任一**参与源当天抓取失败，其独有地址都会落进"下架集"被清零。
+    // HMT 独有 2 个地址（OFAC 未覆盖），一旦 HMT 某天挂掉就会被误删、次日又加回，
+    // 形成写链抖动。故次源也必须纳入下架保护，与主源同等对待。
+    this.hmtSourceOk = false;
     
     // 确保目录存在
     [CONFIG.cacheDir, CONFIG.logDir].forEach(dir => {
@@ -222,6 +227,111 @@ class DailySyncService {
     // 行白等最长 15 秒超时。主源 SDN_ADVANCED.XML + 本地静态后备已完整覆盖。
 
     console.log(`   ✅ OFAC total: ${addresses.length} addresses`);
+    return addresses;
+  }
+
+  // ========== 1b. 加载英国 OFSI（HMT）制裁名单 ==========
+  /**
+   * @dev OFSI ConList.csv 是英国综合制裁名单（约 2 万条记录），加密钱包地址写在
+   *      Other Information 自由文本中。三个必须注意的点：
+   *      ① 首行是元数据（"Last Updated","<date>"），真表头在其后 —— 用
+   *         findHeaderLine 按列名定位，不硬编码行号（OFSI 改版会静默失效，
+   *         这正是原 HMTAdapter 产出 0 条的根因）。
+   *      ② 真实列名是 Address 1..6 / Other Information / Name 1..6 / Group ID，
+   *         不是 Address / Remarks。
+   *      ③ 地址提取复用 sanctions-sync 的 extractCryptoAddresses（带格式校验、去重）。
+   *      当前产量小（6 个 EVM 地址，其中 2 个为 OFAC 未覆盖的净新增），
+   *      但它是每日更新的官方源，OFSI 后续新增的加密地址会自动进入。
+   */
+  async fetchHMT() {
+    console.log('📥 Loading HMT/OFSI (UK) crypto sanctions...');
+    let addresses = [];
+    // 静态后备快照路径：与 OFAC 的 ofac-eth-source.txt 同模式。
+    // 每次成功产出后落盘，供端点故障时兜底，防止其独有地址当天进不了名单。
+    const snapshotFile = path.join(CONFIG.cacheDir, 'hmt-eth-source.txt');
+
+    const url = process.env.HMT_URL
+      || 'https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv';
+    try {
+      const response = await axios.get(url, {
+        timeout: 120000,
+        responseType: 'text',
+        maxContentLength: 200 * 1024 * 1024,
+        maxBodyLength: 200 * 1024 * 1024,
+      });
+
+      const {
+        parseCSV, findHeaderLine, HMT_KNOWN_COLUMNS, extractCryptoAddresses,
+      } = require('../sanctions-sync');
+
+      const headerLine = findHeaderLine(response.data.split('\n'), HMT_KNOWN_COLUMNS);
+      const records = parseCSV(response.data, { headerLine });
+      console.log(`   📄 HMT records: ${records.length} (header line ${headerLine})`);
+
+      // 只有成功解析出记录才置健康位。0 条记录意味着 CSV 结构变了或抓到了空内容
+      // （这正是原实现的静默失败形态），此时必须让下架 diff 停摆，不能放行。
+      if (records.length > 0) this.hmtSourceOk = true;
+
+      // OFSI 用别名行重复同一实体（如 AYASH / AYYASH 两行都列了同一批钱包），
+      // 同一地址会被多行重复命中 —— 先去重再入列，否则 hmt 统计虚高（10 vs 实际 6）。
+      const seen = new Set();
+      for (const r of records) {
+        const remarks = r['Other Information'] || '';
+        const fullAddress = [
+          r['Address 1'], r['Address 2'], r['Address 3'],
+          r['Address 4'], r['Address 5'], r['Address 6'],
+          r['Post/Zip Code'], r['Country'],
+        ].filter(Boolean).join(', ');
+
+        const crypto = extractCryptoAddresses(`${remarks} ${fullAddress}`);
+        for (const raw of (crypto.ethereum || [])) {
+          const addr = raw.toLowerCase();
+          if (seen.has(addr)) continue;
+          seen.add(addr);
+          addresses.push({
+            address: addr,
+            source: 'HMT_OFSI',
+            riskScore: 100,
+            reason: 'UK OFSI Sanctioned',
+          });
+        }
+      }
+
+      // 落盘静态后备快照（健康位已置，说明本次产出可信）
+      if (this.hmtSourceOk) {
+        try {
+          fs.writeFileSync(snapshotFile, addresses.map(a => a.address).join('\n') + '\n');
+        } catch (e) {
+          console.log(`   ⚠️ HMT snapshot write failed: ${e.message}`);
+        }
+      }
+    } catch (e) {
+      // 端点故障 → 回退静态后备快照，避免其独有地址当天完全消失。
+      // 回退数据仍可信（HMT 当日名单≈昨日），置健康位放行下架 diff。
+      console.log(`   ⚠️ HMT/OFSI fetch failed: ${e.message} — falling back to static snapshot`);
+      try {
+        if (fs.existsSync(snapshotFile)) {
+          const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+            .map(l => l.trim().toLowerCase())
+            .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+          console.log(`   📦 HMT static snapshot: ${lines.length} addresses`);
+          for (const addr of lines) {
+            addresses.push({
+              address: addr,
+              source: 'HMT_OFSI_STATIC',
+              riskScore: 100,
+              reason: 'UK OFSI Sanctioned (static snapshot)',
+            });
+          }
+          if (lines.length > 0) this.hmtSourceOk = true;
+        } else {
+          console.log('   ⚠️ No HMT snapshot available');
+        }
+      } catch (e2) {
+        console.log(`   ⚠️ HMT snapshot load failed: ${e2.message}`);
+      }
+    }
+    console.log(`   ✅ HMT/OFSI: ${addresses.length} addresses`);
     return addresses;
   }
 
@@ -460,6 +570,11 @@ class DailySyncService {
       console.log('\n⚠️ OFAC 主源未成功产出，跳过下架 diff（防数据源故障误判为大面积下架）');
       return { skipped: true, reason: 'primary-source-down' };
     }
+    if (!this.hmtSourceOk) {
+      // HMT 有 2 个 OFAC 未覆盖的独有地址，它一挂这些地址就会落进下架集被清零
+      console.log('\n⚠️ HMT/OFSI 次源未成功产出，跳过下架 diff（防其独有地址被误判为下架）');
+      return { skipped: true, reason: 'hmt-source-down' };
+    }
 
     console.log('\n🔎 Checking for delisted addresses...');
 
@@ -534,9 +649,12 @@ class DailySyncService {
     // 并入会让已下架地址自我复活；主源故障时它才作为后备参与。
     const localData = this.primarySourceOk ? [] : this.loadLocalCache();
     const chainalysisData = this.loadChainalysisCache();
-    
+    // 英国 OFSI（HMT）—— 官方制裁源，与 OFAC 同权（riskScore 100）。
+    // 失败时返回空数组并告警，不阻断主源；但会把 hmtSourceOk 置 false 触发下架保护。
+    const hmtData = await this.fetchHMT();
+
     // 2. 合并
-    const merged = this.mergeData([ofacData, localData, chainalysisData]);
+    const merged = this.mergeData([ofacData, localData, chainalysisData, hmtData]);
     
     if (merged.length === 0) {
       // [AUDIT-FIX] 0 条数据不再静默成功：主源 SDN_ADVANCED.XML 常态应有百余个
@@ -581,6 +699,7 @@ class DailySyncService {
       dryRun,
       stats: {
         ofac: ofacData.length,
+        hmt: hmtData.length,
         local: localData.length,
         chainalysis: chainalysisData.length,
         merged: merged.length,

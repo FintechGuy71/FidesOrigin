@@ -37,6 +37,12 @@ jobs:
         working-directory: data-sync
         run: npm ci --ignore-scripts
 
+      # [P3] 测试门禁：解析/抓取逻辑回归测试不过就不写链
+      # （防 CSV 表头偏移、空行语义错位这类"静默丢数据"回归直接污染生产）
+      - name: Run data-sync tests
+        working-directory: data-sync
+        run: npm test
+
       - name: Run daily sync
         working-directory: data-sync
         env:
