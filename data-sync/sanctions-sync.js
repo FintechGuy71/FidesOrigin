@@ -411,10 +411,16 @@ function parseCSVLine(line) {
  * @returns {number} 表头行索引
  */
 function findHeaderLine(lines, knownColumns, maxScan = 5) {
+  // [P1-1 FIX] 索引语义必须与 parseCSV 完全一致：parseCSV 内部先过滤空行
+  // （split('\n').filter(l => l.trim())）再按过滤后的行号解析。若这里在
+  // 未过滤的行上定位、调用方却拿过滤后的行号喂给 parseCSV，一旦表头前
+  // 存在空行就会索引错位——headerLine 越界被钳到末行，返回 [] 静默丢数据。
+  // 此处内部过滤，与文档契约（"已去空行的文本行"）保持一致。
+  const filtered = (lines || []).filter(l => l && l.trim());
   const wanted = knownColumns.map(c => c.toLowerCase());
-  const limit = Math.min(maxScan, lines.length);
+  const limit = Math.min(maxScan, filtered.length);
   for (let i = 0; i < limit; i++) {
-    const cells = parseCSVLine(lines[i]).map(c => c.trim().toLowerCase());
+    const cells = parseCSVLine(filtered[i]).map(c => c.trim().toLowerCase());
     if (wanted.some(col => cells.includes(col))) return i;
   }
   return 0;
