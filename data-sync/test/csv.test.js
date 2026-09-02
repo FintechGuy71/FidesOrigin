@@ -147,3 +147,40 @@ test('HMT 集成：OFSI 结构 + 别名重复行 → 去重后提取 EVM 地址'
   }
   assert.deepStrictEqual(out, ['0x175d44451403edf28469df03a9280c1197adb92c']);
 });
+
+// ============ Q12a：mergeData 同分多源归因 ============
+
+test('mergeData: 同分（皆 100）两源重叠地址，来源累积归因', () => {
+  const { DailySyncService } = require('../scripts/daily-sync.js');
+  const s = new DailySyncService();
+  const ofac = [{ address: '0x' + 'a'.repeat(40), riskScore: 100, source: 'OFAC_SDN_ADVANCED', reason: 'OFAC' }];
+  const hmt = [{ address: '0x' + 'A'.repeat(40), riskScore: 100, source: 'HMT_OFSI', reason: 'HMT' }]; // 同地址不同源
+  const merged = s.mergeData([ofac, hmt]);
+  assert.strictEqual(merged.length, 1); // 去重后 1 条
+  // 归因必须同时含两源（修复前次源标签被丢）
+  assert.deepStrictEqual(merged[0].sources.sort(), ['HMT_OFSI', 'OFAC_SDN_ADVANCED']);
+  assert.strictEqual(merged[0].riskScore, 100);
+  assert.strictEqual(merged[0].tier, 4);
+});
+
+test('mergeData: 多源不同分，分数与 tier 取最高', () => {
+  const { DailySyncService } = require('../scripts/daily-sync.js');
+  const s = new DailySyncService();
+  const low = [{ address: '0x' + 'b'.repeat(40), riskScore: 70, source: 'SRC_LOW', reason: 'r1' }];
+  const high = [{ address: '0x' + 'b'.repeat(40), riskScore: 95, source: 'SRC_HIGH', reason: 'r2' }];
+  const merged = s.mergeData([low, high]);
+  assert.strictEqual(merged.length, 1);
+  assert.strictEqual(merged[0].riskScore, 95);
+  assert.strictEqual(merged[0].tier, 4); // scoreToTier(95)=4
+  assert.deepStrictEqual(merged[0].sources.sort(), ['SRC_HIGH', 'SRC_LOW']);
+});
+
+test('mergeData: 单源地址归因不受影响', () => {
+  const { DailySyncService } = require('../scripts/daily-sync.js');
+  const s = new DailySyncService();
+  const merged = s.mergeData([
+    [{ address: '0x' + 'c'.repeat(40), riskScore: 100, source: 'HMT_OFSI', reason: 'r' }],
+  ]);
+  assert.strictEqual(merged.length, 1);
+  assert.deepStrictEqual(merged[0].sources, ['HMT_OFSI']);
+});

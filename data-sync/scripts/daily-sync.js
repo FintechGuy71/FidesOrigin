@@ -274,6 +274,12 @@ class DailySyncService {
 
       // OFSI 用别名行重复同一实体（如 AYASH / AYYASH 两行都列了同一批钱包），
       // 同一地址会被多行重复命中 —— 先去重再入列，否则 hmt 统计虚高（10 vs 实际 6）。
+      //
+      // [Q14 说明·有意为之] 只消费 crypto.ethereum：本管道是 EVM 链上数据管道，
+      // 链上 RiskRegistry / Merkle leaf 只编码 0x 地址（合约地址语义=以太坊地址）。
+      // OFSI 名单里的 BTC / TRON / LTC 地址（extractCryptoAddresses 也能提取，但属
+      // 非 EVM 形态）不在本管道的管辖范围内，故按设计不接入。若未来需要多链，
+      // 应走独立的非 EVM 通道，而非复用这里的 EVM 抓取器。
       const seen = new Set();
       for (const r of records) {
         const remarks = r['Other Information'] || '';
@@ -403,17 +409,29 @@ class DailySyncService {
       for (const item of source) {
         const addr = item.address.toLowerCase();
         const existing = merged.get(addr);
-        
-        if (!existing || item.riskScore > existing.riskScore) {
+
+        // [Q12 FIX] 多源归因：来源始终累积（同地址被多源命中时全部保留），
+        // 分数与 tier 取各源最高（语义仍是"最严源说了算"）。
+        // 原实现 `item.riskScore > existing.riskScore` 才并入 → 同分（如两官方源皆 100）
+        // 的次源标签被丢弃，重叠地址拿不到多源归因。
+        // 注：Merkle leaf 只编码 address+score+tier，本改动不影响根与计数。
+        if (!existing) {
           merged.set(addr, {
             address: addr,
             riskScore: item.riskScore,
             // [P1-2 FIX] tier 统一由 score 推导（scoreToTier：100→4 CRITICAL），
             // 消灭源端硬编码 tier:3 导致的链上档案/Merkle leaf/引擎语义三方漂移
             tier: scoreToTier(item.riskScore),
-            sources: existing ? [...existing.sources, item.source] : [item.source],
-            reasons: existing ? [...existing.reasons, item.reason] : [item.reason],
+            sources: [item.source],
+            reasons: [item.reason],
           });
+        } else {
+          existing.sources.push(item.source);
+          existing.reasons.push(item.reason);
+          if (item.riskScore > existing.riskScore) {
+            existing.riskScore = item.riskScore;
+            existing.tier = scoreToTier(item.riskScore);
+          }
         }
       }
     }
@@ -583,10 +601,36 @@ class DailySyncService {
       console.log('\n⚠️ OFAC 主源未成功产出，跳过下架 diff（防数据源故障误判为大面积下架）');
       return { skipped: true, reason: 'primary-source-down' };
     }
+
+    // [Q12 FIX] 分区下架：不再"次源失败就全部停摆"。
+    //  - OFAC 健康 → OFAC 贡献可信，其今日删除可下架；
+    //  - HMT 不健康 → 其地址真实状态未知，用静态快照作"保留集"：
+    //      只下架"既不在今日健康源、也不在 HMT 快照"的地址；
+    //      若连快照都没有（HMT 从未成功产出），无法归因 → 回退为完全跳过（保守防误删）。
+    //  这依赖 Q12a 的多源归因：merged 里每个地址的 sources 才是可信的分区依据。
+    let holdSet = new Set();
     if (!this.hmtSourceOk) {
-      // HMT 有 2 个 OFAC 未覆盖的独有地址，它一挂这些地址就会落进下架集被清零
-      console.log('\n⚠️ HMT/OFSI 次源未成功产出，跳过下架 diff（防其独有地址被误判为下架）');
-      return { skipped: true, reason: 'hmt-source-down' };
+      const snapshotFile = path.join(CONFIG.cacheDir, 'hmt-eth-source.txt');
+      if (!fs.existsSync(snapshotFile)) {
+        console.log('\n⚠️ HMT 次源未产出且无快照可归因，跳过下架 diff（防误删）');
+        return { skipped: true, reason: 'hmt-source-down-no-snapshot' };
+      }
+      // 快照年龄门槛与 PR #54 一致（48h）：超龄快照说明 HMT 长期失联，
+      // 其归因不可信 → 与无快照同等对待，整体停摆；新鲜快照才作保留集放行分区。
+      const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+      const SNAPSHOT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+      if (ageMs > SNAPSHOT_MAX_AGE_MS) {
+        console.log(`\n⚠️ HMT 次源未产出且快照超龄（${Math.round(ageMs / 3600000)}h > 48h），归因不可信，跳过下架 diff`);
+        return { skipped: true, reason: 'hmt-snapshot-stale' };
+      }
+      const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+        .map(l => l.trim().toLowerCase())
+        .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+      holdSet = new Set(lines);
+      console.log(
+        `\n⚠️ HMT 次源未产出——用新鲜快照（${holdSet.size} 址）作保留集，` +
+        `只下架既不在今日健康源、也不在 HMT 快照的地址`
+      );
     }
 
     console.log('\n🔎 Checking for delisted addresses...');
@@ -601,7 +645,9 @@ class DailySyncService {
     }
 
     const current = new Set(merged.map(a => a.address.toLowerCase()));
-    const delisted = onchain.map(a => a.toLowerCase()).filter(a => !current.has(a));
+    const delisted = onchain
+      .map(a => a.toLowerCase())
+      .filter(a => !current.has(a) && !holdSet.has(a));
 
     if (delisted.length === 0) {
       console.log('   ✅ 无下架地址');
