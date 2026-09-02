@@ -48,7 +48,12 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
           'ethereum',
           e.riskScore ?? 100,
           level,
-          JSON.stringify(e.sources && e.sources.length ? e.sources : ['OFAC', 'sanctioned']),
+          // [前置修复·hy4 指令 §3.2] tags 恒带 'sanctioned'：引擎 SanctionedListStrategy 的
+          // MARKERS 是大小写敏感子串匹配（OFAC/sanctioned/sdn/STATIC_SNAPSHOT），
+          // OFAC 能命中纯属 "OFAC" 恰好是 "OFAC_SDN_ADVANCED" 的子串；新源 tags 若只有
+          // ["MY_SOURCE"] 会一个标记都中不了 → 引擎静默判 0 分，新源接了白接。
+          // 本管道只承载权威制裁源，'sanctioned' 标记语义恒真。
+          JSON.stringify([...new Set([...(e.sources && e.sources.length ? e.sources : ['OFAC']), 'sanctioned'])]),
           'CONFIRMED',
           new Date().toISOString(),
           0 // report_count：DB 列无默认值，缺省会留 NULL 并使响应模型 int 校验 500
