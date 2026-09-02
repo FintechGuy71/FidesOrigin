@@ -307,7 +307,9 @@ class DailySyncService {
       }
     } catch (e) {
       // 端点故障 → 回退静态后备快照，避免其独有地址当天完全消失。
-      // 回退数据仍可信（HMT 当日名单≈昨日），置健康位放行下架 diff。
+      // [Q13 FIX] 快照无时间戳语义上的"新鲜度"保证 —— 陈旧快照若照常置健康位，
+      // 会放行下架 diff、掩盖"OFSI 今天真删了某地址"。故加年龄上限：超龄快照
+      // 仍可用作兜底名单（保住筛查覆盖），但**不置健康位**，下架当日停摆并告警。
       console.log(`   ⚠️ HMT/OFSI fetch failed: ${e.message} — falling back to static snapshot`);
       try {
         if (fs.existsSync(snapshotFile)) {
@@ -323,7 +325,18 @@ class DailySyncService {
               reason: 'UK OFSI Sanctioned (static snapshot)',
             });
           }
-          if (lines.length > 0) this.hmtSourceOk = true;
+          if (lines.length > 0) {
+            const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+            const SNAPSHOT_MAX_AGE_MS = 48 * 60 * 60 * 1000; // 48h
+            if (ageMs <= SNAPSHOT_MAX_AGE_MS) {
+              this.hmtSourceOk = true;
+            } else {
+              console.log(
+                `   ⚠️ HMT snapshot is stale (${Math.round(ageMs / 3600000)}h > 48h)` +
+                ` — using as fallback list but NOT marking source healthy, delisting paused`
+              );
+            }
+          }
         } else {
           console.log('   ⚠️ No HMT snapshot available');
         }
