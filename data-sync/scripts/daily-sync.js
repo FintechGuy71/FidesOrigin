@@ -246,6 +246,10 @@ class DailySyncService {
   async fetchHMT() {
     console.log('📥 Loading HMT/OFSI (UK) crypto sanctions...');
     let addresses = [];
+    // 静态后备快照路径：与 OFAC 的 ofac-eth-source.txt 同模式。
+    // 每次成功产出后落盘，供端点故障时兜底，防止其独有地址当天进不了名单。
+    const snapshotFile = path.join(CONFIG.cacheDir, 'hmt-eth-source.txt');
+
     const url = process.env.HMT_URL
       || 'https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv';
     try {
@@ -292,9 +296,40 @@ class DailySyncService {
           });
         }
       }
+
+      // 落盘静态后备快照（健康位已置，说明本次产出可信）
+      if (this.hmtSourceOk) {
+        try {
+          fs.writeFileSync(snapshotFile, addresses.map(a => a.address).join('\n') + '\n');
+        } catch (e) {
+          console.log(`   ⚠️ HMT snapshot write failed: ${e.message}`);
+        }
+      }
     } catch (e) {
-      // 新源失败不阻断主源：OFAC 才是事实源，HMT 只是增量补充
-      console.log(`   ⚠️ HMT/OFSI fetch failed: ${e.message}`);
+      // 端点故障 → 回退静态后备快照，避免其独有地址当天完全消失。
+      // 回退数据仍可信（HMT 当日名单≈昨日），置健康位放行下架 diff。
+      console.log(`   ⚠️ HMT/OFSI fetch failed: ${e.message} — falling back to static snapshot`);
+      try {
+        if (fs.existsSync(snapshotFile)) {
+          const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+            .map(l => l.trim().toLowerCase())
+            .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+          console.log(`   📦 HMT static snapshot: ${lines.length} addresses`);
+          for (const addr of lines) {
+            addresses.push({
+              address: addr,
+              source: 'HMT_OFSI_STATIC',
+              riskScore: 100,
+              reason: 'UK OFSI Sanctioned (static snapshot)',
+            });
+          }
+          if (lines.length > 0) this.hmtSourceOk = true;
+        } else {
+          console.log('   ⚠️ No HMT snapshot available');
+        }
+      } catch (e2) {
+        console.log(`   ⚠️ HMT snapshot load failed: ${e2.message}`);
+      }
     }
     console.log(`   ✅ HMT/OFSI: ${addresses.length} addresses`);
     return addresses;

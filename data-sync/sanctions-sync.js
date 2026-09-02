@@ -407,10 +407,10 @@ function parseCSVLine(line) {
  *
  * @param {string[]} lines   已去空行的文本行
  * @param {string[]} knownColumns 该源特有的已知列名（小写比对）
- * @param {number} maxScan   最多扫描前几行
+ * @param {number} maxScan   最多扫描前几行（默认 10，容忍元数据行增多）
  * @returns {number} 表头行索引
  */
-function findHeaderLine(lines, knownColumns, maxScan = 5) {
+function findHeaderLine(lines, knownColumns, maxScan = 10) {
   // [P1-1 FIX] 索引语义必须与 parseCSV 完全一致：parseCSV 内部先过滤空行
   // （split('\n').filter(l => l.trim())）再按过滤后的行号解析。若这里在
   // 未过滤的行上定位、调用方却拿过滤后的行号喂给 parseCSV，一旦表头前
@@ -418,10 +418,14 @@ function findHeaderLine(lines, knownColumns, maxScan = 5) {
   // 此处内部过滤，与文档契约（"已去空行的文本行"）保持一致。
   const filtered = (lines || []).filter(l => l && l.trim());
   const wanted = knownColumns.map(c => c.toLowerCase());
+  // [P2-2 FIX] 单列命中不足以认定表头（数据行某单元格可能恰好叫列名），
+  // 至少 2 列同时命中才放行。knownColumns 少于 2 时降级为要求全部命中。
+  const threshold = Math.min(2, wanted.length);
   const limit = Math.min(maxScan, filtered.length);
   for (let i = 0; i < limit; i++) {
     const cells = parseCSVLine(filtered[i]).map(c => c.trim().toLowerCase());
-    if (wanted.some(col => cells.includes(col))) return i;
+    const hits = wanted.filter(col => cells.includes(col)).length;
+    if (hits >= threshold) return i;
   }
   return 0;
 }
