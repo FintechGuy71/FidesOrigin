@@ -448,6 +448,7 @@ async def request_signature_middleware(
     #   对这些端点强制签名是自相矛盾的设计缺陷：它们本就面向匿名调用方。
     #   它们的滥用防护由限流 + 账户锁定 + 蜜罐承担，与签名无关。
     #   敏感端点（address/report、rules 等）的签名要求保持不变。
+    #   （deploy-trigger: 2026-09-04 重新触发 Render 构建，无逻辑变化）
     public_write_paths = (
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",
