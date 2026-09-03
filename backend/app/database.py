@@ -3,6 +3,7 @@ FidesOrigin 数据库配置（重构版）
 统一使用 Pydantic Settings 配置，消除 os.getenv 分散读取
 """
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import select
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
 import logging
@@ -99,7 +100,11 @@ async def init_db():
     """初始化数据库（创建所有表 + 幂等 seed 默认规则）"""
     async with get_async_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    await ensure_default_rules()
+    # seed 失败绝不能阻断启动：规则缺失可后续补救，启动崩溃才是灾难（曾导致 Render update_failed）
+    try:
+        await ensure_default_rules()
+    except Exception as e:
+        logger.error("default_rules_seed_failed", error=str(e))
 
 
 async def ensure_default_rules():
@@ -111,7 +116,6 @@ async def ensure_default_rules():
     ON CONFLICT (name) DO NOTHING，不覆盖已存在的规则。
     """
     from sqlalchemy.dialects.postgresql import insert as pg_insert
-    from sqlalchemy import text
     # 延迟导入 RiskRule，避免 database ↔ models 循环 import
     from app.models import RiskRule
 
@@ -141,7 +145,13 @@ async def ensure_default_rules():
             },
         ]
         for r in rules:
-            stmt = pg_insert(RiskRule).values(**r).on_conflict_do_nothing(index_elements=["name"])
-            await session.execute(stmt)
+            # 用 ORM 对象而非裸 dict，让 SQLAlchemy 正确处理 native ENUM(rule_type) 的转换
+            # （裸 dict + pg_insert 对 PG native enum 会因缺少显式 cast 而失败）
+            exists = await session.execute(
+                select(RiskRule).where(RiskRule.name == r["name"])
+            )
+            if exists.scalar_one_or_none() is not None:
+                continue  # 已存在，跳过（幂等）
+            session.add(RiskRule(**r))
         await session.commit()
         logger.info("default_rules_ensured", names=[r["name"] for r in rules])

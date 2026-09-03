@@ -71,8 +71,8 @@ class ReportedAddressStrategy(RiskRuleStrategy):
         
         if report_count > 0:
             condition = rule.condition or {}
-            weight = rule.risk_weight if rule.risk_weight is not None else 1.0
-            impact = rule.risk_score_impact or 50
+            weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
+            impact = float(rule.risk_score_impact or 50)
             # 每增加一个举报，增加一定分数（上限 100）
             score = min(report_count * impact, 100) * weight
             return score, f"地址被举报 {report_count} 次"
@@ -194,11 +194,11 @@ class TransactionPatternStrategy(RiskRuleStrategy):
         
         condition = rule.condition or {}
         max_tx_per_hour = condition.get("max_transactions_per_hour", 10)
-        weight = rule.risk_weight if rule.risk_weight is not None else 1.0
+        weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
         
         threshold = max_tx_per_hour * 24
         if tx_count_24h > threshold:
-            impact = rule.risk_score_impact or 40
+            impact = float(rule.risk_score_impact or 40)
             score = min(tx_count_24h / threshold * impact, 100) * weight
             return score, f"24小时内交易 {tx_count_24h} 笔"
         
@@ -227,10 +227,10 @@ class AddressAgeStrategy(RiskRuleStrategy):
                     
                     condition = rule.condition or {}
                     min_days = condition.get("min_days", 7)
-                    weight = rule.risk_weight if rule.risk_weight is not None else 1.0
+                    weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
                     
                     if age_days < min_days:
-                        impact = rule.risk_score_impact or 20
+                        impact = float(rule.risk_score_impact or 20)
                         score = (1 - age_days / min_days) * impact * weight
                         return score, f"地址创建仅 {age_days} 天"
                 except (ValueError, TypeError):
@@ -255,7 +255,7 @@ class LargeTransferStrategy(RiskRuleStrategy):
         condition = rule.condition or {}
         threshold_eth = condition.get("threshold_eth", 100)
         threshold_wei = int(threshold_eth * 10**18)
-        weight = rule.risk_weight if rule.risk_weight is not None else 1.0
+        weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
         
         from sqlalchemy import cast, Numeric
         
@@ -277,7 +277,7 @@ class LargeTransferStrategy(RiskRuleStrategy):
         
         if large_txs:
             max_value = max(int(tx.value) for tx in large_txs) / 10**18
-            impact = rule.risk_score_impact or 30
+            impact = float(rule.risk_score_impact or 30)
             score = min(max_value / threshold_eth * impact, 100) * weight
             return score, f"发现 {len(large_txs)} 笔大额交易，最大 {max_value:.2f} ETH"
         
@@ -353,8 +353,11 @@ class RiskEngineService:
             return await strategy.evaluate(address, chain, rule, self.db, self.blockscout)
         
         # 自定义规则：使用 risk_score_impact 累加
-        impact = rule.risk_score_impact or 0
-        weight = rule.risk_weight if rule.risk_weight is not None else 1.0
+        # [FIX] 必须 float() 转换：risk_score_impact 是 Numeric 列，读出来是 Decimal，
+        # 直接与 float total_score 相加会抛 "unsupported operand +=: float and Decimal"
+        # （生产实证：scam_list 规则在旧引擎无策略时走此兜底 → 500）。
+        impact = float(rule.risk_score_impact or 0)
+        weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
         score = impact * weight
         return score, rule.description or ""
     
@@ -405,8 +408,8 @@ class RiskEngineService:
                     total_score += score
                     risk_factors.append(RiskFactor(
                         name=rule.name,
-                        weight=rule.risk_weight if rule.risk_weight is not None else 1.0,
-                        score=score,
+                        weight=float(rule.risk_weight if rule.risk_weight is not None else 1.0),
+                        score=float(score),
                         description=description or rule.description
                     ))
             
