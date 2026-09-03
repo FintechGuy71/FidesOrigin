@@ -19,7 +19,7 @@ const PAGE_CSS = `
 export default function ContentPrivacyJP() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 <div className="legal-page">
     <div className="container">
       <h1>プライバシーポリシー</h1>

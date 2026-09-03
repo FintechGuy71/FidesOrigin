@@ -79,7 +79,10 @@ export function hreflangAlternates(
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const l of locales) {
-    const target = available.includes(l) ? localize(path, l) : langPrefix(l) + "/";
+    /* 回退到该语言首页。⚠ 不能写成 langPrefix(l) + "/" —— 静态导出未开
+       trailingSlash，产物是 out/cn.html 而不是 out/cn/index.html，
+       带尾斜杠的 URL 会 404。EN 的前缀是空串，必须显式回退到 "/"。 */
+    const target = available.includes(l) ? localize(path, l) : langPrefix(l) || "/";
     out[hreflangCode[l]] = `${SITE}${target === "" ? "/" : target}`;
   }
   out["x-default"] = `${SITE}${path === "/" ? "/" : path}`;

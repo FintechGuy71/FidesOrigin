@@ -19,10 +19,10 @@ const PAGE_CSS = `
     .pricing-card:hover { border-color: var(--border-light); transform: translateY(-4px); }
     .pricing-card.featured {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--bg-card) 0%, rgba(201,169,110,0.03) 100%);
+      background: linear-gradient(180deg, var(--bg-card) 0%, var(--accent-glow) 100%);
     }
     .pricing-card.featured::before {
-      content: 'Most Popular';
+      content: '人気プラン';
       position: absolute;
       top: -1px;
       left: 50%;
@@ -48,7 +48,7 @@ const PAGE_CSS = `
       padding: 8px 0;
       font-size: 0.875rem;
       color: var(--text-secondary);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
     }
     .pricing-features li:last-child { border-bottom: none; }
     .pricing-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
@@ -91,7 +91,7 @@ const PAGE_CSS = `
 export default function ContentPricingJP() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="pricing-hero">
@@ -99,7 +99,7 @@ export default function ContentPricingJP() {
         <div className="reveal">
           <p className="micro">料金</p>
           <h1 className="display">シンプルで透明な<span>料金体系</span></h1>
-          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>Start free. Scale as you grow. No hidden fees, no long-term contracts.</p>
+          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>無料で始められ、成長に合わせてスケール。隠れた費用も長期契約もありません。</p>
         </div>
       </div>
     </section>
@@ -111,15 +111,15 @@ export default function ContentPricingJP() {
           
           <div className="pricing-card reveal">
             <div className="pricing-name">Starter</div>
-            <div className="pricing-desc">For developers and small projects</div>
-            <div className="pricing-price">$0<span>/month</span></div>
+            <div className="pricing-desc">開発者や小規模プロジェクト向け</div>
+            <div className="pricing-price">$0<span>/月</span></div>
             <ul className="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 1,000 API calls/month</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Sepolia testnet access</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Community support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Basic risk screening</li>
-              <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> Mainnet deployment</li>
-              <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> Custom policies</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> API コール 1,000 回/月</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Sepolia テストネットアクセス</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> コミュニティサポート</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 基本的なリスクスクリーニング</li>
+              <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> メインネットデプロイ</li>
+              <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> カスタムポリシー</li>
             </ul>
             <a href="/jp/docs" className="btn btn-secondary pricing-cta">無料で開始</a>
           </div>
@@ -127,38 +127,38 @@ export default function ContentPricingJP() {
           
           <div className="pricing-card featured reveal">
             <div className="pricing-name">Growth</div>
-            <div className="pricing-desc">For growing protocols and stablecoin issuers</div>
-            <div className="pricing-price">$499<span>/month</span></div>
+            <div className="pricing-desc">成長中のプロトコルやステーブルコイン発行者向け</div>
+            <div className="pricing-price">$499<span>/月</span></div>
             <ul className="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 100,000 API calls/month</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Mainnet + testnet</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Priority email support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Custom risk policies</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Quarantine vault</li>
-              <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> Dedicated infrastructure</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> API コール 100,000 回/月</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> メインネット＋テストネット</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 優先メールサポート</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> カスタムリスクポリシー</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 隔離ボールト</li>
+              <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 専有インフラ</li>
             </ul>
-            <a href="mailto:contact@fidesorigin.com" className="btn btn-primary pricing-cta">始める</a>
+            <a href="/jp#contact" className="btn btn-primary pricing-cta">始める</a>
           </div>
 
           
           <div className="pricing-card reveal">
             <div className="pricing-name">Enterprise</div>
-            <div className="pricing-desc">For institutions and large-scale deployments</div>
-            <div className="pricing-price">Custom</div>
+            <div className="pricing-desc">機関投資家や大規模導入向け</div>
+            <div className="pricing-price">個別見積</div>
             <ul className="pricing-features">
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Unlimited API calls</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Multi-chain deployment</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 24/7 dedicated support</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> SLA guarantee (99.99%)</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Custom contract development</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> On-premise option</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> API コール無制限</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> マルチチェーンデプロイ</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 24時間365日の専任サポート</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> SLA 保証（99.99%）</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> カスタムコントラクト開発</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> オンプレミスオプション</li>
             </ul>
-            <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary pricing-cta">営業に問い合わせ</a>
+            <a href="/jp#contact" className="btn btn-secondary pricing-cta">営業に問い合わせ</a>
           </div>
         </div>
 
         <div className="pricing-note reveal">
-          <p>All plans include access to our <a href="/jp/docs/sdk">SDK</a>, <a href="/jp/docs/api">REST API</a>, and <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">open-source contracts</a>. Need a custom solution? <a href="mailto:contact@fidesorigin.com">Let's talk</a>.</p>
+          <p>すべてのプランに <a href="/jp/docs/sdk">SDK</a>、<a href="/jp/docs/api">REST API</a>、<a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">オープンソースコントラクト</a> へのアクセスが含まれます。カスタムソリューションが必要ですか？<a href="mailto:contact@fidesorigin.com">お問い合わせください</a>。</p>
         </div>
       </div>
     </section>
@@ -167,30 +167,30 @@ export default function ContentPricingJP() {
     <section className="section bg-secondary">
       <div className="container">
         <div className="reveal section-intro">
-          <p className="micro">Compare</p>
+          <p className="micro">比較</p>
           <h2 className="h2 section-title">機能比較</h2>
         </div>
         <div className="compare-table-wrap reveal">
           <table className="compare-table">
             <thead>
               <tr>
-                <th>Feature</th>
+                <th>機能</th>
                 <th>Starter</th>
                 <th>Growth</th>
                 <th>Enterprise</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>API Calls / Month</td><td>1,000</td><td>100,000</td><td>Unlimited</td></tr>
-              <tr><td>Networks</td><td>Sepolia</td><td>Mainnet + Testnet</td><td>Multi-chain</td></tr>
-              <tr><td>Risk Screening</td><td className="check">✓</td><td className="check">✓</td><td className="check">✓</td></tr>
-              <tr><td>Quarantine Vault</td><td className="dash">—</td><td className="check">✓</td><td className="check">✓</td></tr>
-              <tr><td>Custom Policies</td><td className="dash">—</td><td className="check">✓</td><td className="check">✓</td></tr>
-              <tr><td>Subgraph Access</td><td className="check">✓</td><td className="check">✓</td><td className="check">✓</td></tr>
-              <tr><td>Support</td><td>Community</td><td>Priority Email</td><td>24/7 Dedicated</td></tr>
+              <tr><td>月間 API コール数</td><td>1,000</td><td>100,000</td><td>無制限</td></tr>
+              <tr><td>ネットワーク</td><td>Sepolia</td><td>メインネット＋テストネット</td><td>マルチチェーン</td></tr>
+              <tr><td>リスクスクリーニング</td><td className="check">✓</td><td className="check">✓</td><td className="check">✓</td></tr>
+              <tr><td>隔離ボールト</td><td className="dash">—</td><td className="check">✓</td><td className="check">✓</td></tr>
+              <tr><td>カスタムポリシー</td><td className="dash">—</td><td className="check">✓</td><td className="check">✓</td></tr>
+              <tr><td>Subgraph アクセス</td><td className="check">✓</td><td className="check">✓</td><td className="check">✓</td></tr>
+              <tr><td>サポート</td><td>コミュニティ</td><td>優先メール</td><td>24時間365日専任</td></tr>
               <tr><td>SLA</td><td className="dash">—</td><td>99.9%</td><td>99.99%</td></tr>
-              <tr><td>Audit Reports</td><td className="dash">—</td><td className="check">✓</td><td className="check">✓</td></tr>
-              <tr><td>Custom Development</td><td className="dash">—</td><td className="dash">—</td><td className="check">✓</td></tr>
+              <tr><td>監査レポート</td><td className="dash">—</td><td className="check">✓</td><td className="check">✓</td></tr>
+              <tr><td>カスタム開発</td><td className="dash">—</td><td className="dash">—</td><td className="check">✓</td></tr>
             </tbody>
           </table>
         </div>

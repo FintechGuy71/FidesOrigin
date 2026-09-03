@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
 Sitemap: https://fidesorigin.com/sitemap.xml
+
+# 运营后台：两个入口都不能被索引。
+#   /admin/          -> public/admin/index.html（静态后台，无鉴权）
+#   /admin/dashboard -> Next 页面（app/admin/layout.tsx 已设 robots: noindex）
 Disallow: /admin/
+Disallow: /admin/dashboard

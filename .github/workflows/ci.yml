@@ -99,3 +99,23 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
       - run: pnpm audit --audit-level high || true
+
+  # [O-1] 前端样式回归校验：把 2026-09-02/09-03 审计沉淀的两个校验脚本纳入 CI，
+  # 防止"未分层 CSS / 尾斜杠链接 / 死变量 / 裸 z-index / 对比度不达标"再次进入产物。
+  # 两个脚本读取 apps/web/out/ 的产物做独立实测，因此必须先构建。
+  frontend-style-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [INFO-4 FIX: pin]
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4 [INFO-4 FIX: pin]
+        with:
+          version: 11.6.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [INFO-4 FIX: pin]
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
+      - run: pnpm turbo run build --filter=@fidesorigin/shared --filter=@fidesorigin/config || true
+      - run: cd apps/web && pnpm build
+      - run: cd apps/web && python _verify.py
+      - run: cd apps/web && python _crosscheck.py

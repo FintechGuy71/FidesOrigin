@@ -15,7 +15,7 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
   ];
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className="border-t py-28 md:py-36" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+      <div className="border-t py-28 md:py-36" style={{ borderColor: "var(--fio-border-hairline)" }}>
         {/* Section header */}
         <div className="mx-auto max-w-2xl pb-20 text-center md:pb-28">
           <div className="fio-caption mb-4" data-aos="fade-up">
@@ -40,9 +40,13 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
 
         {/* Journey timeline */}
         <div className="relative mx-auto max-w-3xl" data-aos="fade-up" data-aos-delay={300}>
-          {/* Vertical line */}
+          {/* Vertical line
+              hidden + lg:block 意味着该元素在 md 断点仍为 display:none，
+              原先的 md:left-8 因此永远不会生效（死类）。改为 md:block 使
+              断点语义连贯：圆点 h-12(48px) 时 left-6(24px) 正对中心，
+              md 起圆点 h-16(64px) 时 left-8(32px) 正对中心。 */}
           <div
-            className="absolute left-6 top-0 hidden h-full w-px md:left-8 lg:block"
+            className="absolute left-6 top-0 hidden h-full w-px md:block md:left-8"
             style={{ background: "linear-gradient(to bottom, var(--fio-accent), var(--fio-gold), transparent)", opacity: 0.2 }}
           />
 
@@ -54,8 +58,8 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
                   <div
                     className="flex h-12 w-12 items-center justify-center rounded-full text-sm font-mono font-medium md:h-16 md:w-16 md:text-base"
                     style={{
-                      background: "rgba(139,126,200,0.06)",
-                      border: "1px solid rgba(139,126,200,0.15)",
+                      background: "var(--fio-accent-glow)",
+                      border: "1px solid var(--fio-accent-dim)",
                       color: "var(--fio-accent)",
                     }}
                   >
@@ -65,20 +69,17 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
 
                 {/* Content */}
                 <div className="flex-1 pb-2">
-                  <h3
-                    className="mb-2 text-lg font-medium"
-                    style={{ color: "var(--fio-text)", fontFamily: "var(--font-serif)" }}
-                  >
+                  <h3 className="mb-2 font-serif text-lg font-medium text-[var(--fio-text)]">
                     {item.title}
                   </h3>
                   <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--fio-text-2)" }}>
                     {item.desc}
                   </p>
                   <div
-                    className="inline-flex items-center gap-2 rounded-sm px-3 py-1.5 text-[0.65rem] font-mono"
+                    className="inline-flex items-center gap-2 rounded-sm px-3 py-1.5 text-[0.6875rem] font-mono"
                     style={{
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.04)",
+                      background: "var(--fio-surface)",
+                      border: "1px solid var(--fio-border-hairline)",
                       color: "var(--fio-text-3)",
                     }}
                   >
@@ -103,10 +104,7 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
           >
             &ldquo;
           </div>
-          <p
-            className="text-lg leading-relaxed italic"
-            style={{ color: "var(--fio-text)", fontFamily: "var(--font-serif)" }}
-          >
+          <p className="font-serif text-lg leading-relaxed italic text-[var(--fio-text)]">
             {d.quote}
           </p>
           <div className="mt-6">

@@ -13,6 +13,9 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
   /* ---- Subtle grid + scan line animation ---- */
   useEffect(() => {
     try {
+      /* 尊重系统"减少动态效果"偏好：扫描线是无限 rAF 重绘，
+         对前庭功能敏感的用户构成持续干扰，也应省电。 */
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -35,7 +38,7 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
           ctx.clearRect(0, 0, w, h);
 
           const gridSize = 80 * window.devicePixelRatio;
-          ctx.strokeStyle = "rgba(255,255,255,0.015)";
+          ctx.strokeStyle = "var(--fio-surface)";
           ctx.lineWidth = 0.5;
 
           for (let x = 0; x < w; x += gridSize) {
@@ -53,9 +56,9 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
 
           offset = (offset + 0.3) % h;
           const scanGradient = ctx.createLinearGradient(0, offset - 80, 0, offset + 80);
-          scanGradient.addColorStop(0, "rgba(139,126,200,0)");
-          scanGradient.addColorStop(0.5, "rgba(139,126,200,0.02)");
-          scanGradient.addColorStop(1, "rgba(139,126,200,0)");
+          scanGradient.addColorStop(0, "transparent");
+          scanGradient.addColorStop(0.5, "var(--fio-accent-glow)");
+          scanGradient.addColorStop(1, "transparent");
           ctx.fillStyle = scanGradient;
           ctx.fillRect(0, offset - 80, w, 160);
         } catch (err) {
@@ -78,27 +81,31 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
     <section className="relative overflow-hidden fio-gradient-hero">
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{ width: "100%", height: "100%" }}
+        /* inset-0 已等价于 top/right/bottom/left:0，块级 canvas 自动填满，
+           原先的内联 width/height:100% 是冗余且无法被响应式覆盖。 */
+        className="pointer-events-none absolute inset-0 z-[var(--z-decor)]"
         aria-label={d.canvasLabel}
         role="img"
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex min-h-[92vh] flex-col items-center justify-center py-24 lg:flex-row lg:items-center lg:gap-16">
+      <div className="relative z-[var(--z-content)] mx-auto max-w-6xl px-4 sm:px-6">
+        {/* svh = 小视口高度。原 vh 在移动浏览器上按"地址栏隐藏时"计算，
+            iOS Safari / Chrome Android 显示地址栏时 92vh 会溢出可见区域
+            8–15%，用户必须滚动才能看到 CTA 与产品卡底部。 */}
+        <div className="flex min-h-[92svh] flex-col items-center justify-center py-24 lg:flex-row lg:items-center lg:gap-16">
           {/* LEFT — Story */}
           <div className="flex-1 text-center lg:text-left">
             {/* Label */}
             <div
               className="fio-animate-fade-up fio-delay-1 mb-8 inline-flex items-center gap-3 rounded-sm px-4 py-2"
               style={{
-                background: "rgba(201,169,110,0.06)",
-                border: "1px solid rgba(201,169,110,0.12)",
+                background: "var(--fio-gold-glow)",
+                border: "1px solid var(--fio-gold-dim)",
               }}
             >
               <span
                 className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{ background: "var(--fio-gold)", boxShadow: "0 0 6px rgba(201,169,110,0.4)" }}
+                style={{ background: "var(--fio-gold)", boxShadow: "0 0 6px var(--fio-gold-dim)" }}
               />
               <span className="fio-caption" style={{ color: "var(--fio-gold)" }}>
                 {d.badge}
@@ -151,7 +158,7 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                 </svg>
               </a>
               <a
-                href="/admin/"
+                href="/admin/dashboard"
                 className="fio-btn fio-btn-ghost"
               >
                 {d.ctaGhost}
@@ -160,26 +167,29 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
           </div>
 
           {/* RIGHT — Product Visual */}
+          {/* 必须 relative：下方的悬浮徽章用 absolute -bottom-3 -right-3 定位，
+              原先这两层之间没有任何定位祖先，徽章会漂到整个 max-w-6xl
+              容器的右下角，而不是产品卡右下角。 */}
           <div
-            className="fio-animate-fade-up fio-delay-3 mt-14 w-full max-w-lg lg:mt-0 lg:flex-1"
+            className="fio-animate-fade-up fio-delay-3 relative mt-14 w-full max-w-lg lg:mt-0 lg:flex-1"
           >
             <div
               className="relative overflow-hidden rounded-lg border p-1"
               style={{
-                borderColor: "rgba(255,255,255,0.06)",
-                background: "linear-gradient(135deg, rgba(139,126,200,0.04) 0%, rgba(7,8,16,0.8) 50%, rgba(201,169,110,0.03) 100%)",
-                boxShadow: "0 0 60px rgba(139,126,200,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
+                borderColor: "var(--fio-border-light)",
+                background: "linear-gradient(135deg, var(--fio-accent-glow) 0%, var(--fio-ink-scrim) 50%, var(--fio-gold-glow) 100%)",
+                boxShadow: "0 0 60px var(--fio-accent-dim), inset 0 1px 0 var(--fio-border-subtle)",
               }}
             >
               {/* Top bar — window chrome */}
               <div
                 className="flex items-center gap-2 px-4 py-3"
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                style={{ borderBottom: "1px solid var(--fio-border-hairline)" }}
               >
                 <div className="flex gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--fio-elevated)" }} />
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--fio-elevated)" }} />
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--fio-elevated)" }} />
                 </div>
                 <span className="ml-3 text-xs font-mono" style={{ color: "var(--fio-text-3)" }}>
                   fidesorigin.com/admin
@@ -198,9 +208,9 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                     <div
                       key={s.label}
                       className="rounded-md p-3"
-                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}
+                      style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
                     >
-                      <div className="text-[0.65rem] font-mono uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
+                      <div className="text-[0.6875rem] font-mono uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
                         {s.label}
                       </div>
                       <div className="mt-1 text-lg font-semibold font-mono" style={{ color: s.color }}>
@@ -212,11 +222,11 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
 
                 {/* Scanning animation bar */}
                 <div className="mb-4">
-                  <div className="mb-1.5 flex items-center justify-between text-[0.65rem] font-mono" style={{ color: "var(--fio-text-3)" }}>
+                  <div className="mb-1.5 flex items-center justify-between text-[0.6875rem] font-mono" style={{ color: "var(--fio-text-3)" }}>
                     <span>{d.scanLabel}</span>
                     <span style={{ color: "var(--fio-gold)" }}>{d.scanActive}</span>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.03)" }}>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: "var(--fio-surface-2)" }}>
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -237,14 +247,14 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                     <div
                       key={i}
                       className="flex items-center justify-between rounded-md px-3 py-2"
-                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)" }}
+                      style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
                     >
                       <div className="flex items-center gap-3">
                         <span
                           className="h-1.5 w-1.5 rounded-full"
                           style={{
                             background: tx.risk === "Low" ? "var(--fio-gold)" : "var(--fio-danger)",
-                            boxShadow: `0 0 4px ${tx.risk === "Low" ? "rgba(201,169,110,0.4)" : "rgba(220,38,38,0.4)"}`,
+                            boxShadow: `0 0 4px ${tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)"}`,
                           }}
                         />
                         <span className="text-xs font-mono" style={{ color: "var(--fio-text-2)" }}>
@@ -252,10 +262,10 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                         </span>
                       </div>
                       <span
-                        className="rounded-sm px-2 py-0.5 text-[0.65rem] font-mono"
+                        className="rounded-sm px-2 py-0.5 text-[0.6875rem] font-mono"
                         style={{
                           color: tx.risk === "Low" ? "var(--fio-gold)" : "var(--fio-danger)",
-                          background: tx.risk === "Low" ? "rgba(201,169,110,0.08)" : "rgba(220,38,38,0.08)",
+                          background: tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)",
                         }}
                       >
                         {tx.status}
@@ -270,13 +280,14 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
             <div
               className="absolute -bottom-3 -right-3 flex items-center gap-2 rounded-md border px-3 py-2"
               style={{
-                background: "rgba(7,8,16,0.9)",
-                borderColor: "rgba(201,169,110,0.15)",
+                background: "var(--fio-ink-scrim)",
+                borderColor: "var(--fio-gold-dim)",
                 backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
               }}
             >
               <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "var(--fio-gold)" }} />
-              <span className="text-[0.65rem] font-mono" style={{ color: "var(--fio-gold)" }}>
+              <span className="text-[0.6875rem] font-mono" style={{ color: "var(--fio-gold)" }}>
                 {d.floatBadge}
               </span>
             </div>
@@ -284,9 +295,11 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
         </div>
       </div>
 
-      {/* Bottom fade */}
+      {/* Bottom fade —— 显式 z-index：原先靠"正 z-index 排在第 9 步、
+          auto 排在第 8 步"的隐式规则才恰好压住 canvas 而不压内容，
+          没有任何说明，极易在后续改动中被破坏。 */}
       <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-32"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 z-[var(--z-decor)] h-32"
         style={{
           background: "linear-gradient(to top, var(--fio-ink), transparent)",
         }}

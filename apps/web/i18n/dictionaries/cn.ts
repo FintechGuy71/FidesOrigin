@@ -89,6 +89,8 @@ const cn: Dict = {
     step2Desc: "链上 RiskRegistryV2 在毫秒级内检查 20,000+ 个档案。",
     step3Title: "策略评估",
     step3Desc: "PolicyEngine 应用你配置的规则来判定合规性。",
+    screenAddressLabel: "待筛查地址",
+    riskAddressLabel: "待评分地址",
   },
   addressCheck: {
     micro: "合规工具",
@@ -168,6 +170,10 @@ const cn: Dict = {
       step3Sub: "智能合约 · 钱包",
       flowLabel: "实时数据流",
       flowLive: "实时",
+      flowNode1: "风险预言机",
+      flowNode2: "策略引擎",
+      flowNode3: "合规引擎",
+      flowNode4: "链上执行",
     },
     features: {
       caption: "核心能力",
@@ -214,7 +220,7 @@ const cn: Dict = {
       j3Detail: "KYC/AML · Tx Limits · Geo-fencing",
       j4Title: "链上结算",
       j4Desc: "智能合约自动转账。",
-      j4Detail: "Immutable audit log",
+      j4Detail: "不可篡改的审计日志",
       quote: "FidesOrigin 让我们从手工合规审查转向全自动执行，风控延迟从小时级降到毫秒级。",
       quoteName: "首席合规官",
       quoteRole: "香港持牌稳定币发行商",
@@ -226,6 +232,12 @@ const cn: Dict = {
       ctaPrimary: "预约演示",
       ctaDocs: "阅读文档",
     },
+  },
+  notFound: {
+    title: "页面未找到",
+    body: "你访问的页面不存在或已被移动。",
+    home: "返回首页",
+    docs: "阅读文档",
   },
 };
 

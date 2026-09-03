@@ -26,17 +26,21 @@ export default function LegacyShell({ lang, pagePath, availableLocales, wallet, 
   const dict = getDictionary(lang);
   return (
     <>
-      {/* Classic-site fonts (legacy.css references Inter / JetBrains Mono).
-          React 19 hoists these <link> elements into <head>. */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet"
-      />
+      {/* Classic-site fonts. React 19 hoists these <link> elements into <head>.
+          ⚠ Inter 已移除：全仓库零处引用（css/legacy.css 的 13 处 font-family
+            全部是 var(--font-sans)，而 --font-sans 由 next/font 的 Plus Jakarta
+            Sans 提供）。53 个经典站页面每页都下载 Inter 的 5 个字重，纯属浪费。
+          ⚠ JetBrains Mono 也已移除：app/_lib/fonts.ts 已自托管同一字体并注入
+            --font-mono-nf，CDN 版是第二份下载，且字重/度量可能与自托管版不同。 */}
       <a href="#main-content" className="skip-link">
         {dict.nav.skip}
       </a>
+      {/* .reveal 的基础态是 opacity:0，完全依赖 LegacyFx 的 IntersectionObserver
+          加 .visible 才可见。JS 被禁用 / 水合失败 / 打印时整页内容空白。
+          noscript 兜底直接把初始态改回可见（不影响 JS 可用时的滚动动画）。 */}
+      <noscript>
+        <style>{`.reveal{opacity:1 !important;transform:none !important}`}</style>
+      </noscript>
       <LegacyHeader
         lang={lang}
         dict={dict}

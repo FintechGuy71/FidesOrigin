@@ -87,6 +87,8 @@ const en = {
     step2Desc: "Our on-chain RiskRegistryV2 checks 20,000+ profiles in milliseconds.",
     step3Title: "Policy Evaluation",
     step3Desc: "The PolicyEngine applies your configured rules to determine compliance.",
+    screenAddressLabel: "Address to screen",
+    riskAddressLabel: "Address to score",
   },
   addressCheck: {
     micro: "Compliance Tool",
@@ -166,6 +168,10 @@ const en = {
       step3Sub: "Smart Contract · Wallet",
       flowLabel: "Real-Time Data Flow",
       flowLive: "Live",
+      flowNode1: "Risk Oracle",
+      flowNode2: "Policy Engine",
+      flowNode3: "Compliance Engine",
+      flowNode4: "On-Chain Execution",
     },
     features: {
       caption: "Core Capabilities",
@@ -224,6 +230,12 @@ const en = {
       ctaPrimary: "Request Demo",
       ctaDocs: "Read the Docs",
     },
+  },
+  notFound: {
+    title: "Page not found",
+    body: "The page you are looking for does not exist or has been moved.",
+    home: "Back to Home",
+    docs: "Read the Docs",
   },
 };
 

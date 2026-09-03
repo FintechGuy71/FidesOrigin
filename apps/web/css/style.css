@@ -1,18 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FIDESORIGIN — Tailwind v4 入口样式表
+   ═══════════════════════════════════════════════════════════════════
+
+   ① 层序声明（必须最先）
+      Tailwind v4 把全部工具类放进 @layer utilities。CSS 级联层规则是
+      「未分层（unlayered）声明 > 任何层内声明，与选择器特异性无关」。
+      经典站样式（css/legacy.css）已整包进 @layer legacy，
+      这里保证 legacy 排在 utilities 之前 —— 于是工具类可以正常覆盖它，
+      而它仍能覆盖 base/components。
+
+   ② 本文件【不再重复定义 :root { --fio-* }】
+      设计令牌的唯一真源是 css/fio-design-system.css。
+      历史 bug：本文件曾重复定义一整份 :root，且因加载顺序在后而覆盖设计系统，
+      其中 `--font-serif: var(--font-serif), …` 是自引用循环，导致
+      全站 .fio-heading-* 与 8 处内联 fontFamily 全部失效。
+
+   ③ 第三方样式必须显式指定层
+      任何 @import 进来的第三方 CSS 默认是 unlayered，会压制全部 Tailwind
+      工具类（与 ① 同源）。aos.css 曾由 components/home-chrome.tsx 以
+      `import "aos/dist/aos.css"` 引入，产物为 28.7 KB 的零 @layer 样式表，
+      且在主 CSS 之前加载 → 首页/语言首页上 [data-aos] 的
+      transition-property / opacity 恒定压掉 Tailwind 的 transition-* / opacity-*。
+      现在统一由本文件以 layer(legacy) 引入，组件内 import 已删除。
+
+   ④ @theme 只保留「会被工具类消费且设计系统未覆盖」的项
+      字体族（--font-sans/serif/mono）与中性灰阶在 @theme 中定义；
+      --color-fio-* 品牌色别名已于 2026-09-02 审计中删除 —— 全站零组件
+      使用 bg-fio-* / text-fio-* 等类，Tailwind v4 按需生成会整批 tree-shake，
+      产物中一个 --color-fio-* 都没有，属于"看起来可用、实际是空头支票"的死配置。
+      组件统一用 var(--fio-*) 任意值语法（如 text-[var(--fio-gold)]）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer theme, base, components, legacy, utilities;
+
 @import 'tailwindcss';
 @import './fio-design-system.css';
 
-/* Additional styles */
-@import './additional-styles/utility-patterns.css' layer(components);
-@import './additional-styles/theme.css';
+/* AOS —— 必须显式进层。详见文件头 ③。 */
+@import 'aos/dist/aos.css' layer(legacy);
 
 @plugin "@tailwindcss/forms" {
   strategy: base;
 }
 
 @theme {
-  --font-inter: var(--font-inter), sans-serif;
-  --font-nacelle: var(--font-nacelle), sans-serif;
+  /* ── 中性灰阶 ─────────────────────────────────────────────────────
+     从已删除的 tailwind.config.js 迁移。v4 默认 gray 是 oklch 蓝调灰
+     （色相约 256–265），与品牌底色 #070810 不同源，混用会出现两套不一致的暗部。 */
+  --color-gray-50:  #f8f8f8;
+  --color-gray-100: #e5e5e5;
+  --color-gray-200: #d4d4d4;
+  --color-gray-300: #a3a3a3;
+  --color-gray-400: #737373;
+  --color-gray-500: #525252;
+  --color-gray-600: #404040;
+  --color-gray-700: #262626;
+  --color-gray-800: #171717;
+  --color-gray-900: #0a0a0a;
+  --color-gray-950: #030712;
 
+  /* ── 字体 ─────────────────────────────────────────────────────────
+     ⚠ 这里【故意不再定义】--font-sans / --font-serif / --font-mono。
+     唯一真源在 css/fio-design-system.css 的 @layer base :root
+     （base 层恒胜 @theme 层，此处定义会是死值，且形成两处需同步的漂移风险）。
+     三者均含 next/font 注入变量（-nf 后缀）与完整 CJK 回退栈。 */
+
+  /* ── 字号阶梯 ───────────────────────────────────────────────── */
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.5384;
   --text-sm: 0.875rem;
@@ -45,6 +98,7 @@
   --text-7xl--line-height: 1;
   --text-7xl--letter-spacing: -0.0268em;
 
+  /* ── 动画 ──────────────────────────────────────────────────── */
   --animate-shine: shine 5s ease-in-out 500ms infinite;
   --animate-gradient: gradient 6s linear infinite;
 
@@ -73,12 +127,9 @@
 }
 
 /*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  Tailwind v4 起，默认边框色改为 currentColor。这里统一改成品色的
+  品牌描边 —— 原写法 var(--color-gray-200, currentColor) 会让所有只写了
+  `border` 而不带颜色的元素在深色主题上出现一条近白（#d4d4d4）亮线。
 */
 @layer base {
   *,
@@ -86,56 +137,6 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
-}
-
-/* FidesOrigin Design System - Ensure CSS variables are loaded */
-@layer base {
-  :root {
-    --fio-ink: #070810;
-    --fio-ink-soft: #0c0e16;
-    --fio-surface: #12141d;
-    --fio-surface-2: #181b26;
-    --fio-surface-3: #1e2130;
-    --fio-elevated: #262a3a;
-    --fio-text: #e8eaf0;
-    --fio-text-2: #8a8f9e;
-    --fio-text-3: #5a6070;
-    --fio-text-4: #3a4050;
-    --fio-accent: #8b7ec8;
-    --fio-accent-dim: rgba(139, 126, 200, 0.12);
-    --fio-accent-glow: rgba(139, 126, 200, 0.06);
-    --fio-gold: #c9a96e;
-    --fio-gold-dim: rgba(201, 169, 110, 0.12);
-    --fio-gold-glow: rgba(201, 169, 110, 0.08);
-    --fio-steel: #6b8cae;
-    --fio-steel-dim: rgba(107, 140, 174, 0.12);
-    --fio-success: #4ade80;
-    --fio-warn: #fbbf24;
-    --fio-danger: #f87171;
-    --fio-info: #60a5fa;
-    --font-sans: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-serif: var(--font-serif), 'Playfair Display', Georgia, serif;
-    --font-mono: var(--font-mono), 'JetBrains Mono', 'SF Mono', monospace;
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 20px;
-    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  
-  html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  body {
-    font-family: var(--font-sans);
-    background: var(--fio-ink);
-    color: var(--fio-text);
-    line-height: 1.6;
+    border-color: var(--fio-border-subtle);
   }
 }

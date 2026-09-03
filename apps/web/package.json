@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "verify:style": "python _verify.py && python _crosscheck.py",
     "clean": "rm -rf .next dist"
   },
   "dependencies": {

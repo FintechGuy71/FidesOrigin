@@ -37,7 +37,7 @@ const PAGE_CSS = `
       margin-bottom: 8px;
     }
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
-    .badge-major { background: rgba(74,222,128,0.12); color: var(--success); }
+    .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
     .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
@@ -53,14 +53,14 @@ const PAGE_CSS = `
 export default function ContentChangelogCN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="cl-hero">
       <div className="container">
         <div className="reveal">
           <p className="micro">更新日志</p>
-          <h1 className="display">Protocol <span>evolution</span></h1>
-          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>Track every milestone, from initial release to the latest security-hardened version.</p>
+          <h1 className="display">协议<span>演进</span></h1>
+          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>追踪每一个里程碑，从首次发布到最新的安全加固版本。</p>
         </div>
       </div>
     </section>
@@ -70,74 +70,74 @@ export default function ContentChangelogCN() {
         <div className="timeline reveal">
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-latest">Latest</span>
-            <h3>v3.3 — Regulatory Templates</h3>
-            <div className="date">July 2026</div>
+            <span className="timeline-badge badge-latest">最新</span>
+            <h3>v3.3 — 监管合规模板</h3>
+            <div className="date">2026 年 7 月</div>
             <ul>
-              <li>Added MiCA and HKMA compliance templates for stablecoin issuers</li>
-              <li>Enhanced PolicyEngine with jurisdiction-based rule sets</li>
-              <li>Released interactive demo on Sepolia testnet</li>
+              <li>为稳定币发行方新增 MiCA 与 HKMA 合规模板</li>
+              <li>PolicyEngine 增强：支持基于司法管辖区的规则集</li>
+              <li>在 Sepolia 测试网发布交互式演示</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.2 — Monitoring & Indexing</h3>
-            <div className="date">March 2026</div>
+            <span className="timeline-badge badge-major">重大版本</span>
+            <h3>v3.2 — 监控与索引</h3>
+            <div className="date">2026 年 3 月</div>
             <ul>
-              <li>Launched The Graph subgraph for indexed on-chain events</li>
-              <li>Deployed Forta monitoring bots for real-time anomaly detection</li>
-              <li>Added WebSocket streaming for live risk updates</li>
+              <li>上线 The Graph Subgraph，索引链上事件</li>
+              <li>部署 Forta 监控机器人，实时检测异常</li>
+              <li>新增 WebSocket 流，实时推送风险更新</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.1 — Security Audit Complete</h3>
-            <div className="date">January 2026</div>
+            <span className="timeline-badge badge-major">重大版本</span>
+            <h3>v3.1 — 安全审计完成</h3>
+            <div className="date">2026 年 1 月</div>
             <ul>
-              <li>Completed 3 rounds of independent security audits</li>
-              <li>Resolved 300+ findings across contracts, backend, and infrastructure</li>
-              <li>391 tests passing, 0 critical issues open</li>
-              <li>Achieved 99.9% test coverage on core contracts</li>
+              <li>完成 3 轮独立安全审计</li>
+              <li>解决合约、后端与基础设施中的 300+ 项发现问题</li>
+              <li>391 项测试通过，0 项严重问题遗留</li>
+              <li>核心合约测试覆盖率达到 99.9%</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.0 — Diamond Architecture</h3>
-            <div className="date">October 2025</div>
+            <span className="timeline-badge badge-major">重大版本</span>
+            <h3>v3.0 — Diamond 架构</h3>
+            <div className="date">2025 年 10 月</div>
             <ul>
-              <li>Migrated to EIP-2535 Diamond pattern for upgradeable facets</li>
-              <li>Added multi-chain support (Ethereum, Base, Arbitrum)</li>
-              <li>Introduced QuarantineVault for suspicious transaction escrow</li>
+              <li>迁移至 EIP-2535 Diamond 模式，支持 facet 可升级</li>
+              <li>新增多链支持（Ethereum、Base、Arbitrum）</li>
+              <li>引入 QuarantineVault，对可疑交易进行隔离托管</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-minor">Minor</span>
+            <span className="timeline-badge badge-minor">次要版本</span>
             <h3>v2.0 — RiskRegistryV2</h3>
-            <div className="date">June 2025</div>
+            <div className="date">2025 年 6 月</div>
             <ul>
-              <li>Upgraded RiskRegistry with Merkle-proof based risk commitments</li>
-              <li>Enhanced PolicyEngine with configurable rule templates</li>
-              <li>Added batch address screening API</li>
+              <li>RiskRegistry 升级，支持基于 Merkle 证明的风险承诺</li>
+              <li>PolicyEngine 增强：支持可配置规则模板</li>
+              <li>新增批量地址筛查 API</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-minor">Minor</span>
-            <h3>v1.0 — Initial Release</h3>
-            <div className="date">January 2025</div>
+            <span className="timeline-badge badge-minor">次要版本</span>
+            <h3>v1.0 — 首次发布</h3>
+            <div className="date">2025 年 1 月</div>
             <ul>
-              <li>Launched FidesOrigin protocol on Sepolia testnet</li>
-              <li>Released RiskRegistry and ComplianceEngine contracts</li>
-              <li>Published TypeScript SDK and REST API</li>
+              <li>FidesOrigin 协议在 Sepolia 测试网上线</li>
+              <li>发布 RiskRegistry 与 ComplianceEngine 合约</li>
+              <li>发布 TypeScript SDK 与 REST API</li>
             </ul>
           </div>
         </div>

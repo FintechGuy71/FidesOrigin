@@ -20,7 +20,7 @@ const PAGE_CSS = `
     }
     .blog-hero-content {
       position: relative;
-      z-index: 1;
+      z-index: var(--z-content);
     }
     .blog-hero .display {
       font-size: clamp(2rem, 4.5vw, 3.2rem);
@@ -29,14 +29,14 @@ const PAGE_CSS = `
       letter-spacing: -0.03em;
     }
     .blog-hero .display span {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .hr-fade {
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      background: linear-gradient(90deg, transparent, var(--fio-border-light), transparent);
       margin: 0 auto;
       max-width: 800px;
     }
@@ -88,7 +88,7 @@ const PAGE_CSS = `
       color: var(--text-muted);
       flex-shrink: 0;
     }
-    @media (max-width: 640px) {
+    @media (max-width: 600px) {
       .blog-card { flex-direction: column; align-items: flex-start; }
       .blog-hero { padding: 120px 0 40px; }
     }
@@ -103,7 +103,7 @@ const PAGE_CSS = `
 export default function ContentBlogJP() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="blog-hero">
@@ -137,7 +137,7 @@ export default function ContentBlogJP() {
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/jp/blog" className="blog-card">
+          <a href="/blog" className="blog-card">
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">English</span>

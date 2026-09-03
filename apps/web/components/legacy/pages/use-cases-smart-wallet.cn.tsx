@@ -9,36 +9,11 @@ const PAGE_CSS = `
       align-items: center;
       margin-top: 48px;
     }
-    .uc-code {
-      background: #0a0c14;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-    .uc-code-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-    .uc-code pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    .uc-code .comment { color: #5c6370; font-style: italic; }
-    .uc-code .kw { color: #c678dd; }
-    .uc-code .type { color: #e5c07b; }
-    .uc-code .func { color: #61afef; }
+    /* .uc-code / .uc-code-header / .uc-code pre / .uc-code .{comment,kw,type,func,str,num}
+       已上移到 css/legacy.css（共享）：这套类名跨 4 个 use-cases 家族 +
+       case-studies 共用，原先每个页面各写一份且数值不一致
+       （#5c6370 对比度仅 3.23:1、#c678dd 紫色破坏金色体系、缺 .str/.num）。
+       此处不再重复定义。 */
     .uc-features {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -59,7 +34,7 @@ const PAGE_CSS = `
       align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
       font-size: 0.9rem;
       color: var(--text-secondary);
     }
@@ -73,14 +48,14 @@ const PAGE_CSS = `
 export default function ContentUseCasesSmartWalletCN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="uc-hero">
       <div className="container">
         <div className="reveal">
-          <p className="micro">Use Case</p>
-          <h1 className="display">Smart Wallet <span>Compliance</span></h1>
-          <p className="lead" style={{ "maxWidth": "700px", "marginTop": "20px" }}>Embed on-chain risk screening directly into smart wallets and account abstraction wallets. Every userOp is evaluated before execution — no bypass possible.</p>
+          <p className="micro">应用场景</p>
+          <h1 className="display">智能钱包<span>合规</span></h1>
+          <p className="lead" style={{ "maxWidth": "700px", "marginTop": "20px" }}>将链上风险筛查直接嵌入智能钱包与账户抽象钱包。每个 userOp 在执行前都会经过评估，无法绕过。</p>
         </div>
       </div>
     </section>
@@ -89,17 +64,17 @@ export default function ContentUseCasesSmartWalletCN() {
       <div className="container">
         <div className="uc-grid">
           <div className="reveal">
-            <h2 className="h2">The Challenge</h2>
-            <p className="body-sm" style={{ "marginTop": "16px" }}>Smart wallets (ERC-4337) and account abstraction are revolutionizing user experience in Web3. But they introduce a new compliance challenge: how do you screen transactions when users interact through bundlers and entry points rather than direct EOA-to-contract calls?</p>
-            <p className="body-sm" style={{ "marginTop": "16px" }}>Traditional compliance solutions rely on dApp-level integration, which smart wallets bypass entirely. A user can construct a userOp that interacts with any contract, and the bundler will execute it — unless the wallet itself enforces compliance.</p>
+            <h2 className="h2">挑战</h2>
+            <p className="body-sm" style={{ "marginTop": "16px" }}>智能钱包（ERC-4337）与账户抽象正在重塑 Web3 的用户体验，但也带来新的合规挑战：当用户通过 bundler 和 entry point 交互、而非直接由 EOA 调用合约时，该如何筛查交易？</p>
+            <p className="body-sm" style={{ "marginTop": "16px" }}>传统合规方案依赖 dApp 层集成，而智能钱包完全可以绕过这一层。用户可以构造一个与任意合约交互的 userOp，bundler 会直接执行它——除非钱包自身强制执行合规。</p>
 
-            <h2 className="h2" style={{ "marginTop": "48px" }}>The Solution</h2>
+            <h2 className="h2" style={{ "marginTop": "48px" }}>解决方案</h2>
             <ul className="uc-checklist" style={{ "marginTop": "16px" }}>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Risk checks at the entrypoint level, before userOp execution</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Automatic screening of all destination addresses and call data</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Policy enforcement per wallet owner, not per dApp</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Bypass impossible even via direct bundler submission</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Real-time risk profile updates via oracle networks</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 在 entrypoint 层面进行风险检查，先于 userOp 执行</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 自动筛查所有目标地址与调用数据</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 策略执行按钱包所有者维度，而非按 dApp 维度</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 即使直接向 bundler 提交也无法绕过</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 通过预言机网络实时更新风险画像</li>
             </ul>
           </div>
           <div className="reveal">
@@ -138,25 +113,25 @@ export default function ContentUseCasesSmartWalletCN() {
     <section className="section bg-secondary">
       <div className="container">
         <div className="reveal section-intro">
-          <p className="micro">Capabilities</p>
-          <h2 className="h2 section-title">Built for account abstraction</h2>
+          <p className="micro">核心能力</p>
+          <h2 className="h2 section-title">为账户抽象而生</h2>
         </div>
         <div className="uc-features">
           <div className="uc-feature reveal">
-            <h3>ERC-4337 Compatible</h3>
-            <p>Integrates with any ERC-4337 entrypoint. Risk checks run during userOp validation, before bundler acceptance.</p>
+            <h3>兼容 ERC-4337</h3>
+            <p>可集成任何 ERC-4337 entrypoint。风险检查在 userOp 验证阶段执行，先于 bundler 受理。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>Bundler-Agnostic</h3>
-            <p>Works with any bundler service. Compliance is enforced by the wallet contract, not the infrastructure.</p>
+            <h3>与 Bundler 无关</h3>
+            <p>可与任何 bundler 服务配合。合规由钱包合约执行，而非依赖基础设施。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>Policy Per Owner</h3>
-            <p>Each wallet owner can configure their own risk policies: daily limits, whitelisted addresses, jurisdiction rules.</p>
+            <h3>按所有者配置策略</h3>
+            <p>每位钱包所有者可配置自己的风险策略：每日限额、白名单地址、司法管辖区规则。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>Session Key Support</h3>
-            <p>Apply different risk policies to session keys vs. owner key. Granular control for delegated access.</p>
+            <h3>Session Key 支持</h3>
+            <p>为 session key 与所有者密钥应用不同的风险策略，对委托访问实现细粒度管控。</p>
           </div>
         </div>
       </div>
@@ -165,8 +140,8 @@ export default function ContentUseCasesSmartWalletCN() {
     <section className="section">
       <div className="container">
         <div className="cta-section reveal">
-          <h2 className="h1">Ready to build a compliant smart wallet?</h2>
-          <p>Get access to our SDK, testnet deployment, and ERC-4337 integration guide.</p>
+          <h2 className="h1">准备好构建合规的智能钱包了吗？</h2>
+          <p>获取我们的 SDK、测试网部署与 ERC-4337 集成指南。</p>
           <div className="cta-buttons">
             <a href="/cn/docs" className="btn btn-primary">阅读文档</a>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">联系销售</a>

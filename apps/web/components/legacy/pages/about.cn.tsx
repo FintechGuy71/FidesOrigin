@@ -21,7 +21,7 @@ const PAGE_CSS = `
     .stat-item .num {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -52,14 +52,14 @@ const PAGE_CSS = `
 export default function ContentAboutCN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="about-hero">
       <div className="container">
         <div className="reveal">
           <p className="micro">关于我们</p>
-          <h1 className="display">Building trust <span>on-chain</span></h1>
-          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>We believe compliance should be programmable, deterministic, and transparent — not a black box controlled by third-party APIs.</p>
+          <h1 className="display">构建<span>链上</span>信任</h1>
+          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>我们相信，合规应当可编程、确定性且透明，而非由第三方 API 控制的黑箱。</p>
         </div>
       </div>
     </section>
@@ -67,26 +67,26 @@ export default function ContentAboutCN() {
     <section className="section" style={{ "paddingTop": "0" }}>
       <div className="container">
         <div className="about-mission reveal">
-          <h2>Our Mission</h2>
-          <p>To make on-chain compliance as fundamental to Web3 as SSL is to the internet. Every transaction should be screened, every policy should be deterministic, and every rule should be auditable — without sacrificing decentralization.</p>
+          <h2>我们的使命</h2>
+          <p>让链上合规成为 Web3 的基础能力，正如 SSL 之于互联网。每笔交易都应经过筛查，每项策略都应确定性执行，每条规则都应可审计——且不牺牲去中心化。</p>
         </div>
 
         <div className="stats-grid reveal">
           <div className="stat-item">
             <div className="num">3</div>
-            <div className="label">Security Audit Rounds</div>
+            <div className="label">安全审计轮次</div>
           </div>
           <div className="stat-item">
             <div className="num">300+</div>
-            <div className="label">Findings Resolved</div>
+            <div className="label">发现问题已解决</div>
           </div>
           <div className="stat-item">
             <div className="num">391</div>
-            <div className="label">Tests Passing</div>
+            <div className="label">测试通过</div>
           </div>
           <div className="stat-item">
             <div className="num">0</div>
-            <div className="label">Critical Issues</div>
+            <div className="label">严重问题</div>
           </div>
         </div>
       </div>
@@ -95,21 +95,21 @@ export default function ContentAboutCN() {
     <section className="section bg-secondary">
       <div className="container">
         <div className="reveal section-intro">
-          <p className="micro">Values</p>
-          <h2 className="h2 section-title">What we believe</h2>
+          <p className="micro">价值观</p>
+          <h2 className="h2 section-title">我们的理念</h2>
         </div>
         <div className="values-grid">
           <div className="value-card reveal">
-            <h3>Determinism Over Trust</h3>
-            <p>Compliance rules should execute the same way every time, for every transaction. No hidden logic, no manual exceptions.</p>
+            <h3>确定性优先于信任</h3>
+            <p>合规规则应对每笔交易以相同方式执行，没有隐藏逻辑，也没有人工例外。</p>
           </div>
           <div className="value-card reveal">
-            <h3>Transparency Over Opacity</h3>
-            <p>All policies, risk profiles, and screening decisions are on-chain and publicly auditable. Regulators can verify; users can trust.</p>
+            <h3>透明优先于黑箱</h3>
+            <p>所有策略、风险画像与筛查决策均上链且可公开审计。监管方可验证，用户可信赖。</p>
           </div>
           <div className="value-card reveal">
-            <h3>Decentralization Over Control</h3>
-            <p>We don't hold your keys, freeze your funds, or censor your transactions. The protocol enforces rules; humans don't.</p>
+            <h3>去中心化优先于管控</h3>
+            <p>我们不持有你的私钥，不冻结你的资金，也不审查你的交易。规则由协议执行，而非由人执行。</p>
           </div>
         </div>
       </div>
@@ -118,10 +118,10 @@ export default function ContentAboutCN() {
     <section className="section">
       <div className="container">
         <div className="cta-section reveal">
-          <h2 className="h1">Join us in building the future of on-chain compliance</h2>
-          <p>We're always looking for builders who share our vision.</p>
+          <h2 className="h1">与我们共建链上合规的未来</h2>
+          <p>我们始终期待与我们愿景一致的构建者加入。</p>
           <div className="cta-buttons">
-            <a href="mailto:contact@fidesorigin.com" className="btn btn-primary">Get in Touch</a>
+            <a href="mailto:contact@fidesorigin.com" className="btn btn-primary">联系我们</a>
             <a href="https://github.com/FintechGuy71/FidesOrigin" className="btn btn-secondary" rel="noopener noreferrer">GitHub</a>
           </div>
         </div>

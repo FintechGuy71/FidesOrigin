@@ -20,7 +20,7 @@ const PAGE_CSS = `
     }
     .blog-hero-content {
       position: relative;
-      z-index: 1;
+      z-index: var(--z-content);
     }
     .blog-hero .display {
       font-size: clamp(2rem, 4.5vw, 3.2rem);
@@ -29,14 +29,14 @@ const PAGE_CSS = `
       letter-spacing: -0.03em;
     }
     .blog-hero .display span {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .hr-fade {
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      background: linear-gradient(90deg, transparent, var(--fio-border-light), transparent);
       margin: 0 auto;
       max-width: 800px;
     }
@@ -88,20 +88,9 @@ const PAGE_CSS = `
       color: var(--text-muted);
       flex-shrink: 0;
     }
-    .blog-cta {
-      text-align: center;
-      padding: 80px 40px;
-    }
-    .blog-cta .btn-primary {
-      background: var(--accent);
-      color: var(--bg);
-      box-shadow: none;
-    }
-    .blog-cta .btn-primary:hover {
-      background: var(--gold);
-      transform: translateY(-1px);
-    }
-    @media (max-width: 640px) {
+    /* .blog-cta / .blog-cta .btn-primary / :hover 已删除：全站无对应
+       className="blog-cta" 的 JSX，三条规则是零消费者死代码。 */
+    @media (max-width: 600px) {
       .blog-card { flex-direction: column; align-items: flex-start; }
       .blog-hero { padding: 120px 0 40px; }
     }
@@ -116,7 +105,7 @@ const PAGE_CSS = `
 export default function ContentBlogEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="blog-hero">
@@ -144,6 +133,20 @@ export default function ContentBlogEN() {
               </div>
               <h2>The Travel Rule On-Chain: What FATF Requires from Stablecoin Transfers</h2>
               <p>FATF Travel Rule requirements for stablecoin transfers in 2026, and why on-chain enforcement beats API-centric screening.</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </a>
+        </div>
+
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <a href="/blog/ofac-sanctions-screening-blockchain" className="blog-card">
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">Sanctions</span>
+                <span className="date">July 2026</span>
+              </div>
+              <h2>OFAC Sanctions Screening on Blockchain: Best Practices</h2>
+              <p>Best practices for OFAC sanctions screening on blockchain — implementing SDN list checks at the smart contract level for stablecoins and DeFi.</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
           </a>

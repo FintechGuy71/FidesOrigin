@@ -21,7 +21,7 @@ const PAGE_CSS = `
     .stat-item .num {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -52,14 +52,14 @@ const PAGE_CSS = `
 export default function ContentAboutJP() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="about-hero">
       <div className="container">
         <div className="reveal">
           <p className="micro">私たちについて</p>
-          <h1 className="display">Building trust <span>on-chain</span></h1>
-          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>We believe compliance should be programmable, deterministic, and transparent — not a black box controlled by third-party APIs.</p>
+          <h1 className="display">オンチェーンで <span>信頼を構築</span></h1>
+          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>コンプライアンスは、サードパーティ API が管理するブラックボックスではなく、プログラマブルで決定論的、かつ透明であるべきだと私たちは考えます。</p>
         </div>
       </div>
     </section>
@@ -67,26 +67,26 @@ export default function ContentAboutJP() {
     <section className="section" style={{ "paddingTop": "0" }}>
       <div className="container">
         <div className="about-mission reveal">
-          <h2>Our Mission</h2>
-          <p>To make on-chain compliance as fundamental to Web3 as SSL is to the internet. Every transaction should be screened, every policy should be deterministic, and every rule should be auditable — without sacrificing decentralization.</p>
+          <h2>私たちのミッション</h2>
+          <p>オンチェーンコンプライアンスを、インターネットにおける SSL のように Web3 の基盤にすること。すべての取引がスクリーニングされ、すべてのポリシーが決定論的であり、すべてのルールが監査可能であること——分散性を犠牲にすることなく。</p>
         </div>
 
         <div className="stats-grid reveal">
           <div className="stat-item">
             <div className="num">3</div>
-            <div className="label">Security Audit Rounds</div>
+            <div className="label">セキュリティ監査ラウンド</div>
           </div>
           <div className="stat-item">
             <div className="num">300+</div>
-            <div className="label">Findings Resolved</div>
+            <div className="label">指摘事項を解決済み</div>
           </div>
           <div className="stat-item">
             <div className="num">391</div>
-            <div className="label">Tests Passing</div>
+            <div className="label">テスト合格</div>
           </div>
           <div className="stat-item">
             <div className="num">0</div>
-            <div className="label">Critical Issues</div>
+            <div className="label">重大な問題</div>
           </div>
         </div>
       </div>
@@ -95,21 +95,21 @@ export default function ContentAboutJP() {
     <section className="section bg-secondary">
       <div className="container">
         <div className="reveal section-intro">
-          <p className="micro">Values</p>
-          <h2 className="h2 section-title">What we believe</h2>
+          <p className="micro">バリュー</p>
+          <h2 className="h2 section-title">私たちが大切にすること</h2>
         </div>
         <div className="values-grid">
           <div className="value-card reveal">
-            <h3>Determinism Over Trust</h3>
-            <p>Compliance rules should execute the same way every time, for every transaction. No hidden logic, no manual exceptions.</p>
+            <h3>信頼より決定論</h3>
+            <p>コンプライアンスルールは、どの取引に対しても毎回同じように実行されるべきです。隠れたロジックも手動の例外処理もありません。</p>
           </div>
           <div className="value-card reveal">
-            <h3>Transparency Over Opacity</h3>
-            <p>All policies, risk profiles, and screening decisions are on-chain and publicly auditable. Regulators can verify; users can trust.</p>
+            <h3>不透明より透明性</h3>
+            <p>すべてのポリシー、リスクプロファイル、スクリーニング判定はオンチェーンに記録され、誰でも監査できます。規制当局は検証でき、ユーザーは信頼できます。</p>
           </div>
           <div className="value-card reveal">
-            <h3>Decentralization Over Control</h3>
-            <p>We don't hold your keys, freeze your funds, or censor your transactions. The protocol enforces rules; humans don't.</p>
+            <h3>管理より分散化</h3>
+            <p>私たちはお客様の秘密鍵を保持せず、資産を凍結せず、取引を検閲しません。ルールを執行するのはプロトコルであり、人間ではありません。</p>
           </div>
         </div>
       </div>
@@ -118,10 +118,10 @@ export default function ContentAboutJP() {
     <section className="section">
       <div className="container">
         <div className="cta-section reveal">
-          <h2 className="h1">Join us in building the future of on-chain compliance</h2>
-          <p>We're always looking for builders who share our vision.</p>
+          <h2 className="h1">オンチェーンコンプライアンスの未来を、私たちと共に</h2>
+          <p>私たちのビジョンに共感してくださるビルダーを常に歓迎しています。</p>
           <div className="cta-buttons">
-            <a href="mailto:contact@fidesorigin.com" className="btn btn-primary">Get in Touch</a>
+            <a href="mailto:contact@fidesorigin.com" className="btn btn-primary">お問い合わせ</a>
             <a href="https://github.com/FintechGuy71/FidesOrigin" className="btn btn-secondary" rel="noopener noreferrer">GitHub</a>
           </div>
         </div>

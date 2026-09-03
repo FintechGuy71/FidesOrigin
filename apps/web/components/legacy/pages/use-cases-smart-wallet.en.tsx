@@ -9,36 +9,11 @@ const PAGE_CSS = `
       align-items: center;
       margin-top: 48px;
     }
-    .uc-code {
-      background: #0a0c14;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-    .uc-code-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-    .uc-code pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    .uc-code .comment { color: #5c6370; font-style: italic; }
-    .uc-code .kw { color: #c678dd; }
-    .uc-code .type { color: #e5c07b; }
-    .uc-code .func { color: #61afef; }
+    /* .uc-code / .uc-code-header / .uc-code pre / .uc-code .{comment,kw,type,func,str,num}
+       已上移到 css/legacy.css（共享）：这套类名跨 4 个 use-cases 家族 +
+       case-studies 共用，原先每个页面各写一份且数值不一致
+       （#5c6370 对比度仅 3.23:1、#c678dd 紫色破坏金色体系、缺 .str/.num）。
+       此处不再重复定义。 */
     .uc-features {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -59,7 +34,7 @@ const PAGE_CSS = `
       align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
       font-size: 0.9rem;
       color: var(--text-secondary);
     }
@@ -73,7 +48,7 @@ const PAGE_CSS = `
 export default function ContentUseCasesSmartWalletEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="uc-hero">
       <div className="container">

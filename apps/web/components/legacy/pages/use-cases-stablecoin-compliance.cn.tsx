@@ -9,36 +9,11 @@ const PAGE_CSS = `
       align-items: center;
       margin-top: 48px;
     }
-    .uc-code {
-      background: #0a0c14;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-    .uc-code-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-    .uc-code pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    .uc-code .comment { color: #5c6370; font-style: italic; }
-    .uc-code .kw { color: #c678dd; }
-    .uc-code .type { color: #e5c07b; }
-    .uc-code .func { color: #61afef; }
+    /* .uc-code / .uc-code-header / .uc-code pre / .uc-code .{comment,kw,type,func,str,num}
+       已上移到 css/legacy.css（共享）：这套类名跨 4 个 use-cases 家族 +
+       case-studies 共用，原先每个页面各写一份且数值不一致
+       （#5c6370 对比度仅 3.23:1、#c678dd 紫色破坏金色体系、缺 .str/.num）。
+       此处不再重复定义。 */
     .uc-features {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -59,7 +34,7 @@ const PAGE_CSS = `
       align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
       font-size: 0.9rem;
       color: var(--text-secondary);
     }
@@ -73,15 +48,15 @@ const PAGE_CSS = `
 export default function ContentUseCasesStablecoinComplianceCN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="uc-hero">
       <div className="container">
         <div className="reveal">
-          <p className="micro">Use Case</p>
-          <h1 className="display">Stablecoin <span>Compliance</span></h1>
-          <p className="lead" style={{ "maxWidth": "700px", "marginTop": "20px" }}>Build compliant stablecoins with deterministic on-chain risk screening. Meet MiCA, Hong Kong, and global regulatory requirements without compromising decentralization.</p>
+          <p className="micro">应用场景</p>
+          <h1 className="display">稳定币<span>合规</span></h1>
+          <p className="lead" style={{ "maxWidth": "700px", "marginTop": "20px" }}>通过确定性的链上风险筛查构建合规稳定币。满足 MiCA、中国香港及全球监管要求，且不牺牲去中心化。</p>
         </div>
       </div>
     </section>
@@ -91,17 +66,17 @@ export default function ContentUseCasesStablecoinComplianceCN() {
       <div className="container">
         <div className="uc-grid">
           <div className="reveal">
-            <h2 className="h2">The Challenge</h2>
-            <p className="body-sm" style={{ "marginTop": "16px" }}>Stablecoin issuers face a critical dilemma: how to comply with OFAC sanctions, FATF travel rules, and emerging regulations like MiCA — without introducing centralization or off-chain dependencies that undermine the very purpose of blockchain.</p>
-            <p className="body-sm" style={{ "marginTop": "16px" }}>Traditional solutions rely on API-based screening that introduces latency, single points of failure, and trust assumptions. Regulators are increasingly demanding proof that compliance is <strong>deterministic and auditable</strong>.</p>
-            
-            <h2 className="h2" style={{ "marginTop": "48px" }}>The Solution</h2>
+            <h2 className="h2">挑战</h2>
+            <p className="body-sm" style={{ "marginTop": "16px" }}>稳定币发行方面临一个关键困境：如何在遵守 OFAC 制裁、FATF 旅行规则以及 MiCA 等新兴法规的同时，不引入有悖区块链初衷的中心化或链下依赖。</p>
+            <p className="body-sm" style={{ "marginTop": "16px" }}>传统方案依赖基于 API 的筛查，会带来延迟、单点故障与信任假设。监管方正越来越要求证明合规是<strong>确定性且可审计</strong>的。</p>
+
+            <h2 className="h2" style={{ "marginTop": "48px" }}>解决方案</h2>
             <ul className="uc-checklist" style={{ "marginTop": "16px" }}>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> On-chain OFAC/UN sanctions screening for every transfer</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Deterministic policy enforcement at the smart contract level</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Quarantine vault for suspicious transactions</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Real-time risk profile updates via Chainlink Functions</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Full audit trail for regulators</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 每笔转账均进行链上 OFAC/UN 制裁筛查</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 智能合约层面的确定性策略执行</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 隔离金库，用于托管可疑交易</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 通过 Chainlink Functions 实时更新风险画像</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 面向监管方的完整审计留痕</li>
             </ul>
           </div>
           <div className="reveal">
@@ -139,25 +114,25 @@ export default function ContentUseCasesStablecoinComplianceCN() {
     <section className="section bg-secondary">
       <div className="container">
         <div className="reveal section-intro">
-          <p className="micro">Capabilities</p>
-          <h2 className="h2 section-title">Built for regulated stablecoins</h2>
+          <p className="micro">核心能力</p>
+          <h2 className="h2 section-title">为受监管的稳定币而生</h2>
         </div>
         <div className="uc-features">
           <div className="uc-feature reveal">
-            <h3>MiCA Ready</h3>
-            <p>Meet EU Markets in Crypto-Assets regulation with on-chain reserve attestations and transaction screening.</p>
+            <h3>MiCA 就绪</h3>
+            <p>通过链上储备金认证与交易筛查，满足欧盟《加密资产市场法规》（MiCA）的要求。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>Hong Kong License</h3>
-            <p>Comply with HKMA stablecoin issuer requirements including real-time sanctions screening and audit trails.</p>
+            <h3>中国香港牌照</h3>
+            <p>符合 HKMA 稳定币发行方要求，包括实时制裁筛查与审计留痕。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>OFAC Screening</h3>
-            <p>SDN list checks on every transfer. Updated autonomously via decentralized oracle networks.</p>
+            <h3>OFAC 筛查</h3>
+            <p>每笔转账均核验 SDN 名单，并通过去中心化预言机网络自主更新。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>FATF Travel Rule</h3>
-            <p>Built-in VASP verification and originator/beneficiary data handling for cross-border transfers.</p>
+            <h3>FATF 旅行规则</h3>
+            <p>内置 VASP 验证与汇款人/收款人数据处理，支持跨境转账。</p>
           </div>
         </div>
       </div>
@@ -167,8 +142,8 @@ export default function ContentUseCasesStablecoinComplianceCN() {
     <section className="section">
       <div className="container">
         <div className="cta-section reveal">
-          <h2 className="h1">Ready to build a compliant stablecoin?</h2>
-          <p>Get access to our SDK, testnet deployment, and compliance documentation.</p>
+          <h2 className="h1">准备好构建合规稳定币了吗？</h2>
+          <p>获取我们的 SDK、测试网部署与合规文档。</p>
           <div className="cta-buttons">
             <a href="/cn/docs" className="btn btn-primary">阅读文档</a>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">联系销售</a>

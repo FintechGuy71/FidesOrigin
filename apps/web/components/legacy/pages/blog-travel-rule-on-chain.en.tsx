@@ -11,7 +11,7 @@ const PAGE_CSS = `
     .blog-content ul, .blog-content ol { color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; padding-left: 24px; }
     .blog-content li { margin-bottom: 8px; }
     .blog-content code { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
-    .blog-content pre { background: #0a0c14; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.7; color: var(--text-secondary); margin: 20px 0; }
+    .blog-content pre { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.7; color: var(--text-secondary); margin: 20px 0; }
     .blog-content blockquote { border-left: 3px solid var(--accent); padding-left: 20px; margin: 24px 0; color: var(--text-secondary); font-style: italic; }
     .blog-nav { display: flex; justify-content: space-between; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
     .blog-nav a { color: var(--accent); font-size: 0.875rem; }
@@ -20,7 +20,7 @@ const PAGE_CSS = `
 export default function ContentBlogTravelRuleOnChainEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
       <article className="blog-article">
         <div className="container">

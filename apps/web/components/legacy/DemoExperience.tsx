@@ -37,6 +37,7 @@ const DEMO_CSS = `
   margin-bottom: 12px;
 }
 .demo-input:focus { outline: none; border-color: var(--accent); }
+.demo-input:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .demo-btn {
   width: 100%;
   padding: 12px;
@@ -48,7 +49,11 @@ const DEMO_CSS = `
   cursor: pointer;
   transition: all 0.2s;
 }
-.demo-btn:hover { background: var(--gold); }
+/* ⚠ 原为 background: var(--gold) —— 与基线 var(--accent) 同为
+   var(--fio-gold) #c9a96e，hover 零视觉反馈，用户以为按钮点不动。 */
+.demo-btn:hover { background: var(--gold-bright); }
+.demo-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+/* 基础态 display:none 是不可达分支：JSX 恒以 "demo-result safe/warning/danger" 渲染 */
 .demo-result {
   margin-top: 16px;
   padding: 16px;
@@ -57,19 +62,22 @@ const DEMO_CSS = `
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  display: none;
 }
-.demo-result.show { display: block; }
-.demo-result.safe { border-color: rgba(74,222,128,0.3); }
-.demo-result.warning { border-color: rgba(251,191,36,0.3); }
-.demo-result.danger { border-color: rgba(248,113,113,0.3); }
+.demo-result.safe { border-color: var(--success); }
+.demo-result.warning { border-color: var(--warning); }
+.demo-result.danger { border-color: var(--danger); }
+/* flex-wrap: 三个页签在 375px 视口需约 430px（JP 文案更长），
+   溢出后被 body{overflow-x:hidden} 裁掉，第三个页签不可见不可点。 */
 .demo-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 24px;
 }
+/* padding 8px 16px + 行高 ≈ 40px，低于 44×44 触控目标下限 */
 .demo-tab {
-  padding: 8px 16px;
+  padding: 12px 16px;
+  min-height: 44px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -77,9 +85,8 @@ const DEMO_CSS = `
   cursor: pointer;
   transition: all 0.2s;
 }
+.demo-tab:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
 .demo-tab.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-.demo-panel { display: none; }
-.demo-panel.active { display: block; }
 @media (max-width: 900px) {
   .demo-grid { grid-template-columns: 1fr; }
 }
@@ -189,7 +196,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
 
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: DEMO_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + DEMO_CSS + "}" }} />
       {/* Hero */}
       <section className="demo-hero">
         <div className="container">
@@ -208,12 +215,15 @@ export default function DemoExperience({ dict }: { dict: D }) {
       {/* Demo Grid */}
       <section className="section" style={{ paddingTop: "0" }}>
         <div className="container">
-          <div className="demo-tabs reveal">
+          {/* 页签原本只有视觉状态：无 role="tablist"/role="tab"/aria-selected，
+              读屏用户无法知晓有几个页签、当前选中哪个。 */}
+          <div className="demo-tabs reveal" role="tablist" aria-label={dict.howTitle}>
             {tabs.map((t) => (
               <button
                 key={t.id}
                 className={`demo-tab${activeTab === t.id ? " active" : ""}`}
-                data-tab={t.id}
+                role="tab"
+                aria-selected={activeTab === t.id}
                 onClick={() => setActiveTab(t.id)}
               >
                 {t.label}
@@ -232,6 +242,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
                 type="text"
                 className="demo-input"
                 placeholder="0x..."
+                aria-label={dict.screenAddressLabel}
                 value={screenAddress}
                 onChange={(e) => setScreenAddress(e.target.value)}
               />
@@ -288,6 +299,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
                 type="text"
                 className="demo-input"
                 placeholder="0x..."
+                aria-label={dict.riskAddressLabel}
                 value={riskAddress}
                 onChange={(e) => setRiskAddress(e.target.value)}
               />

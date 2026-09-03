@@ -18,7 +18,7 @@ const PAGE_CSS = `
     .audit-stat .num {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -48,14 +48,14 @@ const PAGE_CSS = `
       font-size: 0.75rem;
       font-weight: 600;
     }
-    .badge-success { background: rgba(74,222,128,0.12); color: var(--success); }
+    .badge-success { background: var(--success-dim); color: var(--success); }
     .audit-list { list-style: none; padding: 0; }
     .audit-list li {
       display: flex;
       align-items: flex-start;
       gap: 12px;
       padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
       font-size: 0.875rem;
       color: var(--text-secondary);
     }
@@ -67,10 +67,10 @@ const PAGE_CSS = `
       font-weight: 600;
       flex-shrink: 0;
     }
-    .sev-critical { background: rgba(248,113,113,0.15); color: var(--danger); }
-    .sev-high { background: rgba(251,191,36,0.15); color: var(--warning); }
-    .sev-medium { background: rgba(99,102,241,0.15); color: #818cf8; }
-    .sev-low { background: rgba(74,222,128,0.12); color: var(--success); }
+    .sev-critical { background: var(--danger-dim); color: var(--danger); }
+    .sev-high { background: var(--warning-dim); color: var(--warning); }
+    .sev-medium { background: var(--info-dim); color: var(--info); }
+    .sev-low { background: var(--success-dim); color: var(--success); }
     .security-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -105,7 +105,7 @@ const PAGE_CSS = `
 export default function ContentSecurityEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="sec-hero">

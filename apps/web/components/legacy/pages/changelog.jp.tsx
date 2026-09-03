@@ -37,7 +37,7 @@ const PAGE_CSS = `
       margin-bottom: 8px;
     }
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
-    .badge-major { background: rgba(74,222,128,0.12); color: var(--success); }
+    .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
     .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
@@ -53,14 +53,14 @@ const PAGE_CSS = `
 export default function ContentChangelogJP() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="cl-hero">
       <div className="container">
         <div className="reveal">
           <p className="micro">変更履歴</p>
-          <h1 className="display">Protocol <span>evolution</span></h1>
-          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>Track every milestone, from initial release to the latest security-hardened version.</p>
+          <h1 className="display">プロトコルの <span>進化</span></h1>
+          <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>初期リリースから最新のセキュリティ強化バージョンまで、すべてのマイルストーンを追跡できます。</p>
         </div>
       </div>
     </section>
@@ -70,74 +70,74 @@ export default function ContentChangelogJP() {
         <div className="timeline reveal">
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-latest">Latest</span>
-            <h3>v3.3 — Regulatory Templates</h3>
-            <div className="date">July 2026</div>
+            <span className="timeline-badge badge-latest">最新</span>
+            <h3>v3.3 — 規制テンプレート</h3>
+            <div className="date">2026年7月</div>
             <ul>
-              <li>Added MiCA and HKMA compliance templates for stablecoin issuers</li>
-              <li>Enhanced PolicyEngine with jurisdiction-based rule sets</li>
-              <li>Released interactive demo on Sepolia testnet</li>
+              <li>ステーブルコイン発行者向けに MiCA および HKMA のコンプライアンステンプレートを追加</li>
+              <li>PolicyEngine を強化し、管轄区域ベースのルールセットに対応</li>
+              <li>Sepolia テストネットにてインタラクティブデモを公開</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.2 — Monitoring & Indexing</h3>
-            <div className="date">March 2026</div>
+            <span className="timeline-badge badge-major">メジャー</span>
+            <h3>v3.2 — モニタリングとインデックス化</h3>
+            <div className="date">2026年3月</div>
             <ul>
-              <li>Launched The Graph subgraph for indexed on-chain events</li>
-              <li>Deployed Forta monitoring bots for real-time anomaly detection</li>
-              <li>Added WebSocket streaming for live risk updates</li>
+              <li>オンチェーンイベントをインデックス化する The Graph Subgraph を公開</li>
+              <li>リアルタイムの異常検知のため Forta モニタリングボットを配備</li>
+              <li>リアルタイムのリスク更新に対応する WebSocket ストリーミングを追加</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.1 — Security Audit Complete</h3>
-            <div className="date">January 2026</div>
+            <span className="timeline-badge badge-major">メジャー</span>
+            <h3>v3.1 — セキュリティ監査完了</h3>
+            <div className="date">2026年1月</div>
             <ul>
-              <li>Completed 3 rounds of independent security audits</li>
-              <li>Resolved 300+ findings across contracts, backend, and infrastructure</li>
-              <li>391 tests passing, 0 critical issues open</li>
-              <li>Achieved 99.9% test coverage on core contracts</li>
+              <li>3ラウンドの独立セキュリティ監査を完了</li>
+              <li>コントラクト、バックエンド、インフラ全体で 300 件超の指摘事項を解決</li>
+              <li>391 件のテストが合格、重大な問題は 0 件</li>
+              <li>コアコントラクトのテストカバレッジ 99.9% を達成</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.0 — Diamond Architecture</h3>
-            <div className="date">October 2025</div>
+            <span className="timeline-badge badge-major">メジャー</span>
+            <h3>v3.0 — Diamond アーキテクチャ</h3>
+            <div className="date">2025年10月</div>
             <ul>
-              <li>Migrated to EIP-2535 Diamond pattern for upgradeable facets</li>
-              <li>Added multi-chain support (Ethereum, Base, Arbitrum)</li>
-              <li>Introduced QuarantineVault for suspicious transaction escrow</li>
+              <li>アップグレード可能な facet のため EIP-2535 Diamond パターンへ移行</li>
+              <li>マルチチェーン対応を追加（Ethereum、Base、Arbitrum）</li>
+              <li>不正疑いのある取引をエスクローする QuarantineVault を導入</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-minor">Minor</span>
+            <span className="timeline-badge badge-minor">マイナー</span>
             <h3>v2.0 — RiskRegistryV2</h3>
-            <div className="date">June 2025</div>
+            <div className="date">2025年6月</div>
             <ul>
-              <li>Upgraded RiskRegistry with Merkle-proof based risk commitments</li>
-              <li>Enhanced PolicyEngine with configurable rule templates</li>
-              <li>Added batch address screening API</li>
+              <li>RiskRegistry をアップグレードし、Merkle プルーフベースのリスクコミットメントに対応</li>
+              <li>PolicyEngine を強化し、設定可能なルールテンプレートを追加</li>
+              <li>アドレス一括スクリーニング API を追加</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-minor">Minor</span>
-            <h3>v1.0 — Initial Release</h3>
-            <div className="date">January 2025</div>
+            <span className="timeline-badge badge-minor">マイナー</span>
+            <h3>v1.0 — 初期リリース</h3>
+            <div className="date">2025年1月</div>
             <ul>
-              <li>Launched FidesOrigin protocol on Sepolia testnet</li>
-              <li>Released RiskRegistry and ComplianceEngine contracts</li>
-              <li>Published TypeScript SDK and REST API</li>
+              <li>FidesOrigin プロトコルを Sepolia テストネットに公開</li>
+              <li>RiskRegistry と ComplianceEngine コントラクトをリリース</li>
+              <li>TypeScript SDK と REST API を公開</li>
             </ul>
           </div>
         </div>
