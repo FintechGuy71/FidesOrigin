@@ -488,7 +488,9 @@ class DailySyncService {
         seen.add(addr);
         addresses.push({
           address: addr,
-          source: 'SCAM_SNIFFER',
+          // 注意：必须用复数 sources（与 mergeData 输出一致）——push-to-backend-db
+          // 读的是 e.sources；若用单数 source 会读不到，兜底成 ['OFAC'] 被误判为制裁。
+          sources: ['SCAM_SNIFFER'],
           riskScore: 75,
           reason: 'Scam Sniffer phishing/scam blacklist',
         });
@@ -514,7 +516,7 @@ class DailySyncService {
           for (const addr of lines) {
             addresses.push({
               address: addr,
-              source: 'SCAM_SNIFFER_STATIC',
+              sources: ['SCAM_SNIFFER_STATIC'],
               riskScore: 75,
               reason: 'Scam Sniffer phishing/scam blacklist (static snapshot)',
             });

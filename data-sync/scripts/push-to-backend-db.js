@@ -46,7 +46,11 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
         //   - 制裁源（OFAC/HMT/OPEN_SANCTIONS…）→ 兜底 'sanctioned'（SanctionedListStrategy 命中满分）
         //   - 风险源（SCAM_SNIFFER…）→ 兜底 'scam'（RiskListStrategy 命中 75 分，不误判为制裁）
         // 关键：scam 地址绝不能带 'sanctioned'，否则会被 SanctionedListStrategy 误判满分封号。
-        const srcs = e.sources && e.sources.length ? e.sources : ['OFAC'];
+        // 防御：兼容复数 sources（mergeData 输出）与单数 source（直接 fetch 未 merge），
+        // 两者都缺时才兜底 ['OFAC']。
+        const srcs = (e.sources && e.sources.length)
+          ? e.sources
+          : (e.source ? [e.source] : ['OFAC']);
         const isRiskSource = srcs.some(s => String(s).toUpperCase().startsWith('SCAM'));
         const fallbackTag = isRiskSource ? 'scam' : 'sanctioned';
         values.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`);
