@@ -611,7 +611,7 @@ function withMiddleware(handler, requiredScope = SCOPE.READ) {
 // 用于 dashboard 等纯管理通道——不再接受静态 API Key，
 // 验签密钥（JWT_SECRET_KEY/SECRET_KEY）仅在服务端，绝不进入任何响应体。
 function withAdminAuth(handler) {
-  const { verifyAdminToken } = require('./jwt');
+  const { verifyAdminToken, isJwtVerifyConfigured } = require('./jwt');
   return async function (req, res) {
     // 1. CORS（浏览器来源校验；服务端客户端放行）
     if (!checkOrigin(req, res)) return;
@@ -627,11 +627,19 @@ function withAdminAuth(handler) {
     // 3. Bearer JWT 验签 + role=admin（失败一律 401，不泄露细节）
     const auth = req.headers.authorization || '';
     const match = auth.match(/^Bearer\s+(.+)$/i);
-    const payload = match ? verifyAdminToken(match[1]) : null;
-    if (!payload) {
+    if (!match) {
       return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
     }
-    req.admin = payload;
+    if (isJwtVerifyConfigured()) {
+      // 已配置密钥：网关本地验签（提前拦截无效 token，少打一次后端）
+      const payload = verifyAdminToken(match[1]);
+      if (!payload) {
+        return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
+      }
+      req.admin = payload;
+    }
+    // 未配置密钥：不在网关本地验签，凭 Bearer 转发给后端，
+    // 由后端 get_current_user（持 SECRET_KEY）做权威验签 —— 见 stats.js/events.js 的 forwardAuth。
     // 4. Run handler
     try {
       return await handler(req, res);
