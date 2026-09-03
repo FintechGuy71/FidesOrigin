@@ -24,6 +24,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_access_token,
+    rotate_refresh_token,
 )
 
 logger = get_logger(__name__)
@@ -250,6 +251,11 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1, max_length=128, description="密码")
 
 
+class RefreshRequest(BaseModel):
+    """[Auth Fix] Refresh token 刷新请求模型"""
+    refresh_token: str = Field(..., min_length=1, max_length=4096, description="Refresh token")
+
+
 class UserInfo(BaseModel):
     """用户信息响应"""
     username: str
@@ -354,6 +360,49 @@ async def login(body: LoginRequest):
     refresh_token_data = await create_refresh_token(username=body.username)
 
     logger.info("login_success", username=body.username)
+
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token_data["token"],
+        token_type="bearer",
+        expires_in=JWT_EXPIRE_MINUTES * 60,
+    )
+
+
+@router.post(
+    "/refresh",
+    response_model=Token,
+    summary="刷新访问令牌",
+    description="使用 refresh token 换取新的 access token 与 refresh token（旋转机制）",
+    responses={
+        200: {"description": "刷新成功"},
+        401: {"description": "refresh token 无效、过期或已被撤销"},
+    }
+)
+async def refresh(body: RefreshRequest):
+    """
+    刷新 access token
+
+    [Auth Fix] 暴露 app/core/security.py 中已实现的 rotate_refresh_token()：
+    - 验证旧 refresh token（签名、类型、jti 白名单）
+    - 使旧 jti 失效并签发同一 family 的新 refresh token（旋转）
+    - 检测到 token 重放时撤销整个 family 并返回 401
+    """
+    try:
+        refresh_token_data = await rotate_refresh_token(body.refresh_token)
+    except AuthenticationException as e:
+        # 与 /login 一致的错误处理风格：401 + WWW-Authenticate 头
+        logger.warning("refresh_token_rejected", reason=e.message)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 旋转成功：以同一用户签发新的 access token
+    access_token = create_access_token(username=refresh_token_data["username"], role="admin")
+
+    logger.info("token_refreshed", username=refresh_token_data["username"])
 
     return Token(
         access_token=access_token,

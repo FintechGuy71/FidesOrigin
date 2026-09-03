@@ -3,36 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
     <meta name="theme-color" content="#0a0a0a">
     <meta name="robots" content="noindex, nofollow">
-    <!-- [O-4/O-5 Fix] Admin Authentication Layer —— 本文件原先无任何鉴权，
-         运营后台（合约管理/风险扫描/钱包连接）对公网完全开放。
-         实现为两步客户端门禁：
-           ① head 内同步弹窗校验，未通过则注入样式隐藏全站内容并打标记；
-           ② <body> 起始处的兜底脚本在管理脚本执行前清空页面并显示拒绝信息
-              （原型 admin/index.html 的写法在 <head> 执行 document.body.innerHTML
-              会抛 TypeError，实际挡不住人，此处修正）。
-         ⚠ 这是静态页的口令门禁，仅能挡住无目的访问；口令写死前端可被查看源码
-         绕过，真正的服务端鉴权需后端配合（已列入遗留事项）。 -->
-    <script>
-    (function () {
-      var AUTH_KEY = 'fidesorigin_admin_auth';
-      if (sessionStorage.getItem(AUTH_KEY) === 'authenticated') return;
-      var pwd = window.prompt('Admin Access Required');
-      if (pwd === 'FidesOrigin2026!') {
-        sessionStorage.setItem(AUTH_KEY, 'authenticated');
-        return;
-      }
-      // 未授权：此时 <body> 尚未解析，先注入样式隐藏后续内容并打标记
-      document.write('<style>body{display:none !important}</style>');
-      window.__FIDES_ADMIN_DENIED__ = true;
-    })();
-    </script>
+    <!-- Admin Authentication Layer：已移除写死口令与 prompt 门禁，
+         改为 <body> 起始处的真实网关登录（sessionStorage token），见 body 顶部脚本。 -->
     <!-- [SEC-001/SEC-002 Fix] CSP for static admin page: no nonces, script-src 'self' only, external scripts self-hosted -->
     <title>FidesOrigin Admin - 运营后台 v0.4.0 (Sepolia)</title>
     <meta name="description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
@@ -714,18 +693,97 @@
   <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
-  <!-- [O-4/O-5 Fix] 鉴权兜底：在所有管理脚本执行前，若未通过口令校验则
-       清空页面并显示拒绝信息，防止运营后台内容被渲染与脚本被执行。 -->
+  <!-- 鉴权门禁：在所有管理脚本执行前，若 sessionStorage 无网关登录 token，
+       则清空页面并渲染登录表单；登录成功后存 token 并 reload 进入后台。 -->
   <script>
   (function () {
-    if (sessionStorage.getItem('fidesorigin_admin_auth') === 'authenticated') return;
-    document.title = 'Access Denied';
+    var API_BASE = window.FIDESORIGIN_API_BASE || 'https://fidesorigin-api.vercel.app/v1';
+    var TOKEN_KEY = 'fidesorigin_admin_token';
+    var REFRESH_KEY = 'fidesorigin_admin_refresh';
+    if (sessionStorage.getItem(TOKEN_KEY)) return;
+
+    document.title = 'Admin Sign In';
     document.body.innerHTML = '';
-    var el = document.createElement('div');
-    el.style.cssText = 'display:flex !important;align-items:center;justify-content:center;height:100vh;background:#0a0a0a;color:#fff;font-family:Inter,system-ui,sans-serif;';
-    el.textContent = 'Access Denied';
-    document.body.style.display = 'block';
-    document.body.appendChild(el);
+
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100vh;background:#070810;font-family:Inter,system-ui,sans-serif;padding:16px;';
+
+    var form = document.createElement('form');
+    form.style.cssText = 'width:100%;max-width:360px;background:#11131f;border:1px solid rgba(148,163,184,0.2);border-radius:12px;padding:32px;';
+
+    var title = document.createElement('h1');
+    title.textContent = 'Admin Sign In';
+    title.style.cssText = 'font-size:1.25rem;font-weight:600;color:#f8fafc;margin-bottom:8px;';
+
+    var sub = document.createElement('p');
+    sub.textContent = 'Sign in with your admin account to continue.';
+    sub.style.cssText = 'font-size:0.875rem;color:#94a3b8;margin-bottom:24px;';
+
+    function makeInput(id, type, placeholder, labelText, autoComplete) {
+      var label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.textContent = labelText;
+      label.style.cssText = 'display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:4px;';
+      var input = document.createElement('input');
+      input.id = id;
+      input.type = type;
+      input.placeholder = placeholder;
+      input.setAttribute('aria-label', labelText);
+      input.autocomplete = autoComplete;
+      input.required = true;
+      input.style.cssText = 'width:100%;background:#070810;border:1px solid rgba(148,163,184,0.2);border-radius:8px;padding:12px 16px;color:#f8fafc;font-size:0.9rem;margin-bottom:16px;outline:none;';
+      form.appendChild(label);
+      form.appendChild(input);
+      return input;
+    }
+
+    var usernameInput = makeInput('admin-username', 'text', 'Username', 'Username', 'username');
+    var passwordInput = makeInput('admin-password', 'password', 'Password', 'Password', 'current-password');
+
+    var errorEl = document.createElement('p');
+    errorEl.setAttribute('role', 'alert');
+    errorEl.style.cssText = 'display:none;font-size:0.875rem;color:#ef4444;margin-bottom:16px;';
+    form.appendChild(errorEl);
+
+    var btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.textContent = 'Sign in';
+    btn.style.cssText = 'width:100%;background:#c9a96e;color:#070810;border:none;border-radius:8px;padding:12px 16px;font-weight:500;font-size:0.9rem;cursor:pointer;';
+    form.appendChild(btn);
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      fetch(API_BASE + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
+      }).then(function (res) {
+        if (res.ok) {
+          return res.json().then(function (data) {
+            sessionStorage.setItem(TOKEN_KEY, data.access_token);
+            if (data.refresh_token) sessionStorage.setItem(REFRESH_KEY, data.refresh_token);
+            location.reload();
+          });
+        }
+        var msg = '服务器错误，请稍后再试';
+        if (res.status === 401) msg = '用户名或密码错误';
+        else if (res.status === 423) msg = '账户已锁定，请稍后再试';
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }).catch(function () {
+        errorEl.textContent = '无法连接服务器';
+        errorEl.style.display = 'block';
+      }).then(function () {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      });
+    });
+
+    wrap.appendChild(form);
+    document.body.appendChild(wrap);
   })();
   </script>
   <a href="#main-content" class="skip-link">Skip to content</a>

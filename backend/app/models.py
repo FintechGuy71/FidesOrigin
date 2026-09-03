@@ -220,6 +220,22 @@ class AddressReport(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
+class ContactInquiry(Base):
+    """官网联系表单收单记录（[Contact Fix] 新增）"""
+    __tablename__ = "contact_inquiries"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False)
+    email = Column(String(255), nullable=False)
+    company = Column(String(100), nullable=True)
+    use_case = Column(String(50), nullable=True)
+    message = Column(Text, nullable=False)
+    ip = Column(String(45), nullable=True, comment="提交者 IP（IPv6 最长 45 字符）")
+    status = Column(String(20), default="new", comment="处理状态：new/contacted/closed")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Transaction(Base):
     """交易模型 - 存储区块链交易数据和风险分析结果"""
     __tablename__ = "transactions"
