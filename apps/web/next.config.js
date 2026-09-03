@@ -7,8 +7,13 @@ const nextConfig = {
   // routes-manifest.json，Vercel Next builder 会报缺文件；恢复默认 .next，
   // 静态站点产物固定输出到 out/，由 Vercel 零配置自动识别。
   images: {
-    // [H-8 Fix] Removed unoptimized: true to enable Next.js image optimization
-    // unoptimized: true,
+    /* `output: 'export'` 下没有 Next 服务端，默认 loader 无法工作 ——
+       任何被渲染的 <next/image> 都会让导出直接报错：
+       "Image Optimization using the default loader is not compatible
+        with 'output: export'"。
+       此前这里是空对象 {}（注释声称"启用图片优化"），只是因为 next/image
+       恰好不在渲染树上才没炸。显式声明 unoptimized 把这个约束固化下来。 */
+    unoptimized: true,
   },
   eslint: {
     // Temporarily disable during A+ transition

@@ -15,31 +15,42 @@ const AC_CSS = `
 .ac-hero p.lead { color: var(--text-secondary); max-width: 500px; margin: 0 auto; }
 .ac-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
 @media (max-width: 600px) { .ac-stats { grid-template-columns: 1fr; } }
-.ac-stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+.ac-stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; }
 .ac-stat-box .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
 .ac-stat-box .label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
-.ac-search { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-.ac-search input { width: 100%; padding: 14px 18px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; font-family: 'JetBrains Mono', monospace; }
+.ac-search { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; }
+/* font-family 走 var(--font-mono)：硬编码 'JetBrains Mono' 绕过了 next/font
+   注入变量与 CJK 回退栈（JetBrains Mono 只加载 latin 子集）。 */
+.ac-search input { width: 100%; padding: 14px 18px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text); font-size: 1rem; font-family: var(--font-mono); }
 .ac-search input:focus { outline: none; border-color: var(--accent); }
-.ac-search button { width: 100%; margin-top: 12px; padding: 14px; background: var(--accent); color: #0a0a0a; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+/* 仅改 border-color 不足以作为焦点指示（WCAG 2.4.7），补金色焦点环 */
+.ac-search input:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+/* 原为 color: #0a0a0a（孤儿 styles.css 的遗留值），与全站 --bg 系按钮不一致 */
+.ac-search button { width: 100%; margin-top: 12px; padding: 14px; background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .ac-search button:disabled { opacity: 0.6; cursor: not-allowed; }
-.ac-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: none; }
-.ac-result.show { display: block; }
+.ac-search button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+/* 基础态 display:none 是不可达分支：JSX 恒以 "ac-result show" 渲染 */
+.ac-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
 .risk-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
-.risk-black { background: rgba(239,68,68,0.2); color: var(--danger); }
-.risk-grey { background: rgba(148,163,184,0.2); color: var(--text-secondary); }
-.risk-safe { background: rgba(34,197,94,0.2); color: var(--success); }
+/* 语义色走 --*-dim 令牌：原先硬编码 rgba(...) 与 --danger/--success 不同值 */
+.risk-black { background: var(--danger-dim); color: var(--danger); }
+.risk-grey { background: var(--bg-elevated); color: var(--text); }
+.risk-safe { background: var(--success-dim); color: var(--success); }
 .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .detail-row:last-child { border-bottom: none; }
 .detail-label { color: var(--text-secondary); }
-.detail-value { font-family: 'JetBrains Mono', monospace; word-break: break-all; }
+.detail-value { font-family: var(--font-mono); word-break: break-all; }
 @media (max-width: 600px) { .detail-row { flex-direction: column; gap: 4px; } }
-.spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; z-index: 1000; display: none; max-width: 90%; }
-.toast.show { display: block; }
-.toast-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
-.toast-info { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.spinner { /* 半透明白 + 实色白顶：加载圈必须在金色按钮上可读，无对应令牌，刻意保留字面值 */ width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: ac-spin 0.8s linear infinite; display: inline-block; }
+/* ⚠ 不能命名为 spin：Tailwind v4 内置同名关键帧，同名后者覆盖前者。
+   本块经 <style precedence="legacy-page"> 注入，位置晚于全部外链 CSS，
+   会静默覆盖 Tailwind 的 spin（含 transform 关键帧）。 */
+@keyframes ac-spin { to { transform: rotate(360deg); } }
+/* z-index 改用 --z-toast(300)：原裸数字 1000 高于 --z-modal(500)，
+   toast 会盖住任何模态框。基础 display:none 同样是不可达分支。 */
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: var(--radius-md); font-size: 0.9rem; z-index: var(--z-toast); max-width: 90%; }
+.toast-error { background: var(--danger-dim); color: var(--danger); border: 1px solid var(--danger-dim); }
+.toast-info { background: var(--warning-dim); color: var(--warning); border: 1px solid var(--warning-dim); }
 `;
 
 // 公开只读风险查询端点（apps/api 的 SCOPE.PUBLIC 通道，免 key，CORS+双限流保护）
@@ -261,7 +272,7 @@ export default function AddressCheck({ dict }: { dict: D }) {
 
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: AC_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + AC_CSS + "}" }} />
       <section className="ac-hero">
         <div className="container">
           <p className="micro">{dict.micro}</p>
@@ -296,6 +307,9 @@ export default function AddressCheck({ dict }: { dict: D }) {
                 if (e.key === "Enter") checkAddress();
               }}
               placeholder={dict.placeholder}
+              /* placeholder 不是可靠的可访问名称：聚焦即消失，读屏可能只播报
+                 "编辑框"。这是核心功能入口，必须有真正的 aria-label。 */
+              aria-label={dict.placeholder}
               maxLength={42}
               autoComplete="off"
               spellCheck={false}

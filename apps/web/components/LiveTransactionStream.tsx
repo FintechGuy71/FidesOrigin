@@ -141,8 +141,9 @@ function generateMockTransaction(): Transaction {
   }[riskLevel];
 
   return {
-    id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    hash: `0x${Math.random().toString(16).substr(2, 64)}`,
+    id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+    /* 与 id 一致用 slice —— String.prototype.substr 已废弃（Annex B） */
+    hash: `0x${Math.random().toString(16).slice(2, 66)}`,
     from,
     to,
     amount: `${(Math.random() * 100).toFixed(4)}`,
@@ -159,28 +160,30 @@ function generateMockTransaction(): Transaction {
 // 格式化时间
 function formatTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 5) return "刚刚";
-  if (seconds < 60) return `${seconds}秒前`;
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}分钟前`;
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  return `${hours}小时前`;
+  return `${hours}h ago`;
 }
 
 // 风险等级样式
+/* 走设计系统的语义色令牌：Tailwind 默认 green/yellow/orange/red 与
+   --fio-success/warn/danger 不同源，且这些色值对品牌深底对比度不达标。 */
 const riskStyles = {
-  low: "bg-green-500/20 text-green-400 border-green-500/30",
-  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  high: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  critical: "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse",
+  low: "bg-[var(--fio-success-dim)] text-[var(--fio-success)] border-[var(--fio-success-dim)]",
+  medium: "bg-[var(--fio-warn-dim)] text-[var(--fio-warn)] border-[var(--fio-warn-dim)]",
+  high: "bg-[var(--fio-warn-dim)] text-[var(--fio-warn)] border-[var(--fio-warn-dim)]",
+  critical: "bg-[var(--fio-danger-dim)] text-[var(--fio-danger)] border-[var(--fio-danger-dim)] animate-pulse",
 };
 
 // 状态样式
 const statusStyles = {
-  pending: "text-yellow-400",
-  confirmed: "text-green-400",
-  failed: "text-red-400",
-  flagged: "text-orange-400 animate-pulse",
+  pending: "text-[var(--fio-warn)]",
+  confirmed: "text-[var(--fio-success)]",
+  failed: "text-[var(--fio-danger)]",
+  flagged: "text-[var(--fio-warn)] animate-pulse",
 };
 
 // 链图标
@@ -243,22 +246,43 @@ export default function LiveTransactionStream({
     handleWebSocketMessage
   );
 
+  /* 暂停状态同步到 ref：数据流 effect 读 ref 而不是 state，
+     这样 isPaused 不进入依赖数组，定时器不会因暂停/继续而反复重建。 */
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  /* 初始种子数据 —— 必须独立成只跑一次的 effect。
+     原实现把种子逻辑放在数据流 effect 里，而该 effect 的依赖含 isPaused：
+     每次点「暂停/继续」都会重新执行 setTransactions(Array.from({length:5})),
+     把已累积的 50 条记录整批覆盖掉，并重建定时器。 */
+  useEffect(() => {
+    if (!useMockData) return;
+    setTransactions(Array.from({ length: 5 }, generateMockTransaction));
+  }, [useMockData]);
+
   // 模拟数据流
   useEffect(() => {
     if (!useMockData) return;
 
-    const interval = setInterval(() => {
-      if (!isPaused) {
-        const newTx = generateMockTransaction();
-        setTransactions((prev) => [newTx, ...prev].slice(0, maxItems));
-      }
-    }, 2000 + Math.random() * 3000); // 2-5 秒随机间隔
+    /* 用递归 setTimeout 而不是 setInterval：
+       setInterval 的 `2000 + Math.random()*3000` 只在创建时算一次，
+       之后是固定周期，与注释声称的「2-5 秒随机」不符。 */
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (!isPausedRef.current) {
+          const newTx = generateMockTransaction();
+          setTransactions((prev) => [newTx, ...prev].slice(0, maxItems));
+        }
+        schedule();
+      }, 2000 + Math.random() * 3000);
+    };
+    schedule();
 
-    // 初始数据
-    setTransactions(Array.from({ length: 5 }, generateMockTransaction));
-
-    return () => clearInterval(interval);
-  }, [useMockData, isPaused, maxItems]);
+    return () => clearTimeout(timer);
+  }, [useMockData, maxItems]);
 
   // 自动滚动
   useEffect(() => {
@@ -275,43 +299,45 @@ export default function LiveTransactionStream({
   }, []);
 
   return (
-    <div className={`rounded-xl border border-gray-800 bg-gray-900/50 overflow-hidden ${className}`}>
+    <div className={`rounded-xl border border-[var(--fio-border)] bg-[var(--fio-surface)] overflow-hidden ${className}`}>
       {/* 头部 */}
       {showHeader && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--fio-border)]">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-medium text-white">实时交易流</h3>
+            <h3 className="text-sm font-medium text-[var(--fio-text)]">Live Transaction Stream</h3>
             <div className="flex items-center gap-2">
               {useMockData ? (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">
-                  模拟数据
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--fio-warn-dim)] text-[var(--fio-warn)]">
+                  Mock Data
                 </span>
               ) : isConnected ? (
                 <span className="flex items-center gap-1.5">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--fio-success)] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--fio-success)]"></span>
                   </span>
-                  <span className="text-xs text-emerald-400">实时</span>
+                  <span className="text-xs text-[var(--fio-success)]">Live</span>
                 </span>
               ) : (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
-                  连接中...
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--fio-danger-dim)] text-[var(--fio-danger)]">
+                  Connecting...
                 </span>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">{transactions.length} 笔交易</span>
+            <span className="text-xs text-[var(--fio-text-2)]">{transactions.length} txs</span>
             <button
               onClick={() => setIsPaused(!isPaused)}
               className={`p-1.5 rounded transition-colors ${
                 isPaused
-                  ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                  ? "bg-[var(--fio-warn-dim)] text-[var(--fio-warn)]"
+                  : "bg-[var(--fio-surface-2)] text-[var(--fio-text)] hover:bg-[var(--fio-surface-3)]"
               }`}
-              title={isPaused ? "继续" : "暂停"}
+              title={isPaused ? "Resume" : "Pause"}
+              aria-label={isPaused ? "Resume stream" : "Pause stream"}
+              aria-pressed={isPaused}
             >
               {isPaused ? (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -331,23 +357,27 @@ export default function LiveTransactionStream({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+        className="max-h-[400px] overflow-y-auto"
       >
-        <div className="divide-y divide-gray-800/50">
+        <div className="divide-y divide-[var(--fio-border)]">
           {transactions.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-gray-500">
+            <div className="flex items-center justify-center py-12 text-[var(--fio-text-2)]">
               <svg className="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <p>暂无交易数据</p>
+              <p>No transactions yet</p>
             </div>
           ) : (
             transactions.map((tx, index) => (
-              <div
+              /* 原为 div + onClick：不可聚焦、无 role、无键盘事件、无焦点样式，
+                 键盘与读屏用户完全无法触发。改为 button 并补焦点环。 */
+              <button
                 key={tx.id}
+                type="button"
                 onClick={() => onTransactionClick?.(tx)}
                 className={`
-                  px-4 py-3 hover:bg-gray-800/30 transition-all cursor-pointer
+                  w-full px-4 py-3 text-left transition-all hover:bg-[var(--fio-surface-2)]
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--fio-gold)]
                   ${index === 0 && !isPaused ? "animate-slide-in" : ""}
                 `}
               >
@@ -357,38 +387,43 @@ export default function LiveTransactionStream({
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="font-mono text-indigo-400 truncate">
+                        {/* 原 text-indigo-400 依赖已删除的 tailwind.config.js 的
+                            indigo 色板，在 v4 下落回默认蓝紫。改用品牌强调色。 */}
+                        <span className="truncate font-mono text-[var(--fio-accent)]">
                           {formatAddress(tx.hash, 8)}
                         </span>
                         {tx.tags?.map((tag) => (
                           <span
                             key={tag}
-                            className="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 whitespace-nowrap"
+                            className="text-xs px-1.5 py-0.5 rounded bg-[var(--fio-danger-dim)] text-[var(--fio-danger)] whitespace-nowrap"
                           >
                             {tag}
                           </span>
                         ))}
                       </div>
 
-                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                        <span>从</span>
-                        <span className="font-mono text-gray-400">{formatAddress(tx.from, 4)}</span>
-                        <span>到</span>
-                        <span className="font-mono text-gray-400">{formatAddress(tx.to, 4)}</span>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[var(--fio-text-2)]">
+                        <span>From</span>
+                        <span className="font-mono text-[var(--fio-text)]">{formatAddress(tx.from, 4)}</span>
+                        <span>To</span>
+                        <span className="font-mono text-[var(--fio-text)]">{formatAddress(tx.to, 4)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 text-right">
+                  {/* shrink-0：左列已有 min-w-0 + truncate，但右列既无 shrink-0
+                      也无 min-w-0，内含 whitespace-nowrap 的标签，窄屏多标签
+                      叠加时会把整行撑宽触发横向滚动。 */}
+                  <div className="flex shrink-0 items-center gap-3 text-right">
                     <div className="hidden sm:block">
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-[var(--fio-text)]">
                         {tx.amount} {tx.token}
                       </div>
                       <div className={`text-xs ${statusStyles[tx.status]}`}>
-                        {tx.status === "pending" && "待确认"}
-                        {tx.status === "confirmed" && "已确认"}
-                        {tx.status === "failed" && "失败"}
-                        {tx.status === "flagged" && "已标记"}
+                        {tx.status === "pending" && "Pending"}
+                        {tx.status === "confirmed" && "Confirmed"}
+                        {tx.status === "failed" && "Failed"}
+                        {tx.status === "flagged" && "Flagged"}
                       </div>
                     </div>
 
@@ -398,24 +433,24 @@ export default function LiveTransactionStream({
                       >
                         {tx.riskScore}
                       </span>
-                      <span className="text-xs text-gray-500">{formatTimeAgo(tx.timestamp)}</span>
+                      <span className="text-xs text-[var(--fio-text-2)]">{formatTimeAgo(tx.timestamp)}</span>
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
       </div>
 
       {/* 底部信息 */}
-      <div className="px-4 py-2 border-t border-gray-800 bg-gray-900/30">
-        <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="border-t border-[var(--fio-border)] bg-[var(--fio-surface-2)] px-4 py-2">
+        <div className="flex items-center justify-between text-xs text-[var(--fio-text-2)]">
           <span>
-            实时监控 {isConnected ? "已连接" : useMockData ? "模拟模式" : "未连接"}
+            Live monitoring · {isConnected ? "Connected" : useMockData ? "Mock mode" : "Disconnected"}
           </span>
           <span>
-            高风险: {transactions.filter((t) => t.riskLevel === "high" || t.riskLevel === "critical").length}
+            High risk: {transactions.filter((t) => t.riskLevel === "high" || t.riskLevel === "critical").length}
           </span>
         </div>
       </div>

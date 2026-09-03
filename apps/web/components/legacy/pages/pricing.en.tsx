@@ -19,7 +19,7 @@ const PAGE_CSS = `
     .pricing-card:hover { border-color: var(--border-light); transform: translateY(-4px); }
     .pricing-card.featured {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--bg-card) 0%, rgba(201,169,110,0.03) 100%);
+      background: linear-gradient(180deg, var(--bg-card) 0%, var(--accent-glow) 100%);
     }
     .pricing-card.featured::before {
       content: 'Most Popular';
@@ -48,7 +48,7 @@ const PAGE_CSS = `
       padding: 8px 0;
       font-size: 0.875rem;
       color: var(--text-secondary);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
     }
     .pricing-features li:last-child { border-bottom: none; }
     .pricing-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
@@ -91,7 +91,7 @@ const PAGE_CSS = `
 export default function ContentPricingEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="pricing-hero">

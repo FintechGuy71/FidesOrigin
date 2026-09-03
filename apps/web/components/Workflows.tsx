@@ -40,9 +40,11 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
 
           {/* Architecture Flow */}
           <div className="relative mx-auto max-w-4xl" data-aos="fade-up" data-aos-delay={300}>
-            {/* Connecting line background */}
+            {/* Connecting line background
+                节点为 h-16(64px)，几何中心在 y=32px；原 top-12(48px) 落在
+                节点下缘而非中心，视觉上偏低 16px。改为 top-8(32px)。 */}
             <div
-              className="absolute left-1/2 top-12 hidden h-1 w-[70%] -translate-x-1/2 md:block"
+              className="absolute left-1/2 top-8 hidden h-1 w-[70%] -translate-x-1/2 md:block"
               style={{
                 background: "linear-gradient(90deg, var(--fio-accent), var(--fio-gold), var(--fio-steel))",
                 opacity: 0.15,
@@ -56,67 +58,35 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
                   <div
                     className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-lg text-2xl font-light"
                     style={{
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "var(--fio-surface)",
+                      border: "1px solid var(--fio-border-light)",
                       color: i === 1 ? "var(--fio-accent)" : "var(--fio-text-2)",
-                      boxShadow: i === 1 ? "0 0 30px rgba(139,126,200,0.1)" : "none",
+                      boxShadow: i === 1 ? "0 0 30px var(--fio-accent-dim)" : "none",
                     }}
                   >
                     {step.icon}
                   </div>
 
-                  {/* Arrow between nodes (mobile) */}
+                  {/* Label */}
+                  <h3 className="mb-2 font-serif text-lg font-medium text-[var(--fio-text)]">
+                    {step.label}
+                  </h3>
+                  <p className="font-mono text-sm text-[var(--fio-text-3)]">{step.sub}</p>
+
+                  {/* Arrow between nodes (mobile)
+                      ⚠ 必须放在【整个 step 内容之后】：原先夹在节点与标题之间，
+                      渲染序变成 节点1→箭头→标题1→节点2…，视觉上箭头落在
+                      "节点 → 自身标题" 之间，而不是两个节点之间。
+                      `block` 是死类 —— 容器本来就是 <div>，默认即 display:block。 */}
                   {i < 2 && (
                     <div
-                      className="mx-auto my-4 block h-8 w-px md:hidden"
+                      className="mx-auto my-4 h-8 w-px md:hidden"
                       style={{
                         background: "linear-gradient(to bottom, var(--fio-accent), var(--fio-gold))",
                         opacity: 0.3,
                       }}
                     />
                   )}
-
-                  {/* Label */}
-                  <h3
-                    className="mb-2 text-lg font-medium"
-                    style={{ color: "var(--fio-text)", fontFamily: "var(--font-serif)" }}
-                  >
-                    {step.label}
-                  </h3>
-                  <p className="text-sm" style={{ color: "var(--fio-text-3)", fontFamily: "var(--font-mono)" }}>
-                    {step.sub}
-                  </p>
-
-                  {/* Detail bullets - REMOVED for cleaner design */}
-                  <div className="mt-4 space-y-2" style={{ display: 'none' }}>
-                    {i === 0 && [
-                      "实时地址风险评分",
-                      "多数据源交叉验证",
-                      "Sub-50ms 延迟",
-                    ].map((t) => (
-                      <div key={t} className="text-xs" style={{ color: "var(--fio-text-2)" }}>
-                        {t}
-                      </div>
-                    ))}
-                    {i === 1 && [
-                      "可编程合规策略",
-                      "自动规则执行",
-                      "四级风险标签",
-                    ].map((t) => (
-                      <div key={t} className="text-xs" style={{ color: "var(--fio-text-2)" }}>
-                        {t}
-                      </div>
-                    ))}
-                    {i === 2 && [
-                      "交易前拦截",
-                      "交易后审计",
-                      "不可篡改记录",
-                    ].map((t) => (
-                      <div key={t} className="text-xs" style={{ color: "var(--fio-text-2)" }}>
-                        {t}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               ))}
             </div>
@@ -126,8 +96,8 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
           <div
             className="mx-auto mt-20 max-w-3xl overflow-hidden rounded-lg border p-6"
             style={{
-              borderColor: "rgba(255,255,255,0.04)",
-              background: "rgba(255,255,255,0.01)",
+              borderColor: "var(--fio-border-hairline)",
+              background: "var(--fio-surface-2)",
             }}
             data-aos="fade-up"
             data-aos-delay={400}
@@ -136,26 +106,30 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
               <span className="text-xs font-mono uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
                 {d.flowLabel}
               </span>
-              <span className="flex items-center gap-1.5 text-[0.65rem] font-mono" style={{ color: "var(--fio-gold)" }}>
+              <span className="flex items-center gap-1.5 text-[0.6875rem] font-mono" style={{ color: "var(--fio-gold)" }}>
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--fio-gold)" }} />
                 {d.flowLive}
               </span>
             </div>
+            {/* 节点名原先硬编码英文，而同 section 的 d.title / d.body 已翻译
+                → 中日文页面出现中英同屏。改为读字典。
+                箭头 aria-hidden（读屏念"右箭头"纯属噪音）+ shrink-0
+                （flex-wrap 下箭头可独立折行成孤立的 "→"）。 */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono" style={{ color: "var(--fio-text-2)" }}>
-              <span className="rounded-sm px-2.5 py-1" style={{ background: "rgba(139,126,200,0.06)", border: "1px solid rgba(139,126,200,0.1)" }}>
-                Risk Oracle
+              <span className="shrink-0 rounded-sm px-2.5 py-1" style={{ background: "var(--fio-accent-glow)", border: "1px solid var(--fio-accent-dim)" }}>
+                {d.flowNode1}
               </span>
-              <span style={{ color: "var(--fio-text-3)" }}>→</span>
-              <span className="rounded-sm px-2.5 py-1" style={{ background: "rgba(139,126,200,0.06)", border: "1px solid rgba(139,126,200,0.1)" }}>
-                Policy Engine
+              <span aria-hidden="true" className="shrink-0" style={{ color: "var(--fio-text-3)" }}>→</span>
+              <span className="shrink-0 rounded-sm px-2.5 py-1" style={{ background: "var(--fio-accent-glow)", border: "1px solid var(--fio-accent-dim)" }}>
+                {d.flowNode2}
               </span>
-              <span style={{ color: "var(--fio-text-3)" }}>→</span>
-              <span className="rounded-sm px-2.5 py-1" style={{ background: "rgba(139,126,200,0.06)", border: "1px solid rgba(139,126,200,0.1)" }}>
-                Compliance Engine
+              <span aria-hidden="true" className="shrink-0" style={{ color: "var(--fio-text-3)" }}>→</span>
+              <span className="shrink-0 rounded-sm px-2.5 py-1" style={{ background: "var(--fio-accent-glow)", border: "1px solid var(--fio-accent-dim)" }}>
+                {d.flowNode3}
               </span>
-              <span style={{ color: "var(--fio-text-3)" }}>→</span>
-              <span className="rounded-sm px-2.5 py-1" style={{ background: "rgba(201,169,110,0.06)", border: "1px solid rgba(201,169,110,0.1)", color: "var(--fio-gold)" }}>
-                On-Chain Execution
+              <span aria-hidden="true" className="shrink-0" style={{ color: "var(--fio-text-3)" }}>→</span>
+              <span className="shrink-0 rounded-sm px-2.5 py-1" style={{ background: "var(--fio-gold-glow)", border: "1px solid var(--fio-gold-dim)", color: "var(--fio-gold)" }}>
+                {d.flowNode4}
               </span>
             </div>
           </div>

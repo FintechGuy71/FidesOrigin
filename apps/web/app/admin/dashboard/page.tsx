@@ -11,6 +11,16 @@ import { RiskBadge, RiskScore } from "@fidesorigin/ui";
 const MAX_EVENTS_DISPLAY = 50;
 const MAX_EVENT_NAME_LENGTH = 30;
 const MAX_ADDRESS_LENGTH = 10;
+/* ⚠ 下面三个常量原先被直接当作「截断长度 / 风险分阈值」使用：
+   MAX_ADDRESS_LENGTH(地址截断长度) 被当柱状图最小高度，
+   CHART_UPDATE_INTERVAL(图表刷新间隔) 被当地址截断长度，
+   MAX_EVENTS_DISPLAY(事件条数上限) 被当风险分阈值。
+   改一个会破坏另一个，且语义完全无法维护。这里各自补上正确的常量。 */
+const MIN_BAR_HEIGHT_PERCENT = 4;
+const ADDRESS_PREVIEW_LENGTH = 12;
+const HASH_PREVIEW_LENGTH = 20;
+const RISK_SCORE_HIGH = 70;
+const RISK_SCORE_MEDIUM = 40;
 const CHART_UPDATE_INTERVAL = 12;
 const CHART_ANIMATION_OFFSET = -6;
 const BAR_CHART_OFFSET = -8;
@@ -48,6 +58,11 @@ const FORMATTING = {
 
 // 统计数据类型
 interface DashboardStats {
+  /**
+   * 风险趋势点。可选：后端未下发时前端必须渲染占位符，
+   * 不得静默回退到硬编码样本（见文件内 [M-15 FIX] 的同款约束）。
+   */
+  riskTrend?: { time: string; score: number }[];
   todayBlocked: number;
   todayBlockedChange: number;
   riskAddresses: number;
@@ -261,6 +276,31 @@ export default function DashboardPage() {
   const [dataUnavailable, setDataUnavailable] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
+  /* [O-4 Fix] 鉴权门禁：与 public/admin/index.html 相同的 sessionStorage 口令门。
+     ⚠ 与静态后台一致，这是"防君子不防小人"的前端门禁 —— 静态导出没有服务端，
+     页面源码仍可达，真正的鉴权需要后端/网关（已列入遗留事项）。
+     初始为 null：SSR/水合完成前不渲染后台内容，避免未授权闪现。 */
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  const [pwdInput, setPwdInput] = useState("");
+  const [pwdError, setPwdError] = useState(false);
+
+  useEffect(() => {
+    setAuthed(
+      typeof window !== "undefined" &&
+        window.sessionStorage.getItem("fidesorigin_admin_auth") === "authenticated"
+    );
+  }, []);
+
+  const tryLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pwdInput === "FidesOrigin2026!") {
+      window.sessionStorage.setItem("fidesorigin_admin_auth", "authenticated");
+      setAuthed(true);
+    } else {
+      setPwdError(true);
+    }
+  };
+
   // 初始加载数据
   useEffect(() => {
     const loadData = async () => {
@@ -339,30 +379,96 @@ export default function DashboardPage() {
     },
   ];
 
-  // 风险趋势数据（用于图表）
-  const riskTrendData = [
-    { time: "00:00", score: 12 },
-    { time: "04:00", score: 8 },
-    { time: "08:00", score: 25 },
-    { time: "12:00", score: 45 },
-    { time: "16:00", score: 38 },
-    { time: "20:00", score: 55 },
-    { time: "现在", score: 42 },
-  ];
+  /* 风险趋势（用于图表）。
+     ⚠ 原先这里是一份硬编码的 7 点样本（12/8/25/45/38/55/42），永远显示
+     同一条编造曲线 —— 与同文件 [M-15 FIX]「移除静默 mock 回退」直接冲突：
+     上方统计卡在无数据时正确显示「—」，下方图表却一直在画假曲线，
+     两个区块数据自相矛盾（图表 42 分 vs 卡片 —）。
+     改为读后端下发的 riskTrend，无数据时 riskTrendData 为空，
+     由下方渲染逻辑输出占位符。 */
+  const riskTrendData = stats?.riskTrend ?? [];
+
+  /* 风险类型分布：从真实事件列表派生。事件类型字段来自后端，
+     这里只做计数与归一化，不预设任何具体类型名。 */
+  const riskTypeDistribution = (() => {
+    if (events.length === 0) return [];
+    const counts = new Map<string, number>();
+    for (const e of events) counts.set(e.type, (counts.get(e.type) ?? 0) + 1);
+    const palette = [
+      { color: "bg-[var(--fio-danger)]", textColor: "text-[var(--fio-danger)]" },
+      { color: "bg-[var(--fio-warn)]",   textColor: "text-[var(--fio-warn)]" },
+      { color: "bg-[var(--fio-info)]",   textColor: "text-[var(--fio-info)]" },
+      { color: "bg-[var(--fio-success)]", textColor: "text-[var(--fio-success)]" },
+    ];
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([name, count], i) => ({
+        name,
+        percent: Math.round((count / events.length) * 100),
+        ...palette[i % palette.length],
+      }));
+  })();
+
+  const latestRiskScore = riskTrendData.length > 0 ? riskTrendData[riskTrendData.length - 1].score : null;
 
   const handleTransactionClick = (tx: Transaction) => {
     setSelectedTx(tx);
   };
 
+  /* [O-4 Fix] 鉴权门禁渲染：
+     authed === null → 水合未完成，渲染空白避免未授权内容闪现；
+     authed === false → 渲染登录表单；
+     authed === true → 渲染后台本体。 */
+  if (authed === null) {
+    return <div className="min-h-screen bg-[var(--fio-ink)]" />;
+  }
+  if (authed === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--fio-ink)] px-4">
+        <form
+          onSubmit={tryLogin}
+          className="w-full max-w-sm rounded-xl border border-[var(--fio-border)] bg-[var(--fio-surface)] p-8"
+        >
+          <h1 className="mb-2 text-xl font-semibold text-[var(--fio-text)]">Admin Access Required</h1>
+          <p className="mb-6 text-sm text-[var(--fio-text-2)]">Enter the admin password to continue.</p>
+          <input
+            type="password"
+            value={pwdInput}
+            onChange={(e) => {
+              setPwdInput(e.target.value);
+              setPwdError(false);
+            }}
+            placeholder="Password"
+            aria-label="Admin password"
+            autoComplete="current-password"
+            className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
+          />
+          {pwdError && (
+            <p className="mb-4 text-sm text-[var(--fio-danger)]" role="alert">
+              Incorrect password.
+            </p>
+          )}
+          <button
+            type="submit"
+            className="w-full rounded-lg bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)]"
+          >
+            Sign in
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-[var(--fio-ink)]">
       {/* Header */}
-      <div className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <div className="border-b border-[var(--fio-border)] bg-[var(--fio-surface)] backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-semibold text-white">运营仪表盘</h1>
-              <p className="text-gray-400 mt-1">FidesOrigin 实时风险监控与合规数据概览</p>
+              <p className="text-[var(--fio-text-2)] mt-1">FidesOrigin 实时风险监控与合规数据概览</p>
             </div>
             <div className="flex items-center gap-4">
               {dataUnavailable && (
@@ -383,11 +489,11 @@ export default function DashboardPage() {
           {statCards.map((card, index) => (
             <div
               key={index}
-              className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+              className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6 hover:border-[var(--fio-border-light)] transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">{card.title}</p>
+                  <p className="text-[var(--fio-text-2)] text-sm">{card.title}</p>
                   <p className="text-2xl sm:text-3xl font-semibold text-white mt-2">
                     {loading ? "-" : card.value}
                   </p>
@@ -399,7 +505,7 @@ export default function DashboardPage() {
                     {card.change} 较昨日
                   </p>
                 </div>
-                <div className="p-3 bg-gray-800/50 rounded-lg text-gray-400">
+                <div className="p-3 bg-[var(--fio-surface-2)]/50 rounded-lg text-[var(--fio-text-2)]">
                   <card.icon />
                 </div>
               </div>
@@ -410,41 +516,50 @@ export default function DashboardPage() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Risk Trend Chart */}
-          <div className="lg:col-span-2 bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+          <div className="lg:col-span-2 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-white">风险趋势监控</h2>
               <div className="flex gap-2">
-                <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-400">24H</span>
+                <span className="text-xs px-2 py-1 rounded bg-[var(--fio-surface-2)] text-[var(--fio-text-2)]">24H</span>
                 <span className="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">实时</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               {riskTrendData.map((point, i) => (
-                <div key={i} className="text-center p-3 rounded-lg bg-gray-800/30">
+                <div key={i} className="text-center p-3 rounded-lg bg-[var(--fio-surface-2)]">
                   <div className={`text-xl font-semibold ${
                     point.score >= MAX_EVENTS_DISPLAY ? "text-red-400" : point.score >= MAX_EVENT_NAME_LENGTH ? "text-yellow-400" : "text-green-400"
                   }`}>
                     {point.score}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{point.time}</div>
+                  <div className="mt-1 text-xs text-[var(--fio-text-2)]">{point.time}</div>
                 </div>
               ))}
             </div>
 
             <div className="h-48 flex items-end justify-between gap-2">
-              {riskTrendData.map((point, i) => {
-                const height = `${Math.max(MAX_ADDRESS_LENGTH, point.score)}%`;
-                const color = point.score >= MAX_EVENTS_DISPLAY ? "bg-red-500" : point.score >= MAX_EVENT_NAME_LENGTH ? "bg-yellow-500" : "bg-green-500";
+              {riskTrendData.length === 0 ? (
+                <div className="flex h-full w-full items-center justify-center text-sm text-[var(--fio-text-2)]">
+                  No trend data available
+                </div>
+              ) : riskTrendData.map((point, i) => {
+                const height = `${Math.max(MIN_BAR_HEIGHT_PERCENT, point.score)}%`;
+                const color =
+                  point.score >= RISK_SCORE_HIGH
+                    ? "bg-[var(--fio-danger)]"
+                    : point.score >= RISK_SCORE_MEDIUM
+                      ? "bg-[var(--fio-warn)]"
+                      : "bg-[var(--fio-success)]";
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full bg-gray-800 rounded-t-lg relative h-32">
+                    <div className="w-full bg-[var(--fio-surface-2)] rounded-t-lg relative h-32">
                       <div
                         className={`absolute bottom-0 left-0 right-0 ${color} rounded-t-lg transition-all duration-500`}
                         style={{ height }}
                       />
                     </div>
-                    <span className="text-xs text-gray-500">{point.time}</span>
+                    <span className="text-xs text-[var(--fio-text-2)]">{point.time}</span>
                   </div>
                 );
               })}
@@ -452,30 +567,42 @@ export default function DashboardPage() {
           </div>
 
           {/* Risk Type Distribution */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-6">风险类型分布</h2>
+          <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-white mb-6">Risk Type Distribution</h2>
+            {/* ⚠ 原先这里是一份硬编码的百分比（35/28/15/22），永远是同一组数字。
+                改为从真实事件列表派生；无事件时显示占位符。 */}
+            {events.length === 0 ? (
+              <div className="py-8 text-center text-sm text-[var(--fio-text-2)]">
+                No risk events recorded
+              </div>
+            ) : (
             <div className="grid grid-cols-2 gap-4">
-              {[
-                { name: "洗钱风险", value: 35, color: "bg-red-500", textColor: "text-red-400" },
-                { name: "欺诈交易", value: 28, color: "bg-orange-500", textColor: "text-orange-400" },
-                { name: "制裁名单", value: 15, color: "bg-yellow-500", textColor: "text-yellow-400" },
-                { name: "其他", value: 22, color: "bg-blue-500", textColor: "text-blue-400" },
-              ].map((item) => (
-                <div key={item.name} className="text-center p-4 bg-gray-800/30 rounded-lg">
-                  <div className={`text-2xl font-bold ${item.textColor}`}>{item.value}%</div>
-                  <div className="text-sm text-gray-400 mt-1">{item.name}</div>
-                  <div className="mt-2 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                    <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.value}%` }} />
+              {riskTypeDistribution.map((item) => (
+                <div key={item.name} className="text-center p-4 bg-[var(--fio-surface-2)] rounded-lg">
+                  <div className={`text-2xl font-bold ${item.textColor}`}>{item.percent}%</div>
+                  <div className="text-sm text-[var(--fio-text-2)] mt-1">{item.name}</div>
+                  <div className="mt-2 h-1.5 bg-[var(--fio-surface-3)] rounded-full overflow-hidden">
+                    <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.percent}%` }} />
                   </div>
                 </div>
               ))}
             </div>
-
+            )}
             {/* 总体风险评分 */}
-            <div className="mt-6 pt-6 border-t border-gray-800">
+            <div className="mt-6 pt-6 border-t border-[var(--fio-border)]">
               <div className="text-center">
-                <p className="text-sm text-gray-400 mb-2">当前系统风险评分</p>
-                <RiskScore score={42} level="medium" size="md" />
+                <p className="text-sm text-[var(--fio-text-2)] mb-2">Current System Risk Score</p>
+                {/* ⚠ 原先硬编码 score={42} level="medium"：无论后端返回什么，
+                    页面永远显示 42/中等。改为取趋势末点，无数据时显示占位符。 */}
+                {latestRiskScore === null ? (
+                  <p className="text-2xl font-semibold text-[var(--fio-text-2)]">—</p>
+                ) : (
+                  <RiskScore
+                    score={latestRiskScore}
+                    level={latestRiskScore >= RISK_SCORE_HIGH ? "high" : latestRiskScore >= RISK_SCORE_MEDIUM ? "medium" : "low"}
+                    size="md"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -494,8 +621,8 @@ export default function DashboardPage() {
         />
 
         {/* Recent Events Table */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden mb-8">
-          <div className="p-6 border-b border-gray-800">
+        <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl overflow-hidden mb-8">
+          <div className="p-6 border-b border-[var(--fio-border)]">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">最近风险事件</h2>
               <button className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
@@ -506,53 +633,53 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-800/50">
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                <tr className="bg-[var(--fio-surface-2)]/50">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     事件ID
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     类型
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     地址
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     金额
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     风险等级
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     时间
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-[var(--fio-text-2)] uppercase tracking-wider px-6 py-4">
                     状态
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-[var(--fio-border)]">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-[var(--fio-text-2)]">
                       加载中...
                     </td>
                   </tr>
                 ) : events.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-[var(--fio-text-2)]">
                       暂无风险事件
                     </td>
                   </tr>
                 ) : (
                   events.map((event) => (
-                    <tr key={event.id} className="hover:bg-gray-800/30 transition-colors">
+                    <tr key={event.id} className="hover:bg-[var(--fio-surface-2)] transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                         {event.id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--fio-text)]">
                         {event.type}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--fio-text-2)] font-mono">
                         {event.address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
@@ -570,7 +697,7 @@ export default function DashboardPage() {
                           text={event.risk}
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--fio-text-2)]">
                         {event.timestamp
                           ? formatTimeAgo(event.timestamp)
                           : event.time}
@@ -582,7 +709,7 @@ export default function DashboardPage() {
                               ? "bg-emerald-500/20 text-emerald-400"
                               : event.status === "审核中"
                               ? "bg-blue-500/20 text-blue-400"
-                              : "bg-gray-500/20 text-gray-400"
+                              : "bg-gray-500/20 text-[var(--fio-text-2)]"
                           }`}
                         >
                           {event.status}
@@ -606,12 +733,12 @@ export default function DashboardPage() {
           ].map((action, index) => (
             <button
               key={index}
-              className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl text-left hover:border-gray-600 hover:bg-gray-800/50 transition-all group"
+              className="p-4 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl text-left hover:border-[var(--fio-border-light)] hover:bg-[var(--fio-surface-2)]/50 transition-all group"
             >
               <h3 className="font-medium text-white group-hover:text-emerald-400 transition-colors">
                 {action.title}
               </h3>
-              <p className="text-sm text-gray-400 mt-1">{action.desc}</p>
+              <p className="text-sm text-[var(--fio-text-2)] mt-1">{action.desc}</p>
             </button>
           ))}
         </div>
@@ -620,18 +747,18 @@ export default function DashboardPage() {
       {/* 交易详情弹窗 */}
       {selectedTx && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-black/50 p-4"
           onClick={() => setSelectedTx(null)}
         >
           <div
-            className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-lg w-full"
+            className="bg-[var(--fio-surface)] border border-[var(--fio-border-light)] rounded-2xl p-6 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-white">交易详情</h3>
               <button
                 onClick={() => setSelectedTx(null)}
-                className="text-gray-400 hover:text-white"
+                className="text-[var(--fio-text-2)] hover:text-white"
               >
                 <svg
                   className="w-6 h-6"
@@ -651,35 +778,37 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">交易哈希</span>
-                <span className="font-mono text-indigo-400">
-                  {selectedTx.hash.slice(0, BAR_CHART_WIDTH)}...{selectedTx.hash.slice(BAR_CHART_OFFSET)}
+                <span className="text-[var(--fio-text-2)]">交易哈希</span>
+                {/* 原 text-indigo-400 依赖已删除的 tailwind.config.js 色板，
+                    在 v4 下落回默认蓝紫。改用品牌强调色令牌。 */}
+                <span className="font-mono text-[var(--fio-accent)]">
+                  {selectedTx.hash.slice(0, HASH_PREVIEW_LENGTH)}...{selectedTx.hash.slice(BAR_CHART_OFFSET)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">发送方</span>
-                <span className="font-mono text-gray-300">
-                  {selectedTx.from.slice(0, CHART_UPDATE_INTERVAL)}...{selectedTx.from.slice(CHART_ANIMATION_OFFSET)}
+                <span className="text-[var(--fio-text-2)]">发送方</span>
+                <span className="font-mono text-[var(--fio-text)]">
+                  {selectedTx.from.slice(0, ADDRESS_PREVIEW_LENGTH)}...{selectedTx.from.slice(CHART_ANIMATION_OFFSET)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">接收方</span>
-                <span className="font-mono text-gray-300">
-                  {selectedTx.to.slice(0, CHART_UPDATE_INTERVAL)}...{selectedTx.to.slice(CHART_ANIMATION_OFFSET)}
+                <span className="text-[var(--fio-text-2)]">接收方</span>
+                <span className="font-mono text-[var(--fio-text)]">
+                  {selectedTx.to.slice(0, ADDRESS_PREVIEW_LENGTH)}...{selectedTx.to.slice(CHART_ANIMATION_OFFSET)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">金额</span>
+                <span className="text-[var(--fio-text-2)]">金额</span>
                 <span className="text-white font-medium">
                   {selectedTx.amount} {selectedTx.token}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">风险评分</span>
+                <span className="text-[var(--fio-text-2)]">风险评分</span>
                 <RiskBadge level={selectedTx.riskLevel} text={`${selectedTx.riskScore}分`} />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">状态</span>
+                <span className="text-[var(--fio-text-2)]">状态</span>
                 <span
                   className={`${
                     selectedTx.status === "confirmed"
@@ -698,8 +827,8 @@ export default function DashboardPage() {
                 </span>
               </div>
               {selectedTx.tags && selectedTx.tags.length > 0 && (
-                <div className="pt-4 border-t border-gray-800">
-                  <span className="text-gray-400 text-sm">风险标签:</span>
+                <div className="pt-4 border-t border-[var(--fio-border)]">
+                  <span className="text-[var(--fio-text-2)] text-sm">风险标签:</span>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedTx.tags.map((tag) => (
                       <span

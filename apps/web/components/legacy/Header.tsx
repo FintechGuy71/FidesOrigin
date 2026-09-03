@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Script from "next/script";
 import {
   Locale,
@@ -17,6 +17,13 @@ import type { Dict } from "@/i18n/dictionaries/en";
    across all four locales. The wallet cluster renders only on pages
    with real on-chain interaction (address-check).
    ================================================================ */
+
+/* ⚠ 全站 URL 一律不带尾斜杠：静态导出未开 trailingSlash，产物是
+   out/cn.html / out/docs.html，而不是 out/cn/index.html / out/docs/index.html。
+   EN 的前缀是空串，必须显式回退到 "/"。 */
+function homeHref(lang: Locale): string {
+  return langPrefix(lang) || "/";
+}
 
 type Props = {
   lang: Locale;
@@ -35,20 +42,38 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
   const prefix = langPrefix(lang);
   const available = availableLocales ?? locales;
 
+  /* 该语言没有此页时回退到该语言首页。⚠ 不能写 langPrefix(l) + "/"。 */
   const langHref = (l: Locale) =>
-    available.includes(l) ? localize(pagePath, l) : `${langPrefix(l)}/`;
+    available.includes(l) ? localize(pagePath, l) : homeHref(l);
 
   const links = [
-    { href: `${prefix}/#features`, label: dict.nav.features },
+    { href: `${homeHref(lang)}#features`, label: dict.nav.features },
     { href: localize("/use-cases/stablecoin-compliance", lang), label: dict.nav.useCases },
     { href: localize("/pricing", lang), label: dict.nav.pricing },
-    { href: `${localize("/docs", lang)}/`, label: dict.nav.docs },
-    { href: `${localize("/blog", lang)}/`, label: dict.nav.blog },
+    { href: localize("/docs", lang), label: dict.nav.docs },
+    { href: localize("/blog", lang), label: dict.nav.blog },
   ];
 
   // EN has a dedicated /contact page; other locales jump to the
   // localized homepage contact section.
-  const ctaHref = lang === "en" ? "/contact" : `${prefix}/#contact`;
+  const ctaHref = lang === "en" ? "/contact" : `${homeHref(lang)}#contact`;
+
+  /* 移动菜单：Esc 关闭 + 打开时锁滚动。
+     该菜单是常驻 DOM 的 role="dialog" aria-modal="true"（靠 .active 显隐），
+     此前没有任何键盘关闭路径，键盘用户被困在里面。 */
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileOpen]);
 
   const walletSvg = (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -60,7 +85,7 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
     <>
       <nav className="nav" aria-label={dict.nav.mainNav}>
         <div className="nav-inner">
-          <a href={`${prefix}/`} className="nav-logo">
+          <a href={homeHref(lang)} className="nav-logo">
             <img
               src="/brand/logo-dark-icon.png"
               alt="FidesOrigin"
@@ -93,9 +118,19 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
                   <path d="M6 9l6 6 6-6" />
                 </svg>
               </button>
+              {/* ⚠ legacy.css 里曾有 `#langMenu a:first-child { color: var(--accent) }`，
+                  无条件高亮第一项（English）。在 /cn /tw /jp 页面上会显示
+                  "当前语言 = English" 的错误状态。改为按当前 lang 打 .active，
+                  CSS 同步改为 `.active`（见 css/legacy.css）。 */}
               <div id="langMenu" style={{ display: langOpen ? "block" : "none" }}>
                 {locales.map((l) => (
-                  <a key={l} href={langHref(l)} onClick={() => setLangOpen(false)}>
+                  <a
+                    key={l}
+                    href={langHref(l)}
+                    className={l === lang ? "active" : undefined}
+                    aria-current={l === lang ? "true" : undefined}
+                    onClick={() => setLangOpen(false)}
+                  >
                     {langNames[l]}
                   </a>
                 ))}
@@ -145,6 +180,8 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
         role="dialog"
         aria-modal="true"
         aria-label={dict.nav.mobileNav}
+        /* 关闭时对读屏与 Tab 序隐藏：该节点常驻 DOM，仅靠 .active 控制显隐 */
+        aria-hidden={mobileOpen ? undefined : "true"}
       >
         <button
           type="button"
@@ -184,10 +221,14 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
         )}
       </div>
 
-      {/* Close lang menu on outside click */}
+      {/* Close lang menu on outside click
+          原 zIndex: 998 低于 .nav 的 1000，导致点击导航栏区域无法关闭菜单，
+          且与 .scroll-top 撞值。改用层级令牌 --z-backdrop(55)：
+          高于 --z-nav(50)、低于 --z-dropdown(60)，
+          既盖住导航栏，又不会盖住菜单本身。 */}
       {langOpen && (
         <div
-          style={{ position: "fixed", inset: 0, zIndex: 998 }}
+          className="fixed inset-0 z-[var(--z-backdrop)]"
           aria-hidden="true"
           onClick={() => setLangOpen(false)}
         />

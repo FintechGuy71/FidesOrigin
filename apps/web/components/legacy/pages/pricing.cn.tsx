@@ -19,7 +19,7 @@ const PAGE_CSS = `
     .pricing-card:hover { border-color: var(--border-light); transform: translateY(-4px); }
     .pricing-card.featured {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--bg-card) 0%, rgba(201,169,110,0.03) 100%);
+      background: linear-gradient(180deg, var(--bg-card) 0%, var(--accent-glow) 100%);
     }
     .pricing-card.featured::before {
       content: '最受欢迎';
@@ -48,7 +48,7 @@ const PAGE_CSS = `
       padding: 8px 0;
       font-size: 0.875rem;
       color: var(--text-secondary);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
     }
     .pricing-features li:last-child { border-bottom: none; }
     .pricing-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
@@ -91,7 +91,7 @@ const PAGE_CSS = `
 export default function ContentPricingCN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="pricing-hero">
@@ -137,7 +137,7 @@ export default function ContentPricingCN() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 隔离金库</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 专属基础设施</li>
             </ul>
-            <a href="mailto:contact@fidesorigin.com" className="btn btn-primary pricing-cta">开始使用</a>
+            <a href="/cn#contact" className="btn btn-primary pricing-cta">开始使用</a>
           </div>
 
           
@@ -153,7 +153,7 @@ export default function ContentPricingCN() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 自定义合约开发</li>
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 本地部署选项</li>
             </ul>
-            <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary pricing-cta">联系销售</a>
+            <a href="/cn#contact" className="btn btn-secondary pricing-cta">联系销售</a>
           </div>
         </div>
 

@@ -16,7 +16,18 @@ export default function ContentContactEN() {
     <section className="section" style={{ "paddingTop": "0" }}>
       <div className="container">
         <div className="contact-form reveal">
-          <form id="contactForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+          {/* ⚠ 原 action 是 Formspree 占位端点 "https://formspree.io/f/YOUR_FORM_ID"：
+              用户点「Send Message」后既不会成功、也没有任何失败提示 ——
+              联系表单这个页面唯一的核心功能实际上是失效的。
+              在配置真实收单服务之前，这里降级为 mailto: 提交
+              （encType="text/plain" 是 mailto 表单的必需项，否则正文为空）。
+              TODO(业务): 接入真实收单端点后替换 action，并补前端成功/失败提示。 */}
+          <form
+            id="contactForm"
+            action="mailto:contact@fidesorigin.com"
+            method="POST"
+            encType="text/plain"
+          >
             <div className="form-group">
               <label htmlFor="name">Full Name</label>
               <input type="text" id="name" name="name" className="form-input" placeholder="John Doe" required />
@@ -72,7 +83,14 @@ export default function ContentContactEN() {
             </div>
             <h3>Discord</h3>
             <p>Join our developer community for support and discussions.</p>
-            <a href="#" style={{ "color": "var(--accent)", "fontSize": "0.875rem" }}>Coming Soon</a>
+            {/* 原为 <a href="#">：点击跳到页首并污染 history。
+               社群频道尚未开通，改为不可聚焦的占位文本。 */}
+            <span
+              aria-disabled="true"
+              style={{ "color": "var(--text-muted)", "fontSize": "0.875rem" }}
+            >
+              Coming Soon
+            </span>
           </div>
           <div className="feature-card reveal">
             <div className="feature-icon">

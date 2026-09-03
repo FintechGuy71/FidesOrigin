@@ -1,6 +1,11 @@
 /* ============================================
    FIDESORIGIN — BRAND DESIGN SYSTEM v2
    Institutional Fintech. Restrained. Authoritative.
+
+   ⚠ 本文件是 --fio-* 设计令牌的【唯一真源】。
+   不要在任何其它 CSS 文件里重复定义 :root { --fio-* }。
+   （历史上 css/style.css 曾重复定义一份并因加载顺序覆盖本文件，
+     导致 --font-serif 被改成自引用循环、全站标题字体失效。已修复。）
    ============================================ */
 
 @layer base {
@@ -12,11 +17,31 @@
     --fio-surface-2:  #181b26;
     --fio-surface-3:  #1e2130;
     --fio-elevated:   #262a3a;
+    /* 半透明遮罩。组件里曾散落 rgba(7,8,16,0.8/0.9/0.95) 三种手写副本 */
+    --fio-ink-scrim:  rgba(7, 8, 16, 0.9);
 
+    /* Borders — 与 legacy 的 --border / --border-light 对齐（同色值、同语义）
+       hairline = 组件里出现频率最高的 rgba(255,255,255,0.04) 手写副本 */
+    --fio-border:        #1e2130;
+    --fio-border-light:  #262a3a;
+    --fio-border-subtle: rgba(255, 255, 255, 0.05);
+    --fio-border-hairline: rgba(255, 255, 255, 0.04);
+
+    /* Typography colors
+       ⚠ 对比度必须按【最亮的常见底色】--bg-card #12141d 校准，而不是 --fio-ink。
+         旧口径按 #070810 算出的 "text-3 4.7:1" 在卡片底上只有 4.14:1，不达 AA。
+       全站三种常见底色的相对亮度（WCAG 2.1）：
+         --fio-ink       #070810  L=0.00256
+         --fio-ink-soft  #0c0e16  L=0.00450
+         --bg-card       #12141d  L=0.00717
+       实测（前景 → 上述三底）：
+         --fio-text   #e8eaf0  16.6 : 16.0 : 15.3   ✅
+         --fio-text-2 #8a8f9e   6.19 :  5.97 :  5.69  ✅
+         --fio-text-3 #7b8290   5.17 :  4.99 :  4.76  ✅（旧值 #717885 = 4.50/4.34/4.14，卡片底不达标）
+       --fio-text-4 已删除：历史值 1.86:1 不达标，且修复后全站零引用。 */
     --fio-text:       #e8eaf0;
     --fio-text-2:     #8a8f9e;
-    --fio-text-3:     #5a6070;
-    --fio-text-4:     #3a4050;
+    --fio-text-3:     #7b8290;
 
     /* Primary accent — Deep violet. Calm, modern, institutional */
     --fio-accent:     #8b7ec8;
@@ -32,18 +57,40 @@
     --fio-steel:      #6b8cae;
     --fio-steel-dim:  rgba(107, 140, 174, 0.12);
 
-    /* Semantic */
-    --fio-success:    #4ade80;
-    --fio-warn:       #fbbf24;
-    --fio-danger:     #f87171;
-    --fio-info:       #60a5fa;
+    /* Semantic — 补足 dim/glow 三件套，原先只有单色，导致组件里手写 rgba() */
+    --fio-success:      #4ade80;
+    --fio-success-dim:  rgba(74, 222, 128, 0.12);
+    --fio-success-glow: rgba(74, 222, 128, 0.08);
+    --fio-warn:         #fbbf24;
+    --fio-warn-dim:     rgba(251, 191, 36, 0.12);
+    --fio-warn-glow:    rgba(251, 191, 36, 0.08);
+    --fio-danger:       #f87171;
+    --fio-danger-dim:   rgba(248, 113, 113, 0.12);
+    --fio-danger-glow:  rgba(248, 113, 113, 0.08);
+    --fio-info:         #60a5fa;
+    --fio-info-dim:     rgba(96, 165, 250, 0.12);
+    --fio-info-glow:    rgba(96, 165, 250, 0.08);
 
-    /* Typography */
-    --font-sans:      var(--font-sans), 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-serif:     var(--font-display), 'Space Grotesk', Georgia, serif;
-    --font-mono:      var(--font-mono), 'JetBrains Mono', 'SF Mono', monospace;
+    /* Typography
+       ⚠ 变量名必须以 -nf 结尾（next/font 注入），避免与消费名同名造成
+          自引用循环（--font-sans: var(--font-sans) 会让整条声明 IACVT 失效）。
+       ⚠ 三条链都必须带 CJK 回退：next/font 只加载 latin 子集
+          （app/_lib/fonts.ts: subsets:["latin"]），CJK 字形只能靠回退栈兜底。
+          标题体（--font-serif，被 .fio-heading-* 消费）此前只有
+          Space Grotesk + Segoe UI + Georgia —— 三者均无 CJK 字形，
+          cn/tw/jp 页面标题直接落到系统 serif（Windows 宋体 / macOS Songti），
+          与正文的无衬线（PingFang / 微软雅黑）风格割裂。 */
+    --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+                 "Noto Sans SC", sans-serif;
+    --font-serif: var(--font-display-nf, "Space Grotesk"), "Segoe UI",
+                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+                  Georgia, sans-serif;
+    --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
+                 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
 
-    /* Radii — Slightly reduced for a sharper, more institutional feel */
+    /* Radii — Slightly reduced for a sharper, more institutional feel
+       与 legacy.css 的 --radius-* 已统一为同一组值（原 legacy 为 6/10/14px） */
     --radius-sm:      4px;
     --radius-md:      8px;
     --radius-lg:      12px;
@@ -52,10 +99,67 @@
     /* Motion */
     --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
     --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Z-index 层级总表 — 全站唯一，禁止再出现裸数字
+       设计约束：导航 < 菜单遮罩 < 下拉菜单（否则遮罩会盖住菜单本身，
+       或像原本 998 < 1000 那样点导航关不掉语言菜单）。 */
+    --z-decor:     10;   /* 装饰层（canvas / 渐变 / 插图） */
+    --z-content:   20;   /* 正文内容层 */
+    --z-nav:       50;   /* 固定导航 */
+    --z-backdrop:  55;   /* 菜单遮罩：盖住导航，但必须低于下拉菜单 */
+    --z-dropdown:  60;   /* 下拉菜单 / 语言菜单 */
+    --z-sticky:    100;  /* 回到顶部等悬浮按钮 */
+    --z-overlay:   200;  /* 移动端全屏菜单 */
+    --z-toast:     300;  /* Toast 提示 */
+    --z-skip:      400;  /* 跳转到主内容（无障碍） */
+    --z-modal:     500;  /* 模态框 */
+  }
+
+  /* CJK 字体回退栈。
+     ⚠ 必须放在本文件（base 层）而不是 css/legacy.css（legacy 层）：
+       CSS 级联层的优先级高于选择器特异性，base 层的 `:root` 会压掉
+       legacy 层的 `html[lang="ja"]`，把 CJK 回退栈整体失效。
+     ⚠ 原先只在 legacy.css 里定义，导致新版 cn/tw/jp 首页完全没有
+       中日韩字形回退，靠系统字体兜底，字重与字距均不一致。 */
+  /* ⚠ 三个块必须同时覆盖 sans / serif / mono —— 此前只覆盖 --font-sans，
+       导致 --font-serif / --font-mono 在 CJK 页面上无法被修正，
+       而这两者恰好是最需要修正的（.fio-heading-* 与 .fio-caption/.fio-pill）。 */
+  html[lang="zh-CN"],
+  html[lang="zh-Hans"] {
+    --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
+                 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --font-serif: var(--font-display-nf, "Space Grotesk"),
+                  "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
+                 "PingFang SC", "Microsoft YaHei", monospace;
+  }
+  html[lang="zh-TW"],
+  html[lang="zh-HK"] {
+    --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
+                 "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    --font-serif: var(--font-display-nf, "Space Grotesk"),
+                  "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
+                 "PingFang TC", "Microsoft JhengHei", monospace;
+  }
+  html[lang="ja"] {
+    --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
+                 "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    --font-serif: var(--font-display-nf, "Space Grotesk"),
+                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
+                 "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
+  }
+  /* 日文假名密度高，需要更宽松的行高 */
+  html[lang="ja"] body {
+    line-height: 1.8;
+    letter-spacing: 0.01em;
   }
 
   html {
     scroll-behavior: smooth;
+    /* 顶部固定导航 56px（h-14），锚点跳转时留出空间，避免标题被导航盖住 */
+    scroll-padding-top: 3.5rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -162,6 +266,20 @@
     letter-spacing: -0.01em;
   }
 
+  /* CJK 排版适配 —— .fio-caption 的 mono + uppercase + 宽字距对中日文不适用，
+     且 JetBrains Mono 只加载了 latin 子集，CJK 会掉到系统字体导致字重错乱。 */
+  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-caption {
+    font-family: var(--font-sans);
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+  /* CJK 全角字符需要更宽松的行高，负字距会互相挤压 */
+  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) :is(.fio-heading-xl, .fio-heading-lg, .fio-heading-md) {
+    line-height: 1.35;
+    letter-spacing: 0;
+    font-style: normal; /* CJK 无真斜体，浏览器合成斜体视觉效果差 */
+  }
+
   /* ---- Buttons ---- */
   .fio-btn {
     display: inline-flex;
@@ -177,6 +295,13 @@
     border: none;
     white-space: nowrap;
     letter-spacing: 0.01em;
+  }
+
+  /* 焦点可见样式 —— 全站统一金色焦点环（对深底对比度 8.9:1），
+     此前 header / home-chrome / ModalVideo 各自用 indigo-500 / 400 / 200 三种颜色 */
+  .fio-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--fio-ink), 0 0 0 4px var(--fio-gold);
   }
 
   .fio-btn-primary {
@@ -261,9 +386,21 @@
   }
 
   .fio-pill-success {
-    background: rgba(74,222,128,0.08);
+    background: var(--fio-success-dim);
     color: var(--fio-success);
     border: 1px solid rgba(74,222,128,0.12);
+  }
+
+  .fio-pill-danger {
+    background: var(--fio-danger-dim);
+    color: var(--fio-danger);
+    border: 1px solid rgba(248,113,113,0.12);
+  }
+
+  .fio-pill-warn {
+    background: var(--fio-warn-dim);
+    color: var(--fio-warn);
+    border: 1px solid rgba(251,191,36,0.12);
   }
 
   /* ---- Grid Pattern Background ---- */
@@ -292,6 +429,14 @@
     100% { transform: translateY(100%); }
   }
 
+  /* 延迟类必须定义在动画类【之前】：animation 简写会把 animation-delay 重置为 0，
+     若顺序颠倒则 .fio-delay-* 全部静默失效。此处额外提高特异性做双保险。 */
+  .fio-delay-1 { animation-delay: 0.1s; }
+  .fio-delay-2 { animation-delay: 0.2s; }
+  .fio-delay-3 { animation-delay: 0.3s; }
+  .fio-delay-4 { animation-delay: 0.4s; }
+  .fio-delay-5 { animation-delay: 0.5s; }
+
   .fio-animate-fade-up {
     animation: fade-up 0.6s var(--ease-out) both;
   }
@@ -299,11 +444,16 @@
     animation: fade-in 0.5s ease both;
   }
 
-  .fio-delay-1 { animation-delay: 0.1s; }
-  .fio-delay-2 { animation-delay: 0.2s; }
-  .fio-delay-3 { animation-delay: 0.3s; }
-  .fio-delay-4 { animation-delay: 0.4s; }
-  .fio-delay-5 { animation-delay: 0.5s; }
+  .fio-animate-fade-up.fio-delay-1 { animation-delay: 0.1s; }
+  .fio-animate-fade-up.fio-delay-2 { animation-delay: 0.2s; }
+  .fio-animate-fade-up.fio-delay-3 { animation-delay: 0.3s; }
+  .fio-animate-fade-up.fio-delay-4 { animation-delay: 0.4s; }
+  .fio-animate-fade-up.fio-delay-5 { animation-delay: 0.5s; }
+  .fio-animate-fade-in.fio-delay-1 { animation-delay: 0.1s; }
+  .fio-animate-fade-in.fio-delay-2 { animation-delay: 0.2s; }
+  .fio-animate-fade-in.fio-delay-3 { animation-delay: 0.3s; }
+  .fio-animate-fade-in.fio-delay-4 { animation-delay: 0.4s; }
+  .fio-animate-fade-in.fio-delay-5 { animation-delay: 0.5s; }
 
   /* ---- Scrollbar ---- */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -315,5 +465,26 @@
   ::selection {
     background: rgba(139,126,200,0.2);
     color: var(--fio-text);
+  }
+}
+
+/* ---- 无障碍：尊重系统"减少动态效果"偏好 ----
+   此前全站（Hero canvas 无限重绘、animate-pulse/ping、fio-animate-*、AOS）
+   都没有任何 reduced-motion 保护。 */
+@media (prefers-reduced-motion: reduce) {
+  .fio-animate-fade-up,
+  .fio-animate-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

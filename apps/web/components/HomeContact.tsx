@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dict } from "@/i18n/dictionaries/en";
-import { langPrefix, type Locale } from "@/i18n/locales";
+import { localize, type Locale } from "@/i18n/locales";
 
 /* ================================================================
    HOME CONTACT — final CTA band (#contact anchor target for the
@@ -15,13 +15,12 @@ export default function HomeContact({
   d: Dict["home"]["contact"];
   lang: Locale;
 }) {
-  const prefix = langPrefix(lang);
   return (
     <section id="contact" style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div
           className="border-t py-24 text-center md:py-32"
-          style={{ borderColor: "rgba(255,255,255,0.04)" }}
+          style={{ borderColor: "var(--fio-border-hairline)" }}
         >
           <div className="fio-caption mb-4" data-aos="fade-up">
             {d.caption}
@@ -58,7 +57,7 @@ export default function HomeContact({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
               </svg>
             </a>
-            <a href={`${prefix}/docs/`} className="fio-btn fio-btn-ghost">
+            <a href={localize("/docs", lang)} className="fio-btn fio-btn-ghost">
               {d.ctaDocs}
             </a>
           </div>

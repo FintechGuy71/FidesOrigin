@@ -4,6 +4,11 @@ export default function ContentDocsSdkEN() {
     <>
 <div className="docs-layout">
     
+    <button className="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="Toggle sidebar">
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+      Documentation Menu
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+    </button>
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">Documentation</div>
       <ul className="docs-nav-tree">
@@ -16,32 +21,32 @@ export default function ContentDocsSdkEN() {
       <ul className="docs-nav-tree">
         <li><a href="/blog" target="_blank" rel="noopener">Blog</a></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/dashboard">Dashboard</a></li>
       </ul>
     </aside>
 
     
-    <button className="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="Toggle sidebar">
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-      Documentation Menu
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-    </button>
 
     
-    <main className="docs-content">
-      <h1>SDK <span style={{ "fontSize": "0.5em", "color": "var(--accent)", "verticalAlign": "middle" }}>v0.2.1</span></h1>
+    <div className="docs-content">
+      <h1>SDK <span className="docs-version">v0.2.1</span></h1>
       <p className="docs-lead">JavaScript SDK for wallet integration, on-chain compliance, and Guard pre-transaction interception.</p>
 
       <h2>Packages</h2>
-      <div className="docs-cards" style={{ "gridTemplateColumns": "1fr 1fr" }}>
-        <a href="#rest-sdk" className="docs-card" style={{ "textDecoration": "none", "color": "inherit" }}>
+      {/* ⚠ 原为 style={{ gridTemplateColumns: "1fr 1fr" }}：未分层内联样式恒胜任何
+          @layer 内声明，把 legacy.css 的 @media (max-width:600px)
+          {.docs-cards{grid-template-columns:1fr}} 直接击穿 —— 移动端仍是两列，
+          卡片被压到约 160px 宽。.docs-cards 的基线本就是 repeat(2,1fr)，
+          这里无需重复声明。 */}
+      <div className="docs-cards">
+        <a href="#rest-sdk" className="docs-card">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
           <h3>REST SDK</h3>
           <p>API client, risk checks, rule management, WebSocket streaming.</p>
         </a>
-        <a href="#on-chain-sdk" className="docs-card" style={{ "textDecoration": "none", "color": "inherit" }}>
+        <a href="#on-chain-sdk" className="docs-card">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
@@ -82,7 +87,7 @@ const fides = new FidesOriginClient(&#123;
   timeout: 30000
 &#125;);</code></pre>
       </div>
-      <p className="docs-note" style={{ "color": "var(--text-secondary)", "fontSize": "0.875rem" }}><strong>Note:</strong> In browser environments, only public API keys (prefix <code>pk_</code>) are allowed. Secret keys are strictly blocked for security.</p>
+      <p className="docs-note"><strong>Note:</strong> In browser environments, only public API keys (prefix <code>pk_</code>) are allowed. Secret keys are strictly blocked for security.</p>
 
       <h3>Check Address Risk</h3>
       <div className="docs-code-block">
@@ -420,7 +425,7 @@ function RiskBadge(&#123; address &#125;: &#123; address: string &#125;) &#123;
   );
 &#125;</code></pre>
       </div>
-    </main>
+    </div>
   </div>
     </>
   );

@@ -89,6 +89,8 @@ const jp: Dict = {
     step2Desc: "オンチェーンの RiskRegistryV2 が 20,000 件以上のプロファイルをミリ秒でチェックします。",
     step3Title: "ポリシー評価",
     step3Desc: "PolicyEngine が設定されたルールを適用してコンプライアンスを判定します。",
+    screenAddressLabel: "スクリーニング対象アドレス",
+    riskAddressLabel: "スコア算出対象アドレス",
   },
   addressCheck: {
     micro: "コンプライアンスツール",
@@ -167,7 +169,11 @@ const jp: Dict = {
       step3Label: "オンチェーンアクション",
       step3Sub: "スマートコントラクト · ウォレット",
       flowLabel: "リアルタイムデータフロー",
-      flowLive: "Live",
+      flowLive: "ライブ",
+      flowNode1: "リスクオラクル",
+      flowNode2: "ポリシーエンジン",
+      flowNode3: "コンプライアンスエンジン",
+      flowNode4: "オンチェーン実行",
     },
     features: {
       caption: "コア機能",
@@ -214,7 +220,7 @@ const jp: Dict = {
       j3Detail: "KYC/AML · Tx Limits · Geo-fencing",
       j4Title: "オンチェーン決済",
       j4Desc: "スマートコントラクトが自動的に送金。",
-      j4Detail: "Immutable audit log",
+      j4Detail: "改ざん不可能な監査ログ",
       quote: "FidesOrigin により、手作業のコンプライアンス審査から完全自動実行へ移行し、リスク管理の遅延は時間単位からミリ秒単位になりました。",
       quoteName: "チーフ・コンプライアンス・オフィサー",
       quoteRole: "香港ライセンス取得ステーブルコイン発行者",
@@ -226,6 +232,12 @@ const jp: Dict = {
       ctaPrimary: "デモをリクエスト",
       ctaDocs: "ドキュメントを読む",
     },
+  },
+  notFound: {
+    title: "ページが見つかりません",
+    body: "お探しのページは存在しないか、移動された可能性があります。",
+    home: "ホームに戻る",
+    docs: "ドキュメントを読む",
   },
 };
 

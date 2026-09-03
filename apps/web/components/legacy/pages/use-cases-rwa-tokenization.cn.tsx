@@ -9,36 +9,9 @@ const PAGE_CSS = `
       align-items: center;
       margin-top: 48px;
     }
-    .uc-code {
-      background: #0a0c14;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-    .uc-code-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-    .uc-code pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    .uc-code .comment { color: #5c6370; font-style: italic; }
-    .uc-code .kw { color: #c678dd; }
-    .uc-code .type { color: #e5c07b; }
-    .uc-code .func { color: #61afef; }
+    /* .uc-code / .uc-code-header / .uc-code pre / .uc-code .{comment,kw,type,func,str,num}
+       已上移到 css/legacy.css（共享）：case-studies.en.tsx 用同一套类名却
+       没有 PAGE_CSS，导致该页代码块零样式。此处不再重复定义。 */
     .uc-features {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -59,7 +32,7 @@ const PAGE_CSS = `
       align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--fio-border-hairline);
       font-size: 0.9rem;
       color: var(--text-secondary);
     }
@@ -82,15 +55,15 @@ const PAGE_CSS = `
 export default function ContentUseCasesRwaTokenizationCN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="uc-hero">
       <div className="container">
         <div className="reveal">
-          <p className="micro">Use Case</p>
-          <h1 className="display">RWA <span>Tokenization Compliance</span></h1>
-          <p className="lead" style={{ "maxWidth": "700px", "marginTop": "20px" }}>Tokenize real world assets with built-in securities compliance. On-chain accredited investor verification, jurisdiction gating, and automated KYC enforcement at the smart contract level.</p>
+          <p className="micro">应用场景</p>
+          <h1 className="display">RWA <span>代币化合规</span></h1>
+          <p className="lead" style={{ "maxWidth": "700px", "marginTop": "20px" }}>为真实世界资产代币化内置证券合规：链上合格投资者验证、司法管辖区准入控制，以及智能合约层面的自动化 KYC 执行。</p>
         </div>
       </div>
     </section>
@@ -100,17 +73,17 @@ export default function ContentUseCasesRwaTokenizationCN() {
       <div className="container">
         <div className="uc-grid">
           <div className="reveal">
-            <h2 className="h2">The Challenge</h2>
-            <p className="body-sm" style={{ "marginTop": "16px" }}>Real world asset tokenization platforms face a fundamental regulatory challenge: securities laws apply to tokenized assets, but traditional compliance infrastructure cannot enforce rules at the smart contract level.</p>
-            <p className="body-sm" style={{ "marginTop": "16px" }}>Regulators require proof that only accredited investors can hold security tokens, that transfers respect jurisdictional restrictions, and that KYC is completed before any token movement. Off-chain databases and API checks cannot provide deterministic enforcement.</p>
+            <h2 className="h2">挑战</h2>
+            <p className="body-sm" style={{ "marginTop": "16px" }}>真实世界资产代币化平台面临一个根本性的监管挑战：证券法适用于代币化资产，但传统合规基础设施无法在智能合约层面执行规则。</p>
+            <p className="body-sm" style={{ "marginTop": "16px" }}>监管方要求证明：只有合格投资者才能持有证券型代币，转账须遵守司法管辖区限制，且任何代币转移之前都必须完成 KYC。链下数据库与 API 检查无法提供确定性执行。</p>
 
-            <h2 className="h2" style={{ "marginTop": "48px" }}>The Solution</h2>
+            <h2 className="h2" style={{ "marginTop": "48px" }}>解决方案</h2>
             <ul className="uc-checklist" style={{ "marginTop": "16px" }}>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Accredited investor verification on-chain via attestation registry</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Jurisdiction-based transfer restrictions enforced by smart contract</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> On-chain KYC status checks before every transfer</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Whitelist / blacklist management with multi-sig governance</li>
-              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Full audit trail for securities regulators</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 通过认证注册表在链上验证合格投资者身份</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 由智能合约强制执行基于司法管辖区的转账限制</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 每笔转账前进行链上 KYC 状态检查</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 白名单/黑名单管理，配合多签治理</li>
+              <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 面向证券监管方的完整审计留痕</li>
             </ul>
           </div>
           <div className="reveal">
@@ -161,40 +134,40 @@ export default function ContentUseCasesRwaTokenizationCN() {
     <section className="section bg-secondary">
       <div className="container">
         <div className="reveal section-intro">
-          <p className="micro">Regulatory Coverage</p>
-          <h2 className="h2 section-title">Built for securities regulations</h2>
+          <p className="micro">监管覆盖</p>
+          <h2 className="h2 section-title">为证券监管而生</h2>
         </div>
         <div className="uc-features">
           <div className="uc-feature reveal">
             <h3>Regulation D / Reg S</h3>
-            <p>Enforce accredited investor status and offshore transfer restrictions automatically at the contract level.</p>
+            <p>在合约层面自动执行合格投资者身份要求与离岸转账限制。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>MiCA Asset-Referenced Tokens</h3>
-            <p>Meet EU Markets in Crypto-Assets requirements for tokenized securities and e-money tokens.</p>
+            <h3>MiCA 资产参考型代币</h3>
+            <p>满足欧盟《加密资产市场法规》（MiCA）对代币化证券与电子货币代币的要求。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>Singapore MAS Framework</h3>
-            <p>Comply with Singapore's Digital Token Offerings guidelines with on-chain KYC and investor classification.</p>
+            <h3>新加坡 MAS 框架</h3>
+            <p>通过链上 KYC 与投资者分类，符合新加坡数字代币发行（DTO）指引。</p>
           </div>
           <div className="uc-feature reveal">
-            <h3>Swiss DLT Act</h3>
-            <p>Support ledger-based securities with compliant token transfers and registry integration.</p>
+            <h3>瑞士 DLT 法案</h3>
+            <p>通过合规的代币转账与登记册集成，支持瑞士 DLT 法案下的账本式证券。</p>
           </div>
         </div>
 
         <div style={{ "marginTop": "48px" }}>
           <div className="reg-card reveal">
-            <h3>Accredited Investor Verification</h3>
-            <p>Integrate with on-chain attestation providers to verify accredited investor status without exposing personal data. FidesOrigin checks cryptographic attestations in real-time before allowing token transfers. Status can be revoked instantly if circumstances change.</p>
+            <h3>合格投资者验证</h3>
+            <p>对接链上认证服务提供方，在不暴露个人数据的前提下验证合格投资者身份。FidesOrigin 在允许代币转账前实时核验加密认证；若情况发生变化，身份可即时撤销。</p>
           </div>
           <div className="reg-card reveal">
-            <h3>Jurisdiction Gating</h3>
-            <p>Configure per-jurisdiction transfer rules based on token holder residency. Block transfers to restricted jurisdictions, apply holding limits by region, and maintain compliance with local securities laws across 150+ jurisdictions.</p>
+            <h3>司法管辖区准入控制</h3>
+            <p>基于代币持有人的居住地，按司法管辖区配置转账规则：拦截流向受限司法管辖区的转账、按地区设置持仓限额，并覆盖 150+ 个司法管辖区，持续符合当地证券法规。</p>
           </div>
           <div className="reg-card reveal">
-            <h3>On-Chain KYC Integration</h3>
-            <p>Connect KYC providers to the on-chain registry. Once a user completes KYC, their wallet address is attested on-chain. The smart contract verifies this attestation before every transfer — no API calls, no delays, no bypass paths.</p>
+            <h3>链上 KYC 集成</h3>
+            <p>将 KYC 服务提供方接入链上注册表。用户一旦完成 KYC，其钱包地址即在链上获得认证。智能合约在每笔转账前核验该认证——无需 API 调用、无延迟、无绕过路径。</p>
           </div>
         </div>
       </div>
@@ -204,8 +177,8 @@ export default function ContentUseCasesRwaTokenizationCN() {
     <section className="section">
       <div className="container">
         <div className="cta-section reveal">
-          <h2 className="h1">Ready to tokenize real world assets?</h2>
-          <p>Build compliant securities tokens with on-chain investor verification and jurisdictional enforcement.</p>
+          <h2 className="h1">准备好将真实世界资产代币化了吗？</h2>
+          <p>通过链上投资者验证与司法管辖区强制执行，构建合规的证券型代币。</p>
           <div className="cta-buttons">
             <a href="/cn/docs" className="btn btn-primary">阅读文档</a>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">联系销售</a>

@@ -19,7 +19,7 @@ const PAGE_CSS = `
     }
     .blog-hero-content {
       position: relative;
-      z-index: 1;
+      z-index: var(--z-content);
     }
     .blog-hero .display {
       font-size: clamp(2rem, 4.5vw, 3.2rem);
@@ -28,14 +28,14 @@ const PAGE_CSS = `
       letter-spacing: -0.03em;
     }
     .blog-hero .display span {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .hr-fade {
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      background: linear-gradient(90deg, transparent, var(--fio-border-light), transparent);
       margin: 0 auto;
       max-width: 800px;
     }
@@ -111,11 +111,11 @@ const PAGE_CSS = `
       color: var(--text-secondary);
       margin: 0;
     }
-    .tk-keyword { color: #c586c0; }
-    .tk-type { color: #4ec9b0; }
-    .tk-func { color: #dcdcaa; }
-    .tk-comment { color: #6a9955; }
-    .tk-string { color: #ce9178; }
+    .tk-keyword { color: var(--code-kw); }
+    .tk-type { color: var(--code-type); }
+    .tk-func { color: var(--code-func); }
+    .tk-comment { color: var(--code-comment); }
+    .tk-string { color: var(--code-str); }
     .blog-cta {
       text-align: center;
       padding: 80px 40px;
@@ -129,7 +129,7 @@ const PAGE_CSS = `
       background: var(--gold);
       transform: translateY(-1px);
     }
-    @media (max-width: 640px) {
+    @media (max-width: 600px) {
       .blog-hero { padding: 120px 0 30px; }
       .blog-code-body pre { white-space: pre-wrap; word-break: break-all; }
     }
@@ -138,7 +138,7 @@ const PAGE_CSS = `
 export default function ContentBlogWhyOnChainComplianceTW() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     
     <section className="blog-hero">
@@ -275,7 +275,7 @@ export default function ContentBlogWhyOnChainComplianceTW() {
         <h2 className="h2" style={{ "marginBottom": "16px" }}>構建鏈上風險執行</h2>
         <p className="lead" style={{ "marginBottom": "32px" }}>FidesOrigin 是一個原生鏈上風險引擎，面向穩定幣、智能錢包、RWA 平台和代理支付軌道。</p>
         <div style={{ "display": "flex", "gap": "12px", "justifyContent": "center", "flexWrap": "wrap" }}>
-          <a href="/tw/" className="btn btn-primary">
+          <a href="/tw" className="btn btn-primary">
             探索 FidesOrigin
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5-5-5-5" /></svg>
           </a>

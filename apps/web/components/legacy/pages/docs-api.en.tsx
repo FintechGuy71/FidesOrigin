@@ -4,6 +4,11 @@ export default function ContentDocsApiEN() {
     <>
 <div className="docs-layout">
     
+    <button className="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="Toggle sidebar">
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+      Documentation Menu
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+    </button>
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">Documentation</div>
       <ul className="docs-nav-tree">
@@ -16,20 +21,15 @@ export default function ContentDocsApiEN() {
       <ul className="docs-nav-tree">
         <li><a href="/blog" target="_blank" rel="noopener">Blog</a></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/dashboard">Dashboard</a></li>
       </ul>
     </aside>
 
     
-    <button className="docs-sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-label="Toggle sidebar">
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-      Documentation Menu
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-    </button>
 
     
-    <main className="docs-content">
-      <h1>API Reference <span style={{ "fontSize": "0.5em", "color": "var(--accent)", "verticalAlign": "middle" }}>V2.1</span></h1>
+    <div className="docs-content">
+      <h1>API Reference <span className="docs-version">V2.1</span></h1>
       <p className="docs-lead">REST API for on-chain compliance, risk assessment, and rule management.</p>
 
       <h2>Base URL</h2>
@@ -394,7 +394,7 @@ export default function ContentDocsApiEN() {
 
       <h2>Rate Limits</h2>
       <p>API requests are rate-limited to <strong>60 requests per minute per IP address</strong>. The WebSocket stream does not count against this limit.</p>
-    </main>
+    </div>
   </div>
     </>
   );

@@ -104,6 +104,11 @@
       "source": "/:path*.html",
       "destination": "/:path*",
       "permanent": true
+    },
+    {
+      "source": "/((?!admin|_next|brand|api|chart|ethers).*)/",
+      "destination": "/$1",
+      "permanent": false
     }
   ],
   "headers": [

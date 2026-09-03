@@ -37,7 +37,7 @@ const PAGE_CSS = `
       margin-bottom: 8px;
     }
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
-    .badge-major { background: rgba(74,222,128,0.12); color: var(--success); }
+    .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
     .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
@@ -53,7 +53,7 @@ const PAGE_CSS = `
 export default function ContentChangelogEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="cl-hero">
       <div className="container">

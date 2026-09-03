@@ -21,7 +21,7 @@ const PAGE_CSS = `
     .stat-item .num {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -52,7 +52,7 @@ const PAGE_CSS = `
 export default function ContentAboutEN() {
   return (
     <>
-      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style precedence="legacy-page" dangerouslySetInnerHTML={{ __html: "@layer legacy{" + PAGE_CSS + "}" }} />
 
     <section className="about-hero">
       <div className="container">
