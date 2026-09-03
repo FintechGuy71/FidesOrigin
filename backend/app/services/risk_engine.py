@@ -101,7 +101,7 @@ class AlertService:
                             response=response.text[:200]
                         )
             except Exception as e:
-                logger.error("Failed to send alert webhook", error=str(e))
+                logger.error("Failed to send alert webhook: %s", str(e))
 
         # 3. 如果配置了 Slack/飞书等，可以在这里扩展
 
