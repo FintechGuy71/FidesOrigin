@@ -4,6 +4,38 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const xml2js = require('xml2js');
+const { scoreToTier } = require('../src/merkleBuilder');
+
+/**
+ * [P1-7 FIX] 从 SDN_ADVANCED.XML 结构化提取 EVM 制裁地址。
+ * 两步过滤：① 只取字典中名为「Digital Currency Address - *」的 Feature 块
+ * （ETH/USDT/USDC/BSC/ARB…——USDT/USDC 等 ERC-20 地址与 ETH 同地址空间，必须覆盖；
+ * 实证：OFAC 会把同一地址按币种拆成不同 FeatureTypeID，如 345=ETH、887=USDT）；
+ * ② 块内只捕 0x+40hex 形态（XBT/XMR/LTC 等非 EVM 币种天然被格式滤掉）。
+ * 原实现对 ~200MB 全文正则，任何 40 位 hex（参考编号/哈希）都会被当作制裁地址写链。
+ */
+function extractEvmAddresses(xml) {
+  // 1. 字典区：FeatureTypeID → 名称（<FeatureType ID="345" ...>Digital Currency Address - ETH</FeatureType>）
+  const typeNameById = new Map();
+  for (const m of xml.matchAll(/<FeatureType ID="(\d+)"[^>]*>([^<]*)<\/FeatureType>/g)) {
+    typeNameById.set(m[1], m[2].trim());
+  }
+  // 2. 逐 Feature 块过滤提取
+  const out = new Set();
+  const chunks = xml.split(/<Feature\s/i);
+  for (let i = 1; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const gt = chunk.indexOf('>');
+    if (gt < 0) continue;
+    const idMatch = chunk.slice(0, gt).match(/FeatureTypeID="(\d+)"/);
+    if (!idMatch) continue;
+    const name = typeNameById.get(idMatch[1]) || '';
+    if (!name.startsWith('Digital Currency Address')) continue;
+    const m = chunk.match(/0x[a-fA-F0-9]{40}/g);
+    if (m) for (const a of m) out.add(a.toLowerCase());
+  }
+  return [...out];
+}
 
 // Load environment variables from .env file
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -30,6 +62,8 @@ const CONFIG = {
   rpcUrl: process.env.RPC_URL || 'https://rpc.sepolia.org',
   privateKey: process.env.SYNC_PRIVATE_KEY || process.env.PRIVATE_KEY,
   riskRegistryAddress: process.env.RISK_REGISTRY_ADDRESS || process.env.RISK_REGISTRY_CONTRACT,
+  // MerkleRiskRegistry（v3.1.0 现役）：管道建树后推根上链
+  merkleRegistryAddress: process.env.MERKLE_REGISTRY_ADDRESS || '0x31A034efbe22eDc1a78ceb37F52BA869D869c33B',
   batchSize: parseInt(process.env.BATCH_SIZE) || 50,
   cacheDir: path.join(__dirname, '../cache'),
   logDir: path.join(__dirname, '../logs'),
@@ -45,8 +79,17 @@ const RISK_REGISTRY_ABI = [
   'function updateRiskProfile(address addr, uint8 riskScore, uint8 tier, bytes32[] calldata tags, bool sanctioned) external',
   'function getRiskProfile(address account) external view returns (uint8 riskScore, uint8 tier, bytes32[] tags, uint256 lastUpdated, bool sanctioned)',
   'function isSanctioned(address account) external view returns (bool)',
+  'function getSanctionedAddresses() external view returns (address[] memory)',
   'event RiskProfileUpdated(address indexed addr, uint256 riskScore, uint8 tier, bool isSanctioned)',
   'event BatchUpdateCompleted(uint256 successCount, uint256 gasUsed)',
+];
+
+// MerkleRiskRegistry ABI（v3.1.0 现役）
+const MERKLE_REGISTRY_ABI = [
+  'function updateMerkleRoot(bytes32 newRoot) external',
+  'function merkleRoot() view returns (bytes32)',
+  'function lastOracleRootUpdate() view returns (uint256)',
+  'event MerkleRootUpdated(bytes32 indexed oldRoot, bytes32 indexed newRoot, uint256 timestamp, string version)',
 ];
 
 class DailySyncService {
@@ -55,6 +98,15 @@ class DailySyncService {
     this.provider = null;
     this.wallet = null;
     this.contract = null;
+    // [P1-1] OFAC 主源（SDN_ADVANCED）是否成功产出：false 时禁止下架 diff（防数据源故障被误判为大面积下架）
+    this.primarySourceOk = false;
+    // [HMT 接入] 次源（OFSI）健康位。下架 diff 的公式是「链上全集 − 今日名单」，
+    // 因此**任一**参与源当天抓取失败，其独有地址都会落进"下架集"被清零。
+    // HMT 独有 2 个地址（OFAC 未覆盖），一旦 HMT 某天挂掉就会被误删、次日又加回，
+    // 形成写链抖动。故次源也必须纳入下架保护，与主源同等对待。
+    this.hmtSourceOk = false;
+    // [OpenSanctions 接入] 聚合源健康位，同上理由（独有 13 个以色列 NBCTF 地址）。
+    this.openSanctionsOk = false;
     
     // 确保目录存在
     [CONFIG.cacheDir, CONFIG.logDir].forEach(dir => {
@@ -80,6 +132,12 @@ class DailySyncService {
       this.contract = new ethers.Contract(CONFIG.riskRegistryAddress, RISK_REGISTRY_ABI, signer);
       console.log(`📋 RiskRegistry: ${CONFIG.riskRegistryAddress}`);
     }
+
+    if (CONFIG.merkleRegistryAddress) {
+      const signer = this.wallet || this.provider;
+      this.merkleContract = new ethers.Contract(CONFIG.merkleRegistryAddress, MERKLE_REGISTRY_ABI, signer);
+      console.log(`🌲 MerkleRiskRegistry: ${CONFIG.merkleRegistryAddress}`);
+    }
     
     console.log('✅ Ready\n');
   }
@@ -103,19 +161,22 @@ class DailySyncService {
         maxContentLength: 200 * 1024 * 1024,
         maxBodyLength: 200 * 1024 * 1024,
       });
-      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
-      const unique = [...new Set(matches.map(a => a.toLowerCase()))];
-      if (unique.length > 0) {
-        console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} ETH addresses (official, daily-fresh)`);
-        for (const addr of unique) {
-          addresses.push({
-            address: addr,
-            source: 'OFAC_SDN_ADVANCED',
-            riskScore: 100,
-            tier: 3,
-            reason: 'OFAC Sanctioned',
-          });
-        }
+      // [P1-7 FIX] 结构化解析（「Digital Currency Address - *」特征块内提 0x 形态），替代全文档正则
+      const unique = extractEvmAddresses(response.data);
+      if (unique.length === 0) {
+        // 结构解析归零 = OFAC 格式变更（常态百余个 EVM 地址）。按数据源故障处理：
+        // 抛错走 catch 回退静态源，同时 primarySourceOk=false 会阻止下架 diff 误删
+        throw new Error('SDN_ADVANCED structured parse yielded 0 EVM addresses (OFAC format changed?)');
+      }
+      this.primarySourceOk = true;
+      console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} EVM addresses (official, daily-fresh)`);
+      for (const addr of unique) {
+        addresses.push({
+          address: addr,
+          source: 'OFAC_SDN_ADVANCED',
+          riskScore: 100,
+          reason: 'OFAC Sanctioned',
+        });
       }
     } catch (e) {
       console.log(`   ⚠️ SDN_ADVANCED fetch failed: ${e.message} — falling back to static sources`);
@@ -137,7 +198,6 @@ class DailySyncService {
               address: addr,
               source: entry.source || 'STATIC_CACHE',
               riskScore: entry.riskScore ?? 100,
-              tier: entry.tier ?? 3,
               reason: entry.reason || 'OFAC Sanctioned',
             });
           }
@@ -157,7 +217,6 @@ class DailySyncService {
             address: addr,
             source: 'STATIC_SNAPSHOT',
             riskScore: 100,
-            tier: 3,
             reason: 'OFAC Sanctioned',
           });
         }
@@ -170,6 +229,224 @@ class DailySyncService {
     // 行白等最长 15 秒超时。主源 SDN_ADVANCED.XML + 本地静态后备已完整覆盖。
 
     console.log(`   ✅ OFAC total: ${addresses.length} addresses`);
+    return addresses;
+  }
+
+  // ========== 1b. 加载英国 OFSI（HMT）制裁名单 ==========
+  /**
+   * @dev OFSI ConList.csv 是英国综合制裁名单（约 2 万条记录），加密钱包地址写在
+   *      Other Information 自由文本中。三个必须注意的点：
+   *      ① 首行是元数据（"Last Updated","<date>"），真表头在其后 —— 用
+   *         findHeaderLine 按列名定位，不硬编码行号（OFSI 改版会静默失效，
+   *         这正是原 HMTAdapter 产出 0 条的根因）。
+   *      ② 真实列名是 Address 1..6 / Other Information / Name 1..6 / Group ID，
+   *         不是 Address / Remarks。
+   *      ③ 地址提取复用 sanctions-sync 的 extractCryptoAddresses（带格式校验、去重）。
+   *      当前产量小（6 个 EVM 地址，其中 2 个为 OFAC 未覆盖的净新增），
+   *      但它是每日更新的官方源，OFSI 后续新增的加密地址会自动进入。
+   */
+  async fetchHMT() {
+    console.log('📥 Loading HMT/OFSI (UK) crypto sanctions...');
+    let addresses = [];
+    // 静态后备快照路径：与 OFAC 的 ofac-eth-source.txt 同模式。
+    // 每次成功产出后落盘，供端点故障时兜底，防止其独有地址当天进不了名单。
+    const snapshotFile = path.join(CONFIG.cacheDir, 'hmt-eth-source.txt');
+
+    const url = process.env.HMT_URL
+      || 'https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv';
+    try {
+      const response = await axios.get(url, {
+        timeout: 120000,
+        responseType: 'text',
+        maxContentLength: 200 * 1024 * 1024,
+        maxBodyLength: 200 * 1024 * 1024,
+      });
+
+      const {
+        parseCSV, findHeaderLine, HMT_KNOWN_COLUMNS, extractCryptoAddresses,
+      } = require('../sanctions-sync');
+
+      const headerLine = findHeaderLine(response.data.split('\n'), HMT_KNOWN_COLUMNS);
+      const records = parseCSV(response.data, { headerLine });
+      console.log(`   📄 HMT records: ${records.length} (header line ${headerLine})`);
+
+      // 只有成功解析出记录才置健康位。0 条记录意味着 CSV 结构变了或抓到了空内容
+      // （这正是原实现的静默失败形态），此时必须让下架 diff 停摆，不能放行。
+      if (records.length > 0) this.hmtSourceOk = true;
+
+      // OFSI 用别名行重复同一实体（如 AYASH / AYYASH 两行都列了同一批钱包），
+      // 同一地址会被多行重复命中 —— 先去重再入列，否则 hmt 统计虚高（10 vs 实际 6）。
+      //
+      // [Q14 说明·有意为之] 只消费 crypto.ethereum：本管道是 EVM 链上数据管道，
+      // 链上 RiskRegistry / Merkle leaf 只编码 0x 地址（合约地址语义=以太坊地址）。
+      // OFSI 名单里的 BTC / TRON / LTC 地址（extractCryptoAddresses 也能提取，但属
+      // 非 EVM 形态）不在本管道的管辖范围内，故按设计不接入。若未来需要多链，
+      // 应走独立的非 EVM 通道，而非复用这里的 EVM 抓取器。
+      const seen = new Set();
+      for (const r of records) {
+        const remarks = r['Other Information'] || '';
+        const fullAddress = [
+          r['Address 1'], r['Address 2'], r['Address 3'],
+          r['Address 4'], r['Address 5'], r['Address 6'],
+          r['Post/Zip Code'], r['Country'],
+        ].filter(Boolean).join(', ');
+
+        const crypto = extractCryptoAddresses(`${remarks} ${fullAddress}`);
+        for (const raw of (crypto.ethereum || [])) {
+          const addr = raw.toLowerCase();
+          if (seen.has(addr)) continue;
+          seen.add(addr);
+          addresses.push({
+            address: addr,
+            source: 'HMT_OFSI',
+            riskScore: 100,
+            reason: 'UK OFSI Sanctioned',
+          });
+        }
+      }
+
+      // 落盘静态后备快照（健康位已置，说明本次产出可信）
+      if (this.hmtSourceOk) {
+        try {
+          fs.writeFileSync(snapshotFile, addresses.map(a => a.address).join('\n') + '\n');
+        } catch (e) {
+          console.log(`   ⚠️ HMT snapshot write failed: ${e.message}`);
+        }
+      }
+    } catch (e) {
+      // 端点故障 → 回退静态后备快照，避免其独有地址当天完全消失。
+      // [Q13 FIX] 快照无时间戳语义上的"新鲜度"保证 —— 陈旧快照若照常置健康位，
+      // 会放行下架 diff、掩盖"OFSI 今天真删了某地址"。故加年龄上限：超龄快照
+      // 仍可用作兜底名单（保住筛查覆盖），但**不置健康位**，下架当日停摆并告警。
+      console.log(`   ⚠️ HMT/OFSI fetch failed: ${e.message} — falling back to static snapshot`);
+      try {
+        if (fs.existsSync(snapshotFile)) {
+          const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+            .map(l => l.trim().toLowerCase())
+            .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+          console.log(`   📦 HMT static snapshot: ${lines.length} addresses`);
+          for (const addr of lines) {
+            addresses.push({
+              address: addr,
+              source: 'HMT_OFSI_STATIC',
+              riskScore: 100,
+              reason: 'UK OFSI Sanctioned (static snapshot)',
+            });
+          }
+          if (lines.length > 0) {
+            const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+            const SNAPSHOT_MAX_AGE_MS = 48 * 60 * 60 * 1000; // 48h
+            if (ageMs <= SNAPSHOT_MAX_AGE_MS) {
+              this.hmtSourceOk = true;
+            } else {
+              console.log(
+                `   ⚠️ HMT snapshot is stale (${Math.round(ageMs / 3600000)}h > 48h)` +
+                ` — using as fallback list but NOT marking source healthy, delisting paused`
+              );
+            }
+          }
+        } else {
+          console.log('   ⚠️ No HMT snapshot available');
+        }
+      } catch (e2) {
+        console.log(`   ⚠️ HMT snapshot load failed: ${e2.message}`);
+      }
+    }
+    console.log(`   ✅ HMT/OFSI: ${addresses.length} addresses`);
+    return addresses;
+  }
+
+  // ========== 1c. 加载 OpenSanctions 聚合制裁名单 ==========
+  /**
+   * @dev OpenSanctions 是跨司法辖区的制裁名单聚合器（OFAC/EU/UN/英国/瑞士/日本/
+   *      以色列/法国/加拿大/澳大利亚等 11+ 辖区），统一为 targets.simple.csv。
+   *      价值不在重复 OFAC 已覆盖的地址，而在补上 OFAC SDN_ADVANCED.XML 之外的
+   *      官方制裁加密钱包地址（实测主要增量：以色列 NBCTF 加密钱包扣押名单）。
+   *
+   *      实测（2026-09-03，68MB CSV，137 个 EVM 唯一地址）：
+   *      - 与现役 OFAC+HMT 名单重叠 124 个，净新增 13 个（全部来自以色列 NBCTF）。
+   *      - 其余辖区（日/法/瑞士/欧盟等）的地址均为 OFAC 子集，零净增。
+   *
+   *      提取方式：simple.csv 每行一个实体，加密地址以 0x…40hex 形式出现在
+   *      addresses/identifiers 字段，直接正则提取即可（与 OFAC 抓取器同思路）。
+   *      只消费 EVM(0x) 地址——BTC/TRON/LTC 与 OFSI 同理，不在本 EVM 管道管辖。
+   *
+   *      许可：OpenSanctions 数据为 CC-BY-NC（非商业）；本管道仅做技术聚合与
+   *      链上登记，原始制裁事实源仍是各司法辖区官方名单。
+   */
+  async fetchOpenSanctions() {
+    console.log('📥 Loading OpenSanctions aggregated sanctions...');
+    let addresses = [];
+    // 静态后备快照路径：与 HMT 的 hmt-eth-source.txt 同模式，供端点故障时兜底。
+    const snapshotFile = path.join(CONFIG.cacheDir, 'open-sanctions-source.txt');
+    const url = process.env.OPEN_SANCTIONS_URL
+      || 'https://data.opensanctions.org/datasets/latest/sanctions/targets.simple.csv';
+    try {
+      const response = await axios.get(url, {
+        timeout: 180000,
+        responseType: 'text',
+        maxContentLength: 200 * 1024 * 1024,
+        maxBodyLength: 200 * 1024 * 1024,
+      });
+
+      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
+      const seen = new Set();
+      for (const raw of matches) {
+        const addr = raw.toLowerCase();
+        if (seen.has(addr)) continue;
+        seen.add(addr);
+        addresses.push({
+          address: addr,
+          source: 'OPEN_SANCTIONS',
+          riskScore: 100,
+          reason: 'OpenSanctions aggregated sanction',
+        });
+      }
+
+      // 成功产出才置健康位 + 落盘快照（>0 才可信，空响应=端点故障/格式变更）
+      if (addresses.length > 0) {
+        this.openSanctionsOk = true;
+        try {
+          fs.writeFileSync(snapshotFile, addresses.map(a => a.address).join('\n') + '\n');
+        } catch (e) {
+          console.log(`   ⚠️ OpenSanctions snapshot write failed: ${e.message}`);
+        }
+      }
+    } catch (e) {
+      // 聚合源失败不阻断主源：OFAC/HMT 仍是事实源，OpenSanctions 只是增量补充。
+      // 回退静态快照，保住其独有地址当天的筛查覆盖（不置健康位 → 下架保护介入）。
+      console.log(`   ⚠️ OpenSanctions fetch failed: ${e.message} — falling back to static snapshot`);
+      try {
+        if (fs.existsSync(snapshotFile)) {
+          const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+            .map(l => l.trim().toLowerCase())
+            .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+          console.log(`   📦 OpenSanctions static snapshot: ${lines.length} addresses`);
+          for (const addr of lines) {
+            addresses.push({
+              address: addr,
+              source: 'OPEN_SANCTIONS_STATIC',
+              riskScore: 100,
+              reason: 'OpenSanctions aggregated sanction (static snapshot)',
+            });
+          }
+          // 快照年龄门槛（与 HMT/PR #54 一致的 48h）：新鲜才置健康位
+          const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+          if (lines.length > 0 && ageMs <= 48 * 60 * 60 * 1000) {
+            this.openSanctionsOk = true;
+          } else if (lines.length > 0) {
+            console.log(
+              `   ⚠️ OpenSanctions snapshot is stale (${Math.round(ageMs / 3600000)}h > 48h) — not marking healthy`
+            );
+          }
+        } else {
+          console.log('   ⚠️ No OpenSanctions snapshot available');
+        }
+      } catch (e2) {
+        console.log(`   ⚠️ OpenSanctions snapshot load failed: ${e2.message}`);
+      }
+    }
+    console.log(`   ✅ OpenSanctions: ${addresses.length} addresses`);
     return addresses;
   }
 
@@ -210,7 +487,6 @@ class DailySyncService {
         address: (e.address || e).toLowerCase(),
         source: 'Chainalysis',
         riskScore: 95,
-        tier: 3,
         reason: e.category || 'Sanctions',
       }));
     } catch (e) {
@@ -229,15 +505,29 @@ class DailySyncService {
       for (const item of source) {
         const addr = item.address.toLowerCase();
         const existing = merged.get(addr);
-        
-        if (!existing || item.riskScore > existing.riskScore) {
+
+        // [Q12 FIX] 多源归因：来源始终累积（同地址被多源命中时全部保留），
+        // 分数与 tier 取各源最高（语义仍是"最严源说了算"）。
+        // 原实现 `item.riskScore > existing.riskScore` 才并入 → 同分（如两官方源皆 100）
+        // 的次源标签被丢弃，重叠地址拿不到多源归因。
+        // 注：Merkle leaf 只编码 address+score+tier，本改动不影响根与计数。
+        if (!existing) {
           merged.set(addr, {
             address: addr,
             riskScore: item.riskScore,
-            tier: item.tier,
-            sources: existing ? [...existing.sources, item.source] : [item.source],
-            reasons: existing ? [...existing.reasons, item.reason] : [item.reason],
+            // [P1-2 FIX] tier 统一由 score 推导（scoreToTier：100→4 CRITICAL），
+            // 消灭源端硬编码 tier:3 导致的链上档案/Merkle leaf/引擎语义三方漂移
+            tier: scoreToTier(item.riskScore),
+            sources: [item.source],
+            reasons: [item.reason],
           });
+        } else {
+          existing.sources.push(item.source);
+          existing.reasons.push(item.reason);
+          if (item.riskScore > existing.riskScore) {
+            existing.riskScore = item.riskScore;
+            existing.tier = scoreToTier(item.riskScore);
+          }
         }
       }
     }
@@ -345,6 +635,149 @@ class DailySyncService {
     return { batches: results.length, results };
   }
 
+  // ========== 6b. 推 Merkle 根上链（D-1） ==========
+  // MerkleRiskRegistry.updateMerkleRoot 需 ADMIN_ROLE（deployer 持有）。
+  // 幂等：根未变化时跳过写链；失败返回 { error } 由 main() 转成非零退出码。
+  async syncMerkleRoot(tree, dryRun = false) {
+    if (!this.merkleContract || !this.wallet) {
+      console.log('\n⏭️ Skipping merkle root push (no wallet/merkle contract configured)');
+      return { skipped: true };
+    }
+
+    console.log('\n🌲 Pushing Merkle root on-chain...');
+
+    if (dryRun) {
+      console.log(`   [DRY RUN] Would push merkle root ${tree.root}`);
+      return { dryRun: true, root: tree.root };
+    }
+
+    try {
+      const onchainRoot = await this.merkleContract.merkleRoot();
+      console.log(`   🔎 On-chain root: ${onchainRoot}`);
+
+      if (onchainRoot.toLowerCase() === tree.root.toLowerCase()) {
+        console.log('   ✅ Root unchanged, skip');
+        return { unchanged: true, root: tree.root };
+      }
+
+      const gasEstimate = await this.merkleContract.updateMerkleRoot.estimateGas(tree.root);
+      console.log(`   ⛽ Gas estimate: ${gasEstimate}`);
+
+      const tx = await this.merkleContract.updateMerkleRoot(tree.root, {
+        gasLimit: gasEstimate * 12n / 10n, // +20% buffer，与批次写链一致
+      });
+      console.log(`   📝 TX: ${tx.hash}`);
+
+      const receipt = await tx.wait();
+      console.log(`   ✅ Root updated (block ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
+
+      return {
+        root: tree.root,
+        previousRoot: onchainRoot,
+        hash: receipt.hash,
+        block: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+      };
+    } catch (e) {
+      console.error(`   ❌ Merkle root push failed: ${e.message}`);
+      return { error: e.message, root: tree.root };
+    }
+  }
+
+  // ========== 6c. 制裁下架传播（P1-1） ==========
+  // 管道原本只增不删：OFAC delist 后链上与后端库永久残留（误封 + 法律风险）。
+  // 策略：链上制裁全集 − 今日名单 = 下架集；逐地址 updateRiskProfile(0, UNKNOWN, [], false)
+  // （保留审计轨迹并触发 RiskProfileUpdated 供 subgraph 索引；合约内部自动从 sanctionedAddresses 移除）。
+  // 保护：仅在 OFAC 主源成功产出时执行 diff——主源故障走静态后备时，下架集必然是假的。
+  async syncDelisted(merged, dryRun = false) {
+    if (!this.contract || !this.wallet) {
+      return { skipped: true };
+    }
+    if (!this.primarySourceOk) {
+      console.log('\n⚠️ OFAC 主源未成功产出，跳过下架 diff（防数据源故障误判为大面积下架）');
+      return { skipped: true, reason: 'primary-source-down' };
+    }
+
+    // [Q12 FIX] 分区下架：不再"次源失败就全部停摆"。
+    //  - OFAC 健康 → OFAC 贡献可信，其今日删除可下架；
+    //  - 任一次源不健康 → 其地址真实状态未知，用【新鲜静态快照】作"保留集"：
+    //      只下架"既不在今日健康源、也不在任一次源快照"的地址；
+    //      若连快照都没有（该源从未成功产出）或超龄（>48h），无法归因 → 回退为完全跳过。
+    //  这依赖 Q12a 的多源归因：merged 里每个地址的 sources 才是可信的分区依据。
+    const SECONDARY_SOURCES = [
+      { ok: this.hmtSourceOk, snapshot: 'hmt-eth-source.txt', name: 'HMT/OFSI' },
+      { ok: this.openSanctionsOk, snapshot: 'open-sanctions-source.txt', name: 'OpenSanctions' },
+    ];
+    const SNAPSHOT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+    let holdSet = new Set();
+    for (const src of SECONDARY_SOURCES) {
+      if (src.ok) continue; // 健康源今日产出已在 merged 里，无需保留集
+      const snapshotFile = path.join(CONFIG.cacheDir, src.snapshot);
+      if (!fs.existsSync(snapshotFile)) {
+        console.log(`\n⚠️ ${src.name} 未产出且无快照可归因，跳过下架 diff（防误删）`);
+        return { skipped: true, reason: `${src.name}-down-no-snapshot` };
+      }
+      const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+      if (ageMs > SNAPSHOT_MAX_AGE_MS) {
+        console.log(`\n⚠️ ${src.name} 未产出且快照超龄（${Math.round(ageMs / 3600000)}h > 48h），归因不可信，跳过下架 diff`);
+        return { skipped: true, reason: `${src.name}-snapshot-stale` };
+      }
+      const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+        .map(l => l.trim().toLowerCase())
+        .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+      lines.forEach(a => holdSet.add(a));
+      console.log(
+        `\n⚠️ ${src.name} 未产出——用新鲜快照（${lines.length} 址）作保留集`
+      );
+    }
+    if (holdSet.size > 0) {
+      console.log(`   共 ${holdSet.size} 个地址纳入保留集，只下架既不在今日健康源、也不在快照的地址`);
+    }
+
+    console.log('\n🔎 Checking for delisted addresses...');
+
+    let onchain;
+    try {
+      onchain = await this.contract.getSanctionedAddresses();
+    } catch (e) {
+      // 读链失败不猜、不删：告警并跳过（下架是破坏性操作，宁缺毋滥）
+      console.error(`   ❌ 读取链上制裁名单失败：${e.message} —— 跳过下架步骤`);
+      return { skipped: true, reason: 'read-failed' };
+    }
+
+    const current = new Set(merged.map(a => a.address.toLowerCase()));
+    const delisted = onchain
+      .map(a => a.toLowerCase())
+      .filter(a => !current.has(a) && !holdSet.has(a));
+
+    if (delisted.length === 0) {
+      console.log('   ✅ 无下架地址');
+      return { delisted: 0, addresses: [] };
+    }
+
+    console.log(`   🗑️ ${delisted.length} 个地址已不在最新名单，执行链上下架：`);
+
+    if (dryRun) {
+      for (const a of delisted) console.log(`      [DRY RUN] Would delist ${a}`);
+      return { dryRun: true, delisted: delisted.length, addresses: delisted };
+    }
+
+    const results = [];
+    for (const addr of delisted) {
+      try {
+        const tx = await this.contract.updateRiskProfile(addr, 0, 0, [], false);
+        const receipt = await tx.wait();
+        console.log(`      ✅ Delisted ${addr} (tx ${receipt.hash})`);
+        results.push({ address: addr, hash: receipt.hash, status: receipt.status });
+      } catch (e) {
+        console.error(`      ❌ Delist failed ${addr}: ${e.message}`);
+        results.push({ address: addr, error: e.message });
+      }
+    }
+
+    return { delisted: delisted.length, addresses: delisted, results };
+  }
+
   // ========== 7. 保存最终数据库 ==========
   saveDatabase(addresses) {
     const dbFile = path.join(CONFIG.cacheDir, 'risk-database.json');
@@ -372,11 +805,19 @@ class DailySyncService {
     
     // 1. 收集数据
     const ofacData = await this.fetchOFAC();
-    const localData = this.loadLocalCache();
+    // [P1-1] 主源健康时昨日快照不参与合并——它就是昨天的合并结果，
+    // 并入会让已下架地址自我复活；主源故障时它才作为后备参与。
+    const localData = this.primarySourceOk ? [] : this.loadLocalCache();
     const chainalysisData = this.loadChainalysisCache();
-    
+    // 英国 OFSI（HMT）—— 官方制裁源，与 OFAC 同权（riskScore 100）。
+    // 失败时返回空数组并告警，不阻断主源；但会把 hmtSourceOk 置 false 触发下架保护。
+    const hmtData = await this.fetchHMT();
+    // OpenSanctions 聚合源——补 OFAC/HMT 之外的官方制裁钱包地址（主要增量：以色列 NBCTF）。
+    // 失败不阻断主源（纯增量）。
+    const openSanctionsData = await this.fetchOpenSanctions();
+
     // 2. 合并
-    const merged = this.mergeData([ofacData, localData, chainalysisData]);
+    const merged = this.mergeData([ofacData, localData, chainalysisData, hmtData, openSanctionsData]);
     
     if (merged.length === 0) {
       // [AUDIT-FIX] 0 条数据不再静默成功：主源 SDN_ADVANCED.XML 常态应有百余个
@@ -394,11 +835,18 @@ class DailySyncService {
     // 4. 同步到链上
     const chainResult = await this.syncToChain(merged, dryRun);
 
-    // 4b. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
+    // 4a. 推 Merkle 根上链（D-1：MerkleRiskRegistry.updateMerkleRoot，幂等）
+    const merkleResult = await this.syncMerkleRoot(tree, dryRun);
+
+    // 4b. 制裁下架传播（P1-1：链上制裁集 diff 今日名单，下架地址置 sanctioned=false）
+    const delistResult = await this.syncDelisted(merged, dryRun);
+
+    // 4c. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
     if (!dryRun) {
       const { pushToBackendDb } = require('./push-to-backend-db');
       try {
-        await pushToBackendDb(merged);
+        // 下架地址一并推送（置 score=0/清空 tags），DB 视角与链上同步移除
+        await pushToBackendDb(merged, delistResult.addresses || []);
       } catch (e) {
         // 后端库同步失败不阻断主流程（链上已是事实源），告警并继续
         console.error('   ⚠️ Backend DB sync failed (chain 已是事实源，明日重试):', e.message);
@@ -414,6 +862,8 @@ class DailySyncService {
       dryRun,
       stats: {
         ofac: ofacData.length,
+        hmt: hmtData.length,
+        openSanctions: openSanctionsData.length,
         local: localData.length,
         chainalysis: chainalysisData.length,
         merged: merged.length,
@@ -424,6 +874,8 @@ class DailySyncService {
         leaves: tree.count,
       },
       chain: chainResult,
+      merkleOnChain: merkleResult,
+      delist: delistResult,
       duration: Date.now() - startTime,
     };
     
@@ -459,10 +911,23 @@ async function main() {
     // 失败完全不可见（实证：run #15 三笔 tx 全 revert 仍 success）。
     // 现在只要有 batch error，就以非零码退出，让 workflow conclusion=failure。
     const failedBatches = (result?.chain?.results || []).filter((r) => r.error);
-    if (!dryRun && failedBatches.length > 0) {
-      console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
-      for (const f of failedBatches) {
-        console.error(`   Batch ${f.batch}: ${f.error}`);
+    const merkleError = result?.merkleOnChain?.error;
+    const delistFailures = (result?.delist?.results || []).filter((r) => r.error);
+    if (!dryRun && (failedBatches.length > 0 || merkleError || delistFailures.length > 0)) {
+      if (failedBatches.length > 0) {
+        console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
+        for (const f of failedBatches) {
+          console.error(`   Batch ${f.batch}: ${f.error}`);
+        }
+      }
+      if (merkleError) {
+        console.error(`\n❌ Merkle root push failed: ${merkleError}`);
+      }
+      if (delistFailures.length > 0) {
+        console.error(`\n❌ ${delistFailures.length} delist ops failed:`);
+        for (const f of delistFailures) {
+          console.error(`   ${f.address}: ${f.error}`);
+        }
       }
       process.exit(1);
     }

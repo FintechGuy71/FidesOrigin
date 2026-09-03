@@ -7,9 +7,11 @@ import logger from './logger';
 import { createKeyManager } from './kms-key-manager';
 
 /** Minimal RiskRegistry ABI — only updateRiskProfile(). */
+// [P0-3 FIX] 两处对齐 v3.1.0 合约：updateRiskProfile 的 score 为 uint8（原 uint256 选择器必 revert）；
+//            getRiskProfile 是函数返回 5 字段（原误抄 riskProfiles 公共 mapping 的 7 字段 getter 形状）
 const RISK_REGISTRY_ABI = [
-  'function updateRiskProfile(address addr, uint256 riskScore, uint8 tier, bytes32[] tags, bool isSanctioned)',
-  'function getRiskProfile(address addr) view returns (uint256 riskScore, address, uint32 lastUpdated, uint8 riskTier, uint8 sourceConfidence, bool sanctioned, bool exists)',
+  'function updateRiskProfile(address addr, uint8 riskScore, uint8 tier, bytes32[] tags, bool isSanctioned)',
+  'function getRiskProfile(address addr) view returns (uint8 riskScore, uint8 tier, bytes32[] tags, uint256 lastUpdated, bool isSanctioned)',
   'function hasRole(bytes32 role, address account) view returns (bool)',
   'function ORACLE_ROLE() view returns (bytes32)',
 ];

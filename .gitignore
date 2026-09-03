@@ -133,3 +133,8 @@ compile-out.trash
 tscheck.json.trash
 *.trash
 __pycache__/
+# matchstick 测试运行元数据（hy4 复核：与 .pyc 同类产物，不应追踪）
+**/.latest.json
+
+# H-1 一次性运维脚本（按设计本地持有，不入库）
+apps/contracts/scripts/h1-phase4-disable-emergency.js

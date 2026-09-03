@@ -395,17 +395,58 @@ function parseCSVLine(line) {
 }
 
 /**
- * 解析 CSV 文本（使用 parseCSVLine 解析表头和每行）
+ * 定位 CSV 真正的表头行。
+ *
+ * [HMT FIX] OFSI 的 ConList.csv 首行是元数据（"Last Updated","03/06/2026"），
+ * 真表头在其后。原实现无条件把第 0 行当表头，导致 19762 条记录的键全部变成
+ * `Last Updated` / `03/06/2026`，所有字段取值恒为 undefined —— HMTAdapter
+ * 因此产出 0 个加密地址（且 entityName 为空会被 filter 全滤掉，整源失效）。
+ *
+ * 不硬编码行号：OFSI 一旦增删元数据行就会静默复现。改为按已知列名扫描前几行，
+ * 找不到时回退到第 0 行（保持既有行为，不抛错）。
+ *
+ * @param {string[]} lines   已去空行的文本行
+ * @param {string[]} knownColumns 该源特有的已知列名（小写比对）
+ * @param {number} maxScan   最多扫描前几行（默认 10，容忍元数据行增多）
+ * @returns {number} 表头行索引
  */
-function parseCSV(csvText) {
+function findHeaderLine(lines, knownColumns, maxScan = 10) {
+  // [P1-1 FIX] 索引语义必须与 parseCSV 完全一致：parseCSV 内部先过滤空行
+  // （split('\n').filter(l => l.trim())）再按过滤后的行号解析。若这里在
+  // 未过滤的行上定位、调用方却拿过滤后的行号喂给 parseCSV，一旦表头前
+  // 存在空行就会索引错位——headerLine 越界被钳到末行，返回 [] 静默丢数据。
+  // 此处内部过滤，与文档契约（"已去空行的文本行"）保持一致。
+  const filtered = (lines || []).filter(l => l && l.trim());
+  const wanted = knownColumns.map(c => c.toLowerCase());
+  // [P2-2 FIX] 单列命中不足以认定表头（数据行某单元格可能恰好叫列名），
+  // 至少 2 列同时命中才放行。knownColumns 少于 2 时降级为要求全部命中。
+  const threshold = Math.min(2, wanted.length);
+  const limit = Math.min(maxScan, filtered.length);
+  for (let i = 0; i < limit; i++) {
+    const cells = parseCSVLine(filtered[i]).map(c => c.trim().toLowerCase());
+    const hits = wanted.filter(col => cells.includes(col)).length;
+    if (hits >= threshold) return i;
+  }
+  return 0;
+}
+
+/**
+ * 解析 CSV 文本（使用 parseCSVLine 解析表头和每行）
+ *
+ * @param {string} csvText
+ * @param {{headerLine?: number}} [options] headerLine 为表头所在行索引，默认 0（兼容既有调用方）
+ */
+function parseCSV(csvText, options = {}) {
   const lines = csvText.split('\n').filter(l => l.trim());
   if (lines.length === 0) return [];
 
+  const headerLine = Math.max(0, Math.min(options.headerLine || 0, lines.length - 1));
+
   // 使用 parseCSVLine 解析表头，正确处理带引号的列名
-  const headers = parseCSVLine(lines[0]);
+  const headers = parseCSVLine(lines[headerLine]);
   const results = [];
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = headerLine + 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
     const entry = {};
     headers.forEach((h, idx) => {
@@ -960,7 +1001,15 @@ class UNAdapter {
 }
 
 /**
- * HMT (英国财政部) 数据适配器
+ * OFSI ConList.csv 的真实列名（2022 格式）——用于定位表头行与字段映射。
+ * 实测表头：Name 6 / Name 1..5 / Title / ... / Address 1..6 / Post~Zip Code /
+ *          Country / Other Information / Group Type / Alias Type / Regime / Group ID
+ * 注意首行是 "Last Updated","03/06/2026" 元数据，不是表头。
+ */
+const HMT_KNOWN_COLUMNS = ['Name 1', 'Other Information', 'Group ID', 'Address 1'];
+
+/**
+ * HMT (英国财政部 OFSI) 数据适配器
  */
 class HMTAdapter {
   static async fetch() {
@@ -968,31 +1017,43 @@ class HMTAdapter {
 
     try {
       const { data } = await httpGet(CONFIG.sources.hmt.url);
-      const records = parseCSV(data);
 
-      console.log(`[HMT] Parsed ${records.length} records`);
+      // [HMT FIX] ConList.csv 首行是元数据（"Last Updated","03/06/2026"），真表头在其后。
+      // 按已知列名定位表头行，避免硬编码行号随 OFSI 改版失效。
+      const lines = data.split('\n');
+      const headerLine = findHeaderLine(lines, HMT_KNOWN_COLUMNS);
+      const records = parseCSV(data, { headerLine });
+
+      console.log(`[HMT] Parsed ${records.length} records (header at line ${headerLine})`);
 
       const entries = records.map((r, idx) => {
-        const entityName = r['Name'] || r['NAME'] || r['Name (1)'] || '';
-        const remarks = r['Remarks'] || r['Other Information'] || '';
+        // [HMT FIX] 列名对齐 OFSI 2022 格式真实表头：
+        // 原实现找 'Name' / 'Remarks' / 'Address' / 'Town'，这些列名在文件里都不存在，
+        // 取值恒为 undefined → 加密地址提取自空串。真实列名为
+        // Name 1..6（Name 6 为姓）、Other Information、Address 1..6、Country、Group ID。
+        const forenames = ['Name 1', 'Name 2', 'Name 3', 'Name 4', 'Name 5']
+          .map(k => r[k]).filter(Boolean).join(' ');
+        const surname = r['Name 6'] || '';
+        const entityName = [surname, forenames].filter(Boolean).join(', ');
+        const remarks = r['Other Information'] || '';
         const fullAddress = [
-          r['Address'] || r['ADDRESS'] || r['Address (1)'] || '',
-          r['Town'] || r['City'] || '',
-          r['Country'] || r['COUNTRY'] || ''
+          r['Address 1'], r['Address 2'], r['Address 3'],
+          r['Address 4'], r['Address 5'], r['Address 6'],
+          r['Post/Zip Code'], r['Country']
         ].filter(Boolean).join(', ');
 
         const cryptoAddresses = extractCryptoAddresses(remarks + ' ' + fullAddress);
 
         return {
-          uid: `HMT-${r['GroupID'] || r['Unique ID'] || idx}`,
+          uid: `HMT-${r['Group ID'] || r['GroupID'] || r['Unique ID'] || idx}`,
           source: 'HMT',
-          sourceId: r['GroupID'] || r['Unique ID'] || '',
+          sourceId: r['Group ID'] || r['GroupID'] || r['Unique ID'] || '',
           entityName: entityName,
-          entityType: r['Entity Type'] || r['Subsidiary Nature'] || 'Unknown',
-          programs: (r['Sanctioning Regime'] || '').split(',').filter(Boolean),
+          entityType: r['Group Type'] || r['Entity Type'] || 'Unknown',
+          programs: (r['Regime'] || r['Sanctioning Regime'] || '').split(',').filter(Boolean),
           addresses: [{
             address: fullAddress,
-            city: r['Town'] || r['City'] || '',
+            city: r['Post/Zip Code'] || r['Town'] || '',
             country: r['Country'] || r['COUNTRY'] || ''
           }],
           cryptoAddresses,
@@ -1370,6 +1431,8 @@ module.exports = {
   computeHash,
   parseCSV,
   parseCSVLine,
+  findHeaderLine,
+  HMT_KNOWN_COLUMNS,
   extractAllBlocks,
   extractTagContent,
   extractCryptoAddresses,

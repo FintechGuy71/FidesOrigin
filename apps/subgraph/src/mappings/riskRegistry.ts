@@ -63,6 +63,19 @@ export function handleRiskProfileUpdated(event: RiskProfileUpdated): void {
       stats.totalSanctioned += 1;
       stats.lastUpdated = event.block.timestamp;
       stats.save();
+    } else if (!sanctioned.isActive) {
+      // [S-L1 FIX] 再制裁复活：地址曾被解除（isActive=false）后再次制裁时，
+      // 原实现无此分支——isActive 永停 false，totalSanctioned 也不再增加
+      sanctioned.isActive = true;
+      sanctioned.addedAt = event.block.timestamp;
+      sanctioned.removedAt = null;
+      sanctioned.addedBy = event.transaction.from.toHexString();
+      sanctioned.save();
+
+      let stats = getOrCreateStats();
+      stats.totalSanctioned += 1;
+      stats.lastUpdated = event.block.timestamp;
+      stats.save();
     }
   } else {
     let sanctioned = SanctionedAddress.load(account);

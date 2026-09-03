@@ -8,32 +8,26 @@ import {
 import {
   IssuerPolicySet,
   WalletPolicySet,
-  PolicyEvaluated,
+  TransferEvaluated,
   RuleCreated,
   RuleUpdated,
   RuleActivated,
   RuleDeactivated,
 } from '../../generated/PolicyEngine/PolicyEngine';
-import { ethereum, BigInt, log, Address } from '@graphprotocol/graph-ts';
+import { BigInt, log } from '@graphprotocol/graph-ts';
 
+// [P1-3 FIX] 决策映射对齐合约 ActionType 枚举（PolicyEngine.sol L33）：
+// 0=ALLOW 1=BLOCK 2=QUARANTINE 3=REQUIRE_KYC 4=REQUIRE_AML 5=FLAG_FOR_REVIEW
+// schema Decision 仅 ALLOW/BLOCK/FLAG/HOLD：隔离/KYC/AML 归 HOLD，复核归 FLAG
 function getDecision(decisionValue: i32): string {
   if (decisionValue === 0) return 'ALLOW';
   if (decisionValue === 1) return 'BLOCK';
-  if (decisionValue === 2) return 'FLAG';
+  if (decisionValue === 5) return 'FLAG';
   return 'HOLD';
-}
-
-function addressArrayToStrings(addrs: Array<Address>): Array<string> {
-  let result: Array<string> = [];
-  for (let i = 0; i < addrs.length; i++) {
-    result.push(addrs[i].toHexString());
-  }
-  return result;
 }
 
 export function handleIssuerPolicySet(event: IssuerPolicySet): void {
   let issuer = event.params.issuer.toHexString();
-  let policyData = event.params.policy;
 
   let policy = Policy.load(issuer);
   let previousVersion = 0;
@@ -52,15 +46,17 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
     previousVersion = policy.version;
   }
 
+  // [P1-3 FIX] v3.1.0 合约事件为平铺参数（旧 tuple 订阅的 topic0 永不匹配，已实证零触发）；
+  // blockMixer/requireDestinationKYC/cooldownPeriod 不在新事件中，置缺省值
   let newVersion = previousVersion + 1;
   policy.version = newVersion;
-  policy.maxTxAmount = policyData.maxTxAmount;
-  policy.dailyLimit = policyData.dailyLimit;
-  policy.allowMediumRisk = policyData.allowMediumRisk;
-  policy.allowHighRisk = policyData.allowHighRisk;
-  policy.blockMixer = policyData.blockMixer;
-  policy.requireDestinationKYC = policyData.requireDestinationKYC;
-  policy.cooldownPeriod = policyData.cooldownPeriod;
+  policy.maxTxAmount = event.params.maxTxAmount;
+  policy.dailyLimit = event.params.dailyLimit;
+  policy.allowMediumRisk = event.params.allowMediumRisk;
+  policy.allowHighRisk = event.params.allowHighRisk;
+  policy.blockMixer = false;
+  policy.requireDestinationKYC = false;
+  policy.cooldownPeriod = BigInt.zero();
   policy.updatedAt = event.block.timestamp;
   policy.save();
 
@@ -68,13 +64,13 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
   let version = new PolicyVersion(versionId);
   version.policy = issuer;
   version.version = newVersion;
-  version.maxTxAmount = policyData.maxTxAmount;
-  version.dailyLimit = policyData.dailyLimit;
-  version.allowMediumRisk = policyData.allowMediumRisk;
-  version.allowHighRisk = policyData.allowHighRisk;
-  version.blockMixer = policyData.blockMixer;
-  version.requireDestinationKYC = policyData.requireDestinationKYC;
-  version.cooldownPeriod = policyData.cooldownPeriod;
+  version.maxTxAmount = event.params.maxTxAmount;
+  version.dailyLimit = event.params.dailyLimit;
+  version.allowMediumRisk = event.params.allowMediumRisk;
+  version.allowHighRisk = event.params.allowHighRisk;
+  version.blockMixer = false;
+  version.requireDestinationKYC = false;
+  version.cooldownPeriod = BigInt.zero();
   version.updatedAt = event.block.timestamp;
   version.blockNumber = event.block.number;
   version.transactionHash = event.transaction.hash.toHexString();
@@ -86,8 +82,9 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
 
 export function handleWalletPolicySet(event: WalletPolicySet): void {
   let wallet = event.params.wallet.toHexString();
-  let policyData = event.params.policy;
 
+  // [P1-3 FIX] v3.1.0 合约 WalletPolicySet 仅携带 wallet 地址（策略明细不再上事件），
+  // 明细字段置缺省；实体保留，作为"哪些钱包被设置过策略"的台账
   let walletPolicy = WalletPolicy.load(wallet);
   if (!walletPolicy) {
     walletPolicy = new WalletPolicy(wallet);
@@ -95,17 +92,16 @@ export function handleWalletPolicySet(event: WalletPolicySet): void {
     walletPolicy.version = 0;
   }
 
-  let previousVersion = walletPolicy.version || 0;
-  walletPolicy.version = previousVersion + 1;
-  walletPolicy.maxTxValue = policyData.maxTxValue;
-  walletPolicy.maxTokenTxAmount = policyData.maxTokenTxAmount;
-  walletPolicy.dailyEthLimit = policyData.dailyEthLimit;
-  walletPolicy.dailyTokenLimit = policyData.dailyTokenLimit;
-  walletPolicy.blockContractCalls = policyData.blockContractCalls;
-  walletPolicy.blockUnknownTokens = policyData.blockUnknownTokens;
-  walletPolicy.requireWhitelist = policyData.requireWhitelist;
-  walletPolicy.allowedDex = addressArrayToStrings(policyData.allowedDex);
-  walletPolicy.blockedContracts = addressArrayToStrings(policyData.blockedContracts);
+  walletPolicy.version = walletPolicy.version + 1;
+  walletPolicy.maxTxValue = BigInt.zero();
+  walletPolicy.maxTokenTxAmount = BigInt.zero();
+  walletPolicy.dailyEthLimit = BigInt.zero();
+  walletPolicy.dailyTokenLimit = BigInt.zero();
+  walletPolicy.blockContractCalls = false;
+  walletPolicy.blockUnknownTokens = false;
+  walletPolicy.requireWhitelist = false;
+  walletPolicy.allowedDex = [];
+  walletPolicy.blockedContracts = [];
   walletPolicy.updatedAt = event.block.timestamp;
   walletPolicy.blockNumber = event.block.number;
   walletPolicy.transactionHash = event.transaction.hash.toHexString();
@@ -114,22 +110,23 @@ export function handleWalletPolicySet(event: WalletPolicySet): void {
   log.info('WalletPolicySet: {}', [wallet]);
 }
 
-export function handleTransferEvaluated(event: PolicyEvaluated): void {
+export function handleTransferEvaluated(event: TransferEvaluated): void {
   let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString();
   let evaluation = new PolicyEvaluation(id);
-  evaluation.operator = event.params.operator.toHexString();
+  // [P1-3 FIX] 合约 TransferEvaluated 无 operator/reason 字段：
+  // operator 以交易发送者近似，reason 置空串（schema 为非空 String!）
+  evaluation.operator = event.transaction.from.toHexString();
   evaluation.from = event.params.from.toHexString();
   evaluation.to = event.params.to.toHexString();
   evaluation.amount = event.params.amount;
   evaluation.decision = getDecision(event.params.decision as i32);
-  evaluation.reason = event.params.reason;
+  evaluation.reason = '';
   evaluation.timestamp = event.block.timestamp;
   evaluation.blockNumber = event.block.number;
   evaluation.transactionHash = event.transaction.hash.toHexString();
   evaluation.save();
 
-  log.info('TransferEvaluated: {} {} -> {} decision={}', [
-    evaluation.operator,
+  log.info('TransferEvaluated: {} -> {} decision={}', [
     evaluation.from,
     evaluation.to,
     evaluation.decision,

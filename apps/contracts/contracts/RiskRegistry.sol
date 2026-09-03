@@ -313,6 +313,11 @@ contract RiskRegistry is
             }
 
             _updateRiskProfileInternal(addrs[i], riskScores[i], tiers[i], sanctioned[i], tags[i], 100);
+            // [P0-2 FIX] 批量路径此前不发 RiskProfileUpdated —— subgraph 只订阅该事件，
+            // 日更管道写入的档案零索引（链上实证：全历史仅 6 条单笔测试事件，
+            // 而 121 个管道写入的档案无任何可索引事件）。与单笔路径对齐补发，
+            // gas 每地址约 +1.5k，50 条/批可承受。无存储变更，UUPS 升级安全。
+            emit RiskProfileUpdated(addrs[i], riskScores[i], tiers[i], sanctioned[i]);
             successCount++;
         }
 
