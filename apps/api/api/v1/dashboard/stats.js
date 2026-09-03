@@ -1,8 +1,8 @@
 const {
   withAdminAuth,
   sendError,
-} = require('../../lib/utils');
-const { proxyToBackend } = require('../../lib/proxy');
+} = require('../../_lib/utils');
+const { proxyToBackend } = require('../../_lib/proxy');
 
 // [Auth Fix] GET /v1/dashboard/stats
 // 鉴权改造：原 READ scope 静态 API Key → withAdminAuth（JWT role=admin）。

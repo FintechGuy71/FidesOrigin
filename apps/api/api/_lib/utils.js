@@ -566,7 +566,7 @@ let _rateLimit;
 function getRateLimiter() {
   if (!_rateLimit) {
     try {
-      _rateLimit = require('../middleware/rateLimit');
+      _rateLimit = require('../_middleware/rateLimit');
     } catch {
       _rateLimit = null;
     }

@@ -6,15 +6,15 @@
 //             Redis 后端跨实例一致，IP 提取走 TRUST_PROXY 语义）
 //           + 强制 GET-only + 参数严格校验。
 // 只读代理到后端 /api/v1/address/{address}/risk，不接受任何写操作。
-const { proxyToBackend } = require('../../lib/proxy');
-const { checkRateLimit } = require('../../middleware/rateLimit');
+const { proxyToBackend } = require('../../_lib/proxy');
+const { checkRateLimit } = require('../../_middleware/rateLimit');
 const {
   withMiddleware,
   isValidEthereumAddress,
   isValidChainId,
   sendError,
   SCOPE,
-} = require('../../lib/utils');
+} = require('../../_lib/utils');
 
 // 端点级配额：20 req/min/IP（与全局限流不同的独立计数桶）
 const PUBLIC_LIMIT = { max: 20, window: 60, prefix: 'ratelimit:public' };

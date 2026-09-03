@@ -1,8 +1,8 @@
 const {
   withAdminAuth,
   sendError,
-} = require('../../lib/utils');
-const { proxyToBackend } = require('../../lib/proxy');
+} = require('../../_lib/utils');
+const { proxyToBackend } = require('../../_lib/proxy');
 
 // [Auth Fix] GET /v1/dashboard/events
 // 与 stats.js 同一套 withAdminAuth 鉴权（JWT role=admin）+
