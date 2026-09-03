@@ -184,3 +184,37 @@ test('mergeData: 单源地址归因不受影响', () => {
   assert.strictEqual(merged.length, 1);
   assert.deepStrictEqual(merged[0].sources, ['HMT_OFSI']);
 });
+
+// ============ OpenSanctions 聚合源（PR #56）============
+
+test('OpenSanctions: CSV 中混合大小写 0x 地址提取 + 去重 + 小写归一', () => {
+  // 复刻 fetchOpenSanctions 的提取逻辑（正则 + Set 去重 + 小写）
+  const csv = [
+    '"id","schema","name","addresses","dataset"',
+    '"a","CryptoWallet","0x3051Ca7cB7f6C599fA2f27385AD75010cf0f2bbF","0x3051Ca7cB7f6C599fA2f27385AD75010cf0f2bbF","Israel Sanctioned Crypto Wallets List"',
+    '"b","CryptoWallet","0x002471B8A185f9980708d0eAEC5B289714F56f8d","0x002471b8a185f9980708d0eaec5b289714f56f8d","Israel Sanctioned Crypto Wallets List"',
+    '"c","CryptoWallet","0x002471B8A185f9980708d0eAEC5B289714F56f8d","","dup"', // 重复行
+  ].join('\n');
+  const matches = csv.match(/0x[a-fA-F0-9]{40}/g) || [];
+  const seen = new Set();
+  const out = [];
+  for (const raw of matches) {
+    const addr = raw.toLowerCase();
+    if (seen.has(addr)) continue;
+    seen.add(addr);
+    out.push(addr);
+  }
+  // 混合大小写 → 全小写，且重复行去重
+  assert.deepStrictEqual(out.sort(), [
+    '0x002471b8a185f9980708d0eaec5b289714f56f8d',
+    '0x3051ca7cb7f6c599fa2f27385ad75010cf0f2bbf',
+  ]);
+});
+
+test('OpenSanctions: 大小写不敏感去重（同址不同大小写只留一个）', () => {
+  const csv = '0xABCabc1234567890ABCDEFabcdef1234567890ab 0xabcabc1234567890abcdefabcdef1234567890ab';
+  const matches = csv.match(/0x[a-fA-F0-9]{40}/g) || [];
+  const seen = new Set();
+  for (const raw of matches) seen.add(raw.toLowerCase());
+  assert.strictEqual(seen.size, 1);
+});

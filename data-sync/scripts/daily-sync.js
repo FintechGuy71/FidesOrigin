@@ -105,6 +105,8 @@ class DailySyncService {
     // HMT 独有 2 个地址（OFAC 未覆盖），一旦 HMT 某天挂掉就会被误删、次日又加回，
     // 形成写链抖动。故次源也必须纳入下架保护，与主源同等对待。
     this.hmtSourceOk = false;
+    // [OpenSanctions 接入] 聚合源健康位，同上理由（独有 13 个以色列 NBCTF 地址）。
+    this.openSanctionsOk = false;
     
     // 确保目录存在
     [CONFIG.cacheDir, CONFIG.logDir].forEach(dir => {
@@ -351,6 +353,100 @@ class DailySyncService {
       }
     }
     console.log(`   ✅ HMT/OFSI: ${addresses.length} addresses`);
+    return addresses;
+  }
+
+  // ========== 1c. 加载 OpenSanctions 聚合制裁名单 ==========
+  /**
+   * @dev OpenSanctions 是跨司法辖区的制裁名单聚合器（OFAC/EU/UN/英国/瑞士/日本/
+   *      以色列/法国/加拿大/澳大利亚等 11+ 辖区），统一为 targets.simple.csv。
+   *      价值不在重复 OFAC 已覆盖的地址，而在补上 OFAC SDN_ADVANCED.XML 之外的
+   *      官方制裁加密钱包地址（实测主要增量：以色列 NBCTF 加密钱包扣押名单）。
+   *
+   *      实测（2026-09-03，68MB CSV，137 个 EVM 唯一地址）：
+   *      - 与现役 OFAC+HMT 名单重叠 124 个，净新增 13 个（全部来自以色列 NBCTF）。
+   *      - 其余辖区（日/法/瑞士/欧盟等）的地址均为 OFAC 子集，零净增。
+   *
+   *      提取方式：simple.csv 每行一个实体，加密地址以 0x…40hex 形式出现在
+   *      addresses/identifiers 字段，直接正则提取即可（与 OFAC 抓取器同思路）。
+   *      只消费 EVM(0x) 地址——BTC/TRON/LTC 与 OFSI 同理，不在本 EVM 管道管辖。
+   *
+   *      许可：OpenSanctions 数据为 CC-BY-NC（非商业）；本管道仅做技术聚合与
+   *      链上登记，原始制裁事实源仍是各司法辖区官方名单。
+   */
+  async fetchOpenSanctions() {
+    console.log('📥 Loading OpenSanctions aggregated sanctions...');
+    let addresses = [];
+    // 静态后备快照路径：与 HMT 的 hmt-eth-source.txt 同模式，供端点故障时兜底。
+    const snapshotFile = path.join(CONFIG.cacheDir, 'open-sanctions-source.txt');
+    const url = process.env.OPEN_SANCTIONS_URL
+      || 'https://data.opensanctions.org/datasets/latest/sanctions/targets.simple.csv';
+    try {
+      const response = await axios.get(url, {
+        timeout: 180000,
+        responseType: 'text',
+        maxContentLength: 200 * 1024 * 1024,
+        maxBodyLength: 200 * 1024 * 1024,
+      });
+
+      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
+      const seen = new Set();
+      for (const raw of matches) {
+        const addr = raw.toLowerCase();
+        if (seen.has(addr)) continue;
+        seen.add(addr);
+        addresses.push({
+          address: addr,
+          source: 'OPEN_SANCTIONS',
+          riskScore: 100,
+          reason: 'OpenSanctions aggregated sanction',
+        });
+      }
+
+      // 成功产出才置健康位 + 落盘快照（>0 才可信，空响应=端点故障/格式变更）
+      if (addresses.length > 0) {
+        this.openSanctionsOk = true;
+        try {
+          fs.writeFileSync(snapshotFile, addresses.map(a => a.address).join('\n') + '\n');
+        } catch (e) {
+          console.log(`   ⚠️ OpenSanctions snapshot write failed: ${e.message}`);
+        }
+      }
+    } catch (e) {
+      // 聚合源失败不阻断主源：OFAC/HMT 仍是事实源，OpenSanctions 只是增量补充。
+      // 回退静态快照，保住其独有地址当天的筛查覆盖（不置健康位 → 下架保护介入）。
+      console.log(`   ⚠️ OpenSanctions fetch failed: ${e.message} — falling back to static snapshot`);
+      try {
+        if (fs.existsSync(snapshotFile)) {
+          const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+            .map(l => l.trim().toLowerCase())
+            .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+          console.log(`   📦 OpenSanctions static snapshot: ${lines.length} addresses`);
+          for (const addr of lines) {
+            addresses.push({
+              address: addr,
+              source: 'OPEN_SANCTIONS_STATIC',
+              riskScore: 100,
+              reason: 'OpenSanctions aggregated sanction (static snapshot)',
+            });
+          }
+          // 快照年龄门槛（与 HMT/PR #54 一致的 48h）：新鲜才置健康位
+          const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+          if (lines.length > 0 && ageMs <= 48 * 60 * 60 * 1000) {
+            this.openSanctionsOk = true;
+          } else if (lines.length > 0) {
+            console.log(
+              `   ⚠️ OpenSanctions snapshot is stale (${Math.round(ageMs / 3600000)}h > 48h) — not marking healthy`
+            );
+          }
+        } else {
+          console.log('   ⚠️ No OpenSanctions snapshot available');
+        }
+      } catch (e2) {
+        console.log(`   ⚠️ OpenSanctions snapshot load failed: ${e2.message}`);
+      }
+    }
+    console.log(`   ✅ OpenSanctions: ${addresses.length} addresses`);
     return addresses;
   }
 
@@ -604,33 +700,38 @@ class DailySyncService {
 
     // [Q12 FIX] 分区下架：不再"次源失败就全部停摆"。
     //  - OFAC 健康 → OFAC 贡献可信，其今日删除可下架；
-    //  - HMT 不健康 → 其地址真实状态未知，用静态快照作"保留集"：
-    //      只下架"既不在今日健康源、也不在 HMT 快照"的地址；
-    //      若连快照都没有（HMT 从未成功产出），无法归因 → 回退为完全跳过（保守防误删）。
+    //  - 任一次源不健康 → 其地址真实状态未知，用【新鲜静态快照】作"保留集"：
+    //      只下架"既不在今日健康源、也不在任一次源快照"的地址；
+    //      若连快照都没有（该源从未成功产出）或超龄（>48h），无法归因 → 回退为完全跳过。
     //  这依赖 Q12a 的多源归因：merged 里每个地址的 sources 才是可信的分区依据。
+    const SECONDARY_SOURCES = [
+      { ok: this.hmtSourceOk, snapshot: 'hmt-eth-source.txt', name: 'HMT/OFSI' },
+      { ok: this.openSanctionsOk, snapshot: 'open-sanctions-source.txt', name: 'OpenSanctions' },
+    ];
+    const SNAPSHOT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
     let holdSet = new Set();
-    if (!this.hmtSourceOk) {
-      const snapshotFile = path.join(CONFIG.cacheDir, 'hmt-eth-source.txt');
+    for (const src of SECONDARY_SOURCES) {
+      if (src.ok) continue; // 健康源今日产出已在 merged 里，无需保留集
+      const snapshotFile = path.join(CONFIG.cacheDir, src.snapshot);
       if (!fs.existsSync(snapshotFile)) {
-        console.log('\n⚠️ HMT 次源未产出且无快照可归因，跳过下架 diff（防误删）');
-        return { skipped: true, reason: 'hmt-source-down-no-snapshot' };
+        console.log(`\n⚠️ ${src.name} 未产出且无快照可归因，跳过下架 diff（防误删）`);
+        return { skipped: true, reason: `${src.name}-down-no-snapshot` };
       }
-      // 快照年龄门槛与 PR #54 一致（48h）：超龄快照说明 HMT 长期失联，
-      // 其归因不可信 → 与无快照同等对待，整体停摆；新鲜快照才作保留集放行分区。
       const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
-      const SNAPSHOT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
       if (ageMs > SNAPSHOT_MAX_AGE_MS) {
-        console.log(`\n⚠️ HMT 次源未产出且快照超龄（${Math.round(ageMs / 3600000)}h > 48h），归因不可信，跳过下架 diff`);
-        return { skipped: true, reason: 'hmt-snapshot-stale' };
+        console.log(`\n⚠️ ${src.name} 未产出且快照超龄（${Math.round(ageMs / 3600000)}h > 48h），归因不可信，跳过下架 diff`);
+        return { skipped: true, reason: `${src.name}-snapshot-stale` };
       }
       const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
         .map(l => l.trim().toLowerCase())
         .filter(l => /^0x[a-f0-9]{40}$/.test(l));
-      holdSet = new Set(lines);
+      lines.forEach(a => holdSet.add(a));
       console.log(
-        `\n⚠️ HMT 次源未产出——用新鲜快照（${holdSet.size} 址）作保留集，` +
-        `只下架既不在今日健康源、也不在 HMT 快照的地址`
+        `\n⚠️ ${src.name} 未产出——用新鲜快照（${lines.length} 址）作保留集`
       );
+    }
+    if (holdSet.size > 0) {
+      console.log(`   共 ${holdSet.size} 个地址纳入保留集，只下架既不在今日健康源、也不在快照的地址`);
     }
 
     console.log('\n🔎 Checking for delisted addresses...');
@@ -711,9 +812,12 @@ class DailySyncService {
     // 英国 OFSI（HMT）—— 官方制裁源，与 OFAC 同权（riskScore 100）。
     // 失败时返回空数组并告警，不阻断主源；但会把 hmtSourceOk 置 false 触发下架保护。
     const hmtData = await this.fetchHMT();
+    // OpenSanctions 聚合源——补 OFAC/HMT 之外的官方制裁钱包地址（主要增量：以色列 NBCTF）。
+    // 失败不阻断主源（纯增量）。
+    const openSanctionsData = await this.fetchOpenSanctions();
 
     // 2. 合并
-    const merged = this.mergeData([ofacData, localData, chainalysisData, hmtData]);
+    const merged = this.mergeData([ofacData, localData, chainalysisData, hmtData, openSanctionsData]);
     
     if (merged.length === 0) {
       // [AUDIT-FIX] 0 条数据不再静默成功：主源 SDN_ADVANCED.XML 常态应有百余个
@@ -759,6 +863,7 @@ class DailySyncService {
       stats: {
         ofac: ofacData.length,
         hmt: hmtData.length,
+        openSanctions: openSanctionsData.length,
         local: localData.length,
         chainalysis: chainalysisData.length,
         merged: merged.length,
