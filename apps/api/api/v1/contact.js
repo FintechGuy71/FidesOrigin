@@ -1,9 +1,9 @@
 // ⚠ 路径深度注意：本文件在 api/v1/ 下（比 api/v1/auth/ 浅一层），
 //    相对 lib/middleware 只需上跳一层（../），误写成 ../../ 会在 Vercel 打包时
 //    解析到不存在的 apps/api/lib → 部署失败。
-const { withMiddleware, SCOPE, sendError } = require('../lib/utils');
-const { proxyToBackend } = require('../lib/proxy');
-const { checkRateLimit } = require('../middleware/rateLimit');
+const { withMiddleware, SCOPE, sendError } = require('../_lib/utils');
+const { proxyToBackend } = require('../_lib/proxy');
+const { checkRateLimit } = require('../_middleware/rateLimit');
 
 // [Contact Fix] 宽松的邮箱形态校验（服务端第一道防线，后端仍会再校验）
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

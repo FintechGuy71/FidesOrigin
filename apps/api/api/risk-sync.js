@@ -1,7 +1,7 @@
 const https = require('https');
 const crypto = require('crypto');
 
-const { checkRateLimit } = require('./middleware/rateLimit');
+const { checkRateLimit } = require('./_middleware/rateLimit');
 
 // 配置
 // [L-17 FIX] 模块级 throw 改为惰性校验：原实现缺 ETHERSCAN_API_KEY 时模块加载即

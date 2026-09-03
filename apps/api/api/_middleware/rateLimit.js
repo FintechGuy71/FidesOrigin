@@ -17,11 +17,11 @@
 //   RATE_LIMIT_MAX       - Max requests per window per IP (default: 60)
 //
 // Usage (Express-style):
-//   const { rateLimit } = require('./middleware/rateLimit');
+//   const { rateLimit } = require('./_middleware/rateLimit');
 //   app.use(rateLimit);
 //
 // Usage (Vercel serverless / raw handler):
-//   const { checkRateLimit } = require('./middleware/rateLimit');
+//   const { checkRateLimit } = require('./_middleware/rateLimit');
 //   if (!await checkRateLimit(req, res)) return;
 // ============================================================================
 
