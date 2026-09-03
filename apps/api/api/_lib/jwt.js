@@ -16,7 +16,12 @@ const crypto = require('crypto');
 const JWT_SECRET = process.env.JWT_SECRET_KEY || process.env.SECRET_KEY || '';
 
 if (!JWT_SECRET) {
-  console.warn('⚠️ [JWT] JWT_SECRET_KEY/SECRET_KEY not set — admin token verification will always fail (fail-closed).');
+  console.warn('[JWT] JWT_SECRET_KEY/SECRET_KEY not set — 网关本地验签不可用，将转发给后端权威校验。');
+}
+
+/** 是否配置了本地验签密钥。未配置时应转发给后端做权威校验，而不是一律拒绝。 */
+function isJwtVerifyConfigured() {
+  return Boolean(JWT_SECRET);
 }
 
 /**
@@ -76,4 +81,4 @@ function verifyAdminToken(token) {
   }
 }
 
-module.exports = { verifyAdminToken };
+module.exports = { verifyAdminToken, isJwtVerifyConfigured };

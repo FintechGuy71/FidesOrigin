@@ -49,7 +49,8 @@ async function handler(req, res) {
     const response = await proxyToBackend(backendPath, {
       method: 'POST',
       body: JSON.stringify(payload),
-      sign: true, // [HMAC Sign Fix] 网关代签
+      // 不代签：后端已将 /api/v1/auth/login 与 /refresh 列入公开端点签名豁免
+      //（security.py request_signature_middleware 的 public_write_paths）。
     });
     const data = await response.json().catch(() => null);
     return res.status(response.status).json(data);

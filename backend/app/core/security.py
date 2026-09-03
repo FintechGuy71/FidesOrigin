@@ -441,9 +441,22 @@ async def request_signature_middleware(
     # 保留原有的敏感端点列表（所有方法都需要保护）
     sensitive_paths = ["/api/v1/address/report", "/api/v1/rules"]
     is_sensitive_path = any(request.url.path.startswith(p) for p in sensitive_paths)
-    
+
+    # [Auth Fix] 公开端点豁免签名：
+    #   login/refresh 是获取凭证的入口，contact 是公开表单 —— 这些端点按定义
+    #   不可能要求调用方预先持有共享密钥（密钥若在浏览器里就等于公开）。
+    #   对这些端点强制签名是自相矛盾的设计缺陷：它们本就面向匿名调用方。
+    #   它们的滥用防护由限流 + 账户锁定 + 蜜罐承担，与签名无关。
+    #   敏感端点（address/report、rules 等）的签名要求保持不变。
+    public_write_paths = (
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh",
+        "/api/v1/contact",
+    )
+    is_public_write = any(request.url.path.startswith(p) for p in public_write_paths)
+
     # [H-2 Fix] 敏感端点所有方法都需要签名验证，不仅仅是写操作
-    if is_api_write or is_sensitive_path:
+    if (is_api_write or is_sensitive_path) and not is_public_write:
         timestamp = request.headers.get("X-Request-Timestamp")
         signature = request.headers.get("X-Request-Signature")
         
