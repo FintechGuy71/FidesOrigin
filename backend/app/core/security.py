@@ -89,7 +89,7 @@ async def create_refresh_token(username: str, family_id: str = None) -> dict:
     - 检测 token 重放攻击（旧 token 被再次使用）
     
     Returns:
-        dict: {token: str, family_id: str, jti: str}
+        dict: {token: str, family_id: str, jti: str, username: str}
     """
     _settings = get_settings()
     secret = _settings.SECRET_KEY
@@ -122,7 +122,8 @@ async def create_refresh_token(username: str, family_id: str = None) -> dict:
         except Exception:
             pass  # Redis 不可用时降级（token 仍然有效但不支持旋转检测）
     
-    return {"token": token, "family_id": family, "jti": jti}
+    # [Auth Fix] 返回 username 供 /refresh 路由签发新 access token
+    return {"token": token, "family_id": family, "jti": jti, "username": username}
 
 
 async def rotate_refresh_token(old_token: str) -> dict:

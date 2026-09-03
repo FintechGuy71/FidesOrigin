@@ -26,9 +26,11 @@ const CHART_ANIMATION_OFFSET = -6;
 const BAR_CHART_OFFSET = -8;
 const BAR_CHART_WIDTH = 20;
 
-// API 配置
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
-const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || `${API_BASE}/dashboard`;
+// API 配置（网关，注意默认 base 带 /v1）
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://fidesorigin-api.vercel.app/v1";
+const AUTH_TOKEN_KEY = "fidesorigin_admin_token";
+const AUTH_REFRESH_KEY = "fidesorigin_admin_refresh";
 // [L-24 FIX] 移除硬编码生产 WS 回退地址：环境变量未配置时不建立 WS 连接
 // （原实现静默指向生产 wss://api.fidesorigin.com/ws，环境错配难以察觉）
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "";
@@ -158,6 +160,102 @@ function useDashboardWebSocket(
   return { isConnected, error };
 }
 
+// 后端返回的 snake_case 统计结构
+interface BackendStats {
+  today_blocked?: number;
+  today_blocked_change?: number;
+  risk_addresses?: number;
+  risk_addresses_change?: number;
+  compliance_rate?: number;
+  compliance_rate_change?: number;
+  monitored_transactions?: number;
+  monitored_transactions_change?: number;
+  risk_trend?: { time: string; score: number }[];
+  riskTrend?: { time: string; score: number }[];
+}
+
+// snake_case → camelCase 适配层
+function adaptStats(raw: BackendStats): DashboardStats {
+  return {
+    riskTrend: raw.risk_trend ?? raw.riskTrend,
+    todayBlocked: raw.today_blocked ?? 0,
+    todayBlockedChange: raw.today_blocked_change ?? 0,
+    riskAddresses: raw.risk_addresses ?? 0,
+    riskAddressesChange: raw.risk_addresses_change ?? 0,
+    complianceRate: raw.compliance_rate ?? 0,
+    complianceRateChange: raw.compliance_rate_change ?? 0,
+    monitoredTransactions: raw.monitored_transactions ?? 0,
+    monitoredTransactionsChange: raw.monitored_transactions_change ?? 0,
+  };
+}
+
+// 后端事件 → RiskEvent 适配层
+function adaptEvent(raw: Record<string, unknown>): RiskEvent {
+  const riskMap: Record<string, RiskEvent["risk"]> = {
+    critical: "极高",
+    "极高": "极高",
+    high: "高",
+    "高": "高",
+    medium: "中",
+    "中": "中",
+  };
+  const statusMap: Record<string, RiskEvent["status"]> = {
+    blocked: "已拦截",
+    "已拦截": "已拦截",
+    reviewing: "审核中",
+    "审核中": "审核中",
+    flagged: "已标记",
+    "已标记": "已标记",
+  };
+  const riskRaw = String(raw.risk ?? raw.risk_level ?? "中");
+  const statusRaw = String(raw.status ?? "已标记");
+  const ts = typeof raw.timestamp === "number" ? raw.timestamp : undefined;
+  return {
+    id: String(raw.id ?? raw.event_id ?? ""),
+    type: String(raw.type ?? raw.event_type ?? ""),
+    address: String(raw.address ?? ""),
+    amount: String(raw.amount ?? ""),
+    risk: riskMap[riskRaw] ?? "中",
+    time: String(raw.time ?? raw.created_at ?? ""),
+    status: statusMap[statusRaw] ?? "已标记",
+    timestamp: ts,
+  };
+}
+
+// 带凭证的请求：401 时自动用 refresh_token 换新 token 重试一次
+async function authedFetch(path: string, retry = true): Promise<Response> {
+  const token = window.sessionStorage.getItem(AUTH_TOKEN_KEY);
+  const doFetch = (t: string | null) =>
+    fetch(`${API_BASE}${path}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+      },
+    });
+
+  let response = await doFetch(token);
+  if (response.status === 401 && retry) {
+    const refreshToken = window.sessionStorage.getItem(AUTH_REFRESH_KEY);
+    if (refreshToken) {
+      const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        window.sessionStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+        if (data.refresh_token) {
+          window.sessionStorage.setItem(AUTH_REFRESH_KEY, data.refresh_token);
+        }
+        response = await doFetch(data.access_token);
+      }
+    }
+  }
+  return response;
+}
+
 // 获取仪表盘数据
 // [M-15 FIX] 移除静默 mock 回退：原实现 API 失败时 console.warn 后返回硬编码
 // 虚构统计（"今日拦截 1247 笔、合规率 98.7%"）——合规产品的仪表盘展示
@@ -165,21 +263,32 @@ function useDashboardWebSocket(
 async function fetchDashboardData(): Promise<{
   stats: DashboardStats | null;
   events: RiskEvent[];
+  unauthorized?: boolean;
 } | null> {
   try {
-    const response = await fetch(`${DASHBOARD_API_URL}/summary`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const [statsRes, eventsRes] = await Promise.all([
+      authedFetch("/dashboard/stats"),
+      authedFetch("/dashboard/events"),
+    ]);
 
-    if (!response.ok) {
-      throw new Error(`API 错误: ${response.status}`);
+    if (statsRes.status === 401 || eventsRes.status === 401) {
+      return { stats: null, events: [], unauthorized: true };
+    }
+    if (!statsRes.ok || !eventsRes.ok) {
+      throw new Error(`API 错误: stats=${statsRes.status} events=${eventsRes.status}`);
     }
 
-    const data = await response.json();
+    const statsData = await statsRes.json();
+    const eventsData = await eventsRes.json();
+    const rawStats: BackendStats | null = statsData?.stats ?? statsData ?? null;
+    const rawEvents: Record<string, unknown>[] = Array.isArray(eventsData)
+      ? eventsData
+      : Array.isArray(eventsData?.events)
+        ? eventsData.events
+        : [];
     return {
-      stats: data.stats ?? null,
-      events: Array.isArray(data.events) ? data.events : [],
+      stats: rawStats ? adaptStats(rawStats) : null,
+      events: rawEvents.map(adaptEvent),
     };
   } catch (error) {
     console.warn("仪表盘 API 调用失败:", error);
@@ -276,28 +385,49 @@ export default function DashboardPage() {
   const [dataUnavailable, setDataUnavailable] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
-  /* [O-4 Fix] 鉴权门禁：与 public/admin/index.html 相同的 sessionStorage 口令门。
-     ⚠ 与静态后台一致，这是"防君子不防小人"的前端门禁 —— 静态导出没有服务端，
-     页面源码仍可达，真正的鉴权需要后端/网关（已列入遗留事项）。
+  /* 鉴权门禁：与 public/admin/index.html 共用 sessionStorage token（网关真登录）。
      初始为 null：SSR/水合完成前不渲染后台内容，避免未授权闪现。 */
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [usernameInput, setUsernameInput] = useState("");
   const [pwdInput, setPwdInput] = useState("");
-  const [pwdError, setPwdError] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginSubmitting, setLoginSubmitting] = useState(false);
 
   useEffect(() => {
     setAuthed(
       typeof window !== "undefined" &&
-        window.sessionStorage.getItem("fidesorigin_admin_auth") === "authenticated"
+        !!window.sessionStorage.getItem(AUTH_TOKEN_KEY)
     );
   }, []);
 
-  const tryLogin = (e: React.FormEvent) => {
+  const tryLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pwdInput === "FidesOrigin2026!") {
-      window.sessionStorage.setItem("fidesorigin_admin_auth", "authenticated");
-      setAuthed(true);
-    } else {
-      setPwdError(true);
+    setLoginError(null);
+    setLoginSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usernameInput, password: pwdInput }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        window.sessionStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+        if (data.refresh_token) {
+          window.sessionStorage.setItem(AUTH_REFRESH_KEY, data.refresh_token);
+        }
+        setAuthed(true);
+      } else if (res.status === 401) {
+        setLoginError("用户名或密码错误");
+      } else if (res.status === 423) {
+        setLoginError("账户已锁定，请稍后再试");
+      } else {
+        setLoginError("服务器错误，请稍后再试");
+      }
+    } catch {
+      setLoginError("无法连接服务器");
+    } finally {
+      setLoginSubmitting(false);
     }
   };
 
@@ -307,6 +437,13 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         const data = await fetchDashboardData();
+        if (data?.unauthorized) {
+          // token 失效且 refresh 失败：清凭证回登录页
+          window.sessionStorage.removeItem(AUTH_TOKEN_KEY);
+          window.sessionStorage.removeItem(AUTH_REFRESH_KEY);
+          setAuthed(false);
+          return;
+        }
         if (data) {
           setStats(data.stats);
           setEvents(data.events);
@@ -430,30 +567,51 @@ export default function DashboardPage() {
           onSubmit={tryLogin}
           className="w-full max-w-sm rounded-xl border border-[var(--fio-border)] bg-[var(--fio-surface)] p-8"
         >
-          <h1 className="mb-2 text-xl font-semibold text-[var(--fio-text)]">Admin Access Required</h1>
-          <p className="mb-6 text-sm text-[var(--fio-text-2)]">Enter the admin password to continue.</p>
+          <h1 className="mb-2 text-xl font-semibold text-[var(--fio-text)]">Admin Sign In</h1>
+          <p className="mb-6 text-sm text-[var(--fio-text-2)]">Sign in with your admin account to continue.</p>
+          <label htmlFor="admin-username" className="mb-1 block text-sm text-[var(--fio-text-2)]">
+            Username
+          </label>
           <input
+            id="admin-username"
+            type="text"
+            value={usernameInput}
+            onChange={(e) => {
+              setUsernameInput(e.target.value);
+              setLoginError(null);
+            }}
+            placeholder="Username"
+            aria-label="Admin username"
+            autoComplete="username"
+            className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
+          />
+          <label htmlFor="admin-password" className="mb-1 block text-sm text-[var(--fio-text-2)]">
+            Password
+          </label>
+          <input
+            id="admin-password"
             type="password"
             value={pwdInput}
             onChange={(e) => {
               setPwdInput(e.target.value);
-              setPwdError(false);
+              setLoginError(null);
             }}
             placeholder="Password"
             aria-label="Admin password"
             autoComplete="current-password"
             className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
-          {pwdError && (
+          {loginError && (
             <p className="mb-4 text-sm text-[var(--fio-danger)]" role="alert">
-              Incorrect password.
+              {loginError}
             </p>
           )}
           <button
             type="submit"
-            className="w-full rounded-lg bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)]"
+            disabled={loginSubmitting}
+            className="w-full rounded-lg bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)] disabled:opacity-50"
           >
-            Sign in
+            {loginSubmitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
       </div>

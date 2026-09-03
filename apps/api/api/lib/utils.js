@@ -607,6 +607,41 @@ function withMiddleware(handler, requiredScope = SCOPE.READ) {
   };
 }
 
+// [Auth Fix] 管理端点鉴权包装器：CORS + 全局限流 + JWT(role=admin) 验签。
+// 用于 dashboard 等纯管理通道——不再接受静态 API Key，
+// 验签密钥（JWT_SECRET_KEY/SECRET_KEY）仅在服务端，绝不进入任何响应体。
+function withAdminAuth(handler) {
+  const { verifyAdminToken } = require('./jwt');
+  return async function (req, res) {
+    // 1. CORS（浏览器来源校验；服务端客户端放行）
+    if (!checkOrigin(req, res)) return;
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    // 2. 全局限流（Redis 后端统一实现）
+    const limiter = getRateLimiter();
+    if (limiter) {
+      const allowed = await limiter.checkRateLimit(req, res);
+      if (!allowed) return;
+    }
+    // 3. Bearer JWT 验签 + role=admin（失败一律 401，不泄露细节）
+    const auth = req.headers.authorization || '';
+    const match = auth.match(/^Bearer\s+(.+)$/i);
+    const payload = match ? verifyAdminToken(match[1]) : null;
+    if (!payload) {
+      return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
+    }
+    req.admin = payload;
+    // 4. Run handler
+    try {
+      return await handler(req, res);
+    } catch (err) {
+      console.error('Handler error:', err);
+      return sendError(res, 500, 'SERVER_ERROR', err.message || 'Internal server error');
+    }
+  };
+}
+
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -656,5 +691,6 @@ module.exports = {
   generateRuleId,
   initDefaultRules,
   withMiddleware,
+  withAdminAuth,
   parseBody,
 };

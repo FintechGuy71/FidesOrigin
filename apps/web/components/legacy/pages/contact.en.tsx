@@ -1,5 +1,57 @@
-/* Auto-generated from public/contact.html — do not edit by hand. */
+"use client";
+
+/* 联系表单——真实收单版（本轮重写）。
+   原 "Auto-generated from public/contact.html" 注释已过时：源文件 public/contact.html
+   并不存在（生成器也找不到），本文件现为手维护的真实收单实现。 */
+import { useState } from "react";
+
+type SubmitStatus = "idle" | "submitting" | "success" | "error";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://fidesorigin-api.vercel.app/v1";
+
 export default function ContentContactEN() {
+  const [status, setStatus] = useState<SubmitStatus>("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    setStatus("submitting");
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fd.get("name"),
+          email: fd.get("email"),
+          company: fd.get("company") || "",
+          use_case: fd.get("use-case") || "",
+          message: fd.get("message") || "",
+          website: fd.get("website") || "", // 蜜罐字段，正常用户留空
+        }),
+      });
+      if (res.ok) {
+        setStatus("success");
+        form.reset();
+      } else if (res.status === 400) {
+        setStatus("error");
+        setErrorMsg("Please check your input and try again.");
+      } else if (res.status === 429) {
+        setStatus("error");
+        setErrorMsg("Too many submissions. Please try again later.");
+      } else {
+        setStatus("error");
+        setErrorMsg("Server error. Please try again later.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Network error. Please try again later.");
+    }
+  };
+
   return (
     <>
 
@@ -16,18 +68,20 @@ export default function ContentContactEN() {
     <section className="section" style={{ "paddingTop": "0" }}>
       <div className="container">
         <div className="contact-form reveal">
-          {/* ⚠ 原 action 是 Formspree 占位端点 "https://formspree.io/f/YOUR_FORM_ID"：
-              用户点「Send Message」后既不会成功、也没有任何失败提示 ——
-              联系表单这个页面唯一的核心功能实际上是失效的。
-              在配置真实收单服务之前，这里降级为 mailto: 提交
-              （encType="text/plain" 是 mailto 表单的必需项，否则正文为空）。
-              TODO(业务): 接入真实收单端点后替换 action，并补前端成功/失败提示。 */}
+          {/* 真实收单：POST 网关 /contact；mailto 仅作失败时的降级链接。 */}
           <form
             id="contactForm"
-            action="mailto:contact@fidesorigin.com"
-            method="POST"
-            encType="text/plain"
+            onSubmit={handleSubmit}
           >
+            {/* 蜜罐字段：正常用户不可见不填写，机器人填了后端直接拒绝 */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ "position": "absolute", "left": "-9999px", "opacity": 0, "height": 0, "width": 0 }}
+            />
             <div className="form-group">
               <label htmlFor="name">Full Name</label>
               <input type="text" id="name" name="name" className="form-input" placeholder="John Doe" required />
@@ -55,7 +109,25 @@ export default function ContentContactEN() {
               <label htmlFor="message">Message</label>
               <textarea id="message" name="message" className="form-input" placeholder="Tell us about your project and compliance requirements..."></textarea>
             </div>
-            <button type="submit" className="btn btn-primary" style={{ "width": "100%", "justifyContent": "center" }}>Send Message</button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ "width": "100%", "justifyContent": "center" }}
+              disabled={status === "submitting"}
+            >
+              {status === "submitting" ? "Sending..." : "Send Message"}
+            </button>
+            {status === "success" && (
+              <p role="status" style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.9rem", "color": "var(--fio-success)" }}>
+                Message sent! We&apos;ll get back to you within 24 hours.
+              </p>
+            )}
+            {status === "error" && (
+              <p role="alert" style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.9rem", "color": "var(--fio-danger)" }}>
+                {errorMsg}{" "}
+                或直接邮件 <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)" }}>contact@fidesorigin.com</a>
+              </p>
+            )}
             <p style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.8rem", "color": "var(--text-muted)" }}>Prefer email? Reach us at <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)" }}>contact@fidesorigin.com</a></p>
           </form>
         </div>

@@ -185,6 +185,14 @@ class Settings(BaseSettings):
     ALERT_ENABLED: bool = Field(default=False, description="是否启用告警")
     ALERT_WEBHOOK_URL: Optional[str] = Field(default=None, description="告警 Webhook URL")
     ALERT_COOLDOWN_MINUTES: int = Field(default=5, description="告警冷却时间")
+
+    # ==================== 联系表单邮件通知配置 ====================
+    # [Contact Fix] 可选：配置 RESEND_API_KEY 后，contact 收单会同时发送邮件通知
+    RESEND_API_KEY: Optional[str] = Field(default=None, description="Resend 邮件服务 API Key（可选）")
+    CONTACT_NOTIFY_EMAIL: str = Field(
+        default="contact@fidesorigin.com",
+        description="联系表单通知收件邮箱"
+    )
     
     # ==================== 请求限制配置 ====================
     MAX_BODY_SIZE_BYTES: int = Field(default=10_485_760, description="最大请求体大小（10MB）")

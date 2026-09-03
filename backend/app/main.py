@@ -244,7 +244,7 @@ async def general_exception_handler(request, exc: Exception):
 # ==================== 路由注册（API 版本控制） ====================
 
 # 导入 Controller
-from app.controllers import addresses, auth, monitor, rules, transactions
+from app.controllers import addresses, auth, contact, dashboard, monitor, rules, transactions
 
 # API v1 路由（controller 中已定义完整前缀 /api/v1/*）
 app.include_router(auth.router)
@@ -252,6 +252,8 @@ app.include_router(addresses.router)
 app.include_router(transactions.router)
 app.include_router(rules.router)
 app.include_router(monitor.router)
+app.include_router(contact.router)
+app.include_router(dashboard.router)
 
 # 版本信息端点
 @app.get("/api/version", tags=["版本信息"])
