@@ -124,6 +124,52 @@ class SanctionedListStrategy(RiskRuleStrategy):
         return 0, ""
 
 
+class RiskListStrategy(RiskRuleStrategy):
+    """链上风险名单策略（钓鱼/诈骗/恶意地址等风险情报）
+
+    与 SanctionedListStrategy 的本质区别：
+    - 数据来源是安全团队/社区维护的风险黑名单（如 Scam Sniffer），非官方制裁。
+    - 命中给【中高档分数】（rule.risk_score_impact，seed 为 75 = HIGH），
+      **不是**满分/CRITICAL——避免"举报当制裁误封"（D-2 决策）。
+    - 数据由 data-sync 日更管道写入 address_risks.tags（含 scam 标记），
+      【不写链上 RiskRegistry】，只进后端库。
+    """
+
+    # 风险标记（与 SanctionedListStrategy 的 MARKERS 严格隔离，勿混用）
+    MARKERS = ("scam", "phishing", "SCAM_SNIFFER", "fraud", "hack")
+
+    async def evaluate(
+        self,
+        address: str,
+        chain: str,
+        rule: RiskRule,
+        db: AsyncSession,
+        blockscout: BlockscoutService
+    ) -> Tuple[float, str]:
+        result = await db.execute(
+            select(AddressRisk.tags).where(
+                AddressRisk.address == address,
+                AddressRisk.chain == chain,
+            )
+        )
+        tags = result.scalar()
+        hit = False
+        if tags:
+            for t in tags:
+                ts = str(t)
+                if any(m in ts for m in self.MARKERS):
+                    hit = True
+                    break
+
+        if hit:
+            # 风险名单默认 75 分（HIGH），低于制裁的 100/CRITICAL
+            impact = float(rule.risk_score_impact if rule.risk_score_impact is not None else 75)
+            weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
+            return min(impact, 100) * weight, "链上风险名单在册（钓鱼/诈骗等风险情报）"
+
+        return 0, ""
+
+
 class TransactionPatternStrategy(RiskRuleStrategy):
     """交易模式策略（高频交易）"""
     
@@ -265,6 +311,7 @@ class RiskEngineService:
         "new_address": AddressAgeStrategy,
         "large_amount_transfer": LargeTransferStrategy,
         "sanctioned_list": SanctionedListStrategy,
+        "scam_list": RiskListStrategy,
     }
     
     def __init__(

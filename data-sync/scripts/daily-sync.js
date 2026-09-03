@@ -107,6 +107,9 @@ class DailySyncService {
     this.hmtSourceOk = false;
     // [OpenSanctions 接入] 聚合源健康位，同上理由（独有 13 个以色列 NBCTF 地址）。
     this.openSanctionsOk = false;
+    // [Scam Sniffer 接入] 风险源健康位。风险地址不写链、不参与下架 diff，
+    // 故无需纳入 SECONDARY_SOURCES 保留集；健康位仅用于快照新鲜度告警。
+    this.scamSnifferOk = false;
     
     // 确保目录存在
     [CONFIG.cacheDir, CONFIG.logDir].forEach(dir => {
@@ -447,6 +450,87 @@ class DailySyncService {
       }
     }
     console.log(`   ✅ OpenSanctions: ${addresses.length} addresses`);
+    return addresses;
+  }
+
+  // ========== 1d. 加载 Scam Sniffer 钓鱼/诈骗地址黑名单 ==========
+  /**
+   * @dev Scam Sniffer 是 web3 反诈骗安全团队，维护公开的钓鱼/诈骗地址黑名单
+   *      （blacklist/address.json，GitHub raw，免费批量下载）。
+   *
+   *      与制裁源的本质区别：这是【风险情报】不是【官方制裁】。按 D-2 决策，
+   *      ——不写链上 RiskRegistry（避免"举报当制裁"误封）
+   *      ——只进后端库，source=SCAM_SNIFFER、riskScore=75（HIGH，低于制裁的 100/CRITICAL）
+   *      由后端引擎的独立 RiskListStrategy 识别并给 75 分，与 SanctionedListStrategy 隔离。
+   *
+   *      实测（2026-09-03）：2,530 个 EVM 地址，与现役制裁名单零重叠。
+   */
+  async fetchScamSniffer() {
+    console.log('📥 Loading Scam Sniffer phishing/scam blacklist...');
+    let addresses = [];
+    const snapshotFile = path.join(CONFIG.cacheDir, 'scam-sniffer-source.txt');
+    const url = process.env.SCAM_SNIFFER_URL
+      || 'https://raw.githubusercontent.com/scamsniffer/scam-database/main/blacklist/address.json';
+    try {
+      const response = await axios.get(url, {
+        timeout: 120000,
+        responseType: 'text',
+        maxContentLength: 50 * 1024 * 1024,
+        maxBodyLength: 50 * 1024 * 1024,
+      });
+
+      // address.json 是 JSON 字符串数组，元素即 0x 地址；直接正则提取兜底（防格式变化）
+      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
+      const seen = new Set();
+      for (const raw of matches) {
+        const addr = raw.toLowerCase();
+        if (seen.has(addr)) continue;
+        seen.add(addr);
+        addresses.push({
+          address: addr,
+          source: 'SCAM_SNIFFER',
+          riskScore: 75,
+          reason: 'Scam Sniffer phishing/scam blacklist',
+        });
+      }
+
+      if (addresses.length > 0) {
+        this.scamSnifferOk = true;
+        try {
+          fs.writeFileSync(snapshotFile, addresses.map(a => a.address).join('\n') + '\n');
+        } catch (e) {
+          console.log(`   ⚠️ Scam Sniffer snapshot write failed: ${e.message}`);
+        }
+      }
+    } catch (e) {
+      // 风险源失败不阻断主源（制裁管道独立运行），回退静态快照
+      console.log(`   ⚠️ Scam Sniffer fetch failed: ${e.message} — falling back to static snapshot`);
+      try {
+        if (fs.existsSync(snapshotFile)) {
+          const lines = fs.readFileSync(snapshotFile, 'utf8').split('\n')
+            .map(l => l.trim().toLowerCase())
+            .filter(l => /^0x[a-f0-9]{40}$/.test(l));
+          console.log(`   📦 Scam Sniffer static snapshot: ${lines.length} addresses`);
+          for (const addr of lines) {
+            addresses.push({
+              address: addr,
+              source: 'SCAM_SNIFFER_STATIC',
+              riskScore: 75,
+              reason: 'Scam Sniffer phishing/scam blacklist (static snapshot)',
+            });
+          }
+          const ageMs = Date.now() - fs.statSync(snapshotFile).mtimeMs;
+          if (lines.length > 0 && ageMs <= 48 * 60 * 60 * 1000) {
+            this.scamSnifferOk = true;
+          }
+        } else {
+          console.log('   ⚠️ No Scam Sniffer snapshot available');
+        }
+      } catch (e2) {
+        console.log(`   ⚠️ Scam Sniffer snapshot load failed: ${e2.message}`);
+      }
+    }
+    console.log(`   ✅ Scam Sniffer: ${addresses.length} addresses`);
     return addresses;
   }
 
@@ -815,8 +899,11 @@ class DailySyncService {
     // OpenSanctions 聚合源——补 OFAC/HMT 之外的官方制裁钱包地址（主要增量：以色列 NBCTF）。
     // 失败不阻断主源（纯增量）。
     const openSanctionsData = await this.fetchOpenSanctions();
+    // Scam Sniffer 风险地址——【不写链、不 merge】，单独走库。风险≠制裁（D-2），
+    // 由引擎独立 RiskListStrategy 给 75 分，与制裁管道隔离。
+    const scamSnifferData = await this.fetchScamSniffer();
 
-    // 2. 合并
+    // 2. 合并（只合并制裁源；scam 数据不进 merged，避免被写链/下架 diff 误处理）
     const merged = this.mergeData([ofacData, localData, chainalysisData, hmtData, openSanctionsData]);
     
     if (merged.length === 0) {
@@ -847,6 +934,8 @@ class DailySyncService {
       try {
         // 下架地址一并推送（置 score=0/清空 tags），DB 视角与链上同步移除
         await pushToBackendDb(merged, delistResult.addresses || []);
+        // 风险地址（scam/phishing）单独写库——不写链，tags 走 risk 兜底标记
+        await pushToBackendDb(scamSnifferData);
       } catch (e) {
         // 后端库同步失败不阻断主流程（链上已是事实源），告警并继续
         console.error('   ⚠️ Backend DB sync failed (chain 已是事实源，明日重试):', e.message);
@@ -864,6 +953,7 @@ class DailySyncService {
         ofac: ofacData.length,
         hmt: hmtData.length,
         openSanctions: openSanctionsData.length,
+        scamSniffer: scamSnifferData.length,
         local: localData.length,
         chainalysis: chainalysisData.length,
         merged: merged.length,

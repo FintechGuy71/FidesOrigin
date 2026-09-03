@@ -5,8 +5,13 @@ FidesOrigin 数据库配置（重构版）
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
+import logging
 
 from app.config import get_settings
+
+# 注意：不能用 app.core.logging —— 它会触发 core.__init__ → core.di → database 的循环 import。
+# 此处用标准库 logging。
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -91,6 +96,52 @@ TestingSessionLocal = async_sessionmaker(
 
 
 async def init_db():
-    """初始化数据库（创建所有表）"""
+    """初始化数据库（创建所有表 + 幂等 seed 默认规则）"""
     async with get_async_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await ensure_default_rules()
+
+
+async def ensure_default_rules():
+    """幂等 seed 引擎必需的内置规则。
+
+    背景：风险引擎按 DB 里的 risk_rules 行驱动（rule.name → STRATEGIES 映射）。
+    `sanctioned_list` 规则此前靠手工建、不在任何迁移里；新增 `scam_list` 规则
+    （链上风险名单）同样需要一条规则行才能被引擎调用。故统一在此幂等确保，
+    ON CONFLICT (name) DO NOTHING，不覆盖已存在的规则。
+    """
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+    from sqlalchemy import text
+    # 延迟导入 RiskRule，避免 database ↔ models 循环 import
+    from app.models import RiskRule
+
+    async with get_async_session_maker()() as session:
+        rules = [
+            {
+                "name": "sanctioned_list",
+                "description": "官方制裁名单在册（OFAC/SDN 等）",
+                "rule_type": "PATTERN",
+                "category": "compliance",
+                "risk_weight": 1.0,
+                "risk_score_impact": 100.0,
+                "priority": 1,
+                "tags": ["sanctions", "compliance"],
+                "is_active": True,
+            },
+            {
+                "name": "scam_list",
+                "description": "链上风险名单在册（钓鱼/诈骗等风险情报）",
+                "rule_type": "PATTERN",
+                "category": "reputation",
+                "risk_weight": 1.0,
+                "risk_score_impact": 75.0,
+                "priority": 2,
+                "tags": ["scam", "phishing", "fraud"],
+                "is_active": True,
+            },
+        ]
+        for r in rules:
+            stmt = pg_insert(RiskRule).values(**r).on_conflict_do_nothing(index_elements=["name"])
+            await session.execute(stmt)
+        await session.commit()
+        logger.info("default_rules_ensured", names=[r["name"] for r in rules])

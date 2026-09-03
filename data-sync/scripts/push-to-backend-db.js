@@ -42,18 +42,20 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
       chunk.forEach((e, idx) => {
         const base = idx * 8;
         const level = TIER_TO_LEVEL[Math.min(Math.max(e.tier || 3, 0), 4)];
+        // [风险源分流] tags 兜底标记按 source 区分：
+        //   - 制裁源（OFAC/HMT/OPEN_SANCTIONS…）→ 兜底 'sanctioned'（SanctionedListStrategy 命中满分）
+        //   - 风险源（SCAM_SNIFFER…）→ 兜底 'scam'（RiskListStrategy 命中 75 分，不误判为制裁）
+        // 关键：scam 地址绝不能带 'sanctioned'，否则会被 SanctionedListStrategy 误判满分封号。
+        const srcs = e.sources && e.sources.length ? e.sources : ['OFAC'];
+        const isRiskSource = srcs.some(s => String(s).toUpperCase().startsWith('SCAM'));
+        const fallbackTag = isRiskSource ? 'scam' : 'sanctioned';
         values.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`);
         params.push(
           e.address.toLowerCase(),
           'ethereum',
-          e.riskScore ?? 100,
+          e.riskScore ?? (isRiskSource ? 75 : 100),
           level,
-          // [前置修复·hy4 指令 §3.2] tags 恒带 'sanctioned'：引擎 SanctionedListStrategy 的
-          // MARKERS 是大小写敏感子串匹配（OFAC/sanctioned/sdn/STATIC_SNAPSHOT），
-          // OFAC 能命中纯属 "OFAC" 恰好是 "OFAC_SDN_ADVANCED" 的子串；新源 tags 若只有
-          // ["MY_SOURCE"] 会一个标记都中不了 → 引擎静默判 0 分，新源接了白接。
-          // 本管道只承载权威制裁源，'sanctioned' 标记语义恒真。
-          JSON.stringify([...new Set([...(e.sources && e.sources.length ? e.sources : ['OFAC']), 'sanctioned'])]),
+          JSON.stringify([...new Set([...srcs, fallbackTag])]),
           'CONFIRMED',
           new Date().toISOString(),
           0 // report_count：DB 列无默认值，缺省会留 NULL 并使响应模型 int 校验 500
