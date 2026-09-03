@@ -104,7 +104,9 @@ async def init_db():
     try:
         await ensure_default_rules()
     except Exception as e:
-        logger.error("default_rules_seed_failed", error=str(e))
+        # 注意：stdlib logger 不支持 kwargs（names=/error=），必须用 %s 占位符风格，
+        # 否则 Python 3.11 下 logger.error(..., error=...) 会抛 TypeError 再次崩溃
+        logger.error("default_rules_seed_failed: %s", str(e))
 
 
 async def ensure_default_rules():
@@ -154,4 +156,4 @@ async def ensure_default_rules():
                 continue  # 已存在，跳过（幂等）
             session.add(RiskRule(**r))
         await session.commit()
-        logger.info("default_rules_ensured", names=[r["name"] for r in rules])
+        logger.info("default_rules_ensured: %s", [r["name"] for r in rules])
