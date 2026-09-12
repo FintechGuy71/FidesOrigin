@@ -1,4 +1,6 @@
 /* Auto-generated from public/cn/docs/index.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsCN() {
   return (
     <>
@@ -12,16 +14,16 @@ export default function ContentDocsCN() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">文档</div>
       <ul className="docs-nav-tree">
-        <li><a href="/cn/docs" className="active">概览</a></li>
-        <li><a href="/cn/docs/api">API 参考</a></li>
-        <li><a href="/cn/docs/sdk">SDK</a></li>
-        <li><a href="/cn/demo">Demo</a></li>
+        <li><Link href="/cn/docs" className="active" prefetch={false}>概览</Link></li>
+        <li><Link href="/cn/docs/api" prefetch={false}>API 参考</Link></li>
+        <li><Link href="/cn/docs/sdk" prefetch={false}>SDK</Link></li>
+        <li><Link href="/cn/demo" prefetch={false}>Demo</Link></li>
       </ul>
       <div className="docs-sidebar-title">资源</div>
       <ul className="docs-nav-tree">
-        <li><a href="/cn/blog" target="_blank" rel="noopener">博客</a></li>
+        <li><Link href="/cn/blog" prefetch={false}>博客</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">控制台</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>控制台</Link></li>
       </ul>
     </aside>
 
@@ -33,34 +35,34 @@ export default function ContentDocsCN() {
       <p className="docs-lead">将链上合规集成到您的协议所需的一切。现已支持 Guard 交易前拦截。</p>
 
       <div className="docs-cards">
-        <a href="/cn/docs/api" className="docs-card">
+        <Link href="/cn/docs/api" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
           <h3>API 参考</h3>
           <p>地址风险检查、规则管理、批量筛查和实时监测的 REST API 端点。</p>
-        </a>
-        <a href="/cn/docs/sdk" className="docs-card">
+        </Link>
+        <Link href="/cn/docs/sdk" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
           <h3>SDK</h3>
           <p>用于钱包集成、地址筛查、Guard 集成和事件订阅的 JavaScript SDK。</p>
-        </a>
-        <a href="/cn/demo" className="docs-card">
+        </Link>
+        <Link href="/cn/demo" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <h3>Demo</h3>
           <p>Sepolia 测试网上的交互式演示。筛查地址、查看风险分数，并体验 Guard 的实际效果。</p>
-        </a>
-        <a href="/cn/blog" className="docs-card" target="_blank" rel="noopener">
+        </Link>
+        <Link href="/cn/blog" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
           </div>
           <h3>博客</h3>
           <p>深入探讨链上合规、风险引擎和 DeFi 监管。</p>
-        </a>
+        </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
@@ -88,7 +90,7 @@ export default function ContentDocsCN() {
           <span>Shell</span>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
-        <pre><code>npm install @fidesorigin/sdk</code></pre>
+        <pre><code>npm install @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
 
       <h3>3. Solidity 集成</h3>

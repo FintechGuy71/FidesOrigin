@@ -188,11 +188,31 @@ export default function DemoExperience({ dict }: { dict: D }) {
     });
   };
 
+  /* [AUDIT FIX R2-055] 原 tabs 有三个（screen/risk/policy），但：
+     ① role="tab"/aria-selected 不切换任何内容——两块面板恒并排显示，
+        是"假 tablist"（向读屏承诺了 tab 语义却无对应交互）；
+     ② policy tab 根本没有对应面板。
+     改为真实 tab：screen/risk 两个面板按 activeTab 切换显示，移除无内容的
+     policy tab，并补标准键盘导航（←/→ 切换、Home/End 跳首尾）。
+     dict.tabPolicy 键保留（四语言字典结构对齐），此处不再消费。 */
   const tabs = [
     { id: "screen", label: dict.tabScreen },
     { id: "risk", label: dict.tabRisk },
-    { id: "policy", label: dict.tabPolicy },
   ];
+
+  const onTabKeyDown = (e: React.KeyboardEvent) => {
+    const idx = tabs.findIndex((t) => t.id === activeTab);
+    let next = -1;
+    if (e.key === "ArrowRight") next = (idx + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    if (next >= 0) {
+      e.preventDefault();
+      setActiveTab(tabs[next].id);
+      document.getElementById(`demo-tab-${tabs[next].id}`)?.focus();
+    }
+  };
 
   return (
     <>
@@ -215,15 +235,17 @@ export default function DemoExperience({ dict }: { dict: D }) {
       {/* Demo Grid */}
       <section className="section" style={{ paddingTop: "0" }}>
         <div className="container">
-          {/* 页签原本只有视觉状态：无 role="tablist"/role="tab"/aria-selected，
-              读屏用户无法知晓有几个页签、当前选中哪个。 */}
-          <div className="demo-tabs reveal" role="tablist" aria-label={dict.howTitle}>
+          <div className="demo-tabs reveal" role="tablist" aria-label={dict.howTitle} onKeyDown={onTabKeyDown}>
             {tabs.map((t) => (
               <button
                 key={t.id}
+                id={`demo-tab-${t.id}`}
                 className={`demo-tab${activeTab === t.id ? " active" : ""}`}
                 role="tab"
+                type="button"
                 aria-selected={activeTab === t.id}
+                aria-controls={`demo-panel-${t.id}`}
+                tabIndex={activeTab === t.id ? 0 : -1}
                 onClick={() => setActiveTab(t.id)}
               >
                 {t.label}
@@ -233,7 +255,14 @@ export default function DemoExperience({ dict }: { dict: D }) {
 
           <div className="demo-grid">
             {/* Address Screening */}
-            <div className="demo-card reveal">
+            {activeTab === "screen" && (
+            <div
+              className="demo-card reveal"
+              id="demo-panel-screen"
+              role="tabpanel"
+              aria-labelledby="demo-tab-screen"
+              style={{ gridColumn: "1 / -1" }}
+            >
               <h3>{dict.screenTitle}</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "16px" }}>
                 {dict.screenDesc}
@@ -288,9 +317,17 @@ export default function DemoExperience({ dict }: { dict: D }) {
                 </div>
               )}
             </div>
+            )}
 
             {/* Risk Score */}
-            <div className="demo-card reveal">
+            {activeTab === "risk" && (
+            <div
+              className="demo-card reveal"
+              id="demo-panel-risk"
+              role="tabpanel"
+              aria-labelledby="demo-tab-risk"
+              style={{ gridColumn: "1 / -1" }}
+            >
               <h3>{dict.riskTitle}</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "16px" }}>
                 {dict.riskDesc}
@@ -351,6 +388,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       </section>

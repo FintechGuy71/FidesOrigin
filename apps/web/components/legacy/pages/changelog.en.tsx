@@ -71,73 +71,72 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">Latest</span>
-            <h3>v3.3 — Regulatory Templates</h3>
+            <h3>v3.1.0 — Security Audit Release</h3>
+            <div className="date">August 2026</div>
+            <ul>
+              <li>Resolved all 53 findings from the independent security audit (6 High / 15 Medium / 26 Low / 6 Info)</li>
+              <li>9 breaking changes across contracts, gateway API, and data pipeline — see CHANGELOG.md</li>
+              <li>Fresh v3.1.0 contract set deployed on Sepolia; DEPLOYED.md published as the authoritative registry</li>
+              <li>449/449 contract tests passing (15 new regression tests added)</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">Major</span>
+            <h3>v2.8.0 — Real-Time Demo & Multilingual Expansion</h3>
+            <div className="date">August 2026</div>
+            <ul>
+              <li>Live Sepolia demo page with MetaMask wallet integration and multi-RPC fallback</li>
+              <li>Address Check V2.1 rewrite: real-time contract queries with Guard status monitoring</li>
+              <li>15 new translated pages across CN / TW / JP</li>
+              <li>Auto-generated sitemap with hreflang alternates; brand-consistent 404 page</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">Major</span>
+            <h3>v2.7.0-A+ — Security Hardening</h3>
+            <div className="date">August 2026</div>
+            <ul>
+              <li>A+ security audit report; Cloudflare Workers proxy for security headers</li>
+              <li>391 passing contract tests; Subgraph v0.0.4 with Guard entities</li>
+              <li>Website v2.1 full rebuild with EN/CN/TW/JP multilingual support</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">Major</span>
+            <h3>v2.1.0 — Guard Architecture</h3>
             <div className="date">July 2026</div>
             <ul>
-              <li>Added MiCA and HKMA compliance templates for stablecoin issuers</li>
-              <li>Enhanced PolicyEngine with jurisdiction-based rule sets</li>
-              <li>Released interactive demo on Sepolia testnet</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.2 — Monitoring & Indexing</h3>
-            <div className="date">March 2026</div>
-            <ul>
-              <li>Launched The Graph subgraph for indexed on-chain events</li>
-              <li>Deployed Forta monitoring bots for real-time anomaly detection</li>
-              <li>Added WebSocket streaming for live risk updates</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.1 — Security Audit Complete</h3>
-            <div className="date">January 2026</div>
-            <ul>
-              <li>Completed 3 rounds of independent security audits</li>
-              <li>Resolved 300+ findings across contracts, backend, and infrastructure</li>
-              <li>391 tests passing, 0 critical issues open</li>
-              <li>Achieved 99.9% test coverage on core contracts</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">Major</span>
-            <h3>v3.0 — Diamond Architecture</h3>
-            <div className="date">October 2025</div>
-            <ul>
-              <li>Migrated to EIP-2535 Diamond pattern for upgradeable facets</li>
-              <li>Added multi-chain support (Ethereum, Base, Arbitrum)</li>
-              <li>Introduced QuarantineVault for suspicious transaction escrow</li>
+              <li>FidesCompliance V2.1 with PreTransactionGuard for zero-gas pre-flight checks</li>
+              <li>GNN-powered address profiling</li>
+              <li>Pluggable compliance modules via UUPS proxy</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">Minor</span>
-            <h3>v2.0 — RiskRegistryV2</h3>
-            <div className="date">June 2025</div>
+            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <div className="date">July 2026</div>
             <ul>
-              <li>Upgraded RiskRegistry with Merkle-proof based risk commitments</li>
-              <li>Enhanced PolicyEngine with configurable rule templates</li>
-              <li>Added batch address screening API</li>
+              <li>RiskRegistry V2 with CDD labels; PolicyEngine with per-wallet rules</li>
+              <li>QuarantineVault for blocked funds; CompliantStableCoin (fUSD)</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">Minor</span>
-            <h3>v1.0 — Initial Release</h3>
-            <div className="date">January 2025</div>
+            <h3>v1.0.0 — Initial Release</h3>
+            <div className="date">July 2026</div>
             <ul>
-              <li>Launched FidesOrigin protocol on Sepolia testnet</li>
-              <li>Released RiskRegistry and ComplianceEngine contracts</li>
-              <li>Published TypeScript SDK and REST API</li>
+              <li>Initial protocol launch with basic KYC/AML screening</li>
+              <li>OFAC blacklist checks; programmable policy rules</li>
             </ul>
           </div>
         </div>

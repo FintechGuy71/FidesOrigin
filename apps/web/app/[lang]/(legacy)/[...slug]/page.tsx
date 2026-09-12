@@ -11,6 +11,10 @@ import { notFound } from "next/navigation";
 
 export const dynamicParams = false;
 
+/* [AUDIT FIX R2-070] generateStaticParams 是构建期 API，Next 15 规范就是
+   同步 params 对象（非 Promise）——与下方 generateMetadata/page 的
+   Promise 签名不同属正常，并非风格漂移。显式注释防止后续维护者
+   "顺手统一"成 await 形式导致构建失败。 */
 export function generateStaticParams({
   params: { lang },
 }: {

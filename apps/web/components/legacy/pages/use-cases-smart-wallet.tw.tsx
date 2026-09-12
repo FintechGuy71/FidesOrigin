@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/use-cases/smart-wallet.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .uc-hero { padding: 140px 0 60px; }
     .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -143,7 +145,7 @@ export default function ContentUseCasesSmartWalletTW() {
           <h2 className="h1">準備好打造合規的智能錢包了嗎？</h2>
           <p>取得我們的 SDK、測試網部署，以及 ERC-4337 整合指南。</p>
           <div className="cta-buttons">
-            <a href="/tw/docs" className="btn btn-primary">閱讀文件</a>
+            <Link href="/tw/docs" className="btn btn-primary" prefetch={false}>閱讀文件</Link>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">聯繫銷售</a>
           </div>
         </div>

@@ -70,8 +70,14 @@ export function canonicalUrl(path: string, locale: Locale): string {
 }
 
 /**
- * hreflang alternates for a path. Falls back to the locale homepage
- * for locales where the page does not exist (EN-only pages).
+ * hreflang alternates for a path.
+ *
+ * [AUDIT FIX R2-021] EN-only 页（contact / case-studies）此前把 cn/tw/jp 的
+ * hreflang 回退指向各语言首页，而首页的 hreflang 组只包含首页自身——
+ * 形成非对称 hreflang 组（Google 会忽略整个组，等于白声明）。
+ * 改为：页面不存在的语言【直接不声明】，组内只保留真实存在的对应版本
+ * （EN-only 页输出 en + x-default）。hreflang 的原则是"组内互相指认"，
+ * 少声明优于错声明。语言切换器的首页回退（UI 行为）不受影响。
  */
 export function hreflangAlternates(
   path: string,
@@ -79,10 +85,8 @@ export function hreflangAlternates(
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const l of locales) {
-    /* 回退到该语言首页。⚠ 不能写成 langPrefix(l) + "/" —— 静态导出未开
-       trailingSlash，产物是 out/cn.html 而不是 out/cn/index.html，
-       带尾斜杠的 URL 会 404。EN 的前缀是空串，必须显式回退到 "/"。 */
-    const target = available.includes(l) ? localize(path, l) : langPrefix(l) || "/";
+    if (!available.includes(l)) continue;
+    const target = localize(path, l);
     out[hreflangCode[l]] = `${SITE}${target === "" ? "/" : target}`;
   }
   out["x-default"] = `${SITE}${path === "/" ? "/" : path}`;

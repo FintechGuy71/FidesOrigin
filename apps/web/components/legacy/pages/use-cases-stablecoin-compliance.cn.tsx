@@ -1,4 +1,6 @@
 /* Auto-generated from public/cn/use-cases/stablecoin-compliance.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .uc-hero { padding: 140px 0 60px; }
     .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -145,7 +147,7 @@ export default function ContentUseCasesStablecoinComplianceCN() {
           <h2 className="h1">准备好构建合规稳定币了吗？</h2>
           <p>获取我们的 SDK、测试网部署与合规文档。</p>
           <div className="cta-buttons">
-            <a href="/cn/docs" className="btn btn-primary">阅读文档</a>
+            <Link href="/cn/docs" className="btn btn-primary" prefetch={false}>阅读文档</Link>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">联系销售</a>
           </div>
         </div>

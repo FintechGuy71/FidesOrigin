@@ -12,6 +12,14 @@
    （这正是本项目内联 style 泛滥的根因）。
    层序在 css/style.css 顶部统一声明：theme, base, components, legacy, utilities
    —— legacy 排在 utilities 之前，因此工具类可以正常覆盖它。
+
+   ⚠ [AUDIT R2-045] 断点约定：本文件（legacy 层）使用 480 / 600 / 768 / 900px
+   四档断点；新版组件（ui/、首页组件）使用 Tailwind 的 sm:640 / md:768 /
+   lg:1024。两套断点【各管各的层】：经全量复核，components/legacy/ 内
+   零处使用 Tailwind 响应式前缀，新版组件不消费本文件的 @media 规则，
+   两者没有同屏冲突面，因此不做数值归一（重映射会扰动 53 个经典站页面的
+   既有布局，收益为负）。新增 legacy 页面样式时只允许使用上述四档断点，
+   禁止再引入新的孤儿断点值。
    ═══════════════════════════════════════════════════════════════════ */
 
 @layer legacy {
@@ -116,11 +124,10 @@ body {
 /* ⚠ 字体栈已上移到 css/fio-design-system.css（base 层）。
    此处【不再定义 --font-sans】：本文件处于 legacy 层，优先级低于设计系统的
    base 层，即便选择器特异性更高（html[lang] > :root）也会被层规则压掉，
-   留在这里只会造成"改了没效果"的假象。此处只保留纯排版度量。 */
-html[lang="ja"] body {
-  line-height: 1.8;
-  letter-spacing: 0.01em;
-}
+   留在这里只会造成"改了没效果"的假象。此处只保留纯排版度量。
+   [AUDIT FIX R2-044] html[lang="ja"] body 的 line-height/letter-spacing 与
+   fio-design-system.css base 层完全重复（base 层恒胜，本条永远无效），已删除。
+   下面 .display/h1/h2 规则为 legacy 独有，保留。 */
 html[lang="ja"] .display,
 html[lang="ja"] h1,
 html[lang="ja"] h2 {
@@ -409,67 +416,13 @@ img { max-width: 100%; display: block; }
     justify-self: end;
   }
   .nav-inner { padding: 0 20px; }
-}
-
-/* ─── Hero ──────────────────────────────────────────────────────── */
-.hero {
-  position: relative;
-  padding: 160px 0 100px;
-  overflow: hidden;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-}
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% -5%, var(--accent-glow) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 30% at 85% 40%, rgba(201,169,110,0.03) 0%, transparent 50%),
-    var(--bg);
-}
-#particles-canvas {
+}#particles-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-}
-.gradient-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-}
-.hero-content {
-  position: relative;
-  /* 原为裸数字 1，绕过层级令牌 */
-  z-index: var(--z-content);
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto;
-}
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 100px;
-  background: var(--gold-dim);
-  border: 1px solid rgba(201,169,110,0.15);
-  font-size: 0.85rem;
-  color: var(--gold);
-  margin-bottom: 32px;
-  font-weight: 500;
-}
-.hero-badge .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 8px var(--gold);
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
+}@keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
@@ -494,14 +447,6 @@ img { max-width: 100%; display: block; }
   margin: 24px auto 0;
   line-height: 1.7;
 }
-.hero-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 40px;
-}
-
 /* ─── Buttons ───────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -572,41 +517,11 @@ img { max-width: 100%; display: block; }
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.6;
-}
-
-/* ─── Trust Bar ─────────────────────────────────────────────────── */
-.trust-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  padding: 40px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-.trust-stat { text-align: center; }
-.number {
-  font-size: 2.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-fill-color: transparent;
-  background-clip: text;
-}
-.label {
+}.label {
   font-size: 0.85rem;
   color: var(--text-muted);
   margin-top: 4px;
-}
-@media (max-width: 768px) {
-  .trust-bar { grid-template-columns: repeat(2, 1fr); padding: 24px; }
-}
-@media (max-width: 480px) {
-  .trust-bar { grid-template-columns: 1fr; }
-}
-
-/* ─── Features Grid ─────────────────────────────────────────────── */
+}/* ─── Features Grid ─────────────────────────────────────────────── */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -706,41 +621,7 @@ img { max-width: 100%; display: block; }
   .steps { flex-direction: column; }
   .step-arrow { transform: rotate(90deg); }
   .step { max-width: 100%; width: 100%; }
-}
-
-/* ─── Compliance Grid ───────────────────────────────────────────── */
-.compliance-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-top: 48px;
-}
-.compliance-item {
-  padding: 28px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  text-align: center;
-  transition: all 0.3s;
-}
-.compliance-item:hover {
-  border-color: var(--border-light);
-  background: var(--bg-card-hover);
-}
-.compliance-item svg {
-  margin: 0 auto;
-}
-.compliance-item h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-top: 12px;
-}
-.compliance-item p {
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-.badge {
+}.badge {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 100px;
@@ -750,48 +631,9 @@ img { max-width: 100%; display: block; }
   background: rgba(74, 222, 128, 0.1);
   color: var(--success);
 }
-@media (max-width: 900px) {
-  .compliance-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 480px) {
-  .compliance-grid { grid-template-columns: 1fr; }
-}
-
-/* ─── Code Block ────────────────────────────────────────────────── */
-.code-block {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  margin-top: 24px;
-}
-.code-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid var(--border);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-.code-body pre {
-  padding: 20px;
-  overflow-x: auto;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  line-height: 1.7;
-  color: var(--text-secondary);
-}
-/* 语法色统一走 --code-* 令牌（原先这里是第三套 OneDark 配色，
-   且 .comment #5c6370 对比度仅 3.23:1、.kw #c678dd 是紫的破坏金色体系） */
-.code-body .comment { color: var(--code-comment); font-style: italic; }
-.code-body .kw { color: var(--code-kw); }
-.code-body .type { color: var(--code-type); }
-.code-body .func { color: var(--code-func); }
-.code-body .str { color: var(--code-str); }
-.code-body .num { color: var(--code-num); }
+/* [AUDIT FIX R2-041] .code-body .comment/.kw/.type/.func/.str/.num 语法色规则已删：
+   其宿主 .code-block/.code-body 是零消费死类（组件实际用 .docs-code-block/.uc-code），
+   真正在用的语法色由 .uc-code .comment 等同名规则提供（见文件下方）。 */
 
 /* ─── Compliance Panel ──────────────────────────────────────────── */
 .compliance-panel {
@@ -1030,54 +872,11 @@ img { max-width: 100%; display: block; }
 #mobile-wallet-disconnect:hover {
   color: var(--danger);
   border-color: var(--danger);
-}
-
-/* ─── Code Copy Button ──────────────────────────────────────────── */
-.code-copy-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-sans);
-}
-.code-copy-btn:hover {
-  background: var(--bg-card-hover);
-  color: var(--text);
-  border-color: var(--border-light);
-}
-.code-copy-btn.copied {
+}.code-copy-btn.copied {
   background: rgba(74, 222, 128, 0.12);
   color: var(--success);
   border-color: rgba(74, 222, 128, 0.3);
-}
-.code-block {
-  position: relative;
-}
-
-/* ─── Utility Classes for Inline Style Removal ──────────────────── */
-
-/* Gradient orbs */
-.hero .gradient-orb:nth-of-type(1) {
-  width: 600px; height: 600px;
-  background: var(--accent);
-  top: -200px; right: -100px;
-  opacity: 0.08;
-}
-.hero .gradient-orb:nth-of-type(2) {
-  width: 400px; height: 400px;
-  background: var(--gold);
-  bottom: -100px; left: -100px;
-  opacity: 0.06;
-}
-
-/* Section intro centered text */
+}/* Section intro centered text */
 .section-intro {
   text-align: center;
   max-width: 600px;
@@ -1090,79 +889,13 @@ img { max-width: 100%; display: block; }
 /* Secondary background */
 .bg-secondary {
   background: var(--bg-secondary);
-}
-
-/* Wallet compliance section */
-.wallet-compliance {
-  padding-top: 0;
-}
-
-/* Trust section no top padding */
-.trust-section {
-  padding-top: 0;
-}
-
-/* Section title / lead spacing */
+}/* Section title / lead spacing */
 .section-title {
   margin-top: 12px;
-}
-.section-lead {
-  margin-top: 16px;
-}
-
-/* Hero lead top margin */
-.hero-lead {
-  margin-top: 20px;
-}
-
-/* Developer grid (two column) */
-.dev-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-  align-items: center;
-}
-@media (max-width: 900px) {
-  .dev-grid { grid-template-columns: 1fr; gap: 40px; }
-}
-
-/* Developer steps list */
-.dev-steps {
-  margin-top: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.dev-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-.dev-step-num {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  min-width: 24px;
-}
-
-/* Code accent color */
-.code-accent {
-  color: var(--accent);
-}
-
-/* Button sizes */
+}/* Button sizes */
 .btn-sm {
   font-size: 0.875rem;
 }
-
-/* Dev action buttons */
-.dev-actions {
-  margin-top: 32px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 /* CTA buttons row */
 .cta-buttons {
   display: flex;
@@ -1171,36 +904,10 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
   margin-top: 24px;
 }
-
-/* Light button variant */
-.btn-light {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border-color: rgba(255,255,255,0.3);
-}
-
 /* Compliance details spacing */
 .compliance-details {
   margin-top: 12px;
-}
-
-/* Oneline section */
-.oneline-lead {
-  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-  font-weight: 600;
-  color: var(--text);
-}
-.accent-light-text {
-  color: var(--accent-light);
-}
-
-/* Centered wrapper */
-.centered-wrap {
-  text-align: center;
-  margin-top: 40px;
-}
-
-@media (prefers-reduced-motion: reduce) {
+}@media (prefers-reduced-motion: reduce) {
   .reveal, .animate-fadeInUp {
     opacity: 1;
     transform: none;
@@ -1210,8 +917,9 @@ img { max-width: 100%; display: block; }
 }
 
 /* ─── String literal color in code blocks ──────────────────────── */
-.code-body .str { color: #98c379; }
-.code-body .num { color: #d19a66; }
+/* [AUDIT FIX R2-041] 此处 .code-body .str/.num 硬编码 OneDark 色已删：
+   ①宿主 .code-body 是零消费死类；②硬编码色绕过 --code-* 令牌，
+   与文件上方「语法色统一走令牌」的约定冲突。实际生效的是 .uc-code .str/.num。 */
 
 /* ─── Use Cases section (shares features-grid) ─────────────────── */
 #use-cases .features-grid {
@@ -1631,19 +1339,6 @@ img { max-width: 100%; display: block; }
 @media (max-width: 600px) {
   .docs-concept-grid { grid-template-columns: 1fr; }
 }
-
-/* ─── Docs Inline Code Box ──────────────────────────────────────── */
-.docs-code-inline {
-  display: inline-block;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--accent);
-}
-
 /* ─── Docs Base URL Box ─────────────────────────────────────────── */
 .docs-base-url {
   padding: 16px 20px;
@@ -1675,40 +1370,7 @@ img { max-width: 100%; display: block; }
   border-radius: 0 0 var(--radius-sm) 0;
   transition: top 0.2s;
 }
-.skip-link:focus { top: 0; }
-
-/* ─── Trusted By Bar ────────────────────────────────────────────── */
-.trusted-bar {
-  padding: 40px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.trusted-label {
-  text-align: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
-.trusted-logos {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
-}
-.trusted-logo {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  opacity: 0.5;
-  transition: opacity 0.3s;
-}
-.trusted-logo:hover { opacity: 0.8; }
-
-/* ─── Contact Form ──────────────────────────────────────────────── */
+.skip-link:focus { top: 0; }/* ─── Contact Form ──────────────────────────────────────────────── */
 .contact-form { max-width: 500px; margin: 0 auto; }
 .form-group { margin-bottom: 20px; }
 .form-group label {

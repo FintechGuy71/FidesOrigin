@@ -94,7 +94,7 @@ export type PageDef = {
 
 export const pageDefs: Record<string, PageDef> = {
     "about": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "About — FidesOrigin | Programmable On-Chain Compliance", description: "FidesOrigin is building the infrastructure for programmable on-chain compliance. Meet the team behind the protocol." },
@@ -104,67 +104,67 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "address-check": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: true,
       meta: {
       en: { title: "Address Risk Check | FidesOrigin", description: "Check Ethereum address risk in real-time. FidesOrigin scans 20,000+ risk addresses across OFAC, Chainalysis, and more." },
       cn: { title: "地址风险查询 | FidesOrigin", description: "实时查询以太坊地址风险。FidesOrigin扫描超过20,000个风险地址，涵盖OFAC、Chainalysis等来源。" },
       tw: { title: "地址風險查詢 | FidesOrigin", description: "即時查詢以太坊地址風險。FidesOrigin掃描超過20,000個風險地址，涵蓋OFAC、Chainalysis等來源。" },
-      jp: { title: "住所リスクチェック | FidesOrigin", description: "イーサリアム住所のリスクをリアルタイムで確認。FidesOriginはOFAC、Chainalysisなど20,000件以上のリスク住所をスキャンします。" },
+      jp: { title: "アドレスリスクチェック | FidesOrigin", description: "イーサリアムアドレスのリスクをリアルタイムで確認。FidesOriginはOFAC、Chainalysisなど20,000件以上のリスクアドレスをスキャンします。" },
       },
     },
     "blog": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "FidesOrigin Blog — Insights on On-Chain Compliance", description: "Deep dives into programmable on-chain compliance, risk engines, and the future of DeFi regulation." },
       cn: { title: "FidesOrigin 博客 — 链上合规深度洞察", description: "风险引擎、DeFi 监管与确定性合规架构的深度解析。" },
-      tw: { title: "FidesOrigin 博客 — 鏈上合規深度洞察", description: "風險引擎、DeFi 監管與確定性合規架構的深度解析。" },
+      tw: { title: "FidesOrigin 部落格 — 鏈上合規深度洞察", description: "風險引擎、DeFi 監管與確定性合規架構的深度解析。" },
       jp: { title: "FidesOrigin ブログ — オンチェーンコンプライアンスのインサイト", description: "リスクエンジン、DeFi 規制、決定論的コンプライアンスのアーキテクチャを深掘りします。" },
       },
     },
     "blog/hong-kong-stablecoin-license": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Hong Kong Stablecoin License: Compliance Requirements — FidesOrigin Blog", description: "Guide to Hong Kong's stablecoin issuer licensing regime. HKMA requirements, reserve management, and on-chain compliance for VASPs." },
       cn: { title: "中国香港稳定币牌照：合规要求 — FidesOrigin 博客", description: "中国香港稳定币发行方牌照制度指南。HKMA 要求、储备资产管理，以及面向 VASP 的链上合规。" },
-      tw: { title: "中國香港穩定幣牌照：合規要求 — FidesOrigin 博客", description: "中國香港穩定幣發行方牌照制度指南。HKMA 要求、儲備資產管理，以及面向 VASP 的鏈上合規。" },
+      tw: { title: "中國香港穩定幣牌照：合規要求 — FidesOrigin 部落格", description: "中國香港穩定幣發行方牌照制度指南。HKMA 要求、儲備資產管理，以及面向 VASP 的鏈上合規。" },
       jp: { title: "中国香港ステーブルコインライセンス：コンプライアンス要件 — FidesOrigin ブログ", description: "中国香港のステーブルコイン発行者ライセンス制度ガイド。HKMA の要件、準備資産管理、VASP 向けオンチェーンコンプライアンス。" },
       },
     },
     "blog/mica-stablecoin-compliance": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "MiCA Compliance for Stablecoins: A Technical Guide — FidesOrigin Blog", description: "Technical guide to EU MiCA compliance for stablecoin issuers. On-chain reserve attestations, transaction screening, and regulatory reporting requirements." },
       cn: { title: "稳定币的 MiCA 合规：技术指南 — FidesOrigin 博客", description: "面向稳定币发行方的欧盟 MiCA 合规技术指南。链上储备证明、交易筛查与监管报告要求。" },
-      tw: { title: "穩定幣的 MiCA 合規：技術指南 — FidesOrigin 博客", description: "面向穩定幣發行方的歐盟 MiCA 合規技術指南。鏈上儲備證明、交易篩查與監管報告要求。" },
+      tw: { title: "穩定幣的 MiCA 合規：技術指南 — FidesOrigin 部落格", description: "面向穩定幣發行方的歐盟 MiCA 合規技術指南。鏈上儲備證明、交易篩查與監管報告要求。" },
       jp: { title: "ステーブルコインの MiCA コンプライアンス：技術ガイド — FidesOrigin ブログ", description: "ステーブルコイン発行者向け EU MiCA コンプライアンスの技術ガイド。オンチェーン準備資産証明、トランザクションスクリーニング、規制報告要件。" },
       },
     },
     "blog/ofac-sanctions-screening-blockchain": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "OFAC Sanctions Screening on Blockchain: Best Practices — FidesOrigin Blog", description: "Best practices for OFAC sanctions screening on blockchain. How to implement SDN list checks at the smart contract level for stablecoins and DeFi protocols." },
       cn: { title: "区块链上的 OFAC 制裁筛查：最佳实践 — FidesOrigin 博客", description: "区块链上 OFAC 制裁筛查的最佳实践。如何为稳定币与 DeFi 协议在智能合约层实现 SDN 名单核查。" },
-      tw: { title: "區塊鏈上的 OFAC 制裁篩查：最佳實踐 — FidesOrigin 博客", description: "區塊鏈上 OFAC 制裁篩查的最佳實踐。如何為穩定幣與 DeFi 協議在智能合約層實現 SDN 名單核查。" },
+      tw: { title: "區塊鏈上的 OFAC 制裁篩查：最佳實踐 — FidesOrigin 部落格", description: "區塊鏈上 OFAC 制裁篩查的最佳實踐。如何為穩定幣與 DeFi 協議在智能合約層實現 SDN 名單核查。" },
       jp: { title: "ブロックチェーン上の OFAC サンクションスクリーニング：ベストプラクティス — FidesOrigin ブログ", description: "ブロックチェーン上の OFAC サンクションスクリーニングのベストプラクティス。ステーブルコインと DeFi プロトコル向けに、スマートコントラクトレベルでの SDN リストチェック実装を解説。" },
       },
     },
     "blog/travel-rule-on-chain": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "The Travel Rule On-Chain: What FATF Requires from Stablecoin Transfers — FidesOrigin Blog", description: "FATF Travel Rule requirements for stablecoin transfers in 2026, and why on-chain enforcement beats API-centric screening for pre-settlement compliance." },
       cn: { title: "链上旅行规则：FATF 对稳定币转账的要求 — FidesOrigin 博客", description: "2026 年稳定币转账的 FATF 旅行规则要求，以及结算前合规中链上执行为何优于 API 中心化筛查。" },
-      tw: { title: "鏈上旅行規則：FATF 對穩定幣轉帳的要求 — FidesOrigin 博客", description: "2026 年穩定幣轉帳的 FATF 旅行規則要求，以及結算前合規中鏈上執行為何優於 API 中心化篩查。" },
+      tw: { title: "鏈上旅行規則：FATF 對穩定幣轉帳的要求 — FidesOrigin 部落格", description: "2026 年穩定幣轉帳的 FATF 旅行規則要求，以及結算前合規中鏈上執行為何優於 API 中心化篩查。" },
       jp: { title: "オンチェーンのトラベルルール：FATF がステーブルコイン送金に求めるもの — FidesOrigin ブログ", description: "2026 年のステーブルコイン送金における FATF トラベルルール要件と、決済前コンプライアンスにおいてオンチェーンエンフォースメントが API セントリックなスクリーニングに勝る理由。" },
       },
     },
     "blog/why-on-chain-compliance": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Why On-Chain: The End of API-Based Compliance — FidesOrigin", description: "API-based compliance is an architectural mistake. The future is on-chain risk enforcement: deterministic, zero-latency, and impossible to bypass." },
@@ -174,14 +174,14 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "case-studies": {
-      available: ["en"] as unknown as readonly Locale[],
+      available: ["en"] as const,
       wallet: false,
       meta: {
       en: { title: "Case Studies — FidesOrigin | On-Chain Compliance in Production", description: "See how leading stablecoin issuers, RWA platforms, and DeFi protocols use FidesOrigin for deterministic on-chain compliance." },
       },
     },
     "changelog": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Changelog — FidesOrigin | Protocol Updates", description: "Track FidesOrigin protocol updates, security audits, and feature releases. From v1.0 to the latest." },
@@ -191,14 +191,14 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "contact": {
-      available: ["en"] as unknown as readonly Locale[],
+      available: ["en"] as const,
       wallet: false,
       meta: {
       en: { title: "Contact — FidesOrigin | Get Started with On-Chain Compliance", description: "Get in touch with the FidesOrigin team. Request a demo, discuss your compliance needs, or explore partnership opportunities." },
       },
     },
     "demo": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Interactive Demo — FidesOrigin | On-Chain Compliance Engine", description: "Try FidesOrigin's on-chain compliance engine live on Sepolia testnet. Screen addresses, check risk scores, and see quarantine in action." },
@@ -208,7 +208,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "docs": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Documentation — FidesOrigin", description: "FidesOrigin V2.1 documentation. Quick start, core concepts, Guard integration, architecture overview." },
@@ -218,17 +218,17 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "docs/api": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "API Reference — FidesOrigin", description: "FidesOrigin V2.1 REST API reference. Endpoints for address risk checks, rules, batch screening, and monitoring." },
       cn: { title: "API 参考 — FidesOrigin", description: "FidesOrigin REST API 参考。地址风险检查、规则管理和风险评估的端点。" },
       tw: { title: "API 參考 — FidesOrigin", description: "FidesOrigin REST API 參考。地址風險檢查、規則管理和風險評估的端點。" },
-      jp: { title: "API リファレンス — FidesOrigin", description: "FidesOrigin REST API リファレンス。住所リスクチェック、ルール管理、リスク評価のエンドポイント。" },
+      jp: { title: "API リファレンス — FidesOrigin", description: "FidesOrigin REST API リファレンス。アドレスリスクチェック、ルール管理、リスク評価のエンドポイント。" },
       },
     },
     "docs/sdk": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "SDK — FidesOrigin", description: "FidesOrigin JavaScript SDK V2.1. Install, configure, and integrate on-chain compliance with Guard support." },
@@ -238,7 +238,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "pricing": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Pricing — FidesOrigin | On-Chain Compliance Infrastructure", description: "Transparent pricing for on-chain compliance infrastructure. Start free, scale as you grow. Built for stablecoin issuers, RWA platforms, and DeFi protocols." },
@@ -248,7 +248,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "privacy": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Privacy Policy — FidesOrigin", description: "FidesOrigin privacy policy. How we handle data, cookies, and user information." },
@@ -258,7 +258,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "security": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Security & Audits — FidesOrigin | Triple-Audited On-Chain Compliance", description: "FidesOrigin has completed 3 rounds of comprehensive security audits, covering 300+ findings. View our audit reports and security posture." },
@@ -268,7 +268,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "terms": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Terms of Service — FidesOrigin", description: "FidesOrigin terms of service. Rules and conditions for using our platform." },
@@ -278,7 +278,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "use-cases/rwa-tokenization": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "RWA Tokenization Compliance — FidesOrigin", description: "Compliant RWA tokenization with on-chain securities enforcement. Accredited investor verification, jurisdiction checks, and on-chain KYC for tokenized real world assets." },
@@ -288,7 +288,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "use-cases/smart-wallet": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Smart Wallet Compliance — FidesOrigin | Account Abstraction Risk Screening", description: "Embed on-chain risk screening into smart wallets and account abstraction wallets. Screen every userOp before execution with FidesOrigin." },
@@ -298,7 +298,7 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "use-cases/stablecoin-compliance": {
-      available: ["en", "cn", "tw", "jp"] as unknown as readonly Locale[],
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Stablecoin Compliance Solution — FidesOrigin", description: "Build compliant stablecoins with on-chain risk screening. Meet MiCA, Hong Kong, and global regulations with deterministic compliance enforcement." },

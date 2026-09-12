@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/blog/ofac-sanctions-screening-blockchain.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -86,8 +88,8 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainJP() {
         </div>
 
         <div className="blog-nav reveal">
-          <a href="/jp/blog">← 記事一覧</a>
-          <a href="/jp/blog/hong-kong-stablecoin-license">次: 中国香港ライセンス →</a>
+          <Link href="/jp/blog" prefetch={false}>← 記事一覧</Link>
+          <Link href="/jp/blog/hong-kong-stablecoin-license" prefetch={false}>次: 中国香港ライセンス →</Link>
         </div>
       </div>
     </article>

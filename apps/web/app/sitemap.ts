@@ -20,16 +20,50 @@ const LOCALES: Locale[] = ["en", "cn", "tw", "jp"];
 
 export const dynamic = "force-static";
 
+/* [AUDIT FIX R2-054] changeFrequency 按页面类型区分，不再全站 weekly：
+   首页/产品页内容相对稳定（monthly），博客文章发布后基本不再改动（yearly），
+   法务页（privacy/terms）极少变更（yearly）。 */
+function changeFreqFor(slug: string): "daily" | "weekly" | "monthly" | "yearly" {
+  if (slug === "/") return "weekly";
+  if (slug.startsWith("blog")) return "yearly";
+  if (slug === "privacy" || slug === "terms") return "yearly";
+  if (slug === "changelog") return "weekly";
+  return "monthly";
+}
+
+/* [AUDIT FIX R2-054] lastModified 按页维护，不再全站硬编码同一天。
+   博客文章用其真实发布月份（与 blog 索引卡片日期一致）；
+   法务页用保守的固定日期；其余页面回退到构建期当前日期。
+   ⚠ 静态导出下该值随每次构建冻结，但至少各页之间不再雷同、
+   且博客/法务页反映真实更新节奏，避免 Google 因 lastmod 恒定不变而降权。 */
+const BLOG_LASTMOD: Record<string, string> = {
+  "blog/why-on-chain-compliance": "2026-06-15",
+  "blog/hong-kong-stablecoin-license": "2026-07-10",
+  "blog/mica-stablecoin-compliance": "2026-07-18",
+  "blog/ofac-sanctions-screening-blockchain": "2026-07-25",
+  "blog/travel-rule-on-chain": "2026-08-05",
+};
+const LEGAL_LASTMOD = "2026-01-01";
+
+function lastModFor(slug: string): Date {
+  if (slug.startsWith("blog/") && BLOG_LASTMOD[slug]) return new Date(BLOG_LASTMOD[slug]);
+  if (slug === "blog") return new Date("2026-08-05");
+  if (slug === "privacy" || slug === "terms") return new Date(LEGAL_LASTMOD);
+  return new Date();
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
   const push = (path: string, locale: Locale, priority: number, available?: readonly Locale[]) => {
     // 首页特殊处理：localize("", l) 得到 "/cn" 而不是 "/cn/"。
     // 其余页面走 localize("/slug", l)，不会产生尾斜杠。
     const localized = path === "/" ? (locale === "en" ? "" : `/${locale}`) : localize(path, locale);
+    // slug 键：首页用 "/"，其余去掉前导斜杠以匹配 BLOG_LASTMOD 等表
+    const slugKey = path === "/" ? "/" : path.replace(/^\//, "");
     entries.push({
       url: `${BASE}${localized === "" ? "/" : localized}`,
-      lastModified: new Date("2026-08-28"),
-      changeFrequency: "weekly",
+      lastModified: lastModFor(slugKey),
+      changeFrequency: changeFreqFor(slugKey),
       priority,
       alternates: { languages: hreflangAlternates(path, available) },
     });

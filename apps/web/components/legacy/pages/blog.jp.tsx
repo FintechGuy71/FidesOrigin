@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/blog/index.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 /* Blog page-specific styles */
     .blog-hero {
@@ -123,7 +125,7 @@ export default function ContentBlogJP() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
-          <a href="/jp/blog/why-on-chain-compliance" className="blog-card">
+          <Link href="/jp/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">カテゴリー定義</span>
@@ -133,21 +135,60 @@ export default function ContentBlogJP() {
               <p>API ベースのコンプライアンスはアーキテクチャ的な誤りだ。未来はオンチェーンリスクエンフォースメント：決定論的、ゼロレイテンシー、迂回不可能。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog" className="blog-card">
+          <Link href="/jp/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
-                <span className="tag">English</span>
-                <span className="date">2026年7月</span>
+                <span className="tag">規制</span>
+                <span className="date">2026年8月</span>
               </div>
-              <h2>その他の記事（英語版）</h2>
-              <p>香港ステーブルコインライセンスのコンプライアンス要件、MiCA 技術ガイドなど、さらに詳しい記事は英語ブログをご覧ください。</p>
+              <h2>オンチェーンのトラベルルール：FATF がステーブルコイン送金に求めるもの</h2>
+              <p>2026 年のステーブルコイン送金における FATF トラベルルール要件と、決済前コンプライアンスにおいてオンチェーン実行が API セントリックなスクリーニングに勝る理由。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/jp/blog/ofac-sanctions-screening-blockchain" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">コンプライアンス</span>
+                <span className="date">2026年7月</span>
+              </div>
+              <h2>ブロックチェーン上の OFAC サンクションスクリーニング：ベストプラクティス</h2>
+              <p>ステーブルコインと DeFi プロトコル向けに、スマートコントラクトレベルで SDN リストチェックを実装するベストプラクティス。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/jp/blog/hong-kong-stablecoin-license" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">規制</span>
+                <span className="date">2026年7月</span>
+              </div>
+              <h2>中国香港ステーブルコインライセンス：コンプライアンス要件</h2>
+              <p>中国香港のステーブルコイン発行者ライセンス制度ガイド：HKMA の要件、準備資産管理、VASP 向けオンチェーンコンプライアンス。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/jp/blog/mica-stablecoin-compliance" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">規制</span>
+                <span className="date">2026年7月</span>
+              </div>
+              <h2>ステーブルコインの MiCA コンプライアンス：技術ガイド</h2>
+              <p>ステーブルコイン発行者向け EU MiCA コンプライアンスの技術ガイド：オンチェーン準備資産証明、トランザクションスクリーニング、規制報告要件。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
         </div>
       </div>
     </section>

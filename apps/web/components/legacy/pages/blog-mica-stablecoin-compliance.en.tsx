@@ -1,4 +1,6 @@
 /* Auto-generated from public/blog/mica-stablecoin-compliance.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -98,8 +100,8 @@ function _update(address from, address to, uint256 amount) internal override &#1
         </div>
 
         <div className="blog-nav reveal">
-          <a href="/blog">← All Articles</a>
-          <a href="/blog/why-on-chain-compliance">Next: Why On-Chain →</a>
+          <Link href="/blog" prefetch={false}>← All Articles</Link>
+          <Link href="/blog/why-on-chain-compliance" prefetch={false}>Next: Why On-Chain →</Link>
         </div>
       </div>
     </article>

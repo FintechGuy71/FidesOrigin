@@ -174,7 +174,10 @@ function formatTimeAgo(timestamp: number): string {
 const riskStyles = {
   low: "bg-[var(--fio-success-dim)] text-[var(--fio-success)] border-[var(--fio-success-dim)]",
   medium: "bg-[var(--fio-warn-dim)] text-[var(--fio-warn)] border-[var(--fio-warn-dim)]",
-  high: "bg-[var(--fio-warn-dim)] text-[var(--fio-warn)] border-[var(--fio-warn-dim)]",
+  /* [AUDIT FIX] high 原与 medium 完全同色（warn 系），四档风险只有三级视觉，
+     高风险被弱化。改用 danger 系但不加 pulse，与 critical（danger+pulse）区分：
+     high=实心红、critical=红+闪烁。 */
+  high: "bg-[var(--fio-danger-dim)] text-[var(--fio-danger)] border-[var(--fio-danger-dim)]",
   critical: "bg-[var(--fio-danger-dim)] text-[var(--fio-danger)] border-[var(--fio-danger-dim)] animate-pulse",
 };
 
@@ -317,6 +320,14 @@ export default function LiveTransactionStream({
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--fio-success)]"></span>
                   </span>
                   <span className="text-xs text-[var(--fio-success)]">Live</span>
+                </span>
+              ) : !wsUrl ? (
+                /* [AUDIT FIX R2-056] 未配置 wsUrl 时不会发起任何连接，
+                   恒显 "Connecting..." 是对事实的错误陈述。
+                   文案用英文：本组件受"中文硬编码清零"不变量约束
+                   （见 _crosscheck.py #8b），与 Mock Data/Live/Connecting 口径一致。 */
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--fio-surface-2)] text-[var(--fio-text-3)]">
+                  Stream not configured
                 </span>
               ) : (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--fio-danger-dim)] text-[var(--fio-danger)]">

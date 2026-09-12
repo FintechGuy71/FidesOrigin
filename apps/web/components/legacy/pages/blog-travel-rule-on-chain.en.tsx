@@ -1,4 +1,6 @@
 /* Hand-written new article — registry-driven, same shape as codemod output. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -77,8 +79,8 @@ export default function ContentBlogTravelRuleOnChainEN() {
           </div>
 
           <div className="blog-nav reveal">
-            <a href="/blog">← Back to Blog</a>
-            <a href="/blog/mica-stablecoin-compliance">Next: MiCA Compliance for Stablecoins →</a>
+            <Link href="/blog" prefetch={false}>← Back to Blog</Link>
+            <Link href="/blog/mica-stablecoin-compliance" prefetch={false}>Next: MiCA Compliance for Stablecoins →</Link>
           </div>
         </div>
       </article>

@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/use-cases/rwa-tokenization.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .uc-hero { padding: 140px 0 60px; }
     .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -180,7 +182,7 @@ export default function ContentUseCasesRwaTokenizationTW() {
           <h2 className="h1">準備好將實體資產代幣化了嗎？</h2>
           <p>結合鏈上投資人驗證與司法管轄區執行機制，打造合規的證券型代幣。</p>
           <div className="cta-buttons">
-            <a href="/tw/docs" className="btn btn-primary">閱讀文件</a>
+            <Link href="/tw/docs" className="btn btn-primary" prefetch={false}>閱讀文件</Link>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">聯繫銷售</a>
           </div>
         </div>

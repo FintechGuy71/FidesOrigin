@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/docs/sdk.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsSdkJP() {
   return (
     <>
@@ -11,15 +13,15 @@ export default function ContentDocsSdkJP() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">ドキュメント</div>
       <ul className="docs-nav-tree">
-        <li><a href="/jp/docs">概要</a></li>
-        <li><a href="/jp/docs/api">API リファレンス</a></li>
-        <li><a href="/jp/docs/sdk" className="active">SDK</a></li>
+        <li><Link href="/jp/docs" prefetch={false}>概要</Link></li>
+        <li><Link href="/jp/docs/api" prefetch={false}>API リファレンス</Link></li>
+        <li><Link href="/jp/docs/sdk" className="active" prefetch={false}>SDK</Link></li>
       </ul>
       <div className="docs-sidebar-title">リソース</div>
       <ul className="docs-nav-tree">
-        <li><a href="/jp/blog" target="_blank" rel="noopener">ブログ</a></li>
+        <li><Link href="/jp/blog" prefetch={false}>ブログ</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">ダッシュボード</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>ダッシュボード</Link></li>
       </ul>
     </aside>
 
@@ -57,42 +59,48 @@ export default function ContentDocsSdkJP() {
           <span>npm</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>npm install @fidesorigin/sdk</code></pre>
+        <pre><code>npm install @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
       <div className="docs-code-block">
         <div className="docs-code-header">
           <span>yarn</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>yarn add @fidesorigin/sdk</code></pre>
+        <pre><code>yarn add @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
 
       <h2>クイックスタート</h2>
 
-      <h3>SDK を初期化</h3>
+      <h3>クライアントを初期化</h3>
       <div className="docs-code-block">
         <div className="docs-code-header">
           <span>TypeScript</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>import &#123; FidesOrigin &#125; from '@fidesorigin/sdk';
+        <pre><code>import &#123; FidesOriginClient &#125; from '@fintechguy71/fidesorigin-sdk';
 
-const fides = new FidesOrigin(&#123;
+const fides = new FidesOriginClient(&#123;
+  baseUrl: 'https://api.fidesorigin.com',
   apiKey: 'YOUR_API_KEY',
-  network: 'sepolia' // または 'mainnet', 'base'
+  timeout: 30000
 &#125;);</code></pre>
       </div>
+      <p className="docs-note"><strong>注意：</strong>ブラウザ環境では公開 API キー（プレフィックス <code>pk_</code>）のみ使用できます。セキュリティ上、シークレットキーは厳格に禁止されます。</p>
 
-      <h3>住所リスクをチェック</h3>
+      <h3>アドレスリスクをチェック</h3>
       <div className="docs-code-block">
         <div className="docs-code-header">
           <span>TypeScript</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>const result = await fides.evaluateAddress('0x...');
+        <pre><code>const result = await fides.checkRisk(&#123;
+  address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+  chainId: 1  // または 'ethereum'、'sepolia'、11155111
+&#125;);
 
-console.log(result.riskTier); // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
-console.log(result.isSanctioned); // true または false</code></pre>
+console.log(result.risk_level);   // 'low' | 'medium' | 'high' | 'critical'
+console.log(result.risk_score);   // 0-100
+console.log(result.risk_factors); // リスクフラグの配列</code></pre>
       </div>
 
       <h3>バッチリスクチェック</h3>
@@ -135,21 +143,6 @@ ws.on('alert.new', (msg) =&gt; &#123;
 &#125;);</code></pre>
       </div>
 
-      <h3>イベントを購読</h3>
-      <div className="docs-code-block">
-        <div className="docs-code-header">
-          <span>TypeScript</span>
-          <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
-        </div>
-        <pre><code>fides.on('RiskDetected', (event) =&gt; &#123;
-  console.log('リスク検出:', event.address, event.riskTier);
-&#125;);
-
-fides.on('SanctionAdded', (event) =&gt; &#123;
-  console.log('制裁追加:', event.address);
-&#125;);</code></pre>
-      </div>
-
       <h2>コア API</h2>
       <div className="docs-table-wrap">
         <table className="docs-table">
@@ -157,14 +150,19 @@ fides.on('SanctionAdded', (event) =&gt; &#123;
             <tr><th>メソッド</th><th>戻り値</th><th>説明</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>connect(provider)</code></td><td>Promise&lt;void&gt;</td><td>Web3 プロバイダーに接続</td></tr>
-            <tr><td><code>evaluateAddress(addr)</code></td><td>Promise&lt;RiskProfile&gt;</td><td>住所のリスクプロファイルを取得</td></tr>
-            <tr><td><code>evaluateTx(tx)</code></td><td>Promise&lt;TxResult&gt;</td><td>トランザクションの事前スクリーニング</td></tr>
-            <tr><td><code>subscribe(event)</code></td><td>EventEmitter</td><td>オンチェーン・イベントを購読</td></tr>
-            <tr><td><code>disconnect()</code></td><td>void</td><td>接続をクリーンアップ</td></tr>
+            <tr><td><code>checkRisk(input)</code></td><td>Promise&lt;RiskCheckResult&gt;</td><td>単一アドレスのリスク評価</td></tr>
+            <tr><td><code>batchCheckRisk(input)</code></td><td>Promise&lt;BatchRiskCheckResult&gt;</td><td>アドレスの一括スクリーニング</td></tr>
+            <tr><td><code>getAddressRisk(address)</code></td><td>Promise&lt;AddressRisk&gt;</td><td>アドレスの最新リスクスナップショットを取得</td></tr>
+            <tr><td><code>getDashboardStats()</code></td><td>Promise&lt;DashboardStats&gt;</td><td>グローバルなコンプライアンス統計</td></tr>
+            <tr><td><code>listRules(options?)</code></td><td>Promise&lt;RuleListResponse&gt;</td><td>コンプライアンスルールをページネーションで一覧</td></tr>
+            <tr><td><code>createRule(req)</code></td><td>Promise&lt;Rule&gt;</td><td>新しいコンプライアンスルールを作成</td></tr>
+            <tr><td><code>updateRule(id, req)</code></td><td>Promise&lt;Rule&gt;</td><td>既存のルールを更新</td></tr>
+            <tr><td><code>deleteRule(id)</code></td><td>Promise&lt;void&gt;</td><td>コンプライアンスルールを削除</td></tr>
+            <tr><td><code>createWebSocket(config?)</code></td><td>FidesOriginWebSocket</td><td>リアルタイム WebSocket 接続を作成</td></tr>
           </tbody>
         </table>
       </div>
+
 
       <h2 id="on-chain-sdk">On-Chain SDK</h2>
       <p>スマートコントラクトと直接連携するには、On-Chain SDK を使用します。すべての view 関数はガスフリーです。</p>
@@ -185,6 +183,7 @@ fides.on('SanctionAdded', (event) =&gt; &#123;
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
         <pre><code>import &#123; FidesOriginSDK &#125; from '@fidesorigin/on-chain-sdk';
+
 import &#123; JsonRpcProvider &#125; from 'ethers';
 
 const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
@@ -299,22 +298,63 @@ contract MyStableCoin is CompliantStableCoin &#123;
           <span>TypeScript</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>interface RiskProfile &#123;
+        <pre><code>interface RiskCheckResult &#123;
   address: string;
-  riskScore: number;
-  riskTier: 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  isSanctioned: boolean;
-  tags: string[];
-  entityName: string;
-  lastUpdated: string;
+  chain: string;
+  risk_score: number;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  risk_factors: RiskFactor[];
+  scores?: RiskScore[];
+  addressType?: 'wallet' | 'contract' | 'exchange' | 'mixer' | 'unknown';
+  timestamp?: string;
+  relatedEntities?: Entity[];
+  transactionStats?: TransactionStats;
 &#125;
 
-interface TxResult &#123;
-  allowed: boolean;
-  riskScore: number;
-  riskTier: string;
-  quarantineRequired: boolean;
-  reason: string | null;
+interface RiskFactor &#123;
+  name: string;
+  category: string;
+  severity: string;
+  description?: string;
+&#125;
+
+interface RiskScore &#123;
+  score: number;
+  level: string;
+  confidence: number;
+&#125;
+
+interface Rule &#123;
+  id: string;
+  name: string;
+  description?: string;
+  status: 'active' | 'inactive' | 'draft';
+  priority: number;
+  conditions: RuleCondition[];
+  actions: RuleAction[];
+  createdAt: string;
+  updatedAt: string;
+&#125;
+
+interface RuleCondition &#123;
+  field: string;
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in';
+  value: unknown;
+&#125;
+
+interface RuleAction &#123;
+  type: 'flag' | 'block' | 'review' | 'allow';
+  params?: Record&lt;string, unknown&gt;;
+&#125;
+
+// On-Chain SDK types
+enum Decision &#123; ALLOW = 0, FLAG = 1, BLOCK = 2 &#125;
+enum RiskTier &#123; UNKNOWN = 0, LOW = 1, MEDIUM = 2, HIGH = 3, CRITICAL = 4 &#125;
+
+interface TransferValidationResult &#123;
+  wouldSucceed: boolean;
+  decision: Decision;
+  reason: string;
 &#125;</code></pre>
       </div>
 

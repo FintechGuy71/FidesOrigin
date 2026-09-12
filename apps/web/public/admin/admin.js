@@ -117,7 +117,14 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || Object.freeze({
   MerkleRiskRegistry: '0x31A034efbe22eDc1a78ceb37F52BA869D869c33B'
 });
 
-const SUBGRAPH_URL = (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRAPH_URL) || '';
+/* [AUDIT FIX R2-010/R2-032] 原实现 fetch('/api/subgraph')：静态导出没有 API routes、
+   vercel.json 也没有该 rewrite，请求恒 404 → Subgraph 统计卡与合规日志永久失效。
+   现改为直连 The Graph Studio 查询端点（meta CSP connect-src 已放行
+   api.studio.thegraph.com），并保留 window.FIDESORIGIN_SUBGRAPH_URL 注入点
+   （在 admin-config.js 或页面注入即可覆盖，便于切换版本/私有部署）。 */
+const SUBGRAPH_URL =
+  (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRAPH_URL) ||
+  'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3';
 const CONTRACT_ADDRESS = sessionStorage.getItem('contractAddress') || SEPOLIA_ADDRESSES.CompliantStableCoin;
 
 let provider, signer, contract, userAddress;
@@ -128,7 +135,7 @@ async function querySubgraph(query) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch('/api/subgraph', {
+    const response = await fetch(SUBGRAPH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),

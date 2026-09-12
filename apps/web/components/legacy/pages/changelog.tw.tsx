@@ -71,73 +71,72 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">最新</span>
-            <h3>v3.3 — 監管模板</h3>
+            <h3>v3.1.0 — 安全審計修復版本</h3>
+            <div className="date">2026 年 8 月</div>
+            <ul>
+              <li>完整修復獨立安全審計發現的全部 53 項問題（High 6 / Medium 15 / Low 26 / Info 6）</li>
+              <li>合約、閘道 API 與資料鏈路共 9 項 Breaking Changes——詳見 CHANGELOG.md</li>
+              <li>Sepolia 全新部署 v3.1.0 合約集；發布 DEPLOYED.md 作為權威合約註冊表</li>
+              <li>合約測試 449/449 全綠（新增 15 項回歸測試）</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">重大</span>
+            <h3>v2.8.0 — 實時演示與多語言擴展</h3>
+            <div className="date">2026 年 8 月</div>
+            <ul>
+              <li>Sepolia 實時演示頁上線：MetaMask 錢包整合與多 RPC 回退</li>
+              <li>地址查詢 V2.1 重寫：實時合約查詢與 Guard 狀態監控</li>
+              <li>CN / TW / JP 新增 15 個翻譯頁面</li>
+              <li>自動生成帶 hreflang 的 sitemap；品牌一致的 404 頁面</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">重大</span>
+            <h3>v2.7.0-A+ — 安全加固</h3>
+            <div className="date">2026 年 8 月</div>
+            <ul>
+              <li>A+ 安全審計報告；Cloudflare Workers 代理注入安全回應標頭</li>
+              <li>391 項合約測試通過；Subgraph v0.0.4 新增 Guard 實體</li>
+              <li>網站 v2.1 全面重建，支援 EN/CN/TW/JP 四語言</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">重大</span>
+            <h3>v2.1.0 — Guard 架構</h3>
             <div className="date">2026 年 7 月</div>
             <ul>
-              <li>為穩定幣發行方新增 MiCA 與 HKMA 合規模板</li>
-              <li>強化 PolicyEngine，支援以司法管轄區為基礎的規則集</li>
-              <li>在 Sepolia 測試網發布互動式示範</li>
+              <li>FidesCompliance V2.1 整合 PreTransactionGuard，實現零 Gas 交易前攔截</li>
+              <li>GNN 驅動的地址風險輪廓</li>
+              <li>基於 UUPS 代理的可插拔合規模組</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">重大更新</span>
-            <h3>v3.2 — 監控與索引</h3>
-            <div className="date">2026 年 3 月</div>
+            <span className="timeline-badge badge-minor">次要</span>
+            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <div className="date">2026 年 7 月</div>
             <ul>
-              <li>推出 The Graph Subgraph，用於索引鏈上事件</li>
-              <li>部署 Forta 監控機器人，進行即時異常偵測</li>
-              <li>新增 WebSocket 串流，提供即時風險更新</li>
+              <li>RiskRegistry V2 引入 CDD 標籤；PolicyEngine 支援依錢包配置規則</li>
+              <li>QuarantineVault 隔離金庫；CompliantStableCoin (fUSD)</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">重大更新</span>
-            <h3>v3.1 — 完成安全審計</h3>
-            <div className="date">2026 年 1 月</div>
+            <span className="timeline-badge badge-minor">次要</span>
+            <h3>v1.0.0 — 初始發布</h3>
+            <div className="date">2026 年 7 月</div>
             <ul>
-              <li>完成 3 輪獨立安全審計</li>
-              <li>解決合約、後端與基礎設施中超過 300 項發現項</li>
-              <li>391 項測試通過，0 項未解決的嚴重問題</li>
-              <li>核心合約測試覆蓋率達 99.9%</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">重大更新</span>
-            <h3>v3.0 — Diamond 架構</h3>
-            <div className="date">2025 年 10 月</div>
-            <ul>
-              <li>遷移至 EIP-2535 Diamond 模式，支援可升級的 facet</li>
-              <li>新增多鏈支援（Ethereum、Base、Arbitrum）</li>
-              <li>引入 QuarantineVault 隔離金庫，用於託管可疑交易</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-minor">次要更新</span>
-            <h3>v2.0 — RiskRegistryV2</h3>
-            <div className="date">2025 年 6 月</div>
-            <ul>
-              <li>升級 RiskRegistry，支援以 Merkle 證明為基礎的風險承諾</li>
-              <li>強化 PolicyEngine，提供可設定的規則模板</li>
-              <li>新增批量位址篩查 API</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-minor">次要更新</span>
-            <h3>v1.0 — 初始發布</h3>
-            <div className="date">2025 年 1 月</div>
-            <ul>
-              <li>在 Sepolia 測試網推出 FidesOrigin 協議</li>
-              <li>發布 RiskRegistry 與 ComplianceEngine 合約</li>
-              <li>推出 TypeScript SDK 與 REST API</li>
+              <li>協議初始發布，內建基礎 KYC/AML 篩查</li>
+              <li>OFAC 黑名單檢查；可編程策略規則</li>
             </ul>
           </div>
         </div>

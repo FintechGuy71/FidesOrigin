@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Locale, langPrefix, localize } from "@/i18n/locales";
 import type { Dict } from "@/i18n/dictionaries/en";
 
@@ -35,18 +37,22 @@ export default function LegacyFooter({ lang, dict }: Props) {
           </div>
           <div className="footer-col">
             <h4>{dict.footer.product}</h4>
+            {/* #features 是同页锚点，保留原生 <a>；其余站内链接改 next/link（R2-049） */}
             <a href={`${homeHref(lang)}#features`}>{dict.footer.features}</a>
-            <a href={localize("/use-cases/stablecoin-compliance", lang)}>{dict.footer.useCases}</a>
-            <a href={localize("/pricing", lang)}>{dict.footer.pricing}</a>
-            <a href={localize("/security", lang)}>{dict.footer.security}</a>
-            <a href="/admin/dashboard">{dict.footer.dashboard}</a>
+            <Link href={localize("/use-cases/stablecoin-compliance", lang)} prefetch={false}>{dict.footer.useCases}</Link>
+            <Link href={localize("/pricing", lang)} prefetch={false}>{dict.footer.pricing}</Link>
+            <Link href={localize("/security", lang)} prefetch={false}>{dict.footer.security}</Link>
+            <Link href="/admin/dashboard" prefetch={false}>{dict.footer.dashboard}</Link>
           </div>
           <div className="footer-col">
             <h4>{dict.footer.developers}</h4>
-            <a href={localize("/docs", lang)}>{dict.footer.documentation}</a>
-            <a href={localize("/docs/api", lang)}>{dict.footer.apiReference}</a>
-            <a href={localize("/docs/sdk", lang)}>SDK</a>
-            {/* rel="noopener noreferrer" 没有 target="_blank" 时是死属性 */}
+            <Link href={localize("/docs", lang)} prefetch={false}>{dict.footer.documentation}</Link>
+            <Link href={localize("/docs/api", lang)} prefetch={false}>{dict.footer.apiReference}</Link>
+            <Link href={localize("/docs/sdk", lang)} prefetch={false}>SDK</Link>
+            {/* [AUDIT FIX R1-X2] /address-check（四语言，带钱包链上合规查询的
+                核心功能页）此前是孤儿页：全站无任何链接可达，只能靠 sitemap/
+                直接输入 URL。加入 footer Developers 列使其可发现。 */}
+            <Link href={localize("/address-check", lang)} prefetch={false}>{dict.footer.addressCheck}</Link>
             <a
               href="https://github.com/FintechGuy71/FidesOrigin"
               target="_blank"
@@ -58,9 +64,9 @@ export default function LegacyFooter({ lang, dict }: Props) {
           <div className="footer-col">
             <h4>{dict.footer.company}</h4>
             <a href="mailto:contact@fidesorigin.com">{dict.footer.contact}</a>
-            <a href={localize("/blog", lang)}>{dict.footer.blog}</a>
-            <a href={localize("/privacy", lang)}>{dict.footer.privacy}</a>
-            <a href={localize("/terms", lang)}>{dict.footer.terms}</a>
+            <Link href={localize("/blog", lang)} prefetch={false}>{dict.footer.blog}</Link>
+            <Link href={localize("/privacy", lang)} prefetch={false}>{dict.footer.privacy}</Link>
+            <Link href={localize("/terms", lang)} prefetch={false}>{dict.footer.terms}</Link>
           </div>
         </div>
         <div className="footer-bottom">

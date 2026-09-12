@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/blog/ofac-sanctions-screening-blockchain.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -86,8 +88,8 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainTW() {
         </div>
 
         <div className="blog-nav reveal">
-          <a href="/tw/blog">← 全部文章</a>
-          <a href="/tw/blog/hong-kong-stablecoin-license">下一篇：中國香港牌照 →</a>
+          <Link href="/tw/blog" prefetch={false}>← 全部文章</Link>
+          <Link href="/tw/blog/hong-kong-stablecoin-license" prefetch={false}>下一篇：中國香港牌照 →</Link>
         </div>
       </div>
     </article>

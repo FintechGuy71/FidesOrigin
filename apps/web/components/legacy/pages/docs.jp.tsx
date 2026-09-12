@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/docs/index.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsJP() {
   return (
     <>
@@ -11,16 +13,16 @@ export default function ContentDocsJP() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">ドキュメント</div>
       <ul className="docs-nav-tree">
-        <li><a href="/jp/docs" className="active">概要</a></li>
-        <li><a href="/jp/docs/api">API リファレンス</a></li>
-        <li><a href="/jp/docs/sdk">SDK</a></li>
-        <li><a href="/jp/demo">デモ</a></li>
+        <li><Link href="/jp/docs" className="active" prefetch={false}>概要</Link></li>
+        <li><Link href="/jp/docs/api" prefetch={false}>API リファレンス</Link></li>
+        <li><Link href="/jp/docs/sdk" prefetch={false}>SDK</Link></li>
+        <li><Link href="/jp/demo" prefetch={false}>デモ</Link></li>
       </ul>
       <div className="docs-sidebar-title">リソース</div>
       <ul className="docs-nav-tree">
-        <li><a href="/jp/blog" target="_blank" rel="noopener">ブログ</a></li>
+        <li><Link href="/jp/blog" prefetch={false}>ブログ</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">ダッシュボード</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>ダッシュボード</Link></li>
       </ul>
     </aside>
 
@@ -30,34 +32,34 @@ export default function ContentDocsJP() {
       <p className="docs-lead">プロトコルにオンチェーン・コンプライアンスを統合するために必要なすべて。Guard によるトランザクション前のインターセプトにも対応しました。</p>
 
       <div className="docs-cards">
-        <a href="/jp/docs/api" className="docs-card">
+        <Link href="/jp/docs/api" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
           <h3>API リファレンス</h3>
           <p>住所リスクチェック、ルール管理、一括スクリーニング、リアルタイムモニタリングの REST API エンドポイント。</p>
-        </a>
-        <a href="/jp/docs/sdk" className="docs-card">
+        </Link>
+        <Link href="/jp/docs/sdk" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
           <h3>SDK</h3>
           <p>ウォレット統合、住所スクリーニング、Guard 統合、イベント購読用 JavaScript SDK。</p>
-        </a>
-        <a href="/jp/demo" className="docs-card">
+        </Link>
+        <Link href="/jp/demo" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <h3>デモ</h3>
           <p>Sepolia テストネットでのインタラクティブデモ。アドレスのスクリーニング、リスクスコアの確認、Guard の動作を体験できます。</p>
-        </a>
-        <a href="/jp/blog" className="docs-card" target="_blank" rel="noopener">
+        </Link>
+        <Link href="/jp/blog" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
           </div>
           <h3>ブログ</h3>
           <p>オンチェーン・コンプライアンス、リスクエンジン、DeFi 規制の深掘り。</p>
-        </a>
+        </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
@@ -85,7 +87,7 @@ export default function ContentDocsJP() {
           <span>Shell</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>npm install @fidesorigin/sdk</code></pre>
+        <pre><code>npm install @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
 
       <h3>3. Solidity 統合</h3>

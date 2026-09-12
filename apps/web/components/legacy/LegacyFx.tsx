@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { Dict } from "@/i18n/dictionaries/en";
+/* [AUDIT FIX] 未使用的 Dict 类型导入已删（组件 props 只用 string） */
 
 /* ================================================================
    LEGACY FX — scroll-reveal IntersectionObserver + scroll-to-top

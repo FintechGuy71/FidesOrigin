@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/use-cases/smart-wallet.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .uc-hero { padding: 140px 0 60px; }
     .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -143,7 +145,7 @@ export default function ContentUseCasesSmartWalletJP() {
           <h2 className="h1">コンプライアンス対応のスマートウォレットを構築しませんか？</h2>
           <p>SDK、テストネットデプロイ、ERC-4337 統合ガイドをご利用いただけます。</p>
           <div className="cta-buttons">
-            <a href="/jp/docs" className="btn btn-primary">ドキュメントを読む</a>
+            <Link href="/jp/docs" className="btn btn-primary" prefetch={false}>ドキュメントを読む</Link>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">営業に問い合わせ</a>
           </div>
         </div>

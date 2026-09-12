@@ -32,7 +32,7 @@ export default function Header({
   d: Dict["home"]["chrome"];
 }) {
   const navLinks = [
-    { href: `${homeHref(lang)}#capabilities`, label: d.capabilities },
+    { href: `${homeHref(lang)}#capabilities`, label: d.capabilities, hash: true },
     { href: pageHref("/pricing", lang), label: d.pricing },
     { href: pageHref("/docs", lang), label: d.docs },
     { href: pageHref("/blog", lang), label: d.blog },
@@ -71,9 +71,40 @@ export default function Header({
       }
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setLangOpen(false);
-      setMobileOpen(false);
+      if (e.key === "Escape") {
+        if (langOpen) {
+          /* [AUDIT FIX R2-048] Esc 关闭后焦点返还触发按钮（此前落在 body） */
+          langRef.current
+            ?.querySelector<HTMLButtonElement>(`button[aria-controls="${langMenuId}"]`)
+            ?.focus();
+        }
+        setLangOpen(false);
+        setMobileOpen(false);
+        return;
+      }
+      /* [AUDIT FIX R2-048] role="menu" 契约要求方向键导航：
+         菜单打开时 ↑/↓ 在 menuitem 间循环，Home/End 跳首尾。
+         此前只有 role 标注没有键盘行为，读屏用户被承诺了 menu 语义
+         却得不到对应的交互。 */
+      if (!langOpen) return;
+      const menu = langRef.current?.querySelector<HTMLDivElement>(`#${langMenuId}`);
+      if (!menu) return;
+      const items = Array.from(menu.querySelectorAll<HTMLAnchorElement>('a[role="menuitem"]'));
+      if (items.length === 0) return;
+      const idx = items.indexOf(document.activeElement as HTMLAnchorElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        items[(idx + 1 + items.length) % items.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        items[(idx - 1 + items.length) % items.length].focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        items[0].focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        items[items.length - 1].focus();
+      }
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -130,7 +161,8 @@ export default function Header({
               >
                 {link.label}
               </a>
-            ) : (
+            ) : link.hash ? (
+              /* 同页锚点保持原生 <a>：Link 的 hash 导航在跨页时才需要路由 */
               <a
                 key={link.label}
                 href={link.href}
@@ -138,16 +170,55 @@ export default function Header({
               >
                 {link.label}
               </a>
+            ) : (
+              /* [AUDIT FIX R2-049] 站内跨页导航改用 next/link：
+                 静态导出下裸 <a> 每次跳转整页刷新、重新执行全部 JS；
+                 Link 走客户端路由（同 root layout 组内无刷新切换）。
+                 prefetch=false：91 页站点避免默认 prefetch 扫全站。 */
+              <Link
+                key={link.label}
+                href={link.href}
+                prefetch={false}
+                className="rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+              >
+                {link.label}
+              </Link>
             )
           )}
           {/* Language dropdown */}
           <div className="relative ml-2" ref={langRef}>
             <button
-              onClick={() => setLangOpen(!langOpen)}
+              onClick={() => {
+                const next = !langOpen;
+                setLangOpen(next);
+                /* [AUDIT FIX R2-048] 菜单打开后焦点移入第一项：
+                   与下方方向键导航配套（焦点若留在按钮上，↑/↓ 无作用对象）。
+                   Esc 关闭时焦点仍在 document.activeElement（菜单内），
+                   由 onKeyDown 的 Escape 分支关闭后浏览器自然回落，
+                   这里补充：关闭时把焦点还给按钮。 */
+                if (next) {
+                  requestAnimationFrame(() => {
+                    langRef.current
+                      ?.querySelector<HTMLDivElement>(`#${langMenuId}`)
+                      ?.querySelector<HTMLAnchorElement>('a[role="menuitem"]')
+                      ?.focus();
+                  });
+                }
+              }}
               aria-label={d.language}
               aria-expanded={langOpen}
               aria-haspopup="menu"
               aria-controls={langMenuId}
+              onKeyDown={(e) => {
+                /* 按钮上的方向键也直接进入菜单（menu-button 标准行为） */
+                if (langOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+                  e.preventDefault();
+                  langRef.current
+                    ?.querySelector<HTMLDivElement>(`#${langMenuId}`)
+                    ?.querySelector<HTMLAnchorElement>('a[role="menuitem"]')
+                    ?.focus();
+                }
+              }}
               className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
             >
               {lang.toUpperCase()}
@@ -189,12 +260,13 @@ export default function Header({
             )}
           </div>
 
-          <a
+          <Link
             href="/admin/dashboard"
+            prefetch={false}
             className="ml-3 rounded-md border border-[var(--fio-gold-dim)] bg-[var(--fio-gold-glow)] px-4 py-1.5 text-sm font-medium text-[var(--fio-gold)] transition-all hover:bg-[var(--fio-gold-dim)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
           >
             {d.dashboard}
-          </a>
+          </Link>
         </nav>
 
         {/* Mobile toggle */}
@@ -227,25 +299,48 @@ export default function Header({
           className="border-t border-[var(--fio-border-subtle)] px-4 py-4 md:hidden"
           style={{ background: "var(--fio-ink-scrim)" }}
         >
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              target={link.external ? "_blank" : undefined}
-              rel={link.external ? "noopener noreferrer" : undefined}
-              className="block rounded-md px-3 py-2.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
-              onClick={() => setMobileOpen(false)}
-            >
-              {link.label}
-            </a>
-          ))}
-          <a
+          {navLinks.map((link) =>
+            link.external ? (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-md px-3 py-2.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </a>
+            ) : link.hash ? (
+              <a
+                key={link.label}
+                href={link.href}
+                className="block rounded-md px-3 py-2.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </a>
+            ) : (
+              /* [AUDIT FIX R2-049] 移动端菜单同样改客户端路由 */
+              <Link
+                key={link.label}
+                href={link.href}
+                prefetch={false}
+                className="block rounded-md px-3 py-2.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+          <Link
             href="/admin/dashboard"
+            prefetch={false}
             className="mt-2 block rounded-md px-3 py-2.5 text-sm font-medium text-[var(--fio-gold)] transition-colors hover:bg-[var(--fio-gold-dim)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
             onClick={() => setMobileOpen(false)}
           >
             {d.dashboard} →
-          </a>
+          </Link>
           <div className="mt-3 flex items-center gap-1 border-t border-[var(--fio-border-subtle)] pt-3">
             {langLinks.map((l) => (
               <a

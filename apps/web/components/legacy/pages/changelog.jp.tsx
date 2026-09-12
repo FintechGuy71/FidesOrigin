@@ -71,73 +71,72 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">最新</span>
-            <h3>v3.3 — 規制テンプレート</h3>
+            <h3>v3.1.0 — セキュリティ監査リリース</h3>
+            <div className="date">2026年8月</div>
+            <ul>
+              <li>独立セキュリティ監査で指摘された全 53 件を完全修復（High 6 / Medium 15 / Low 26 / Info 6）</li>
+              <li>コントラクト・ゲートウェイ API・データパイプラインで 9 件の Breaking Changes——詳細は CHANGELOG.md</li>
+              <li>Sepolia に v3.1.0 コントラクト群を新規デプロイ；DEPLOYED.md を権威レジストリとして公開</li>
+              <li>コントラクトテスト 449/449 合格（回帰テスト 15 件を追加）</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">メジャー</span>
+            <h3>v2.8.0 — リアルタイムデモと多言語展開</h3>
+            <div className="date">2026年8月</div>
+            <ul>
+              <li>Sepolia リアルタイムデモページ公開：MetaMask ウォレット連携とマルチ RPC フォールバック</li>
+              <li>アドレスチェック V2.1 を全面刷新：リアルタイムのコントラクタクエリと Guard ステータス監視</li>
+              <li>CN / TW / JP で 15 の翻訳ページを新規追加</li>
+              <li>hreflang 付き sitemap を自動生成；ブランド統一の 404 ページ</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">メジャー</span>
+            <h3>v2.7.0-A+ — セキュリティ強化</h3>
+            <div className="date">2026年8月</div>
+            <ul>
+              <li>A+ セキュリティ監査レポート；Cloudflare Workers プロキシでセキュリティヘッダーを注入</li>
+              <li>391 件のコントラクトテスト合格；Subgraph v0.0.4 に Guard エンティティを追加</li>
+              <li>ウェブサイト v2.1 を全面再構築、EN/CN/TW/JP の 4 言語に対応</li>
+            </ul>
+          </div>
+
+          <div className="timeline-item">
+            <div className="timeline-dot"></div>
+            <span className="timeline-badge badge-major">メジャー</span>
+            <h3>v2.1.0 — Guard アーキテクチャ</h3>
             <div className="date">2026年7月</div>
             <ul>
-              <li>ステーブルコイン発行者向けに MiCA および HKMA のコンプライアンステンプレートを追加</li>
-              <li>PolicyEngine を強化し、管轄区域ベースのルールセットに対応</li>
-              <li>Sepolia テストネットにてインタラクティブデモを公開</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">メジャー</span>
-            <h3>v3.2 — モニタリングとインデックス化</h3>
-            <div className="date">2026年3月</div>
-            <ul>
-              <li>オンチェーンイベントをインデックス化する The Graph Subgraph を公開</li>
-              <li>リアルタイムの異常検知のため Forta モニタリングボットを配備</li>
-              <li>リアルタイムのリスク更新に対応する WebSocket ストリーミングを追加</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">メジャー</span>
-            <h3>v3.1 — セキュリティ監査完了</h3>
-            <div className="date">2026年1月</div>
-            <ul>
-              <li>3ラウンドの独立セキュリティ監査を完了</li>
-              <li>コントラクト、バックエンド、インフラ全体で 300 件超の指摘事項を解決</li>
-              <li>391 件のテストが合格、重大な問題は 0 件</li>
-              <li>コアコントラクトのテストカバレッジ 99.9% を達成</li>
-            </ul>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <span className="timeline-badge badge-major">メジャー</span>
-            <h3>v3.0 — Diamond アーキテクチャ</h3>
-            <div className="date">2025年10月</div>
-            <ul>
-              <li>アップグレード可能な facet のため EIP-2535 Diamond パターンへ移行</li>
-              <li>マルチチェーン対応を追加（Ethereum、Base、Arbitrum）</li>
-              <li>不正疑いのある取引をエスクローする QuarantineVault を導入</li>
+              <li>FidesCompliance V2.1 に PreTransactionGuard を統合し、ガス不要の取引前チェックを実現</li>
+              <li>GNN 駆動のアドレスプロファイリング</li>
+              <li>UUPS プロキシによるプラガブルなコンプライアンスモジュール</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">マイナー</span>
-            <h3>v2.0 — RiskRegistryV2</h3>
-            <div className="date">2025年6月</div>
+            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <div className="date">2026年7月</div>
             <ul>
-              <li>RiskRegistry をアップグレードし、Merkle プルーフベースのリスクコミットメントに対応</li>
-              <li>PolicyEngine を強化し、設定可能なルールテンプレートを追加</li>
-              <li>アドレス一括スクリーニング API を追加</li>
+              <li>RiskRegistry V2 に CDD ラベルを導入；PolicyEngine がウォレット単位のルールに対応</li>
+              <li>QuarantineVault（隔離ボールト）；CompliantStableCoin (fUSD)</li>
             </ul>
           </div>
 
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">マイナー</span>
-            <h3>v1.0 — 初期リリース</h3>
-            <div className="date">2025年1月</div>
+            <h3>v1.0.0 — 初期リリース</h3>
+            <div className="date">2026年7月</div>
             <ul>
-              <li>FidesOrigin プロトコルを Sepolia テストネットに公開</li>
-              <li>RiskRegistry と ComplianceEngine コントラクトをリリース</li>
-              <li>TypeScript SDK と REST API を公開</li>
+              <li>プロトコル初期リリース、基本的な KYC/AML スクリーニングを内蔵</li>
+              <li>OFAC ブラックリストチェック；プログラマブルなポリシールール</li>
             </ul>
           </div>
         </div>

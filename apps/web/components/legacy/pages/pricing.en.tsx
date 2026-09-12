@@ -1,4 +1,6 @@
 /* Auto-generated from public/pricing.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .pricing-hero { padding: 140px 0 60px; text-align: center; }
     .pricing-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -121,7 +123,7 @@ export default function ContentPricingEN() {
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> Mainnet deployment</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> Custom policies</li>
             </ul>
-            <a href="/docs" className="btn btn-secondary pricing-cta">Start Free</a>
+            <Link href="/docs" className="btn btn-secondary pricing-cta" prefetch={false}>Start Free</Link>
           </div>
 
           
@@ -137,7 +139,7 @@ export default function ContentPricingEN() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Quarantine vault</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> Dedicated infrastructure</li>
             </ul>
-            <a href="/contact" className="btn btn-primary pricing-cta">Get Started</a>
+            <Link href="/contact" className="btn btn-primary pricing-cta" prefetch={false}>Get Started</Link>
           </div>
 
           
@@ -153,12 +155,12 @@ export default function ContentPricingEN() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Custom contract development</li>
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> On-premise option</li>
             </ul>
-            <a href="/contact" className="btn btn-secondary pricing-cta">Contact Sales</a>
+            <Link href="/contact" className="btn btn-secondary pricing-cta" prefetch={false}>Contact Sales</Link>
           </div>
         </div>
 
         <div className="pricing-note reveal">
-          <p>All plans include access to our <a href="/docs/sdk">SDK</a>, <a href="/docs/api">REST API</a>, and <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">open-source contracts</a>. Need a custom solution? <a href="mailto:contact@fidesorigin.com">Let's talk</a>.</p>
+          <p>All plans include access to our <Link href="/docs/sdk" prefetch={false}>SDK</Link>, <Link href="/docs/api" prefetch={false}>REST API</Link>, and <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">open-source contracts</a>. Need a custom solution? <a href="mailto:contact@fidesorigin.com">Let's talk</a>.</p>
         </div>
       </div>
     </section>

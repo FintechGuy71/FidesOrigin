@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/blog/why-on-chain-compliance.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-hero {
       position: relative;
@@ -275,10 +277,10 @@ export default function ContentBlogWhyOnChainComplianceJP() {
         <h2 className="h2" style={{ "marginBottom": "16px" }}>オンチェーンリスクエンフォースメントで構築</h2>
         <p className="lead" style={{ "marginBottom": "32px" }}>FidesOrigin は、ステーブルコイン、スマートウォレット、RWA プラットフォーム、エージェンティック・ペイメント・レールのためのネイティブ・オンチェーン・リスク・エンジンだ。</p>
         <div style={{ "display": "flex", "gap": "12px", "justifyContent": "center", "flexWrap": "wrap" }}>
-          <a href="/jp" className="btn btn-primary">
+          <Link href="/jp" className="btn btn-primary" prefetch={false}>
             FidesOrigin を探る
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5-5-5-5" /></svg>
-          </a>
+          </Link>
           <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">お問い合わせ</a>
         </div>
       </div>

@@ -1,4 +1,6 @@
 /* Auto-generated from public/blog/index.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 /* Blog page-specific styles */
     .blog-hero {
@@ -125,7 +127,7 @@ export default function ContentBlogEN() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
-          <a href="/blog/travel-rule-on-chain" className="blog-card">
+          <Link href="/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">Regulation</span>
@@ -135,11 +137,11 @@ export default function ContentBlogEN() {
               <p>FATF Travel Rule requirements for stablecoin transfers in 2026, and why on-chain enforcement beats API-centric screening.</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog/ofac-sanctions-screening-blockchain" className="blog-card">
+          <Link href="/blog/ofac-sanctions-screening-blockchain" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">Sanctions</span>
@@ -149,11 +151,11 @@ export default function ContentBlogEN() {
               <p>Best practices for OFAC sanctions screening on blockchain — implementing SDN list checks at the smart contract level for stablecoins and DeFi.</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog/hong-kong-stablecoin-license" className="blog-card">
+          <Link href="/blog/hong-kong-stablecoin-license" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">Regulation</span>
@@ -163,11 +165,11 @@ export default function ContentBlogEN() {
               <p>Guide to Hong Kong's stablecoin issuer licensing regime. HKMA requirements, reserve management, and on-chain compliance for VASPs.</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog/mica-stablecoin-compliance" className="blog-card">
+          <Link href="/blog/mica-stablecoin-compliance" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">Regulation</span>
@@ -177,11 +179,11 @@ export default function ContentBlogEN() {
               <p>Technical guide to EU MiCA compliance for stablecoin issuers. On-chain reserve attestations, transaction screening, and regulatory reporting.</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog/why-on-chain-compliance" className="blog-card">
+          <Link href="/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">Category Definition</span>
@@ -191,7 +193,7 @@ export default function ContentBlogEN() {
               <p>Why screening transactions through off-chain APIs is structurally broken — and what "on-chain risk enforcement" means for digital asset infrastructure.</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

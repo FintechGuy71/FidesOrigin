@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/blog/travel-rule-on-chain.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -77,8 +79,8 @@ export default function ContentBlogTravelRuleOnChainJP() {
           </div>
 
           <div className="blog-nav reveal">
-            <a href="/jp/blog">← ブログに戻る</a>
-            <a href="/jp/blog/mica-stablecoin-compliance">次: ステーブルコインの MiCA コンプライアンス →</a>
+            <Link href="/jp/blog" prefetch={false}>← ブログに戻る</Link>
+            <Link href="/jp/blog/mica-stablecoin-compliance" prefetch={false}>次: ステーブルコインの MiCA コンプライアンス →</Link>
           </div>
         </div>
       </article>

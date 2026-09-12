@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/docs/api.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsApiTW() {
   return (
     <>
@@ -11,15 +13,15 @@ export default function ContentDocsApiTW() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">文件</div>
       <ul className="docs-nav-tree">
-        <li><a href="/tw/docs">概覽</a></li>
-        <li><a href="/tw/docs/api" className="active">API 參考</a></li>
-        <li><a href="/tw/docs/sdk">SDK</a></li>
+        <li><Link href="/tw/docs" prefetch={false}>概覽</Link></li>
+        <li><Link href="/tw/docs/api" className="active" prefetch={false}>API 參考</Link></li>
+        <li><Link href="/tw/docs/sdk" prefetch={false}>SDK</Link></li>
       </ul>
       <div className="docs-sidebar-title">資源</div>
       <ul className="docs-nav-tree">
-        <li><a href="/tw/blog" target="_blank" rel="noopener">博客</a></li>
+        <li><Link href="/tw/blog" prefetch={false}>部落格</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">控制台</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>控制台</Link></li>
       </ul>
     </aside>
 
@@ -51,6 +53,13 @@ export default function ContentDocsApiTW() {
           <code className="docs-endpoint-path">/rules</code>
         </div>
         <p>列出所有活躍的合規規則。</p>
+        {/* [AUDIT FIX R2-003] 补 GET /rules 查询参数节，与 EN/cn 对齐 */}
+        <h4>查詢參數</h4>
+        <ul>
+          <li><code>status</code>（可選）— 依狀態過濾：<code>active</code>、<code>inactive</code>、<code>draft</code>。</li>
+          <li><code>limit</code>（可選）— 每頁筆數，最大 100，預設 50。</li>
+          <li><code>offset</code>（可選）— 分頁偏移量，預設 0。</li>
+        </ul>
         <h4>響應</h4>
         <div className="docs-code-block">
           <div className="docs-code-header">
@@ -60,13 +69,20 @@ export default function ContentDocsApiTW() {
           <pre><code>&#123;
   "rules": [
     &#123;
-      "id": "rule-001",
-      "name": "Sanctions Screening",
-      "type": "BLOCK",
-      "active": true,
-      "priority": 1
+      "id": "rule_1",
+      "name": "Block Critical Risk Addresses",
+      "description": "Automatically block transactions to addresses with critical risk score",
+      "status": "active",
+      "priority": 100,
+      "conditions": [&#123; "field": "risk.score", "operator": "greater_than", "value": 90 &#125;],
+      "actions": [&#123; "type": "block", "params": &#123; "reason": "Critical risk score exceeded" &#125; &#125;],
+      "createdAt": "2026-08-01T10:00:00Z",
+      "updatedAt": "2026-08-01T10:00:00Z"
     &#125;
-  ]
+  ],
+  "total": 3,
+  "page": 1,
+  "limit": 50
 &#125;</code></pre>
         </div>
       </div>
@@ -286,7 +302,7 @@ export default function ContentDocsApiTW() {
       </div>
 
       <h2>Guard 整合（鏈上）</h2>
-      <p>V2.1 引入了 <strong>PreTransactionGuard</strong>——零 Gas 的交易前攔截層。Guard 操作透過智慧合約呼叫直接在鏈上執行，而非透過 REST API。請使用<a href="/docs/sdk#guard">鏈上 SDK</a> 進行 Guard 整合。</p>
+      <p>V2.1 引入了 <strong>PreTransactionGuard</strong>——零 Gas 的交易前攔截層。Guard 操作透過智慧合約呼叫直接在鏈上執行，而非透過 REST API。請使用<Link href="/tw/docs/sdk#guard" prefetch={false}>鏈上 SDK</Link> 進行 Guard 整合。</p>
 
       <div className="docs-code-block">
         <div className="docs-code-header">
@@ -327,9 +343,11 @@ export default function ContentDocsApiTW() {
           <tbody>
             <tr><td><code>400</code></td><td>Bad Request</td><td>請求參數無效</td></tr>
             <tr><td><code>401</code></td><td>Unauthorized</td><td>缺少或無效的 API 密鑰</td></tr>
+            <tr><td><code>403</code></td><td>Forbidden</td><td>狀態變更請求的 CSRF 來源不被允許</td></tr>
             <tr><td><code>404</code></td><td>Not Found</td><td>地址或資源未找到</td></tr>
-            <tr><td><code>429</code></td><td>Rate Limited</td><td>請求過於頻繁</td></tr>
+            <tr><td><code>429</code></td><td>Rate Limited</td><td>請求過於頻繁（每 IP 每分鐘 60 次）</td></tr>
             <tr><td><code>500</code></td><td>Server Error</td><td>內部伺服器錯誤</td></tr>
+            <tr><td><code>502</code></td><td>Bad Gateway</td><td>後端代理不可用</td></tr>
           </tbody>
         </table>
       </div>

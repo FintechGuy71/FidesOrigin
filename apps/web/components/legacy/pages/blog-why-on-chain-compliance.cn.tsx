@@ -1,4 +1,6 @@
 /* Auto-generated from public/cn/blog/why-on-chain-compliance.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-hero {
       position: relative;
@@ -275,10 +277,10 @@ export default function ContentBlogWhyOnChainComplianceCN() {
         <h2 className="h2" style={{ "marginBottom": "16px" }}>构建链上风险执行</h2>
         <p className="lead" style={{ "marginBottom": "32px" }}>FidesOrigin 是一个原生链上风险引擎，面向稳定币、智能钱包、RWA 平台和代理支付轨道。</p>
         <div style={{ "display": "flex", "gap": "12px", "justifyContent": "center", "flexWrap": "wrap" }}>
-          <a href="/cn" className="btn btn-primary">
+          <Link href="/cn" className="btn btn-primary" prefetch={false}>
             探索 FidesOrigin
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5-5-5-5" /></svg>
-          </a>
+          </Link>
           <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">联系我们</a>
         </div>
       </div>

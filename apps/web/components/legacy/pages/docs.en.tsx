@@ -1,4 +1,6 @@
 /* Auto-generated from public/docs/index.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsEN() {
   return (
     <>
@@ -12,16 +14,16 @@ export default function ContentDocsEN() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">Documentation</div>
       <ul className="docs-nav-tree">
-        <li><a href="/docs" className="active">Overview</a></li>
-        <li><a href="/docs/api">API Reference</a></li>
-        <li><a href="/docs/sdk">SDK</a></li>
-        <li><a href="/demo">Demo</a></li>
+        <li><Link href="/docs" className="active" prefetch={false}>Overview</Link></li>
+        <li><Link href="/docs/api" prefetch={false}>API Reference</Link></li>
+        <li><Link href="/docs/sdk" prefetch={false}>SDK</Link></li>
+        <li><Link href="/demo" prefetch={false}>Demo</Link></li>
       </ul>
       <div className="docs-sidebar-title">Resources</div>
       <ul className="docs-nav-tree">
-        <li><a href="/blog" target="_blank" rel="noopener">Blog</a></li>
+        <li><Link href="/blog" prefetch={false}>Blog</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">Dashboard</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>Dashboard</Link></li>
       </ul>
     </aside>
 
@@ -33,27 +35,27 @@ export default function ContentDocsEN() {
       <p className="docs-lead">Everything you need to integrate on-chain compliance into your protocol. Now with Guard pre-transaction interception.</p>
 
       <div className="docs-cards">
-        <a href="/docs/api" className="docs-card">
+        <Link href="/docs/api" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
           <h3>API Reference</h3>
           <p>REST API endpoints for address risk checks, rules management, batch screening, and real-time monitoring.</p>
-        </a>
-        <a href="/docs/sdk" className="docs-card">
+        </Link>
+        <Link href="/docs/sdk" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
           <h3>SDK</h3>
           <p>JavaScript SDK for wallet integration, address screening, Guard integration, and event subscriptions.</p>
-        </a>
-        <a href="/demo" className="docs-card">
+        </Link>
+        <Link href="/demo" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <h3>Demo</h3>
           <p>Interactive demo on Sepolia testnet. Screen addresses, check risk scores, and see Guard in action.</p>
-        </a>
+        </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>

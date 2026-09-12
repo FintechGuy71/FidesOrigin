@@ -1,4 +1,6 @@
 /* Auto-generated from public/case-studies.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentCaseStudiesEN() {
   return (
     <>
@@ -167,8 +169,8 @@ export default function ContentCaseStudiesEN() {
           <h2 className="h1">Ready to become our next case study?</h2>
           <p>Get in touch to discuss your compliance needs.</p>
           <div className="cta-buttons">
-            <a href="/contact" className="btn btn-primary">Contact Sales</a>
-            <a href="/demo" className="btn btn-secondary">Try Demo</a>
+            <Link href="/contact" className="btn btn-primary" prefetch={false}>Contact Sales</Link>
+            <Link href="/demo" className="btn btn-secondary" prefetch={false}>Try Demo</Link>
           </div>
         </div>
       </div>

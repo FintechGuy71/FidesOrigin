@@ -1,4 +1,6 @@
 /* Auto-generated from public/docs/api.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsApiEN() {
   return (
     <>
@@ -12,16 +14,16 @@ export default function ContentDocsApiEN() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">Documentation</div>
       <ul className="docs-nav-tree">
-        <li><a href="/docs">Overview</a></li>
-        <li><a href="/docs/api" className="active">API Reference</a></li>
-        <li><a href="/docs/sdk">SDK</a></li>
-        <li><a href="/demo">Demo</a></li>
+        <li><Link href="/docs" prefetch={false}>Overview</Link></li>
+        <li><Link href="/docs/api" className="active" prefetch={false}>API Reference</Link></li>
+        <li><Link href="/docs/sdk" prefetch={false}>SDK</Link></li>
+        <li><Link href="/demo" prefetch={false}>Demo</Link></li>
       </ul>
       <div className="docs-sidebar-title">Resources</div>
       <ul className="docs-nav-tree">
-        <li><a href="/blog" target="_blank" rel="noopener">Blog</a></li>
+        <li><Link href="/blog" prefetch={false}>Blog</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">Dashboard</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>Dashboard</Link></li>
       </ul>
     </aside>
 
@@ -310,7 +312,7 @@ export default function ContentDocsApiEN() {
       </div>
 
       <h2>Guard Integration (On-Chain)</h2>
-      <p>V2.1 introduces the <strong>PreTransactionGuard</strong> — a zero-gas pre-transaction interception layer. Guard operations are executed directly on-chain via smart contract calls, not through the REST API. Use the <a href="/docs/sdk#guard">On-Chain SDK</a> for Guard integration.</p>
+      <p>V2.1 introduces the <strong>PreTransactionGuard</strong> — a zero-gas pre-transaction interception layer. Guard operations are executed directly on-chain via smart contract calls, not through the REST API. Use the <Link href="/docs/sdk#guard" prefetch={false}>On-Chain SDK</Link> for Guard integration.</p>
 
       <div className="docs-code-block">
         <div className="docs-code-header">

@@ -34,7 +34,12 @@
       chainIdHex: '0xaa36a7',
       name: 'Sepolia',
       rpc: 'https://rpc.sepolia.org',
-      contract: '0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707',
+      /* [AUDIT FIX] FidesCompliance 当前生产代（v3.1.0）地址，
+         与 packages/config/deployments.json、public/admin/admin-config.js 对齐。
+         原值 0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707 在 deployments.json
+         中已被标注为 deprecated（FidesCompliance_admin_config），指向旧部署，
+         quickCheckAddress/getRiskProfile 查询的是过期合约。 */
+      contract: '0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5',
       explorer: 'https://sepolia.etherscan.io',
     },
     mainnet: {
