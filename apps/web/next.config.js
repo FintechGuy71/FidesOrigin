@@ -32,9 +32,9 @@ const nextConfig = {
     };
     return config;
   },
-  env: {
-    NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || '0.1.1',
-  },
+  /* [AUDIT FIX R2-028] 移除 env.NEXT_PUBLIC_APP_VERSION：
+     全站零消费（grep 实测 0 处），且回退值 '0.1.1' 与 package.json 版本不符，
+     是「看似有用、实则空头支票」的死配置。版本号如需暴露应直接读 package.json。 */
 }
 
 module.exports = nextConfig

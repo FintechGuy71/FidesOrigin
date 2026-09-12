@@ -129,5 +129,5 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// Log test setup
-console.log('[setupTests] Test environment initialized');
+/* [AUDIT FIX R2-024] 删除残留的 console.log('[setupTests] ...')：
+   setup 文件在每次测试运行时打印噪音，且原 src/ 复制品测试已删除。 */

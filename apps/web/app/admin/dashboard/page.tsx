@@ -8,23 +8,25 @@ import { RiskBadge, RiskScore } from "@fidesorigin/ui";
 
 
 // 事件显示配置
+/* [AUDIT FIX R2-016/R2-017 收尾] 原 MAX_EVENT_NAME_LENGTH / MAX_ADDRESS_LENGTH /
+   CHART_UPDATE_INTERVAL / CHART_ANIMATION_OFFSET / BAR_CHART_OFFSET / BAR_CHART_WIDTH /
+   REFRESH_INTERVALS 七个常量在语义修复后全站零消费（原先正是它们被互相
+   误用造成截断长度/阈值 bug），已删除，避免"看似可用"的误导。 */
 const MAX_EVENTS_DISPLAY = 50;
-const MAX_EVENT_NAME_LENGTH = 30;
-const MAX_ADDRESS_LENGTH = 10;
-/* ⚠ 下面三个常量原先被直接当作「截断长度 / 风险分阈值」使用：
-   MAX_ADDRESS_LENGTH(地址截断长度) 被当柱状图最小高度，
-   CHART_UPDATE_INTERVAL(图表刷新间隔) 被当地址截断长度，
-   MAX_EVENTS_DISPLAY(事件条数上限) 被当风险分阈值。
-   改一个会破坏另一个，且语义完全无法维护。这里各自补上正确的常量。 */
 const MIN_BAR_HEIGHT_PERCENT = 4;
 const ADDRESS_PREVIEW_LENGTH = 12;
 const HASH_PREVIEW_LENGTH = 20;
+/* [AUDIT FIX] 地址/哈希「取末尾 N 位」的语义常量。
+   此前 modal 里用 slice(BAR_CHART_OFFSET=-8) / slice(CHART_ANIMATION_OFFSET=-6)
+   —— 两个图表几何常量被当字符串负索引，数值凑巧能用但语义完全错误，
+   改图表布局会静默改变地址显示。 */
+const ADDRESS_TAIL_LENGTH = 6;
+const HASH_TAIL_LENGTH = 8;
 const RISK_SCORE_HIGH = 70;
 const RISK_SCORE_MEDIUM = 40;
-const CHART_UPDATE_INTERVAL = 12;
-const CHART_ANIMATION_OFFSET = -6;
-const BAR_CHART_OFFSET = -8;
-const BAR_CHART_WIDTH = 20;
+/* [AUDIT FIX] 仪表盘数据轮询间隔。此前复用 WS_MAX_RETRY_DELAY（WS 重连退避上限），
+   数值凑巧 30s，但改 WS 退避策略会连带改刷新频率。 */
+const DASHBOARD_REFRESH_INTERVAL = 30000;
 
 // API 配置（网关，注意默认 base 带 /v1）
 const API_BASE =
@@ -40,20 +42,11 @@ const WS_INITIAL_RETRY_DELAY = 1000;
 const WS_MAX_RETRY_DELAY = 30000;
 const WS_RETRY_MULTIPLIER = 2;
 
-// 刷新间隔配置 (毫秒)
-const REFRESH_INTERVALS = {
-  realtime: 120000,    // 2分钟
-  fast: 300000,        // 5分钟
-  normal: 720000,      // 12分钟
-  slow: 1080000,       // 18分钟
-  verySlow: 1500000,   // 25分钟
-} as const;
-
 // 数值格式化常量
+/* [AUDIT FIX] .hundred 零消费已删除。 */
 const FORMATTING = {
   million: 1000000,
   thousand: 1000,
-  hundred: 100,
   minute: 60,
   second: 1000,
 } as const;
@@ -101,6 +94,12 @@ function useDashboardWebSocket(
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const connect = useCallback(() => {
+    /* [AUDIT FIX R2-056] WS_URL 未配置（空串）时不得构造 WebSocket：
+       new WebSocket("") 会抛 SyntaxError。此前该 hook 无守卫（同仓
+       LiveTransactionStream 的 useWebSocket 有 `if (!url) return;`），
+       导致未配置环境下每次打开页面必抛错，且 LiveIndicator 永显"连接中"。
+       与 LiveTransactionStream 对齐：空 URL 直接跳过连接。 */
+    if (!url) return;
     try {
       ws.current = new WebSocket(url);
 
@@ -332,7 +331,16 @@ function ChartIcon() {
   );
 }
 
-function LiveIndicator({ isConnected }: { isConnected: boolean }) {
+function LiveIndicator({ isConnected, wsConfigured }: { isConnected: boolean; wsConfigured: boolean }) {
+  /* [AUDIT FIX R2-056] 未配置 WS 时显示"未配置"而非恒显"连接中..."：
+     与 LiveTransactionStream 头部状态口径一致，避免同屏矛盾。 */
+  if (!wsConfigured) {
+    return (
+      <span className="text-sm font-medium text-[var(--fio-text-3)] px-2 py-0.5 rounded-full bg-[var(--fio-surface-2)]">
+        实时流未配置
+      </span>
+    );
+  }
   return (
     <div className="flex items-center gap-2">
       <span className="relative flex h-3 w-3">
@@ -384,6 +392,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [dataUnavailable, setDataUnavailable] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  /* [AUDIT FIX R2-059] 交易详情模态框：焦点管理 + Esc 关闭所需的 ref */
+  const modalRef = useRef<HTMLDivElement>(null);
 
   /* 鉴权门禁：与 public/admin/index.html 共用 sessionStorage token（网关真登录）。
      初始为 null：SSR/水合完成前不渲染后台内容，避免未授权闪现。 */
@@ -433,6 +443,12 @@ export default function DashboardPage() {
 
   // 初始加载数据
   useEffect(() => {
+    /* [AUDIT FIX R2-065] 仅在已登录（authed === true）时拉取数据：
+       此前 effect 无前置条件，未登录用户每次打开页面都会发出 2 个必 401 的
+       /dashboard/stats|events 请求 + 1 次必失败的 WS 构造，网关侧看是匿名扫射，
+       可能触发风控/限流。authed 进入依赖数组：登录成功后自动开始拉取。 */
+    if (authed !== true) return;
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -462,9 +478,9 @@ export default function DashboardPage() {
     loadData();
 
     // 定期刷新数据（每 30 秒）
-    const interval = setInterval(loadData, WS_MAX_RETRY_DELAY);
+    const interval = setInterval(loadData, DASHBOARD_REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, []);
+  }, [authed]);
 
   // WebSocket 数据更新处理
   const handleStatsUpdate = useCallback((newStats: DashboardStats) => {
@@ -484,34 +500,42 @@ export default function DashboardPage() {
   // WebSocket 连接
   const { isConnected } = useDashboardWebSocket(WS_URL, handleStatsUpdate, handleNewEvent);
 
+  /* [AUDIT FIX R2-057] 变化率此前恒以 `+` 前缀拼接：后端下发 -5 时显示 "+-5%"；
+     且 changeType 按卡片写死，不随数值符号变化——下降的拦截量也显示绿色。
+     改为按符号生成前缀，changeType 由数值方向决定。
+     ⚠ 「风险地址」语义相反：风险地址**减少**是好事（绿），增加是坏事（红），
+        因此该卡的 changeType 取反。 */
+  const changeText = (v: number) => `${v >= 0 ? "+" : ""}${v}%`;
+
   // 统计数据卡片（[M-15 FIX] 无数据时显示占位符而非虚构数字）
   const statCards = [
     {
       title: "今日拦截",
       value: stats ? formatNumber(stats.todayBlocked) : "—",
-      change: stats ? `+${stats.todayBlockedChange}%` : "",
-      changeType: "positive" as const,
+      change: stats ? changeText(stats.todayBlockedChange) : "",
+      changeType: (stats?.todayBlockedChange ?? 0) >= 0 ? ("positive" as const) : ("negative" as const),
       icon: ShieldIcon,
     },
     {
       title: "风险地址",
       value: stats ? formatNumber(stats.riskAddresses) : "—",
-      change: stats ? `+${stats.riskAddressesChange}%` : "",
-      changeType: "negative" as const,
+      change: stats ? changeText(stats.riskAddressesChange) : "",
+      // 风险地址增加 = 负面（红），减少 = 正面（绿）——与其它卡方向相反
+      changeType: (stats?.riskAddressesChange ?? 0) >= 0 ? ("negative" as const) : ("positive" as const),
       icon: AlertIcon,
     },
     {
       title: "合规通过率",
       value: stats ? `${stats.complianceRate}%` : "—",
-      change: stats ? `+${stats.complianceRateChange}%` : "",
-      changeType: "positive" as const,
+      change: stats ? changeText(stats.complianceRateChange) : "",
+      changeType: (stats?.complianceRateChange ?? 0) >= 0 ? ("positive" as const) : ("negative" as const),
       icon: CheckIcon,
     },
     {
       title: "监控交易",
       value: stats ? formatNumber(stats.monitoredTransactions) : "—",
-      change: stats ? `+${stats.monitoredTransactionsChange}%` : "",
-      changeType: "positive" as const,
+      change: stats ? changeText(stats.monitoredTransactionsChange) : "",
+      changeType: (stats?.monitoredTransactionsChange ?? 0) >= 0 ? ("positive" as const) : ("negative" as const),
       icon: ChartIcon,
     },
   ];
@@ -553,6 +577,26 @@ export default function DashboardPage() {
     setSelectedTx(tx);
   };
 
+  /* [AUDIT FIX R2-059] 模态框键盘契约：打开时焦点移入并支持 Esc 关闭。
+     此前模态仅靠点击遮罩/关闭按钮关闭，无 role="dialog"、无 Esc、
+     焦点不移入、背景可 Tab 穿透。 */
+  useEffect(() => {
+    if (!selectedTx) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedTx(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    // 打开后把焦点移入模态（聚焦关闭按钮，避免焦点留在被遮挡的背景）
+    const focusTarget = modalRef.current?.querySelector<HTMLElement>("[data-modal-close]");
+    focusTarget?.focus();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedTx]);
+
   /* [O-4 Fix] 鉴权门禁渲染：
      authed === null → 水合未完成，渲染空白避免未授权内容闪现；
      authed === false → 渲染登录表单；
@@ -567,10 +611,12 @@ export default function DashboardPage() {
           onSubmit={tryLogin}
           className="w-full max-w-sm rounded-xl border border-[var(--fio-border)] bg-[var(--fio-surface)] p-8"
         >
-          <h1 className="mb-2 text-xl font-semibold text-[var(--fio-text)]">Admin Sign In</h1>
-          <p className="mb-6 text-sm text-[var(--fio-text-2)]">Sign in with your admin account to continue.</p>
+          {/* [AUDIT FIX R2-066] 登录表单原为英文，与主体中文界面混杂。
+              后台受众为运营团队，统一为中文。 */}
+          <h1 className="mb-2 text-xl font-semibold text-[var(--fio-text)]">管理员登录</h1>
+          <p className="mb-6 text-sm text-[var(--fio-text-2)]">使用管理员账号登录以继续。</p>
           <label htmlFor="admin-username" className="mb-1 block text-sm text-[var(--fio-text-2)]">
-            Username
+            用户名
           </label>
           <input
             id="admin-username"
@@ -580,13 +626,13 @@ export default function DashboardPage() {
               setUsernameInput(e.target.value);
               setLoginError(null);
             }}
-            placeholder="Username"
-            aria-label="Admin username"
+            placeholder="请输入用户名"
+            aria-label="管理员用户名"
             autoComplete="username"
             className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
           <label htmlFor="admin-password" className="mb-1 block text-sm text-[var(--fio-text-2)]">
-            Password
+            密码
           </label>
           <input
             id="admin-password"
@@ -596,8 +642,8 @@ export default function DashboardPage() {
               setPwdInput(e.target.value);
               setLoginError(null);
             }}
-            placeholder="Password"
-            aria-label="Admin password"
+            placeholder="请输入密码"
+            aria-label="管理员密码"
             autoComplete="current-password"
             className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
@@ -611,7 +657,7 @@ export default function DashboardPage() {
             disabled={loginSubmitting}
             className="w-full rounded-lg bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)] disabled:opacity-50"
           >
-            {loginSubmitting ? "Signing in..." : "Sign in"}
+            {loginSubmitting ? "登录中..." : "登录"}
           </button>
         </form>
       </div>
@@ -634,7 +680,7 @@ export default function DashboardPage() {
                   数据不可用
                 </span>
               )}
-              <LiveIndicator isConnected={isConnected} />
+              <LiveIndicator isConnected={isConnected} wsConfigured={!!WS_URL} />
             </div>
           </div>
         </div>
@@ -687,7 +733,10 @@ export default function DashboardPage() {
               {riskTrendData.map((point, i) => (
                 <div key={i} className="text-center p-3 rounded-lg bg-[var(--fio-surface-2)]">
                   <div className={`text-xl font-semibold ${
-                    point.score >= MAX_EVENTS_DISPLAY ? "text-red-400" : point.score >= MAX_EVENT_NAME_LENGTH ? "text-yellow-400" : "text-green-400"
+                    /* [AUDIT FIX R2-016] 此前误用 MAX_EVENTS_DISPLAY(50)/MAX_EVENT_NAME_LENGTH(30)
+                       当风险分阈值，与同页柱状图（RISK_SCORE_HIGH=70/MEDIUM=40）配色矛盾：
+                       同一分数在两块区域一个判红一个判黄。统一用语义阈值常量。 */
+                    point.score >= RISK_SCORE_HIGH ? "text-red-400" : point.score >= RISK_SCORE_MEDIUM ? "text-yellow-400" : "text-green-400"
                   }`}>
                     {point.score}
                   </div>
@@ -749,7 +798,7 @@ export default function DashboardPage() {
             {/* 总体风险评分 */}
             <div className="mt-6 pt-6 border-t border-[var(--fio-border)]">
               <div className="text-center">
-                <p className="text-sm text-[var(--fio-text-2)] mb-2">Current System Risk Score</p>
+                <p className="text-sm text-[var(--fio-text-2)] mb-2">当前系统风险评分</p>
                 {/* ⚠ 原先硬编码 score={42} level="medium"：无论后端返回什么，
                     页面永远显示 42/中等。改为取趋势末点，无数据时显示占位符。 */}
                 {latestRiskScore === null ? (
@@ -783,9 +832,11 @@ export default function DashboardPage() {
           <div className="p-6 border-b border-[var(--fio-border)]">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">最近风险事件</h2>
-              <button className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
-                查看全部 →
-              </button>
+              {/* [AUDIT FIX R2-058] "查看全部"此前是无 onClick/href 的死按钮（虚假可供性）。
+                  事件列表页尚未实现，降级为不可交互的占位文本。 */}
+              <span className="text-sm text-[var(--fio-text-3)]" aria-disabled="true">
+                查看全部 →（即将上线）
+              </span>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -882,22 +933,29 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
+        {/* [AUDIT FIX R2-058] 此前 4 个 <button> 均无 onClick/href，可聚焦、有 hover 态，
+            但点击零反馈——虚假可供性。对应后端功能尚未实现，改为非交互占位卡
+            （div + aria-disabled + "即将上线"标记），不再用 button 语义误导用户。 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: "生成报告", desc: "导出今日风险分析", color: "blue" },
-            { title: "配置规则", desc: "更新风控策略", color: "purple" },
-            { title: "地址查询", desc: "查询风险地址", color: "orange" },
-            { title: "系统设置", desc: "管理通知与阈值", color: "gray" },
+            { title: "生成报告", desc: "导出今日风险分析" },
+            { title: "配置规则", desc: "更新风控策略" },
+            { title: "地址查询", desc: "查询风险地址" },
+            { title: "系统设置", desc: "管理通知与阈值" },
           ].map((action, index) => (
-            <button
+            <div
               key={index}
-              className="p-4 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl text-left hover:border-[var(--fio-border-light)] hover:bg-[var(--fio-surface-2)]/50 transition-all group"
+              aria-disabled="true"
+              className="p-4 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl text-left opacity-70"
             >
-              <h3 className="font-medium text-white group-hover:text-emerald-400 transition-colors">
-                {action.title}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-white">{action.title}</h3>
+                <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-[var(--fio-surface-2)] text-[var(--fio-text-3)]">
+                  即将上线
+                </span>
+              </div>
               <p className="text-sm text-[var(--fio-text-2)] mt-1">{action.desc}</p>
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -909,20 +967,29 @@ export default function DashboardPage() {
           onClick={() => setSelectedTx(null)}
         >
           <div
+            /* [AUDIT FIX R2-059] 补 dialog 语义：role/aria-modal/aria-labelledby，
+               此前纯 div 实现，读屏无法识别为模态对话框。 */
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tx-detail-title"
             className="bg-[var(--fio-surface)] border border-[var(--fio-border-light)] rounded-2xl p-6 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-white">交易详情</h3>
+              <h3 id="tx-detail-title" className="text-lg font-medium text-white">交易详情</h3>
               <button
+                data-modal-close
                 onClick={() => setSelectedTx(null)}
-                className="text-[var(--fio-text-2)] hover:text-white"
+                aria-label="关闭交易详情"
+                className="text-[var(--fio-text-2)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] rounded"
               >
                 <svg
                   className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -940,19 +1007,19 @@ export default function DashboardPage() {
                 {/* 原 text-indigo-400 依赖已删除的 tailwind.config.js 色板，
                     在 v4 下落回默认蓝紫。改用品牌强调色令牌。 */}
                 <span className="font-mono text-[var(--fio-accent)]">
-                  {selectedTx.hash.slice(0, HASH_PREVIEW_LENGTH)}...{selectedTx.hash.slice(BAR_CHART_OFFSET)}
+                  {selectedTx.hash.slice(0, HASH_PREVIEW_LENGTH)}...{selectedTx.hash.slice(-HASH_TAIL_LENGTH)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[var(--fio-text-2)]">发送方</span>
                 <span className="font-mono text-[var(--fio-text)]">
-                  {selectedTx.from.slice(0, ADDRESS_PREVIEW_LENGTH)}...{selectedTx.from.slice(CHART_ANIMATION_OFFSET)}
+                  {selectedTx.from.slice(0, ADDRESS_PREVIEW_LENGTH)}...{selectedTx.from.slice(-ADDRESS_TAIL_LENGTH)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[var(--fio-text-2)]">接收方</span>
                 <span className="font-mono text-[var(--fio-text)]">
-                  {selectedTx.to.slice(0, ADDRESS_PREVIEW_LENGTH)}...{selectedTx.to.slice(CHART_ANIMATION_OFFSET)}
+                  {selectedTx.to.slice(0, ADDRESS_PREVIEW_LENGTH)}...{selectedTx.to.slice(-ADDRESS_TAIL_LENGTH)}
                 </span>
               </div>
               <div className="flex items-center justify-between">

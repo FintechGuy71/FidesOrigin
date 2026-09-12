@@ -1,4 +1,6 @@
 /* Auto-generated from public/blog/ofac-sanctions-screening-blockchain.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -86,8 +88,8 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainEN() {
         </div>
 
         <div className="blog-nav reveal">
-          <a href="/blog">← All Articles</a>
-          <a href="/blog/hong-kong-stablecoin-license">Next: HK License →</a>
+          <Link href="/blog" prefetch={false}>← All Articles</Link>
+          <Link href="/blog/hong-kong-stablecoin-license" prefetch={false}>Next: HK License →</Link>
         </div>
       </div>
     </article>

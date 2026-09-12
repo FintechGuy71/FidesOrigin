@@ -21,9 +21,15 @@ export default function ContentContactEN() {
     setStatus("submitting");
     setErrorMsg(null);
     try {
+      /* [AUDIT FIX R2-053] 补 AbortController 8s 超时：同仓 AddressCheck 与
+         DemoExperience 均有同款模板，唯独联系表单没有——慢网关下按钮永久
+         停留 "Sending..."（disabled），用户无法重试。 */
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       const res = await fetch(`${API_BASE}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           name: fd.get("name"),
           email: fd.get("email"),
@@ -33,6 +39,7 @@ export default function ContentContactEN() {
           website: fd.get("website") || "", // 蜜罐字段，正常用户留空
         }),
       });
+      clearTimeout(timeoutId);
       if (res.ok) {
         setStatus("success");
         form.reset();

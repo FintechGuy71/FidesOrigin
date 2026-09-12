@@ -54,12 +54,43 @@ const AC_CSS = `
 `;
 
 // 公开只读风险查询端点（apps/api 的 SCOPE.PUBLIC 通道，免 key，CORS+双限流保护）
-const PUBLIC_RISK_CHECK_URL = "https://fidesorigin-api.vercel.app/v1/public/risk-check";
+const PUBLIC_RISK_CHECK_URL =
+  /* [AUDIT FIX R2-032] 支持构建期环境变量覆盖，硬编码仅作回退
+     （与 app/admin/dashboard 的 API_BASE 口径一致）。 */
+  process.env.NEXT_PUBLIC_RISK_CHECK_URL ||
+  "https://fidesorigin-api.vercel.app/v1/public/risk-check";
 // [H-6 Fix] Subgraph URL from runtime config — no hardcoded URLs
+/* [AUDIT FIX R2-032] window.FIDESORIGIN_SUBGRAPH_URL 此前全站无任何注入点，
+   空串兜底导致 subgraph 统计与兜底查询永久失效（统计恒显示 "--"）。
+   现改为三级回退：运行时注入 > 构建期 env > 已部署的 Studio 端点
+   （与 public/admin/admin.js 同源）。CSP connect-src 已允许 api.studio.thegraph.com。
+   [AUDIT FIX R2-031] window as any → 具名可选属性的精确断言。 */
 const SUBGRAPH_URL =
-  (typeof window !== "undefined" && (window as any).FIDESORIGIN_SUBGRAPH_URL) || "";
+  (typeof window !== "undefined" &&
+    (window as unknown as { FIDESORIGIN_SUBGRAPH_URL?: string })
+      .FIDESORIGIN_SUBGRAPH_URL) ||
+  process.env.NEXT_PUBLIC_SUBGRAPH_URL ||
+  "https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3";
 
 type D = Dict["addressCheck"];
+
+/* [AUDIT FIX R2-031] 取代两处 any：
+   · fetchBackendRisk 的返回（公开 risk-check 端点的 JSON 形状）
+   · fetchSubgraphRisk 的返回（subgraph riskProfile 实体） */
+type RiskFactor = { name?: string; type?: string; severity?: string };
+type BackendRiskResponse = {
+  risk_score?: number;
+  risk_level?: string;
+  risk_factors?: RiskFactor[];
+  tags?: string[];
+};
+type SubgraphRiskProfile = {
+  id: string;
+  riskScore: number;
+  tier: string;
+  isSanctioned: boolean;
+  tags?: string[];
+};
 
 type Result = {
   badgeClass: "risk-black" | "risk-grey" | "risk-safe";
@@ -91,10 +122,11 @@ export default function AddressCheck({ dict }: { dict: D }) {
   // Load stats on mount
   useEffect(() => {
     loadStatsFromSubgraph();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchBackendRisk = async (address: string) => {
+  const fetchBackendRisk = async (
+    address: string
+  ): Promise<BackendRiskResponse | null> => {
     const url = `${PUBLIC_RISK_CHECK_URL}?address=${encodeURIComponent(address)}&chainId=11155111`;
     try {
       const controller = new AbortController();
@@ -106,7 +138,7 @@ export default function AddressCheck({ dict }: { dict: D }) {
       });
       clearTimeout(timeoutId);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
+      return (await res.json()) as BackendRiskResponse;
     } catch {
       return null;
     }
@@ -151,7 +183,9 @@ export default function AddressCheck({ dict }: { dict: D }) {
     }
   };
 
-  const fetchSubgraphRisk = async (address: string) => {
+  const fetchSubgraphRisk = async (
+    address: string
+  ): Promise<SubgraphRiskProfile | null> => {
     if (!SUBGRAPH_URL) return null;
     // [MEDIUM-4 FIX] GraphQL variables instead of string interpolation
     const query = `query GetRiskProfile($id: String!) {
@@ -168,7 +202,8 @@ export default function AddressCheck({ dict }: { dict: D }) {
       });
       clearTimeout(timeoutId);
       const data = await res.json();
-      if (data.data && data.data.riskProfile) return data.data.riskProfile;
+      if (data.data && data.data.riskProfile)
+        return data.data.riskProfile as SubgraphRiskProfile;
     } catch {
       /* fall through */
     }
@@ -205,7 +240,7 @@ export default function AddressCheck({ dict }: { dict: D }) {
     });
 
     const apiData = await fetchBackendRisk(value);
-    let subgraphData: any = null;
+    let subgraphData: SubgraphRiskProfile | null = null;
 
     if (!apiData) {
       subgraphData = await fetchSubgraphRisk(value);
@@ -233,7 +268,7 @@ export default function AddressCheck({ dict }: { dict: D }) {
         tier: level,
         source: dict.backendSource,
         tags: tags.join(", ") || "-",
-        entity: factors.map((f: any) => f.name || f.type).join(", ") || "-",
+        entity: factors.map((f: RiskFactor) => f.name || f.type).join(", ") || "-",
       });
     } else if (subgraphData) {
       const tier = subgraphData.tier;
@@ -354,6 +389,33 @@ export default function AddressCheck({ dict }: { dict: D }) {
               </div>
             </div>
           )}
+
+          {/* [AUDIT FIX R2-015] 钱包合规面板挂载点。
+              public/wallet-connect.js（仅在 wallet:true 页面加载）按 id 操作
+              compliance-panel / compliance-result / compliance-status /
+              compliance-details / wallet-status 五个节点，但此前全站没有任何
+              组件渲染它们——el()/show()/setText() 对 null 静默跳过，
+              连接钱包后链上合规查询结果没有任何 UI 承载，核心功能静默残废。
+              样式已由 css/legacy.css 的 .compliance-panel/.compliance-result/
+              .status-badge/.compliance-row 提供（基础态 display:none，
+              由脚本在连接成功后显示）。 */}
+          {/* wallet-connect.js 的 show() 会把本节点 display 置为 flex，
+              故 inline 固定为纵向列布局，避免标题/结果横排。 */}
+          <div
+            className="compliance-panel"
+            id="compliance-panel"
+            aria-live="polite"
+            style={{ flexDirection: "column", gap: "12px" }}
+          >
+            <h4>{dict.walletPanelTitle}</h4>
+            {/* wallet-status：连接被拒/失败时的文案承载（setText 写入），
+                平时为空不占视觉空间 */}
+            <p id="wallet-status" role="status" style={{ fontSize: "0.85rem", color: "var(--danger)" }}></p>
+            <div className="compliance-result" id="compliance-result" style={{ display: "none" }}>
+              <div id="compliance-status"></div>
+              <div id="compliance-details" style={{ marginTop: "12px" }}></div>
+            </div>
+          </div>
         </div>
       </section>
 

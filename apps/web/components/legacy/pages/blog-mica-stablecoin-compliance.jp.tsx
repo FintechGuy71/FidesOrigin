@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/blog/mica-stablecoin-compliance.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -98,8 +100,8 @@ function _update(address from, address to, uint256 amount) internal override &#1
         </div>
 
         <div className="blog-nav reveal">
-          <a href="/jp/blog">← 記事一覧</a>
-          <a href="/jp/blog/why-on-chain-compliance">次: なぜオンチェーンか →</a>
+          <Link href="/jp/blog" prefetch={false}>← 記事一覧</Link>
+          <Link href="/jp/blog/why-on-chain-compliance" prefetch={false}>次: なぜオンチェーンか →</Link>
         </div>
       </div>
     </article>

@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/pricing.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .pricing-hero { padding: 140px 0 60px; text-align: center; }
     .pricing-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -121,7 +123,7 @@ export default function ContentPricingTW() {
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 主網部署</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 自訂策略</li>
             </ul>
-            <a href="/tw/docs" className="btn btn-secondary pricing-cta">免費開始</a>
+            <Link href="/tw/docs" className="btn btn-secondary pricing-cta" prefetch={false}>免費開始</Link>
           </div>
 
           
@@ -137,7 +139,7 @@ export default function ContentPricingTW() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 隔離金庫</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 專屬基礎設施</li>
             </ul>
-            <a href="/tw#contact" className="btn btn-primary pricing-cta">開始使用</a>
+            <Link href="/tw#contact" className="btn btn-primary pricing-cta" prefetch={false}>開始使用</Link>
           </div>
 
           
@@ -153,12 +155,12 @@ export default function ContentPricingTW() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 客製合約開發</li>
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 自建部署選項</li>
             </ul>
-            <a href="/tw#contact" className="btn btn-secondary pricing-cta">聯繫銷售</a>
+            <Link href="/tw#contact" className="btn btn-secondary pricing-cta" prefetch={false}>聯繫銷售</Link>
           </div>
         </div>
 
         <div className="pricing-note reveal">
-          <p>所有方案均包含 <a href="/tw/docs/sdk">SDK</a>、<a href="/tw/docs/api">REST API</a> 與 <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">開源合約</a> 的存取權限。需要客製化方案嗎？<a href="mailto:contact@fidesorigin.com">聯絡我們</a>。</p>
+          <p>所有方案均包含 <Link href="/tw/docs/sdk" prefetch={false}>SDK</Link>、<Link href="/tw/docs/api" prefetch={false}>REST API</Link> 與 <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">開源合約</a> 的存取權限。需要客製化方案嗎？<a href="mailto:contact@fidesorigin.com">聯絡我們</a>。</p>
         </div>
       </div>
     </section>

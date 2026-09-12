@@ -1,4 +1,6 @@
 /* Auto-generated from public/cn/blog/index.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 /* Blog page-specific styles */
     .blog-hero {
@@ -123,7 +125,7 @@ export default function ContentBlogCN() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
-          <a href="/cn/blog/why-on-chain-compliance" className="blog-card">
+          <Link href="/cn/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">概念定义</span>
@@ -133,21 +135,60 @@ export default function ContentBlogCN() {
               <p>基于 API 的合规是一种架构层面的错误。未来属于链上风险执行：确定性、零延迟、无法绕过的原生执行。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog" className="blog-card">
+          <Link href="/cn/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
-                <span className="tag">English</span>
-                <span className="date">2026 年 7 月</span>
+                <span className="tag">监管</span>
+                <span className="date">2026 年 8 月</span>
               </div>
-              <h2>更多文章（英文版）</h2>
-              <p>香港稳定币牌照合规要求、MiCA 稳定币合规技术指南等更多深度文章，请访问英文博客。</p>
+              <h2>链上旅行规则：FATF 对稳定币转账的要求</h2>
+              <p>2026 年稳定币转账的 FATF 旅行规则要求，以及结算前合规中链上执行为何优于 API 中心化筛查。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/cn/blog/ofac-sanctions-screening-blockchain" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">合规</span>
+                <span className="date">2026 年 7 月</span>
+              </div>
+              <h2>区块链上的 OFAC 制裁筛查：最佳实践</h2>
+              <p>如何为稳定币与 DeFi 协议在智能合约层实现 SDN 名单核查的最佳实践。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/cn/blog/hong-kong-stablecoin-license" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">监管</span>
+                <span className="date">2026 年 7 月</span>
+              </div>
+              <h2>中国香港稳定币牌照：合规要求</h2>
+              <p>中国香港稳定币发行方牌照制度指南：HKMA 要求、储备资产管理，以及面向 VASP 的链上合规。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/cn/blog/mica-stablecoin-compliance" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">监管</span>
+                <span className="date">2026 年 7 月</span>
+              </div>
+              <h2>稳定币的 MiCA 合规：技术指南</h2>
+              <p>面向稳定币发行方的欧盟 MiCA 合规技术指南：链上储备证明、交易筛查与监管报告要求。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
         </div>
       </div>
     </section>

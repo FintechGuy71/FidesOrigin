@@ -1,4 +1,6 @@
 /* Auto-generated from public/cn/blog/travel-rule-on-chain.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -77,8 +79,8 @@ export default function ContentBlogTravelRuleOnChainCN() {
           </div>
 
           <div className="blog-nav reveal">
-            <a href="/cn/blog">← 返回博客</a>
-            <a href="/cn/blog/mica-stablecoin-compliance">下一篇：稳定币的 MiCA 合规 →</a>
+            <Link href="/cn/blog" prefetch={false}>← 返回博客</Link>
+            <Link href="/cn/blog/mica-stablecoin-compliance" prefetch={false}>下一篇：稳定币的 MiCA 合规 →</Link>
           </div>
         </div>
       </article>

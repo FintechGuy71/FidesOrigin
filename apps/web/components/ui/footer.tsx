@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
 
@@ -59,31 +61,46 @@ export default function Footer({
           </div>
 
           {/* Center links */}
+          {/* [AUDIT FIX R2-049] 站内链接改 next/link 客户端路由；
+              mailto 与 GitHub 外链保留原生 <a>。 */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <a
+            <Link
               href={href("/pricing", lang)}
+              prefetch={false}
               className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
             >
               {d.pricing}
-            </a>
-            <a
+            </Link>
+            <Link
               href={href("/docs", lang)}
+              prefetch={false}
               className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
             >
               {d.docs}
-            </a>
-            <a
+            </Link>
+            <Link
               href={href("/blog", lang)}
+              prefetch={false}
               className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
             >
               {d.blog}
-            </a>
-            <a
+            </Link>
+            <Link
               href={href("/demo", lang)}
+              prefetch={false}
               className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
             >
               {d.demo}
-            </a>
+            </Link>
+            {/* [AUDIT FIX R1-X2] /address-check 此前是孤儿页（全站零链接可达），
+                补入新版 footer，与 legacy footer 的修复保持同一可达性口径。 */}
+            <Link
+              href={href("/address-check", lang)}
+              prefetch={false}
+              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+            >
+              {d.addressCheck}
+            </Link>
             <a
               href="https://github.com/FintechGuy71/FidesOrigin"
               target="_blank"

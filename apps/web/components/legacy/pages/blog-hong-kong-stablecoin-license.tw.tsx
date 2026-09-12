@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/blog/hong-kong-stablecoin-license.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
     .blog-article .container { max-width: 800px; }
@@ -80,8 +82,8 @@ export default function ContentBlogHongKongStablecoinLicenseTW() {
         </div>
 
         <div className="blog-nav reveal">
-          <a href="/tw/blog">← 全部文章</a>
-          <a href="/tw/blog/mica-stablecoin-compliance">下一篇：MiCA 指南 →</a>
+          <Link href="/tw/blog" prefetch={false}>← 全部文章</Link>
+          <Link href="/tw/blog/mica-stablecoin-compliance" prefetch={false}>下一篇：MiCA 指南 →</Link>
         </div>
       </div>
     </article>

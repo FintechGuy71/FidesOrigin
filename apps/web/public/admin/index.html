@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -13,7 +13,7 @@
     <!-- Admin Authentication Layer：已移除写死口令与 prompt 门禁，
          改为 <body> 起始处的真实网关登录（sessionStorage token），见 body 顶部脚本。 -->
     <!-- [SEC-001/SEC-002 Fix] CSP for static admin page: no nonces, script-src 'self' only, external scripts self-hosted -->
-    <title>FidesOrigin Admin - 运营后台 v0.4.0 (Sepolia)</title>
+    <title>FidesOrigin Admin - 运营后台 v3.1.0 (Sepolia)</title>
     <meta name="description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
     <meta property="og:title" content="FidesOrigin Admin - 运营后台">
     <meta property="og:description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
@@ -25,8 +25,12 @@
     <meta name="twitter:site" content="@fidesorigin">
     <link rel="canonical" href="https://fidesorigin.com/admin/">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⬡%3C/text%3E%3C/svg%3E">
-    <script src="../chart.min.js"></script>
-    <script src="../ethers.umd.min.js"></script>
+    <!-- [AUDIT FIX R2-039] chart.min.js(205KB)+ethers.umd.min.js(487KB) 原为 head 同步脚本，
+         阻塞首屏渲染约 0.7MB。二者仅在 admin.js 的 DOMContentLoaded 回调中使用
+         （顶层不依赖），加 defer 后并行下载、按序在 DOMContentLoaded 前执行，
+         既不阻塞渲染又保证 Chart/ethers 全局可用。 -->
+    <script src="../chart.min.js" defer></script>
+    <script src="../ethers.umd.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -170,7 +174,7 @@
             border-bottom: 1px solid var(--border);
         }
         
-        .header-title h1 {
+        .header-title h2 {
             font-size: 1.75rem;
             font-weight: 600;
             margin-bottom: 4px;
@@ -431,7 +435,44 @@
             background: rgba(6, 182, 212, 0.2);
             color: var(--accent-cyan);
         }
-        
+
+        /* [AUDIT FIX R2-011] 以下三个类此前被引用但从未定义：
+           .skip-link 无样式 → 跳转链接常驻页面左上角破坏布局（a11y 元素应聚焦才可见）；
+           .badge（networkBadge/The Graph 状态徽章）无基础样式，全靠内联 style 硬撑；
+           .tag-success 无样式 → 「自动拦截已启用」徽章与其他 tag 变体观感不一致。 */
+        .tag-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -48px;
+            left: 12px;
+            z-index: 10000;
+            padding: 8px 16px;
+            background: var(--accent-gold, #f59e0b);
+            color: #0f172a;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 0 0 8px 8px;
+            text-decoration: none;
+            transition: top 0.2s ease;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
         /* Forms */
         .form-group {
             margin-bottom: 20px;
@@ -690,7 +731,11 @@
         .table-loading { text-align: center; color: var(--text-secondary); padding: 24px; }
         .table-loading .spinner { margin-bottom: 8px; width: 24px; height: 24px; }
     </style>
-  <script defer data-domain="fidesorigin.com" src="https://plausible.io/js/script.js"></script>
+  <!-- [AUDIT FIX R2-009] 移除 plausible 统计脚本：
+       ① 运营后台为 noindex 内部页，无需公开站点分析；
+       ② 该脚本的 src(plausible.io) 从未被本页 meta CSP 的 script-src 允许，
+          上线以来 100% 被自家 CSP 拦截（控制台报 violation），是无效加载。
+       直接删除，而非放宽 CSP。 -->
 </head>
 <body>
   <!-- 鉴权门禁：在所有管理脚本执行前，若 sessionStorage 无网关登录 token，
@@ -803,9 +848,9 @@
                 <a href="/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
                 <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><img src="/brand/logo-dark-icon.png" alt="FidesOrigin" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
                 <div>
-                    <div class="logo-text">FidesOrigin</div>
+                    <h1 class="logo-text">FidesOrigin</h1>
                     <div class="logo-sub">运营后台</div>
-                    <div class="version">v0.4.0 Sepolia</div>
+                    <div class="version">v3.1.0 Sepolia</div>
                 </div>
                 </a>
             </div>
@@ -878,7 +923,7 @@
             <div id="dashboard" class="page-section active">
                 <div class="header">
                     <div class="header-title">
-                        <h1>数据看板</h1>
+                        <h2>数据看板</h2>
                         <p>实时监控平台运行状态与链上数据</p>
                     </div>
                     <div class="header-actions">
@@ -1025,7 +1070,7 @@
             <div id="monitor" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>实时监控</h1>
+                        <h2>实时监控</h2>
                         <p>链上交易实时追踪与风控拦截</p>
                     </div>
                 </div>
@@ -1071,7 +1116,7 @@
             <div id="customers" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>客户管理</h1>
+                        <h2>客户管理</h2>
                         <p>管理用户地址与风控标签</p>
                     </div>
                     <div class="header-actions">
@@ -1108,7 +1153,7 @@
             <div id="tags" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>标签管理</h1>
+                        <h2>标签管理</h2>
                         <p>管理地址风险标签和风控策略</p>
                     </div>
                     <div class="header-actions">
@@ -1143,7 +1188,7 @@
             <div id="limits" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>限额配置</h1>
+                        <h2>限额配置</h2>
                         <p>管理各风险等级的交易限额</p>
                     </div>
                 </div>
@@ -1198,7 +1243,7 @@
             <div id="timelock" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>时间锁管理</h1>
+                        <h2>时间锁管理</h2>
                         <p>管理交易延迟执行与待处理操作</p>
                     </div>
                     <div class="header-actions">
@@ -1281,7 +1326,7 @@
             <div id="multisig" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>多签管理</h1>
+                        <h2>多签管理</h2>
                         <p>管理签名者与多签阈值</p>
                     </div>
                     <div class="header-actions">
@@ -1359,7 +1404,7 @@
             <div id="quarantine" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>隔离资金管理</h1>
+                        <h2>隔离资金管理</h2>
                         <p>查看和管理被自动隔离的污染资金</p>
                     </div>
                     <div class="header-actions">
@@ -1429,7 +1474,7 @@
             <div id="incomingBlocks" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>收款拦截记录</h1>
+                        <h2>收款拦截记录</h2>
                         <p>被 receive() 自动拦截的 ETH 转账记录</p>
                     </div>
                 </div>
@@ -1469,7 +1514,7 @@
             <div id="emergency" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>🚨 紧急暂停</h1>
+                        <h2>🚨 紧急暂停</h2>
                         <p>紧急情况下暂停合约功能</p>
                     </div>
                 </div>
@@ -1525,7 +1570,7 @@
             <div id="logs" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>操作日志</h1>
+                        <h2>操作日志</h2>
                         <p>查看所有管理操作记录</p>
                     </div>
                     <div class="header-actions">
@@ -1553,7 +1598,7 @@
             <div id="policies" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>策略配置</h1>
+                        <h2>策略配置</h2>
                         <p>管理发行方合规策略与版本历史</p>
                     </div>
                     <div class="header-actions">
@@ -1625,7 +1670,7 @@
             <div id="complianceLogs" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>合规日志</h1>
+                        <h2>合规日志</h2>
                         <p>The Graph 实时索引的链上合规检查记录</p>
                     </div>
                     <div class="header-actions">
@@ -1671,7 +1716,7 @@
             <div id="settings" class="page-section">
                 <div class="header">
                     <div class="header-title">
-                        <h1>系统设置</h1>
+                        <h2>系统设置</h2>
                         <p>配置合约连接与网络</p>
                     </div>
                 </div>

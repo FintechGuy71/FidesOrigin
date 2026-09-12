@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/docs/api.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsApiJP() {
   return (
     <>
@@ -11,15 +13,15 @@ export default function ContentDocsApiJP() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">ドキュメント</div>
       <ul className="docs-nav-tree">
-        <li><a href="/jp/docs">概要</a></li>
-        <li><a href="/jp/docs/api" className="active">API リファレンス</a></li>
-        <li><a href="/jp/docs/sdk">SDK</a></li>
+        <li><Link href="/jp/docs" prefetch={false}>概要</Link></li>
+        <li><Link href="/jp/docs/api" className="active" prefetch={false}>API リファレンス</Link></li>
+        <li><Link href="/jp/docs/sdk" prefetch={false}>SDK</Link></li>
       </ul>
       <div className="docs-sidebar-title">リソース</div>
       <ul className="docs-nav-tree">
-        <li><a href="/jp/blog" target="_blank" rel="noopener">ブログ</a></li>
+        <li><Link href="/jp/blog" prefetch={false}>ブログ</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">ダッシュボード</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>ダッシュボード</Link></li>
       </ul>
     </aside>
 
@@ -51,6 +53,12 @@ export default function ContentDocsApiJP() {
           <code className="docs-endpoint-path">/rules</code>
         </div>
         <p>すべてのアクティブなコンプライアンスルールを一覧表示します。</p>
+        <h4>クエリパラメータ</h4>
+        <ul>
+          <li><code>status</code>（任意）— ステータスで絞り込み：<code>active</code>、<code>inactive</code>、<code>draft</code>。</li>
+          <li><code>limit</code>（任意）— 1 ページあたりの件数、最大 100、デフォルト 50。</li>
+          <li><code>offset</code>（任意）— ページネーションのオフセット、デフォルト 0。</li>
+        </ul>
         <h4>レスポンス</h4>
         <div className="docs-code-block">
           <div className="docs-code-header">
@@ -60,13 +68,20 @@ export default function ContentDocsApiJP() {
           <pre><code>&#123;
   "rules": [
     &#123;
-      "id": "rule-001",
-      "name": "Sanctions Screening",
-      "type": "BLOCK",
-      "active": true,
-      "priority": 1
+      "id": "rule_1",
+      "name": "Block Critical Risk Addresses",
+      "description": "Automatically block transactions to addresses with critical risk score",
+      "status": "active",
+      "priority": 100,
+      "conditions": [&#123; "field": "risk.score", "operator": "greater_than", "value": 90 &#125;],
+      "actions": [&#123; "type": "block", "params": &#123; "reason": "Critical risk score exceeded" &#125; &#125;],
+      "createdAt": "2026-08-01T10:00:00Z",
+      "updatedAt": "2026-08-01T10:00:00Z"
     &#125;
-  ]
+  ],
+  "total": 3,
+  "page": 1,
+  "limit": 50
 &#125;</code></pre>
         </div>
       </div>
@@ -286,7 +301,7 @@ export default function ContentDocsApiJP() {
       </div>
 
       <h2>Guard 連携（オンチェーン）</h2>
-      <p>V2.1 では <strong>PreTransactionGuard</strong>（ゼロガスのトランザクション事前インターセプト層）を導入しました。Guard 操作は REST API ではなく、スマートコントラクト呼び出しによってオンチェーンで直接実行されます。Guard 連携には<a href="/docs/sdk#guard">オンチェーン SDK</a> をご利用ください。</p>
+      <p>V2.1 では <strong>PreTransactionGuard</strong>（ゼロガスのトランザクション事前インターセプト層）を導入しました。Guard 操作は REST API ではなく、スマートコントラクト呼び出しによってオンチェーンで直接実行されます。Guard 連携には<Link href="/jp/docs/sdk#guard" prefetch={false}>オンチェーン SDK</Link> をご利用ください。</p>
 
       <div className="docs-code-block">
         <div className="docs-code-header">
@@ -327,9 +342,11 @@ export default function ContentDocsApiJP() {
           <tbody>
             <tr><td><code>400</code></td><td>Bad Request</td><td>無効なリクエストパラメータ</td></tr>
             <tr><td><code>401</code></td><td>Unauthorized</td><td>API キーがないか無効</td></tr>
+            <tr><td><code>403</code></td><td>Forbidden</td><td>状態変更リクエストの CSRF オリジンが許可されていません</td></tr>
             <tr><td><code>404</code></td><td>Not Found</td><td>アドレスまたはリソースが見つからない</td></tr>
-            <tr><td><code>429</code></td><td>Rate Limited</td><td>リクエストが多すぎる</td></tr>
+            <tr><td><code>429</code></td><td>Rate Limited</td><td>リクエストが多すぎます（IP ごとに毎分 60 回）</td></tr>
             <tr><td><code>500</code></td><td>Server Error</td><td>内部サーバーエラー</td></tr>
+            <tr><td><code>502</code></td><td>Bad Gateway</td><td>バックエンドプロキシが利用不可</td></tr>
           </tbody>
         </table>
       </div>

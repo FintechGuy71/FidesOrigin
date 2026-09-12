@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/pricing.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .pricing-hero { padding: 140px 0 60px; text-align: center; }
     .pricing-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -121,7 +123,7 @@ export default function ContentPricingJP() {
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> メインネットデプロイ</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> カスタムポリシー</li>
             </ul>
-            <a href="/jp/docs" className="btn btn-secondary pricing-cta">無料で開始</a>
+            <Link href="/jp/docs" className="btn btn-secondary pricing-cta" prefetch={false}>無料で開始</Link>
           </div>
 
           
@@ -137,7 +139,7 @@ export default function ContentPricingJP() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 隔離ボールト</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 専有インフラ</li>
             </ul>
-            <a href="/jp#contact" className="btn btn-primary pricing-cta">始める</a>
+            <Link href="/jp#contact" className="btn btn-primary pricing-cta" prefetch={false}>始める</Link>
           </div>
 
           
@@ -153,12 +155,12 @@ export default function ContentPricingJP() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> カスタムコントラクト開発</li>
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> オンプレミスオプション</li>
             </ul>
-            <a href="/jp#contact" className="btn btn-secondary pricing-cta">営業に問い合わせ</a>
+            <Link href="/jp#contact" className="btn btn-secondary pricing-cta" prefetch={false}>営業に問い合わせ</Link>
           </div>
         </div>
 
         <div className="pricing-note reveal">
-          <p>すべてのプランに <a href="/jp/docs/sdk">SDK</a>、<a href="/jp/docs/api">REST API</a>、<a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">オープンソースコントラクト</a> へのアクセスが含まれます。カスタムソリューションが必要ですか？<a href="mailto:contact@fidesorigin.com">お問い合わせください</a>。</p>
+          <p>すべてのプランに <Link href="/jp/docs/sdk" prefetch={false}>SDK</Link>、<Link href="/jp/docs/api" prefetch={false}>REST API</Link>、<a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">オープンソースコントラクト</a> へのアクセスが含まれます。カスタムソリューションが必要ですか？<a href="mailto:contact@fidesorigin.com">お問い合わせください</a>。</p>
         </div>
       </div>
     </section>

@@ -12,69 +12,76 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
 
   /* ---- Subtle grid + scan line animation ---- */
   useEffect(() => {
-    try {
-      /* 尊重系统"减少动态效果"偏好：扫描线是无限 rAF 重绘，
-         对前庭功能敏感的用户构成持续干扰，也应省电。 */
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+    /* 尊重系统"减少动态效果"偏好：扫描线是无限 rAF 重绘，
+       对前庭功能敏感的用户构成持续干扰，也应省电。 */
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      let w = 0, h = 0;
-      const resize = () => {
-        w = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-        h = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      };
-      resize();
-      window.addEventListener("resize", resize);
+    /* ⚠ Canvas 2D 的颜色字段（strokeStyle / fillStyle / addColorStop）
+       只接受可解析的 CSS 颜色，**不支持 var()**。此前直接写
+       "var(--fio-surface)" / "var(--fio-accent-glow)"：
+         · strokeStyle 赋值被静默忽略 → 网格线回落默认黑，深底上不可见；
+         · addColorStop 对非法颜色抛 SyntaxError → 扫描线首帧即崩。
+       改为在 effect 内用 getComputedStyle 解析出真实色值（只解析一次，
+       不在每帧重读），再交给 Canvas。令牌定义在 base 层 :root，产物 CSS
+       恒包含；万一读不到（理论上不应发生）则跳过装饰动画而不是硬编码
+       字面色值兜底（避免色值出现第二真源，_verify.py 也禁止组件内散落色值）。 */
+    const cs = getComputedStyle(document.documentElement);
+    const gridColor = cs.getPropertyValue("--fio-surface").trim();
+    const scanColor = cs.getPropertyValue("--fio-accent-glow").trim();
+    if (!gridColor || !scanColor) return;
 
-      let offset = 0;
-      let frame = 0;
+    let w = 0, h = 0;
+    const resize = () => {
+      w = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      h = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+    };
+    resize();
+    window.addEventListener("resize", resize);
 
-      const draw = () => {
-        try {
-          frame = requestAnimationFrame(draw);
-          ctx.clearRect(0, 0, w, h);
+    let offset = 0;
+    let frame = 0;
 
-          const gridSize = 80 * window.devicePixelRatio;
-          ctx.strokeStyle = "var(--fio-surface)";
-          ctx.lineWidth = 0.5;
+    const draw = () => {
+      frame = requestAnimationFrame(draw);
+      ctx.clearRect(0, 0, w, h);
 
-          for (let x = 0; x < w; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, h);
-            ctx.stroke();
-          }
-          for (let y = 0; y < h; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
-          }
+      const gridSize = 80 * window.devicePixelRatio;
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 0.5;
 
-          offset = (offset + 0.3) % h;
-          const scanGradient = ctx.createLinearGradient(0, offset - 80, 0, offset + 80);
-          scanGradient.addColorStop(0, "transparent");
-          scanGradient.addColorStop(0.5, "var(--fio-accent-glow)");
-          scanGradient.addColorStop(1, "transparent");
-          ctx.fillStyle = scanGradient;
-          ctx.fillRect(0, offset - 80, w, 160);
-        } catch (err) {
-          console.error("Canvas draw error:", err);
-          cancelAnimationFrame(frame);
-        }
-      };
-      draw();
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
 
-      return () => {
-        cancelAnimationFrame(frame);
-        window.removeEventListener("resize", resize);
-      };
-    } catch (err) {
-      console.error("Canvas init error:", err);
-    }
+      offset = (offset + 0.3) % h;
+      const scanGradient = ctx.createLinearGradient(0, offset - 80, 0, offset + 80);
+      scanGradient.addColorStop(0, "transparent");
+      scanGradient.addColorStop(0.5, scanColor);
+      scanGradient.addColorStop(1, "transparent");
+      ctx.fillStyle = scanGradient;
+      ctx.fillRect(0, offset - 80, w, 160);
+    };
+    draw();
+
+    /* cleanup 现在恒被返回（不再被内层 try/catch 的提前退出绕过），
+       resize 监听与 rAF 句柄必定回收。 */
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
   return (
@@ -202,8 +209,10 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                 <div className="mb-5 grid grid-cols-3 gap-3">
                   {[
                     { label: d.statRisk, value: d.statRiskValue, color: "var(--fio-gold)" },
-                    { label: d.statTx, value: "12,847", color: "var(--fio-accent)" },
-                    { label: d.statAlerts, value: "3", color: "var(--fio-danger)" },
+                    /* [AUDIT FIX R2-052] 原为硬编码 "12,847"/"3"，与 statRiskValue
+                       走字典的处理不一致，且数字不随语言变化。改为读字典示意值。 */
+                    { label: d.statTx, value: d.statTxValue, color: "var(--fio-accent)" },
+                    { label: d.statAlerts, value: d.statAlertsValue, color: "var(--fio-danger)" },
                   ].map((s) => (
                     <div
                       key={s.label}

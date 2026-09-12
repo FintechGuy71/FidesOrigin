@@ -1,4 +1,6 @@
 /* Auto-generated from public/tw/blog/index.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 /* Blog page-specific styles */
     .blog-hero {
@@ -110,7 +112,7 @@ export default function ContentBlogTW() {
       <div className="glow glow-1"></div>
       <div className="container blog-hero-content">
         <div className="reveal">
-          <p className="micro">博客</p>
+          <p className="micro">部落格</p>
           <h1 className="display">可編程鏈上合規的<br /><span>深度洞察</span></h1>
           <p className="lead" style={{ "maxWidth": "600px", "marginTop": "20px" }}>風險引擎、DeFi 監管與確定性合規架構的深度解析。</p>
         </div>
@@ -123,7 +125,7 @@ export default function ContentBlogTW() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
-          <a href="/tw/blog/why-on-chain-compliance" className="blog-card">
+          <Link href="/tw/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">概念定義</span>
@@ -133,21 +135,60 @@ export default function ContentBlogTW() {
               <p>基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
         </div>
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
-          <a href="/blog" className="blog-card">
+          <Link href="/tw/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
             <div>
               <div style={{ "marginBottom": "8px" }}>
-                <span className="tag">English</span>
-                <span className="date">2026 年 7 月</span>
+                <span className="tag">監管</span>
+                <span className="date">2026 年 8 月</span>
               </div>
-              <h2>更多文章（英文版）</h2>
-              <p>香港穩定幣牌照合規要求、MiCA 穩定幣合規技術指南等更多深度文章，請訪問英文博客。</p>
+              <h2>鏈上旅行規則：FATF 對穩定幣轉帳的要求</h2>
+              <p>2026 年穩定幣轉帳的 FATF 旅行規則要求，以及結算前合規中鏈上執行為何優於 API 中心化篩查。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/tw/blog/ofac-sanctions-screening-blockchain" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">合規</span>
+                <span className="date">2026 年 7 月</span>
+              </div>
+              <h2>區塊鏈上的 OFAC 制裁篩查：最佳實踐</h2>
+              <p>如何為穩定幣與 DeFi 協議在智能合約層實現 SDN 名單篩查的最佳實踐。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/tw/blog/hong-kong-stablecoin-license" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">監管</span>
+                <span className="date">2026 年 7 月</span>
+              </div>
+              <h2>中國香港穩定幣牌照：合規要求</h2>
+              <p>中國香港穩定幣發行方牌照制度指南：HKMA 要求、儲備資產管理，以及面向 VASP 的鏈上合規。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/tw/blog/mica-stablecoin-compliance" className="blog-card" prefetch={false}>
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">監管</span>
+                <span className="date">2026 年 7 月</span>
+              </div>
+              <h2>穩定幣的 MiCA 合規：技術指南</h2>
+              <p>面向穩定幣發行方的歐盟 MiCA 合規技術指南：鏈上儲備證明、交易篩查與監管報告要求。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
         </div>
       </div>
     </section>

@@ -1,4 +1,6 @@
 /* Auto-generated from public/use-cases/rwa-tokenization.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .uc-hero { padding: 140px 0 60px; }
     .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -180,7 +182,7 @@ export default function ContentUseCasesRwaTokenizationEN() {
           <h2 className="h1">Ready to tokenize real world assets?</h2>
           <p>Build compliant securities tokens with on-chain investor verification and jurisdictional enforcement.</p>
           <div className="cta-buttons">
-            <a href="/docs" className="btn btn-primary">Read Documentation</a>
+            <Link href="/docs" className="btn btn-primary" prefetch={false}>Read Documentation</Link>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">Contact Sales</a>
           </div>
         </div>

@@ -1,4 +1,6 @@
 /* Auto-generated from public/cn/pricing.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .pricing-hero { padding: 140px 0 60px; text-align: center; }
     .pricing-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -121,7 +123,7 @@ export default function ContentPricingCN() {
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 主网部署</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 自定义策略</li>
             </ul>
-            <a href="/cn/docs" className="btn btn-secondary pricing-cta">免费开始</a>
+            <Link href="/cn/docs" className="btn btn-secondary pricing-cta" prefetch={false}>免费开始</Link>
           </div>
 
           
@@ -137,7 +139,7 @@ export default function ContentPricingCN() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 隔离金库</li>
               <li className="missing"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> 专属基础设施</li>
             </ul>
-            <a href="/cn#contact" className="btn btn-primary pricing-cta">开始使用</a>
+            <Link href="/cn#contact" className="btn btn-primary pricing-cta" prefetch={false}>开始使用</Link>
           </div>
 
           
@@ -153,12 +155,12 @@ export default function ContentPricingCN() {
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 自定义合约开发</li>
               <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> 本地部署选项</li>
             </ul>
-            <a href="/cn#contact" className="btn btn-secondary pricing-cta">联系销售</a>
+            <Link href="/cn#contact" className="btn btn-secondary pricing-cta" prefetch={false}>联系销售</Link>
           </div>
         </div>
 
         <div className="pricing-note reveal">
-          <p>所有套餐均包含我们的 <a href="/cn/docs/sdk">SDK</a>、<a href="/cn/docs/api">REST API</a> 和 <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">开源合约</a> 访问权限。需要定制方案？<a href="mailto:contact@fidesorigin.com">联系我们</a>。</p>
+          <p>所有套餐均包含我们的 <Link href="/cn/docs/sdk" prefetch={false}>SDK</Link>、<Link href="/cn/docs/api" prefetch={false}>REST API</Link> 和 <a href="https://github.com/FintechGuy71/FidesOrigin" rel="noopener noreferrer">开源合约</a> 访问权限。需要定制方案？<a href="mailto:contact@fidesorigin.com">联系我们</a>。</p>
         </div>
       </div>
     </section>

@@ -1,4 +1,6 @@
 /* Auto-generated from public/docs/sdk.html — do not edit by hand. */
+import Link from "next/link";
+
 export default function ContentDocsSdkEN() {
   return (
     <>
@@ -12,16 +14,16 @@ export default function ContentDocsSdkEN() {
     <aside className="docs-sidebar" id="docsSidebar">
       <div className="docs-sidebar-title">Documentation</div>
       <ul className="docs-nav-tree">
-        <li><a href="/docs">Overview</a></li>
-        <li><a href="/docs/api">API Reference</a></li>
-        <li><a href="/docs/sdk" className="active">SDK</a></li>
-        <li><a href="/demo">Demo</a></li>
+        <li><Link href="/docs" prefetch={false}>Overview</Link></li>
+        <li><Link href="/docs/api" prefetch={false}>API Reference</Link></li>
+        <li><Link href="/docs/sdk" className="active" prefetch={false}>SDK</Link></li>
+        <li><Link href="/demo" prefetch={false}>Demo</Link></li>
       </ul>
       <div className="docs-sidebar-title">Resources</div>
       <ul className="docs-nav-tree">
-        <li><a href="/blog" target="_blank" rel="noopener">Blog</a></li>
+        <li><Link href="/blog" prefetch={false}>Blog</Link></li>
         <li><a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a href="/admin/dashboard">Dashboard</a></li>
+        <li><Link href="/admin/dashboard" prefetch={false}>Dashboard</Link></li>
       </ul>
     </aside>
 
@@ -224,6 +226,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
         <pre><code>import &#123; FidesOriginSDK &#125; from '@fidesorigin/on-chain-sdk';
+
 import &#123; JsonRpcProvider &#125; from 'ethers';
 
 const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');

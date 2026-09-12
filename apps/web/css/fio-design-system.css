@@ -55,21 +55,16 @@
 
     /* Secondary accent — Steel blue. Supporting elements. */
     --fio-steel:      #6b8cae;
-    --fio-steel-dim:  rgba(107, 140, 174, 0.12);
 
     /* Semantic — 补足 dim/glow 三件套，原先只有单色，导致组件里手写 rgba() */
     --fio-success:      #4ade80;
     --fio-success-dim:  rgba(74, 222, 128, 0.12);
-    --fio-success-glow: rgba(74, 222, 128, 0.08);
     --fio-warn:         #fbbf24;
     --fio-warn-dim:     rgba(251, 191, 36, 0.12);
-    --fio-warn-glow:    rgba(251, 191, 36, 0.08);
     --fio-danger:       #f87171;
     --fio-danger-dim:   rgba(248, 113, 113, 0.12);
-    --fio-danger-glow:  rgba(248, 113, 113, 0.08);
     --fio-info:         #60a5fa;
     --fio-info-dim:     rgba(96, 165, 250, 0.12);
-    --fio-info-glow:    rgba(96, 165, 250, 0.08);
 
     /* Typography
        ⚠ 变量名必须以 -nf 结尾（next/font 注入），避免与消费名同名造成
@@ -94,11 +89,9 @@
     --radius-sm:      4px;
     --radius-md:      8px;
     --radius-lg:      12px;
-    --radius-xl:      20px;
 
     /* Motion */
     --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* Z-index 层级总表 — 全站唯一，禁止再出现裸数字
        设计约束：导航 < 菜单遮罩 < 下拉菜单（否则遮罩会盖住菜单本身，
@@ -106,7 +99,9 @@
     --z-decor:     10;   /* 装饰层（canvas / 渐变 / 插图） */
     --z-content:   20;   /* 正文内容层 */
     --z-nav:       50;   /* 固定导航 */
-    --z-backdrop:  55;   /* 菜单遮罩：盖住导航，但必须低于下拉菜单 */
+    --z-backdrop:  55;   /* 菜单遮罩层级（标尺保留位）。[AUDIT R2-047] legacy 语言菜单
+                            改用 pointerdown-outside 关闭后当前无消费者，但作为 z-index
+                            标尺的一环保留，供未来需要遮罩层的组件复用。 */
     --z-dropdown:  60;   /* 下拉菜单 / 语言菜单 */
     --z-sticky:    100;  /* 回到顶部等悬浮按钮 */
     --z-overlay:   200;  /* 移动端全屏菜单 */
@@ -179,42 +174,7 @@
       radial-gradient(ellipse 70% 50% at 50% -5%, rgba(139,126,200,0.05) 0%, transparent 60%),
       radial-gradient(ellipse 50% 30% at 85% 40%, rgba(201,169,110,0.03) 0%, transparent 50%),
       var(--fio-ink);
-  }
-
-  .fio-surface-glass {
-    background: rgba(12, 14, 22, 0.75);
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
-    border: 1px solid rgba(255,255,255,0.04);
-  }
-
-  .fio-border-subtle {
-    border: 1px solid rgba(255,255,255,0.05);
-  }
-
-  .fio-border-glow {
-    border: 1px solid rgba(139,126,200,0.12);
-    box-shadow: 0 0 24px rgba(139,126,200,0.04), inset 0 1px 0 rgba(255,255,255,0.03);
-  }
-
-  /* ---- Accent Glows ---- */
-  .fio-glow-accent {
-    box-shadow:
-      0 0 0 1px rgba(139,126,200,0.15),
-      0 0 32px -8px rgba(139,126,200,0.1);
-  }
-
-  .fio-glow-gold {
-    box-shadow:
-      0 0 0 1px rgba(201,169,110,0.2),
-      0 0 32px -8px rgba(201,169,110,0.12);
-  }
-
-  .fio-text-glow {
-    text-shadow: 0 0 24px rgba(139,126,200,0.25);
-  }
-
-  /* ---- Typography ---- */
+  }/* ---- Typography ---- */
   .fio-heading-xl {
     font-size: clamp(2.2rem, 5vw, 4.2rem);
     font-weight: 500;
@@ -230,27 +190,11 @@
     letter-spacing: -0.01em;
     font-family: var(--font-serif);
   }
-
-  .fio-heading-md {
-    font-size: clamp(1.15rem, 2vw, 1.5rem);
-    font-weight: 500;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    font-family: var(--font-serif);
-  }
-
   .fio-body-lg {
     font-size: 1.05rem;
     line-height: 1.7;
     color: var(--fio-text-2);
   }
-
-  .fio-body {
-    font-size: 0.9rem;
-    line-height: 1.6;
-    color: var(--fio-text-2);
-  }
-
   .fio-caption {
     font-size: 0.75rem;
     letter-spacing: 0.08em;
@@ -259,13 +203,6 @@
     color: var(--fio-text-3);
     font-family: var(--font-mono);
   }
-
-  .fio-mono {
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    letter-spacing: -0.01em;
-  }
-
   /* CJK 排版适配 —— .fio-caption 的 mono + uppercase + 宽字距对中日文不适用，
      且 JetBrains Mono 只加载了 latin 子集，CJK 会掉到系统字体导致字重错乱。 */
   :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-caption {
@@ -273,8 +210,9 @@
     letter-spacing: 0.04em;
     text-transform: none;
   }
-  /* CJK 全角字符需要更宽松的行高，负字距会互相挤压 */
-  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) :is(.fio-heading-xl, .fio-heading-lg, .fio-heading-md) {
+  /* CJK 全角字符需要更宽松的行高，负字距会互相挤压
+     [AUDIT FIX R2-043] .fio-heading-md 已从 :is() 移除：该类零消费且已删除 */
+  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) :is(.fio-heading-xl, .fio-heading-lg) {
     line-height: 1.35;
     letter-spacing: 0;
     font-style: normal; /* CJK 无真斜体，浏览器合成斜体视觉效果差 */
@@ -313,19 +251,7 @@
     background: #d4b87a;
     box-shadow: 0 0 30px rgba(201,169,110,0.35);
     transform: translateY(-1px);
-  }
-
-  .fio-btn-secondary {
-    background: var(--fio-surface-2);
-    color: var(--fio-text);
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-  .fio-btn-secondary:hover {
-    background: var(--fio-surface-3);
-    border-color: rgba(255,255,255,0.1);
-  }
-
-  .fio-btn-ghost {
+  }  .fio-btn-ghost {
     background: transparent;
     color: var(--fio-text-2);
     border: 1px solid rgba(255,255,255,0.06);
@@ -334,102 +260,11 @@
     color: var(--fio-text);
     background: rgba(255,255,255,0.03);
     border-color: rgba(255,255,255,0.1);
-  }
-
-  /* ---- Cards ---- */
-  .fio-card {
-    background: var(--fio-surface);
-    border: 1px solid rgba(255,255,255,0.04);
-    border-radius: var(--radius-lg);
-    transition: all 0.3s var(--ease-out);
-  }
-  .fio-card:hover {
-    border-color: rgba(255,255,255,0.08);
-    transform: translateY(-1px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-  }
-
-  .fio-card-glow {
-    background: var(--fio-surface);
-    border: 1px solid rgba(139,126,200,0.08);
-    border-radius: var(--radius-lg);
-    transition: all 0.3s var(--ease-out);
-  }
-  .fio-card-glow:hover {
-    border-color: rgba(139,126,200,0.18);
-    box-shadow: 0 0 40px -12px rgba(139,126,200,0.08);
-  }
-
-  /* ---- Tags / Pills ---- */
-  .fio-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 100px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    font-family: var(--font-mono);
-  }
-
-  .fio-pill-accent {
-    background: var(--fio-accent-dim);
-    color: var(--fio-accent);
-    border: 1px solid rgba(139,126,200,0.12);
-  }
-
-  .fio-pill-gold {
-    background: var(--fio-gold-dim);
-    color: var(--fio-gold);
-    border: 1px solid rgba(201,169,110,0.12);
-  }
-
-  .fio-pill-success {
-    background: var(--fio-success-dim);
-    color: var(--fio-success);
-    border: 1px solid rgba(74,222,128,0.12);
-  }
-
-  .fio-pill-danger {
-    background: var(--fio-danger-dim);
-    color: var(--fio-danger);
-    border: 1px solid rgba(248,113,113,0.12);
-  }
-
-  .fio-pill-warn {
-    background: var(--fio-warn-dim);
-    color: var(--fio-warn);
-    border: 1px solid rgba(251,191,36,0.12);
-  }
-
-  /* ---- Grid Pattern Background ---- */
-  .fio-grid-bg {
-    background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
-  }
-
-  /* ---- Animations ---- */
+  }/* ---- Animations ---- */
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(139,126,200,0.08); }
-    50%      { box-shadow: 0 0 30px rgba(139,126,200,0.15); }
-  }
-  @keyframes scan-line {
-    0%   { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-  }
-
-  /* 延迟类必须定义在动画类【之前】：animation 简写会把 animation-delay 重置为 0，
+  }/* 延迟类必须定义在动画类【之前】：animation 简写会把 animation-delay 重置为 0，
      若顺序颠倒则 .fio-delay-* 全部静默失效。此处额外提高特异性做双保险。 */
   .fio-delay-1 { animation-delay: 0.1s; }
   .fio-delay-2 { animation-delay: 0.2s; }
@@ -440,22 +275,11 @@
   .fio-animate-fade-up {
     animation: fade-up 0.6s var(--ease-out) both;
   }
-  .fio-animate-fade-in {
-    animation: fade-in 0.5s ease both;
-  }
-
   .fio-animate-fade-up.fio-delay-1 { animation-delay: 0.1s; }
   .fio-animate-fade-up.fio-delay-2 { animation-delay: 0.2s; }
   .fio-animate-fade-up.fio-delay-3 { animation-delay: 0.3s; }
   .fio-animate-fade-up.fio-delay-4 { animation-delay: 0.4s; }
-  .fio-animate-fade-up.fio-delay-5 { animation-delay: 0.5s; }
-  .fio-animate-fade-in.fio-delay-1 { animation-delay: 0.1s; }
-  .fio-animate-fade-in.fio-delay-2 { animation-delay: 0.2s; }
-  .fio-animate-fade-in.fio-delay-3 { animation-delay: 0.3s; }
-  .fio-animate-fade-in.fio-delay-4 { animation-delay: 0.4s; }
-  .fio-animate-fade-in.fio-delay-5 { animation-delay: 0.5s; }
-
-  /* ---- Scrollbar ---- */
+  .fio-animate-fade-up.fio-delay-5 { animation-delay: 0.5s; }/* ---- Scrollbar ---- */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
@@ -472,8 +296,8 @@
    此前全站（Hero canvas 无限重绘、animate-pulse/ping、fio-animate-*、AOS）
    都没有任何 reduced-motion 保护。 */
 @media (prefers-reduced-motion: reduce) {
-  .fio-animate-fade-up,
-  .fio-animate-fade-in {
+  /* [AUDIT FIX R2-043] .fio-animate-fade-in 已从组合选择器移除：该类零消费且已删除 */
+  .fio-animate-fade-up {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

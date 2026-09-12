@@ -1,4 +1,6 @@
 /* Auto-generated from public/jp/use-cases/rwa-tokenization.html — do not edit by hand. */
+import Link from "next/link";
+
 const PAGE_CSS = `
 .uc-hero { padding: 140px 0 60px; }
     .uc-hero .display { font-size: clamp(2rem, 4.5vw, 3.2rem); }
@@ -180,7 +182,7 @@ export default function ContentUseCasesRwaTokenizationJP() {
           <h2 className="h1">実物資産のトークン化を始めませんか？</h2>
           <p>オンチェーンの投資家検証と管轄区域レベルの執行を備えた、コンプライアンス準拠のセキュリティトークンを構築しましょう。</p>
           <div className="cta-buttons">
-            <a href="/jp/docs" className="btn btn-primary">ドキュメントを読む</a>
+            <Link href="/jp/docs" className="btn btn-primary" prefetch={false}>ドキュメントを読む</Link>
             <a href="mailto:contact@fidesorigin.com" className="btn btn-secondary">営業に問い合わせ</a>
           </div>
         </div>
