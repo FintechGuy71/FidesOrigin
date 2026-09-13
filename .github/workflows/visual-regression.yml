@@ -46,7 +46,7 @@ jobs:
             git config user.email "bot@fidesorigin.com"
             git add apps/web/test/visual/visual.spec.ts-snapshots/
             git commit -m "test(web): 视觉回归基线自举 [skip ci]"
-            git push
+            git push origin "HEAD:${{ github.head_ref || github.ref_name }}"
           else
             echo "bootstrap=false" >> "$GITHUB_OUTPUT"
           fi
