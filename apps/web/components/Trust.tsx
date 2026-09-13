@@ -3,7 +3,7 @@
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
-   TRUST — Social proof, credibility anchors. (#security anchor)
+   TRUST v4 — Regulatory coverage band + institutional quote.
    ================================================================ */
 
 export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
@@ -13,22 +13,40 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
     { label: d.badge3Label, status: d.badge3Status },
     { label: d.badge4Label, status: d.badge4Status },
   ];
+  const coverage = [d.coverage1, d.coverage2, d.coverage3, d.coverage4];
   return (
-    <section id="security" style={{ background: "var(--fio-ink)" }}>
+    <section id="security" style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="border-t py-20 md:py-28" style={{ borderColor: "var(--fio-border-hairline)" }}>
-          {/* Badges row */}
-          <div
-            className="mb-16 flex flex-wrap items-center justify-center gap-4"
-            data-aos="fade-up"
-          >
+        <div className="py-24 md:py-32">
+          {/* Coverage band */}
+          <div className="mb-20 text-center">
+            <div className="fio-eyebrow mb-8 justify-center" style={{ justifyContent: "center" }}>
+              {d.coverageCaption}
+            </div>
+            <div className="grid grid-cols-2 gap-px md:grid-cols-4" style={{ background: "var(--fio-border-hairline)", border: "1px solid var(--fio-border-hairline)" }}>
+              {coverage.map((c) => (
+                <div
+                  key={c}
+                  className="flex items-center justify-center px-4 py-6 text-center"
+                  style={{ background: "var(--fio-ink-soft)" }}
+                >
+                  <span className="font-mono text-xs tracking-wider" style={{ color: "var(--fio-text-2)" }}>
+                    {c}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Capability badges */}
+          <div className="mb-20 flex flex-wrap items-center justify-center gap-3">
             {badges.map((badge) => (
               <div
                 key={badge.label}
-                className="flex items-center gap-2.5 rounded-md border px-4 py-2.5"
+                className="flex items-center gap-2.5 border px-4 py-2.5"
                 style={{
                   borderColor: "var(--fio-border-light)",
-                  background: "var(--fio-surface-2)",
+                  background: "var(--fio-surface)",
                 }}
               >
                 <span
@@ -41,7 +59,7 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
                 <span className="text-xs font-medium" style={{ color: "var(--fio-text-2)" }}>
                   {badge.label}
                 </span>
-                <span className="rounded-sm bg-[var(--fio-gold-dim)] px-1.5 py-0.5 font-mono text-[0.6875rem] text-[var(--fio-gold)]">
+                <span className="bg-[var(--fio-gold-dim)] px-1.5 py-0.5 font-mono text-[0.6875rem] text-[var(--fio-gold)]">
                   {badge.status}
                 </span>
               </div>
@@ -49,30 +67,29 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
           </div>
 
           {/* Big quote */}
-          <div className="mx-auto max-w-3xl text-center" data-aos="fade-up" data-aos-delay={150}>
+          <div className="mx-auto max-w-3xl text-center">
             <div
-              className="mb-8 text-6xl font-serif leading-none"
-              style={{ color: "var(--fio-accent)", opacity: 0.2 }}
+              aria-hidden="true"
+              className="mb-8 font-serif text-6xl leading-none"
+              style={{ color: "var(--fio-gold)", opacity: 0.25 }}
             >
               &ldquo;
             </div>
-            <p className="mb-8 font-serif text-xl leading-relaxed italic text-[var(--fio-text)] sm:text-2xl">
+            <p className="mb-8 font-serif text-xl leading-relaxed sm:text-2xl" style={{ color: "var(--fio-text)", fontStyle: "normal" }}>
               {d.quote}
             </p>
             <div className="flex items-center justify-center gap-3">
-              {/* 原为一个无图片、无文字、无 aria-hidden 的空圆环，读屏会渲染无意义节点。
-                装饰性占位改为首字母头像。 */}
               <div
                 aria-hidden="true"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--fio-accent-dim)] bg-[var(--fio-accent-dim)] text-xs font-medium text-[var(--fio-accent)]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--fio-gold-dim)] bg-[var(--fio-gold-glow)] text-xs font-medium text-[var(--fio-gold)]"
               >
                 {d.quoteName.slice(0, 1)}
               </div>
               <div className="text-left">
-                <div className="text-sm font-medium text-[var(--fio-text)]">
+                <div className="text-sm font-medium" style={{ color: "var(--fio-text)" }}>
                   {d.quoteName}
                 </div>
-                <div className="text-xs text-[var(--fio-text-3)]">{d.quoteRole}</div>
+                <div className="text-xs" style={{ color: "var(--fio-text-3)" }}>{d.quoteRole}</div>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Features from "@/components/Features";
 import Hero from "@/components/HeroHome";
 import HomeContact from "@/components/HomeContact";
+import Segments from "@/components/Segments";
 import Testimonials from "@/components/Testimonials";
 import Trust from "@/components/Trust";
 import Workflows from "@/components/Workflows";
@@ -76,6 +77,7 @@ export default async function LocalizedHome({
       <Hero d={dict.home.hero} />
       <Workflows d={dict.home.workflows} />
       <Features d={dict.home.features} />
+      <Segments d={dict.home.segments} />
       <Trust d={dict.home.trust} />
       <Testimonials d={dict.home.journey} />
       <HomeContact d={dict.home.contact} lang={lang} />

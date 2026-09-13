@@ -4,80 +4,132 @@ import { useEffect, useRef } from "react";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
-   HERO v3 — Product-first layout. Left story, right product.
+   HERO v4 — "Compliance Mesh"
+   Canvas 粒子网络（风险情报网格）：节点漂移、近距连线、
+   高亮节点脉冲。下方是等宽数字指标带 + 旋转监管封印。
    ================================================================ */
+
+type Particle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  hot: boolean; // 高亮节点（被筛查命中的风险点）
+  phase: number;
+};
 
 export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  /* ---- Subtle grid + scan line animation ---- */
+  /* ---- Compliance mesh: particle network with proximity links ---- */
   useEffect(() => {
-    /* 尊重系统"减少动态效果"偏好：扫描线是无限 rAF 重绘，
-       对前庭功能敏感的用户构成持续干扰，也应省电。 */
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    /* ⚠ Canvas 2D 的颜色字段（strokeStyle / fillStyle / addColorStop）
-       只接受可解析的 CSS 颜色，**不支持 var()**。此前直接写
-       "var(--fio-surface)" / "var(--fio-accent-glow)"：
-         · strokeStyle 赋值被静默忽略 → 网格线回落默认黑，深底上不可见；
-         · addColorStop 对非法颜色抛 SyntaxError → 扫描线首帧即崩。
-       改为在 effect 内用 getComputedStyle 解析出真实色值（只解析一次，
-       不在每帧重读），再交给 Canvas。令牌定义在 base 层 :root，产物 CSS
-       恒包含；万一读不到（理论上不应发生）则跳过装饰动画而不是硬编码
-       字面色值兜底（避免色值出现第二真源，_verify.py 也禁止组件内散落色值）。 */
+    /* Canvas 2D 不支持 var() —— 用 getComputedStyle 解析一次令牌色值。 */
     const cs = getComputedStyle(document.documentElement);
-    const gridColor = cs.getPropertyValue("--fio-surface").trim();
-    const scanColor = cs.getPropertyValue("--fio-accent-glow").trim();
-    if (!gridColor || !scanColor) return;
+    const cLine = cs.getPropertyValue("--fio-border-light").trim();
+    const cNode = cs.getPropertyValue("--fio-steel").trim();
+    const cHot = cs.getPropertyValue("--fio-gold").trim();
+    const cHotDim = cs.getPropertyValue("--fio-gold-dim").trim();
+    const cCream = cs.getPropertyValue("--fio-accent").trim();
+    if (!cLine || !cNode || !cHot || !cCream) return;
 
     let w = 0, h = 0;
+    let particles: Particle[] = [];
+
+    const seed = () => {
+      const count = Math.max(36, Math.min(90, Math.floor((w * h) / 26000)));
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        r: 1 + Math.random() * 1.4,
+        hot: Math.random() < 0.12,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    };
+
     const resize = () => {
-      w = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      h = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      const dpr = window.devicePixelRatio || 1;
+      w = canvas.width = canvas.offsetWidth * dpr;
+      h = canvas.height = canvas.offsetHeight * dpr;
+      seed();
     };
     resize();
     window.addEventListener("resize", resize);
 
-    let offset = 0;
+    const LINK_DIST = () => Math.min(w, h) * 0.16;
     let frame = 0;
+    let t = 0;
 
     const draw = () => {
       frame = requestAnimationFrame(draw);
+      t += 0.016;
       ctx.clearRect(0, 0, w, h);
 
-      const gridSize = 80 * window.devicePixelRatio;
-      ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 0.5;
+      const dpr = window.devicePixelRatio || 1;
+      const linkDist = LINK_DIST();
 
-      for (let x = 0; x < w; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
+      /* links */
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < linkDist) {
+            const alpha = (1 - dist / linkDist) * 0.5;
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = a.hot || b.hot ? cHot : cLine;
+            ctx.lineWidth = (a.hot || b.hot ? 0.7 : 0.5) * dpr;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
       }
-      for (let y = 0; y < h; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
-      }
+      ctx.globalAlpha = 1;
 
-      offset = (offset + 0.3) % h;
-      const scanGradient = ctx.createLinearGradient(0, offset - 80, 0, offset + 80);
-      scanGradient.addColorStop(0, "transparent");
-      scanGradient.addColorStop(0.5, scanColor);
-      scanGradient.addColorStop(1, "transparent");
-      ctx.fillStyle = scanGradient;
-      ctx.fillRect(0, offset - 80, w, 160);
+      /* nodes */
+      for (const p of particles) {
+        p.x += p.vx * dpr;
+        p.y += p.vy * dpr;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+
+        if (p.hot) {
+          /* 高亮节点：金色脉冲光晕 */
+          const pulse = 0.5 + 0.5 * Math.sin(t * 2 + p.phase);
+          ctx.globalAlpha = 0.25 + pulse * 0.3;
+          ctx.fillStyle = cHotDim;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, (6 + pulse * 5) * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = cHot;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, (p.r + 0.6) * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.globalAlpha = 0.75;
+          ctx.fillStyle = cNode;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
     };
     draw();
 
-    /* cleanup 现在恒被返回（不再被内层 try/catch 的提前退出绕过），
-       resize 监听与 rAF 句柄必定回收。 */
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
@@ -88,71 +140,39 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
     <section className="relative overflow-hidden fio-gradient-hero">
       <canvas
         ref={canvasRef}
-        /* inset-0 已等价于 top/right/bottom/left:0，块级 canvas 自动填满，
-           原先的内联 width/height:100% 是冗余且无法被响应式覆盖。 */
         className="pointer-events-none absolute inset-0 z-[var(--z-decor)]"
         aria-label={d.canvasLabel}
         role="img"
       />
 
       <div className="relative z-[var(--z-content)] mx-auto max-w-6xl px-4 sm:px-6">
-        {/* svh = 小视口高度。原 vh 在移动浏览器上按"地址栏隐藏时"计算，
-            iOS Safari / Chrome Android 显示地址栏时 92vh 会溢出可见区域
-            8–15%，用户必须滚动才能看到 CTA 与产品卡底部。 */}
-        <div className="flex min-h-[92svh] flex-col items-center justify-center py-24 lg:flex-row lg:items-center lg:gap-16">
-          {/* LEFT — Story */}
-          <div className="flex-1 text-center lg:text-left">
-            {/* Label */}
-            <div
-              className="fio-animate-fade-up fio-delay-1 mb-8 inline-flex items-center gap-3 rounded-sm px-4 py-2"
-              style={{
-                background: "var(--fio-gold-glow)",
-                border: "1px solid var(--fio-gold-dim)",
-              }}
-            >
-              <span
-                className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{ background: "var(--fio-gold)", boxShadow: "0 0 6px var(--fio-gold-dim)" }}
-              />
-              <span className="fio-caption" style={{ color: "var(--fio-gold)" }}>
-                {d.badge}
-              </span>
+        <div className="flex min-h-[92svh] flex-col justify-center py-28 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
+          {/* LEFT — Positioning */}
+          <div className="text-center lg:col-span-7 lg:text-left">
+            <div className="fio-animate-fade-up fio-delay-1 mb-9">
+              <span className="fio-eyebrow">{d.badge}</span>
             </div>
 
-            {/* Headline */}
             <h1
               className="fio-animate-fade-up fio-delay-2 fio-heading-xl"
               style={{ color: "var(--fio-text)" }}
             >
               {d.titlePre}
               <br />
-              <span style={{ color: "var(--fio-accent)", fontStyle: "italic" }}>
-                {d.titleEm}
-              </span>
+              <span style={{ color: "var(--fio-cream)" }}>{d.titleEm}</span>
             </h1>
 
-            {/* Subheadline */}
             <p
-              className="fio-animate-fade-up fio-delay-3 mt-6 max-w-lg text-base leading-relaxed"
+              className="fio-animate-fade-up fio-delay-3 mx-auto mt-7 max-w-xl text-base leading-relaxed lg:mx-0"
               style={{ color: "var(--fio-text-2)" }}
             >
               {d.sub}
             </p>
 
-            {/* Divider */}
             <div
-              className="fio-animate-fade-up fio-delay-3 mt-8 h-px w-16 lg:mx-0"
-              style={{ background: "linear-gradient(90deg, var(--fio-accent), transparent)" }}
-            />
-
-            {/* CTAs */}
-            <div
-              className="fio-animate-fade-up fio-delay-4 mt-8 flex flex-col items-center gap-3 sm:flex-row lg:items-start"
+              className="fio-animate-fade-up fio-delay-4 mt-10 flex flex-col items-center gap-3 sm:flex-row lg:justify-start"
             >
-              <a
-                href="mailto:contact@fidesorigin.com"
-                className="fio-btn fio-btn-primary group"
-              >
+              <a href="mailto:contact@fidesorigin.com" className="fio-btn fio-btn-primary group">
                 {d.ctaPrimary}
                 <svg
                   className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
@@ -164,89 +184,80 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                 </svg>
               </a>
-              <a
-                href="/admin/dashboard"
-                className="fio-btn fio-btn-ghost"
-              >
+              <a href="/admin/dashboard" className="fio-btn fio-btn-ghost">
                 {d.ctaGhost}
               </a>
             </div>
           </div>
 
-          {/* RIGHT — Product Visual */}
-          {/* 必须 relative：下方的悬浮徽章用 absolute -bottom-3 -right-3 定位，
-              原先这两层之间没有任何定位祖先，徽章会漂到整个 max-w-6xl
-              容器的右下角，而不是产品卡右下角。 */}
-          <div
-            className="fio-animate-fade-up fio-delay-3 relative mt-14 w-full max-w-lg lg:mt-0 lg:flex-1"
-          >
+          {/* RIGHT — Live screening panel + rotating seal */}
+          <div className="fio-animate-fade-up fio-delay-3 relative mt-16 w-full lg:col-span-5 lg:mt-0">
             <div
-              className="relative overflow-hidden rounded-lg border p-1"
+              className="fio-ticks relative rounded-sm border"
               style={{
                 borderColor: "var(--fio-border-light)",
-                background: "linear-gradient(135deg, var(--fio-accent-glow) 0%, var(--fio-ink-scrim) 50%, var(--fio-gold-glow) 100%)",
-                boxShadow: "0 0 60px var(--fio-accent-dim), inset 0 1px 0 var(--fio-border-subtle)",
+                background: "var(--fio-ink-scrim)",
+                boxShadow: "var(--fio-panel-shadow)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
               }}
             >
-              {/* Top bar — window chrome */}
+              {/* Window chrome */}
               <div
-                className="flex items-center gap-2 px-4 py-3"
+                className="flex items-center justify-between px-5 py-3.5"
                 style={{ borderBottom: "1px solid var(--fio-border-hairline)" }}
               >
-                <div className="flex gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--fio-elevated)" }} />
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--fio-elevated)" }} />
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--fio-elevated)" }} />
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
+                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
+                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
                 </div>
-                <span className="ml-3 text-xs font-mono" style={{ color: "var(--fio-text-3)" }}>
+                <span className="font-mono text-[0.6875rem] tracking-wider" style={{ color: "var(--fio-text-3)" }}>
                   fidesorigin.com/admin
                 </span>
               </div>
 
-              {/* Dashboard mockup content */}
-              <div className="px-4 py-5">
+              <div className="px-5 py-5">
                 {/* Stats row */}
                 <div className="mb-5 grid grid-cols-3 gap-3">
                   {[
                     { label: d.statRisk, value: d.statRiskValue, color: "var(--fio-gold)" },
-                    /* [AUDIT FIX R2-052] 原为硬编码 "12,847"/"3"，与 statRiskValue
-                       走字典的处理不一致，且数字不随语言变化。改为读字典示意值。 */
                     { label: d.statTx, value: d.statTxValue, color: "var(--fio-accent)" },
                     { label: d.statAlerts, value: d.statAlertsValue, color: "var(--fio-danger)" },
                   ].map((s) => (
                     <div
                       key={s.label}
-                      className="rounded-md p-3"
+                      className="p-3"
                       style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
                     >
-                      <div className="text-[0.6875rem] font-mono uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
+                      <div className="font-mono text-[0.6875rem] uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
                         {s.label}
                       </div>
-                      <div className="mt-1 text-lg font-semibold font-mono" style={{ color: s.color }}>
+                      <div className="fio-num mt-1 text-lg font-semibold" style={{ color: s.color }}>
                         {s.value}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Scanning animation bar */}
+                {/* Scanning bar */}
                 <div className="mb-4">
-                  <div className="mb-1.5 flex items-center justify-between text-[0.6875rem] font-mono" style={{ color: "var(--fio-text-3)" }}>
+                  <div className="mb-1.5 flex items-center justify-between font-mono text-[0.6875rem]" style={{ color: "var(--fio-text-3)" }}>
                     <span>{d.scanLabel}</span>
                     <span style={{ color: "var(--fio-gold)" }}>{d.scanActive}</span>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: "var(--fio-surface-2)" }}>
+                  <div className="h-1 w-full overflow-hidden" style={{ background: "var(--fio-surface-2)" }}>
                     <div
-                      className="h-full rounded-full"
+                      className="h-full"
                       style={{
                         width: "72%",
-                        background: "linear-gradient(90deg, var(--fio-accent), var(--fio-gold))",
+                        background: "linear-gradient(90deg, var(--fio-steel), var(--fio-gold))",
                       }}
                     />
                   </div>
                 </div>
 
-                {/* Transaction list mock */}
+                {/* Transaction stream */}
                 <div className="space-y-2">
                   {[
                     { addr: "0x7a2f...9e3d", status: d.statusCleared, risk: "Low" },
@@ -255,7 +266,7 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                   ].map((tx, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between rounded-md px-3 py-2"
+                      className="flex items-center justify-between px-3 py-2"
                       style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
                     >
                       <div className="flex items-center gap-3">
@@ -266,12 +277,12 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                             boxShadow: `0 0 4px ${tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)"}`,
                           }}
                         />
-                        <span className="text-xs font-mono" style={{ color: "var(--fio-text-2)" }}>
+                        <span className="font-mono text-xs" style={{ color: "var(--fio-text-2)" }}>
                           {tx.addr}
                         </span>
                       </div>
                       <span
-                        className="rounded-sm px-2 py-0.5 text-[0.6875rem] font-mono"
+                        className="px-2 py-0.5 font-mono text-[0.6875rem]"
                         style={{
                           color: tx.risk === "Low" ? "var(--fio-gold)" : "var(--fio-danger)",
                           background: tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)",
@@ -285,33 +296,70 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
               </div>
             </div>
 
-            {/* Floating badge */}
+            {/* Rotating regulatory seal */}
             <div
-              className="absolute -bottom-3 -right-3 flex items-center gap-2 rounded-md border px-3 py-2"
-              style={{
-                background: "var(--fio-ink-scrim)",
-                borderColor: "var(--fio-gold-dim)",
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-              }}
+              aria-hidden="true"
+              className="absolute -right-5 -top-8 hidden h-28 w-28 sm:block"
             >
-              <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "var(--fio-gold)" }} />
-              <span className="text-[0.6875rem] font-mono" style={{ color: "var(--fio-gold)" }}>
-                {d.floatBadge}
-              </span>
+              <svg viewBox="0 0 120 120" className="h-full w-full">
+                <defs>
+                  <path id="fio-seal-circle" d="M 60,60 m -44,0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0" />
+                </defs>
+                <circle cx="60" cy="60" r="59" fill="var(--fio-ink-scrim)" stroke="var(--fio-gold-dim)" strokeWidth="1" />
+                <circle cx="60" cy="60" r="33" fill="none" stroke="var(--fio-gold-dim)" strokeWidth="0.5" />
+                <g className="fio-seal-ring">
+                  <text fontSize="9.5" letterSpacing="2.2" fill="var(--fio-gold)" fontFamily="var(--font-mono)">
+                    <textPath href="#fio-seal-circle">{d.sealText}</textPath>
+                  </text>
+                </g>
+                {/* Center mark — shield check */}
+                <path
+                  d="M60 46 L72 52 L72 64 Q72 74 60 78 Q48 74 48 64 L48 52 Z"
+                  fill="none"
+                  stroke="var(--fio-gold)"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M55 61 L58.5 64.5 L66 56.5"
+                  fill="none"
+                  stroke="var(--fio-cream)"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
           </div>
         </div>
+
+        {/* Metrics strip — hairline grid, tabular numerals */}
+        <div
+          className="fio-animate-fade-up fio-delay-5 relative z-[var(--z-content)] grid grid-cols-2 border-t md:grid-cols-4"
+          style={{ borderColor: "var(--fio-border-hairline)" }}
+        >
+          {d.metrics.map((m, i) => (
+            <div
+              key={m.label}
+              className={`py-7 md:py-9 ${i === 0 ? "" : "md:border-l"} ${i % 2 === 1 ? "border-l md:border-l" : ""}`}
+              style={{ borderColor: "var(--fio-border-hairline)" }}
+            >
+              <div className="px-2 text-center md:px-4">
+                <div className="fio-num text-2xl font-semibold md:text-3xl" style={{ color: "var(--fio-cream)" }}>
+                  {m.value}
+                </div>
+                <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--fio-text-3)" }}>
+                  {m.label}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Bottom fade —— 显式 z-index：原先靠"正 z-index 排在第 9 步、
-          auto 排在第 8 步"的隐式规则才恰好压住 canvas 而不压内容，
-          没有任何说明，极易在后续改动中被破坏。 */}
+      {/* Bottom fade */}
       <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 z-[var(--z-decor)] h-32"
-        style={{
-          background: "linear-gradient(to top, var(--fio-ink), transparent)",
-        }}
+        className="pointer-events-none absolute bottom-0 left-0 right-0 z-[var(--z-decor)] h-24"
+        style={{ background: "linear-gradient(to top, var(--fio-ink), transparent)" }}
       />
     </section>
   );

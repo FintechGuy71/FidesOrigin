@@ -3,7 +3,7 @@
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
-   TESTIMONIALS v3 — One deep case study. A user's journey.
+   TESTIMONIALS v4 — Client journey as an audit trail.
    ================================================================ */
 
 export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
@@ -14,109 +14,93 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
     { step: "04", title: d.j4Title, desc: d.j4Desc, detail: d.j4Detail },
   ];
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className="border-t py-28 md:py-36" style={{ borderColor: "var(--fio-border-hairline)" }}>
-        {/* Section header */}
-        <div className="mx-auto max-w-2xl pb-20 text-center md:pb-28">
-          <div className="fio-caption mb-4" data-aos="fade-up">
-            {d.caption}
-          </div>
-          <h2
-            className="fio-heading-lg mb-5"
-            style={{ color: "var(--fio-text)" }}
-            data-aos="fade-up"
-            data-aos-delay={100}
-          >
-            {d.title}
-          </h2>
-          <p
-            className="fio-body-lg"
-            data-aos="fade-up"
-            data-aos-delay={200}
-          >
-            {d.body}
-          </p>
-        </div>
-
-        {/* Journey timeline */}
-        <div className="relative mx-auto max-w-3xl" data-aos="fade-up" data-aos-delay={300}>
-          {/* Vertical line
-              hidden + lg:block 意味着该元素在 md 断点仍为 display:none，
-              原先的 md:left-8 因此永远不会生效（死类）。改为 md:block 使
-              断点语义连贯：圆点 h-12(48px) 时 left-6(24px) 正对中心，
-              md 起圆点 h-16(64px) 时 left-8(32px) 正对中心。 */}
-          <div
-            className="absolute left-6 top-0 hidden h-full w-px md:block md:left-8"
-            style={{ background: "linear-gradient(to bottom, var(--fio-accent), var(--fio-gold), transparent)", opacity: 0.2 }}
-          />
-
-          <div className="space-y-10">
-            {journeySteps.map((item, _i) => (
-              <div key={item.step} className="relative flex gap-6 lg:gap-10">
-                {/* Step number circle */}
-                <div className="flex-shrink-0">
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-full text-sm font-mono font-medium md:h-16 md:w-16 md:text-base"
-                    style={{
-                      background: "var(--fio-accent-glow)",
-                      border: "1px solid var(--fio-accent-dim)",
-                      color: "var(--fio-accent)",
-                    }}
-                  >
-                    {item.step}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 pb-2">
-                  <h3 className="mb-2 font-serif text-lg font-medium text-[var(--fio-text)]">
-                    {item.title}
-                  </h3>
-                  <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--fio-text-2)" }}>
-                    {item.desc}
-                  </p>
-                  <div
-                    className="inline-flex items-center gap-2 rounded-sm px-3 py-1.5 text-[0.6875rem] font-mono"
-                    style={{
-                      background: "var(--fio-surface)",
-                      border: "1px solid var(--fio-border-hairline)",
-                      color: "var(--fio-text-3)",
-                    }}
-                  >
-                    <span className="h-1 w-1 rounded-full" style={{ background: "var(--fio-gold)" }} />
-                    {item.detail}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom quote */}
-        <div
-          className="mx-auto mt-20 max-w-2xl text-center"
-          data-aos="fade-up"
-          data-aos-delay={400}
-        >
-          <div
-            className="mb-6 text-5xl font-serif leading-none"
-            style={{ color: "var(--fio-accent)", opacity: 0.3 }}
-          >
-            &ldquo;
-          </div>
-          <p className="font-serif text-lg leading-relaxed italic text-[var(--fio-text)]">
-            {d.quote}
-          </p>
-          <div className="mt-6">
-            <div className="text-sm font-medium" style={{ color: "var(--fio-text)" }}>
-              {d.quoteName}
+    <section style={{ background: "var(--fio-ink)" }}>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="border-t py-28 md:py-36" style={{ borderColor: "var(--fio-border-hairline)" }}>
+          {/* Section header — left editorial */}
+          <div className="grid gap-10 pb-16 md:grid-cols-12 md:pb-24">
+            <div className="md:col-span-6">
+              <div className="fio-eyebrow mb-5">{d.caption}</div>
+              <h2 className="fio-heading-lg" style={{ color: "var(--fio-text)" }}>
+                {d.title}
+              </h2>
             </div>
-            <div className="text-xs" style={{ color: "var(--fio-text-3)" }}>
-              {d.quoteRole}
+            <div className="flex items-end md:col-span-5 md:col-start-7">
+              <p className="fio-body-lg">{d.body}</p>
+            </div>
+          </div>
+
+          {/* Journey — audit trail timeline */}
+          <div className="relative mx-auto max-w-3xl">
+            <div
+              aria-hidden="true"
+              className="absolute left-6 top-0 hidden h-full w-px md:block md:left-8"
+              style={{ background: "linear-gradient(to bottom, var(--fio-gold), var(--fio-border-light), transparent)", opacity: 0.35 }}
+            />
+
+            <div className="space-y-12">
+              {journeySteps.map((item) => (
+                <div key={item.step} className="relative flex gap-6 lg:gap-10">
+                  <div className="flex-shrink-0">
+                    <div
+                      className="fio-num flex h-12 w-12 items-center justify-center border text-sm font-medium md:h-16 md:w-16 md:text-base"
+                      style={{
+                        background: "var(--fio-ink)",
+                        border: "1px solid var(--fio-gold-dim)",
+                        color: "var(--fio-gold)",
+                      }}
+                    >
+                      {item.step}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 pb-2 pt-1">
+                    <h3 className="mb-2 font-serif text-lg font-medium" style={{ color: "var(--fio-text)" }}>
+                      {item.title}
+                    </h3>
+                    <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--fio-text-2)" }}>
+                      {item.desc}
+                    </p>
+                    <div
+                      className="inline-flex items-center gap-2 px-3 py-1.5 font-mono text-[0.6875rem]"
+                      style={{
+                        background: "var(--fio-surface)",
+                        border: "1px solid var(--fio-border-hairline)",
+                        color: "var(--fio-text-3)",
+                      }}
+                    >
+                      <span className="h-1 w-1 rounded-full" style={{ background: "var(--fio-gold)" }} />
+                      {item.detail}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom quote */}
+          <div className="mx-auto mt-24 max-w-2xl text-center">
+            <div
+              aria-hidden="true"
+              className="mb-6 font-serif text-5xl leading-none"
+              style={{ color: "var(--fio-gold)", opacity: 0.3 }}
+            >
+              &ldquo;
+            </div>
+            <p className="font-serif text-lg leading-relaxed" style={{ color: "var(--fio-text)" }}>
+              {d.quote}
+            </p>
+            <div className="mt-6">
+              <div className="text-sm font-medium" style={{ color: "var(--fio-text)" }}>
+                {d.quoteName}
+              </div>
+              <div className="text-xs" style={{ color: "var(--fio-text-3)" }}>
+                {d.quoteRole}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
