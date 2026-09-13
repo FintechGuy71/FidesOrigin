@@ -59,23 +59,21 @@
   --text-secondary: var(--fio-text-2);
   --text-muted:     var(--fio-text-3);
 
-  /* 强调色 —— 经典站统一为金色 */
+  /* 强调色 —— 经典站统一为青铜金（v4 调色板） */
   --accent:       var(--fio-gold);
   --accent-dim:   var(--fio-gold-dim);
   --accent-glow:  var(--fio-gold-glow);
-  /* 原先未定义，导致 .accent-light-text 的 color 声明整条失效 */
-  --accent-light: #ddc08c;
-  /* 描边/填充强度档位，替代原先硬编码的紫 rgba(139,126,200,*) */
-  --accent-line:       rgba(201, 169, 110, 0.28);
-  --accent-fill:       rgba(201, 169, 110, 0.18);
-  --accent-shadow:     rgba(201, 169, 110, 0.28);
-  --accent-shadow-lg:  rgba(201, 169, 110, 0.38);
+  --accent-light: var(--fio-cream);
+  /* 描边/填充强度档位 —— 青铜 rgba(175,145,95,*) */
+  --accent-line:       rgba(175, 145, 95, 0.32);
+  --accent-fill:       rgba(175, 145, 95, 0.18);
+  --accent-shadow:     rgba(175, 145, 95, 0.26);
+  --accent-shadow-lg:  rgba(175, 145, 95, 0.38);
 
-  /* 金色 —— 增加亮端 --gold-bright，
-     避免 --accent→--gold 同值导致渐变退化成纯色 */
+  /* 金色亮端 —— 奶油金，避免渐变退化成纯色 */
   --gold:        var(--fio-gold);
   --gold-dim:    var(--fio-gold-dim);
-  --gold-bright: #e6cd9c;
+  --gold-bright: var(--fio-accent);
 
   /* 语义色 —— 含 dim 档位，原先只有单色，导致 security / AddressCheck /
      DemoExperience 各写一份 rgba() 硬编码（且数值互不对齐） */
@@ -88,17 +86,13 @@
   --danger-dim:  var(--fio-danger-dim);
   --info-dim:    var(--fio-info-dim);
 
-  /* 代码语法高亮配色 —— 全站唯一一份。
-     原先散落三套互不兼容的配色：use-cases 的 OneDark（#5c6370/#c678dd/
-     #e5c07b/#61afef）、blog-why-on-chain 的 VS Code Dark+（#c586c0/
-     #4ec9b0/#dcdcaa/#6a9955/#ce9178）、legacy.css 的 .code-body OneDark。
-     对比度均按 --bg-elevated #0c0e16 校准（AA 4.5:1）。 */
-  --code-comment: #7d8799;  /* 5.32:1（原 #5c6370 仅 3.23:1） */
-  --code-kw:      var(--fio-gold);  /* 金，与经典站强调色一致（原 OneDark 紫 #c678dd） */
-  --code-type:    #e5c07b;  /* 11.2:1 */
-  --code-func:    #61afef;  /* 6.9:1 */
-  --code-str:     #98c379;  /* 8.0:1 */
-  --code-num:     #d19a66;  /* 7.4:1 */
+  /* 代码语法高亮配色 —— 全站唯一一份，v4 暖色温（青铜/钢蓝家族）。 */
+  --code-comment: #8b8f83;
+  --code-kw:      var(--fio-gold);
+  --code-type:    #e3c892;  /* 奶油金，与 --fio-accent 同族 */
+  --code-func:    #7aa8c9;  /* 钢蓝 = --fio-info */
+  --code-str:     #58c98a;  /* = --fio-success */
+  --code-num:     #d9a94f;  /* = --fio-warn */
 
   /* 字体 / 圆角 —— 与 fio 同源，此处【故意不再定义】。
      --font-sans、--font-mono、--radius-sm/md/lg 均由
@@ -152,7 +146,7 @@ img { max-width: 100%; display: block; }
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: var(--z-nav);
-  background: rgba(7, 8, 16, 0.85);
+  background: var(--fio-ink-scrim);
   backdrop-filter: blur(20px) saturate(1.2);
   border-bottom: 1px solid var(--border);
 }
@@ -191,13 +185,13 @@ img { max-width: 100%; display: block; }
   font-size: 0.8125rem;
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: #8a8f9e;
+  color: var(--fio-text-2);
   transition: color 0.2s ease;
   position: relative;
   white-space: nowrap;
 }
 .nav-left > a:hover {
-  color: #c4c8d4;
+  color: var(--fio-text);
 }
 .nav-left > a::after {
   content: '';
@@ -222,7 +216,7 @@ img { max-width: 100%; display: block; }
 .nav-divider {
   width: 1px;
   height: 18px;
-  background: rgba(255,255,255,0.08);
+  background: var(--fio-border-subtle);
   flex-shrink: 0;
 }
 .nav-cta {
@@ -266,7 +260,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
   gap: 4px;
 }
-#langToggleBtn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+#langToggleBtn:hover { color: var(--text); background: rgba(244,241,233,0.04); }
 #langToggleBtn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
@@ -365,7 +359,7 @@ img { max-width: 100%; display: block; }
   white-space: nowrap;
 }
 .wallet-btn:hover {
-  background: rgba(255,255,255,0.06);
+  background: rgba(244,241,233,0.06);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -427,14 +421,14 @@ img { max-width: 100%; display: block; }
   50% { opacity: 0.4; }
 }
 .display {
-  font-size: clamp(2.8rem, 6vw, 4.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
   color: var(--text);
 }
 .display span {
-  background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+  background: linear-gradient(135deg, var(--fio-cream) 0%, var(--gold) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-fill-color: transparent;
@@ -463,7 +457,7 @@ img { max-width: 100%; display: block; }
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
-  color: var(--bg);
+  color: var(--fio-ink);
   box-shadow: 0 4px 20px var(--accent-shadow);
 }
 .btn-primary:hover {
@@ -476,7 +470,7 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--border-light);
 }
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.04);
+  background: rgba(244,241,233,0.04);
   border-color: var(--text-secondary);
 }
 .btn svg { width: 16px; height: 16px; }
@@ -487,18 +481,29 @@ img { max-width: 100%; display: block; }
   position: relative;
 }
 .micro {
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.3em;
   color: var(--accent);
   margin-bottom: 12px;
 }
-/* CJK 排版适配：0.1em 字距 + uppercase 对中日文有害 —— 全角字符被拉开、
-   text-transform 对 CJK 无意义（fio-design-system.css 已对 .fio-caption
-   做过同样修正，此处补上遗留的 .micro，保证新旧站 eyebrow 排版一致）。 */
+.micro::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.6;
+}
+/* CJK 排版适配：宽字距 + uppercase + mono 对中日文不适用 */
 :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .micro {
-  letter-spacing: 0.04em;
+  font-family: var(--font-sans);
+  letter-spacing: 0.1em;
   text-transform: none;
 }
 .h1 {
@@ -591,8 +596,9 @@ img { max-width: 100%; display: block; }
 .step-number {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  background: var(--accent-dim);
+  border-radius: var(--radius-sm);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-line);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -624,11 +630,12 @@ img { max-width: 100%; display: block; }
 }.badge {
   display: inline-block;
   padding: 4px 10px;
-  border-radius: 100px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 600;
   margin-top: 12px;
-  background: rgba(74, 222, 128, 0.1);
+  background: var(--success-dim);
   color: var(--success);
 }
 /* [AUDIT FIX R2-041] .code-body .comment/.kw/.type/.func/.str/.num 语法色规则已删：
@@ -659,26 +666,28 @@ img { max-width: 100%; display: block; }
   background: var(--bg-elevated);
   border: 1px solid var(--border);
 }
-.compliance-result.compliant { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.05); }
-.compliance-result.warning { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); }
-.compliance-result.non-compliant { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
+.compliance-result.compliant { border-color: rgba(88,201,138,0.3); background: rgba(88,201,138,0.05); }
+.compliance-result.warning { border-color: rgba(217,169,79,0.3); background: rgba(217,169,79,0.05); }
+.compliance-result.non-compliant { border-color: rgba(217,106,95,0.3); background: rgba(217,106,95,0.05); }
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: 100px;
-  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
 }
-.status-safe { background: rgba(74,222,128,0.12); color: var(--success); }
-.status-warning { background: rgba(251,191,36,0.12); color: var(--warning); }
-.status-danger { background: rgba(248,113,113,0.12); color: var(--danger); }
+.status-safe { background: var(--success-dim); color: var(--success); }
+.status-warning { background: var(--warning-dim); color: var(--warning); }
+.status-danger { background: var(--danger-dim); color: var(--danger); }
 .compliance-row {
   display: flex;
   justify-content: space-between;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--fio-border-hairline);
   font-size: 0.85rem;
 }
 .compliance-row:last-child { border-bottom: none; }
@@ -692,9 +701,35 @@ img { max-width: 100%; display: block; }
 .cta-section {
   text-align: center;
   padding: 80px 40px;
-  background: linear-gradient(135deg, var(--accent-glow) 0%, rgba(201,169,110,0.05) 100%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, var(--gold-glow) 0%, transparent 65%),
+    var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  /* v4 技术图纸角标 */
+  background-image:
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)),
+    radial-gradient(ellipse 70% 60% at 50% 0%, var(--gold-glow) 0%, transparent 65%);
+  background-size:
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px,
+    100% 100%;
+  background-position:
+    left 8px top 8px, left 8px top 8px,
+    right 8px top 8px, right 8px top 8px,
+    left 8px bottom 8px, left 8px bottom 8px,
+    right 8px bottom 8px, right 8px bottom 8px,
+    0 0;
+  background-repeat: no-repeat;
 }
 .cta-section p {
   color: var(--text-secondary);
@@ -705,12 +740,14 @@ img { max-width: 100%; display: block; }
 }
 .cta-section .btn {
   margin-top: 24px;
-  background: rgba(255,255,255,0.1);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.2);
+  background: var(--gold);
+  color: var(--fio-ink);
+  border: none;
+  box-shadow: 0 4px 20px var(--accent-shadow);
 }
 .cta-section .btn:hover {
-  background: rgba(255,255,255,0.15);
+  background: var(--gold-bright);
+  box-shadow: 0 6px 28px var(--accent-shadow-lg);
 }
 
 /* ─── Footer ────────────────────────────────────────────────────── */
@@ -841,7 +878,7 @@ img { max-width: 100%; display: block; }
   transition: all 0.2s;
 }
 #mobile-wallet-btn:hover {
-  background: rgba(255,255,255,0.06);
+  background: rgba(244,241,233,0.06);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -873,9 +910,9 @@ img { max-width: 100%; display: block; }
   color: var(--danger);
   border-color: var(--danger);
 }.code-copy-btn.copied {
-  background: rgba(74, 222, 128, 0.12);
+  background: var(--success-dim);
   color: var(--success);
-  border-color: rgba(74, 222, 128, 0.3);
+  border-color: rgba(88,201,138,0.3);
 }/* Section intro centered text */
 .section-intro {
   text-align: center;
@@ -1181,7 +1218,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(244,241,233,0.02);
   border-bottom: 1px solid var(--border);
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -1210,9 +1247,9 @@ img { max-width: 100%; display: block; }
   border-color: var(--border-light);
 }
 .docs-code-copy.copied {
-  background: rgba(74, 222, 128, 0.12);
+  background: var(--success-dim);
   color: var(--success);
-  border-color: rgba(74, 222, 128, 0.3);
+  border-color: rgba(88,201,138,0.3);
 }
 
 /* ─── Docs Endpoint Card ────────────────────────────────────────── */
@@ -1236,10 +1273,10 @@ img { max-width: 100%; display: block; }
   font-size: 0.75rem;
   font-weight: 600;
 }
-.docs-method.get { background: rgba(74, 222, 128, 0.15); color: var(--success); }
-.docs-method.post { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
-.docs-method.put { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-.docs-method.delete { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+.docs-method.get { background: var(--success-dim); color: var(--success); }
+.docs-method.post { background: var(--warning-dim); color: var(--warning); }
+.docs-method.put { background: var(--info-dim); color: var(--info); }
+.docs-method.delete { background: var(--danger-dim); color: var(--danger); }
 .docs-endpoint-path {
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -1470,7 +1507,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(244,241,233,0.02);
   border-bottom: 1px solid var(--border);
   font-size: 0.8rem;
   color: var(--text-secondary);
