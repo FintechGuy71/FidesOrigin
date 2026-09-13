@@ -39,6 +39,11 @@ jobs:
         id: bootstrap
         run: |
           if [ ! -d apps/web/test/visual/visual.spec.ts-snapshots ]; then
+            if [ -z "${{ github.head_ref }}" ]; then
+              echo "snapshots missing on main push — nothing to do (baselines land via PR)"
+              echo "bootstrap=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             echo "bootstrap=true" >> "$GITHUB_OUTPUT"
             cd apps/web && pnpm exec playwright test --update-snapshots
             cd ../..
@@ -46,14 +51,22 @@ jobs:
             git config user.email "bot@fidesorigin.com"
             git add apps/web/test/visual/visual.spec.ts-snapshots/
             git commit -m "test(web): 视觉回归基线自举 [skip ci]"
-            git push origin "HEAD:${{ github.head_ref || github.ref_name }}"
+            BRANCH="${{ github.head_ref }}"
+            git fetch origin "$BRANCH"
+            git rebase "origin/$BRANCH"
+            git push origin "HEAD:$BRANCH"
           else
             echo "bootstrap=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run visual comparison
         if: steps.bootstrap.outputs.bootstrap != 'true'
-        run: cd apps/web && pnpm exec playwright test
+        run: |
+          if [ ! -d apps/web/test/visual/visual.spec.ts-snapshots ]; then
+            echo "::notice::快照基线尚未建立（首个 PR 正在自举）——本次跳过对比"
+            exit 0
+          fi
+          cd apps/web && pnpm exec playwright test
 
       - name: Upload diff report on failure
         if: failure()
