@@ -680,5 +680,36 @@ QuarantineVault.emergencyUnpause()
 
 ---
 
-*Document version: 1.0 | Last updated: 2026-06-26*
+## 5. Website CSP Tradeoff (官网前端)
+
+> 记录时间：2026-09-13（前端深度审计 D4 决策）
+
+### CSP 收紧已完成项（vercel.json）
+
+- `connect-src` 移除零使用的 `cdn.jsdelivr.net` / `static.cloudflareinsights.com`（缩小第三方可达面）。
+- `img-src` 由 `https:`（任意域）收紧为 `'self' data:`（产物零外链图片实证）。
+- `X-Frame-Options: DENY`、`Strict-Transport-Security` 保留。
+
+### 保留 `script-src 'unsafe-inline'` 的决策（A：维持现状）
+
+**背景**：Next.js App Router 静态导出（`output: 'export'`）会把 RSC 序列化数据以
+`<script>self.__next_f.push(...)</script>` 内联进 HTML。移除 `'unsafe-inline'` 会
+导致全站水合失败——**正确性约束，非偷懒**。
+
+**为何不 nonce 化**：nonce/hash 方案要求服务端在每次请求时生成并注入随机值，
+而静态导出没有逐请求的服务端运行时（构建期产物是纯静态 HTML），无法做到。
+改为 nonce 需放弃静态导出改用服务端渲染（架构级变更），成本远高于其边际安全收益。
+
+**缓解措施**（在 `unsafe-inline` 必要约束下已做）：
+- admin token 仅存 `sessionStorage`（不落 localStorage/磁盘，关页即清）。
+- admin 后台 `noindex` + `robots.txt` 屏蔽 `/admin/`。
+- 已知残余风险：内联脚本可注入场景下（如某 XSS），`unsafe-inline` 不拦脚本执行。
+  根治路径是 D1 的后端真鉴权（token 不再存前端可读存储）——见遗留决策。
+
+**结论**：当前形态在「静态导出」架构约束下已是可达的最紧 CSP；继续收紧需先做
+架构改造（非本轮范围），故维持现状并把本权衡记录在案。
+
+---
+
+*Document version: 1.1 | Last updated: 2026-09-13*
 *This checklist should be reviewed and updated before every major deployment*

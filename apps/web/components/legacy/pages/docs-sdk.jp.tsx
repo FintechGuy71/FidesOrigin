@@ -68,6 +68,7 @@ export default function ContentDocsSdkJP() {
         </div>
         <pre><code>yarn add @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
+      <p className="docs-note"><strong>パッケージの提供元:</strong> SDK は公共の npm registry に公開されています（上記コマンドが正規のインストール方法です）。公共 npm への初回公開が有効になるまでは、GitHub Packages からもインストールできます。&mdash; <code>.npmrc</code> に <code>@fintechguy71:registry=https://npm.pkg.github.com</code> を追加し、GitHub トークンで認証してください。</p>
 
       <h2>クイックスタート</h2>
 
