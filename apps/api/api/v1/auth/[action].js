@@ -1,33 +1,79 @@
 const { withMiddleware, SCOPE, sendError } = require('../../_lib/utils');
 const { proxyToBackend } = require('../../_lib/proxy');
 const { checkRateLimit } = require('../../_middleware/rateLimit');
+const {
+  setAuthCookies,
+  clearAuthCookies,
+  readAccessCookie,
+  readRefreshCookie,
+} = require('../../_lib/cookies');
 
-/* [Auth Fix] POST /v1/auth/[action] —— 合并 login 与 refresh 两个端点为一个函数。
-   原因：Vercel Hobby 计划单部署最多 12 个 serverless 函数，且 api/ 下每个 .js
-   都计为一个。合并动态路由段 [action] 可省一个函数名额，为后续端点留余量。
+/* [Auth Fix] POST/GET /v1/auth/[action] —— admin 后台认证（httpOnly cookie 会话）。
+   合并多个动作到一个函数（Vercel Hobby 单部署最多 12 个 serverless 函数，
+   api/ 下每个 .js 计一个；[action] 动态段复用同一函数名额）。
 
-   - action=login   → 后端 POST /api/v1/auth/login（username/password 换 JWT）
-   - action=refresh → 后端 POST /api/v1/auth/refresh（refresh_token 换新 Token）
-   两个都是公开端点（免 API key），写操作由网关代签 HMAC。端点级限流 5 次/分钟防爆破，
-   按 action 独立计数桶。 */
+   动作：
+   - action=login   (POST) → 后端 /api/v1/auth/login 换 JWT，设为 httpOnly cookie
+   - action=refresh (POST) → 读 refresh cookie → 后端 /api/v1/auth/refresh，重设 cookie
+   - action=me      (GET)  → 读 access cookie → 后端 /api/v1/auth/me，返回当前用户
+   - action=logout  (POST) → 清空两个 cookie（无需打后端）
+
+   [D1 Fix] 会话存储从 sessionStorage 迁到 httpOnly cookie（JS 不可读，根治 XSS
+   窃取 token）。响应体不再回传 token——只回用户信息与过期秒数。
+   login/refresh 是公开端点（免 API key，后端已列入签名豁免）；me/logout 同样是
+   公开通道，me 的鉴权由 cookie 内 JWT 在后端权威校验完成。限流防凭证爆破。 */
+
+const LOGIN_MAX_AGE_FALLBACK = 1800; // 后端 30min，仅用于响应体 expires_in 兜底
+
 async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return sendError(res, 405, 'BAD_REQUEST', 'Method not allowed');
-  }
-
   const action = req.query && req.query.action;
-  if (action !== 'login' && action !== 'refresh') {
+
+  if (!['login', 'refresh', 'me', 'logout'].includes(action)) {
     return sendError(res, 404, 'NOT_FOUND', 'Unknown auth action');
   }
 
-  // 端点级限流：比全局更严，防凭证爆破；login/refresh 独立计数桶
+  // me 用 GET，其余用 POST
+  const expectedMethod = action === 'me' ? 'GET' : 'POST';
+  if (req.method !== expectedMethod) {
+    return sendError(res, 405, 'BAD_REQUEST', 'Method not allowed');
+  }
+
+  // 端点级限流：login/refresh 防凭证爆破；me/logout 轻量
+  const strict = action === 'login' || action === 'refresh';
   const allowed = await checkRateLimit(req, res, {
-    max: 5,
+    max: strict ? 5 : 30,
     window: 60,
     prefix: `ratelimit:auth-${action}`,
   });
   if (!allowed) return;
 
+  // ── logout：纯网关侧清 cookie，无需打后端 ────────────────────────────────
+  if (action === 'logout') {
+    clearAuthCookies(res);
+    return res.status(200).json({ success: true });
+  }
+
+  // ── me：读 access cookie → 后端 /me 权威校验 → 返回用户信息 ────────────────
+  if (action === 'me') {
+    const accessToken = readAccessCookie(req);
+    if (!accessToken) {
+      return sendError(res, 401, 'UNAUTHORIZED', 'Not authenticated');
+    }
+    try {
+      const response = await proxyToBackend('/api/v1/auth/me', {
+        method: 'GET',
+        forwardAuth: true,
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await response.json().catch(() => null);
+      return res.status(response.status).json(data);
+    } catch (error) {
+      console.error('[auth/me] proxy error:', error.message);
+      return sendError(res, 502, 'PROXY_ERROR', 'Backend unavailable');
+    }
+  }
+
+  // ── login / refresh：向后端换 token，设为 httpOnly cookie ─────────────────
   const body = req.body || {};
   let backendPath;
   let payload;
@@ -38,21 +84,33 @@ async function handler(req, res) {
     backendPath = '/api/v1/auth/login';
     payload = { username: body.username, password: body.password };
   } else {
-    if (!body.refresh_token) {
+    // refresh：优先读 httpOnly refresh cookie；兼容旧前端 body.refresh_token（过渡期）
+    const refreshToken = readRefreshCookie(req) || body.refresh_token;
+    if (!refreshToken) {
       return sendError(res, 400, 'BAD_REQUEST', 'refresh_token is required');
     }
     backendPath = '/api/v1/auth/refresh';
-    payload = { refresh_token: body.refresh_token };
+    payload = { refresh_token: refreshToken };
   }
 
   try {
     const response = await proxyToBackend(backendPath, {
       method: 'POST',
       body: JSON.stringify(payload),
-      // 不代签：后端已将 /api/v1/auth/login 与 /refresh 列入公开端点签名豁免
-      //（security.py request_signature_middleware 的 public_write_paths）。
+      // 不代签：后端已将 login/refresh 列入公开端点签名豁免（security.py）。
     });
     const data = await response.json().catch(() => null);
+
+    // 登录/刷新成功：把 token 落到 httpOnly cookie，响应体剔除 token 字段
+    if (response.ok && data && data.access_token) {
+      setAuthCookies(res, data.access_token, data.refresh_token || '');
+      const { access_token, refresh_token, ...safe } = data;
+      return res.status(response.status).json({
+        ...safe,
+        expires_in: safe.expires_in || LOGIN_MAX_AGE_FALLBACK,
+      });
+    }
+    // 失败（401/423/...）原样透传后端响应
     return res.status(response.status).json(data);
   } catch (error) {
     console.error(`[auth/${action}] proxy error:`, error.message);

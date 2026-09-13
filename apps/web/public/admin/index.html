@@ -738,17 +738,29 @@
        直接删除，而非放宽 CSP。 -->
 </head>
 <body>
-  <!-- 鉴权门禁：在所有管理脚本执行前，若 sessionStorage 无网关登录 token，
-       则清空页面并渲染登录表单；登录成功后存 token 并 reload 进入后台。 -->
+  <!-- 鉴权门禁：会话凭证存于 httpOnly cookie（JS 不可读，根治 XSS 窃取 token）。
+       cookie 无法本地探测，改为在所有管理脚本执行前调 /api/v1/auth/me 确认会话；
+       401 则清空页面并渲染登录表单；登录成功由网关 Set-Cookie 落 cookie，reload 进入后台。
+       [D1 Fix] 同源 rewrite：/api/v1/* 反代到网关，cookie 成为第一方（跨域第三方
+       cookie 会被现代浏览器拦截）。fetch 一律 credentials:'include'。 -->
   <script>
   (function () {
-    var API_BASE = window.FIDESORIGIN_API_BASE || 'https://fidesorigin-api.vercel.app/v1';
-    var TOKEN_KEY = 'fidesorigin_admin_token';
-    var REFRESH_KEY = 'fidesorigin_admin_refresh';
-    if (sessionStorage.getItem(TOKEN_KEY)) return;
+    // 同源 API base（经网站 vercel.json rewrite 反代到网关）
+    var API_BASE = window.FIDESORIGIN_API_BASE || '/api/v1';
 
-    document.title = 'Admin Sign In';
-    document.body.innerHTML = '';
+    function showLoginForm() {
+      document.title = 'Admin Sign In';
+      document.body.innerHTML = '';
+      renderLogin();
+    }
+
+    // 会话探测：/auth/me 用 httpOnly access cookie 在后端权威校验
+    fetch(API_BASE + '/auth/me', { credentials: 'include' }).then(function (res) {
+      if (!res.ok) showLoginForm(); // 401 → 未登录，渲染登录表单
+      // 200 → 已登录，脚本继续加载后台
+    }).catch(function () { showLoginForm(); });
+
+    function renderLogin() {
 
     var wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100vh;background:#070810;font-family:Inter,system-ui,sans-serif;padding:16px;';
@@ -757,11 +769,11 @@
     form.style.cssText = 'width:100%;max-width:360px;background:#11131f;border:1px solid rgba(148,163,184,0.2);border-radius:12px;padding:32px;';
 
     var title = document.createElement('h1');
-    title.textContent = 'Admin Sign In';
+    title.textContent = '管理员登录';
     title.style.cssText = 'font-size:1.25rem;font-weight:600;color:#f8fafc;margin-bottom:8px;';
 
     var sub = document.createElement('p');
-    sub.textContent = 'Sign in with your admin account to continue.';
+    sub.textContent = '使用管理员账户登录以继续。';
     sub.style.cssText = 'font-size:0.875rem;color:#94a3b8;margin-bottom:24px;';
 
     function makeInput(id, type, placeholder, labelText, autoComplete) {
@@ -782,8 +794,8 @@
       return input;
     }
 
-    var usernameInput = makeInput('admin-username', 'text', 'Username', 'Username', 'username');
-    var passwordInput = makeInput('admin-password', 'password', 'Password', 'Password', 'current-password');
+    var usernameInput = makeInput('admin-username', 'text', '用户名', '用户名', 'username');
+    var passwordInput = makeInput('admin-password', 'password', '密码', '密码', 'current-password');
 
     var errorEl = document.createElement('p');
     errorEl.setAttribute('role', 'alert');
@@ -792,7 +804,7 @@
 
     var btn = document.createElement('button');
     btn.type = 'submit';
-    btn.textContent = 'Sign in';
+    btn.textContent = '登录';
     btn.style.cssText = 'width:100%;background:#c9a96e;color:#070810;border:none;border-radius:8px;padding:12px 16px;font-weight:500;font-size:0.9rem;cursor:pointer;';
     form.appendChild(btn);
 
@@ -800,18 +812,18 @@
       e.preventDefault();
       errorEl.style.display = 'none';
       btn.disabled = true;
-      btn.textContent = 'Signing in...';
+      btn.textContent = '登录中...';
+      // [D1 Fix] credentials:'include' 让浏览器携带/接收 httpOnly cookie；
+      // token 不再写 sessionStorage（JS 可读=可被 XSS 窃取）
       fetch(API_BASE + '/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
       }).then(function (res) {
         if (res.ok) {
-          return res.json().then(function (data) {
-            sessionStorage.setItem(TOKEN_KEY, data.access_token);
-            if (data.refresh_token) sessionStorage.setItem(REFRESH_KEY, data.refresh_token);
-            location.reload();
-          });
+          location.reload(); // cookie 已落，重载进后台
+          return;
         }
         var msg = '服务器错误，请稍后再试';
         if (res.status === 401) msg = '用户名或密码错误';
@@ -823,12 +835,13 @@
         errorEl.style.display = 'block';
       }).then(function () {
         btn.disabled = false;
-        btn.textContent = 'Sign in';
+        btn.textContent = '登录';
       });
     });
 
     wrap.appendChild(form);
     document.body.appendChild(wrap);
+    }
   })();
   </script>
   <a href="#main-content" class="skip-link">Skip to content</a>

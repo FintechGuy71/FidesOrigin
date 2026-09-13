@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://fidesorigin-api.vercel.app/v1/:path*"
+    }
+  ],
   "redirects": [
     {
       "source": "/whitepaper",
