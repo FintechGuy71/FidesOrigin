@@ -18,6 +18,9 @@ jobs:
       - name: Verify signed tag
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
+          # [Fix] actions/checkout 默认把 annotated tag 剥成其指向的 commit，
+          # 本地 cat-file -t 会误判为轻量标签。先显式拉取 tag 对象再判型。
+          git fetch --force origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME" 2>/dev/null || true
           TAG_TYPE=$(git cat-file -t "$TAG_NAME" 2>/dev/null || echo "")
           if [ "$TAG_TYPE" != "tag" ]; then
             echo "❌ Refusal: tag '$TAG_NAME' is a lightweight tag (type=$TAG_TYPE)."
