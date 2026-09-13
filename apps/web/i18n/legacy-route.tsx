@@ -12,12 +12,24 @@ export function legacyStaticParams(locale: Locale): { slug: string[] }[] {
     .map(([slug]) => ({ slug: slug.split("/") }));
 }
 
+/* 博客文章专属 OG 封面（scripts/generate-blog-covers.py 生成） */
+const OG_COVER: Record<string, string> = {
+  "blog/travel-rule-on-chain": "travel-rule-on-chain",
+  "blog/ofac-sanctions-screening-blockchain": "ofac-sanctions-screening-blockchain",
+  "blog/hong-kong-stablecoin-license": "hong-kong-stablecoin-license",
+  "blog/mica-stablecoin-compliance": "mica-stablecoin-compliance",
+  "blog/why-on-chain-compliance": "why-on-chain-compliance",
+};
+
 export function legacyMetadata(locale: Locale, slugParts: string[]): Metadata {
   const slug = slugParts.join("/");
   const def = pageDefs[slug];
   if (!def || !def.available.includes(locale)) return {};
   const m = def.meta[locale] ?? def.meta.en ?? { title: "FidesOrigin", description: "" };
   const url = canonicalUrl(`/${slug}`, locale);
+  const ogImage = OG_COVER[slug]
+    ? `https://fidesorigin.com/brand/covers/${OG_COVER[slug]}.png`
+    : "https://fidesorigin.com/brand/og-image.png";
   return {
     title: m.title,
     description: m.description,
@@ -30,12 +42,12 @@ export function legacyMetadata(locale: Locale, slugParts: string[]): Metadata {
       description: m.description,
       type: "website",
       url,
-      images: ["https://fidesorigin.com/brand/og-image.png"],
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
       site: "@fidesorigin",
-      images: ["https://fidesorigin.com/brand/og-image.png"],
+      images: [ogImage],
     },
   };
 }
