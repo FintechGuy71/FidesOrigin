@@ -132,10 +132,10 @@ export default function ContentContactEN() {
             {status === "error" && (
               <p role="alert" style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.9rem", "color": "var(--fio-danger)" }}>
                 {errorMsg}{" "}
-                或直接邮件 <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)" }}>contact@fidesorigin.com</a>
+                或直接邮件 <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px" }}>contact@fidesorigin.com</a>
               </p>
             )}
-            <p style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.8rem", "color": "var(--text-muted)" }}>Prefer email? Reach us at <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)" }}>contact@fidesorigin.com</a></p>
+            <p style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.8rem", "color": "var(--text-muted)" }}>Prefer email? Reach us at <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px" }}>contact@fidesorigin.com</a></p>
           </form>
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function ContentContactEN() {
             </div>
             <h3>GitHub</h3>
             <p>Explore our open-source contracts, SDK, and documentation.</p>
-            <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" style={{ "color": "var(--accent)", "fontSize": "0.875rem" }}>View on GitHub →</a>
+            <a href="https://github.com/FintechGuy71/FidesOrigin" target="_blank" rel="noopener" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px", "fontSize": "0.875rem" }}>View on GitHub →</a>
           </div>
           <div className="feature-card reveal">
             <div className="feature-icon">
@@ -177,7 +177,7 @@ export default function ContentContactEN() {
             </div>
             <h3>Email</h3>
             <p>For partnerships, press, and general inquiries.</p>
-            <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "fontSize": "0.875rem" }}>contact@fidesorigin.com</a>
+            <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px", "fontSize": "0.875rem" }}>contact@fidesorigin.com</a>
           </div>
         </div>
       </div>

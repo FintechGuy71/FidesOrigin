@@ -75,7 +75,7 @@ const PAGE_CSS = `
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--accent);
+      color: var(--accent-light);
       padding: 2px 8px;
       border-radius: 4px;
       background: var(--accent-dim);

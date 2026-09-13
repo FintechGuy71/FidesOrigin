@@ -163,7 +163,7 @@ function FeatureCard({
       <div className={`flex flex-col justify-center ${index % 2 === 1 ? "lg:order-1" : ""}`}>
         <div
           className="fio-num mb-4 text-5xl font-light leading-none"
-          style={{ color: "var(--fio-surface-3)", WebkitTextStroke: "1px var(--fio-border-light)" }}
+          style={{ color: "var(--fio-text-3)" }}
           aria-hidden="true"
         >
           {feature.num}

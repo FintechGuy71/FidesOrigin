@@ -38,7 +38,7 @@ export default function Footer({
           <div className="flex items-center gap-2.5">
           {/* Logo */}
           <img
-            src="/brand/logo-dark-icon.png"
+            src="/brand/logo-icon-56.png"
             alt="FidesOrigin"
             width="24"
             height="24"

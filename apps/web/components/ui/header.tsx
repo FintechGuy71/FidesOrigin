@@ -128,7 +128,7 @@ export default function Header({
         {/* Logo */}
         <Link href={homeHref(lang)} className="flex items-center gap-2.5">
           <img
-            src="/brand/logo-dark-icon.png"
+            src="/brand/logo-icon-56.png"
             alt="FidesOrigin"
             width="28"
             height="28"

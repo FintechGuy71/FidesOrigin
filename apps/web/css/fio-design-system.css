@@ -57,6 +57,8 @@
     --fio-warn-dim:     rgba(217, 169, 79, 0.12);
     --fio-danger:       #d96a5f;
     --fio-danger-dim:   rgba(217, 106, 95, 0.12);
+    /* dim 底色上的小字专用亮色（danger 本色在 dim 底上仅 ~4.4:1） */
+    --fio-danger-light: #e89890;
     --fio-info:         #7aa8c9;
     --fio-info-dim:     rgba(122, 168, 201, 0.12);
 
