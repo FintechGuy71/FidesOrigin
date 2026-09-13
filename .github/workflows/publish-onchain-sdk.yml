@@ -1,0 +1,51 @@
+name: Publish On-Chain SDK to npm
+
+on:
+  push:
+    tags:
+      - 'onchain-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # 公共 npm provenance（OIDC 可信发布）
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [pin]
+
+      - name: Verify signed tag
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          TAG_TYPE=$(git cat-file -t "$TAG_NAME" 2>/dev/null || echo "")
+          if [ "$TAG_TYPE" != "tag" ]; then
+            echo "❌ Refusal: tag '$TAG_NAME' is a lightweight tag (type=$TAG_TYPE)."
+            echo "   Only annotated/signed tags are allowed for publishing."
+            exit 1
+          fi
+          echo "✅ Verified signed/annotated tag: $TAG_NAME"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [pin]
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906aff7b6bcc4f8a6ec77f1f6f2f67f10a2b0bb # v4 [pin]
+
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --no-frozen-lockfile --config.blockExoticSubdeps=false
+
+      - name: Build On-Chain SDK (tsup)
+        run: pnpm --filter @fintechguy71/on-chain-sdk run build
+
+      - name: Test On-Chain SDK
+        run: pnpm --filter @fintechguy71/on-chain-sdk run test
+
+      - name: Publish to public npm
+        working-directory: packages/on-chain-sdk
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

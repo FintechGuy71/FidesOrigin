@@ -217,7 +217,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <span>npm</span>
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>npm install @fidesorigin/on-chain-sdk</code></pre>
+        <pre><code>npm install @fintechguy71/on-chain-sdk</code></pre>
       </div>
 
       <h3>Initialize On-Chain SDK</h3>
@@ -226,7 +226,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <span>TypeScript</span>
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>import &#123; FidesOriginSDK &#125; from '@fidesorigin/on-chain-sdk';
+        <pre><code>import &#123; FidesOriginSDK &#125; from '@fintechguy71/on-chain-sdk';
 
 import &#123; JsonRpcProvider &#125; from 'ethers';
 
@@ -250,7 +250,7 @@ const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
           <span>TypeScript — Guard Assessment</span>
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
-        <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fidesorigin/on-chain-sdk';
+        <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fintechguy71/on-chain-sdk';
 
 // Validate a transfer through the compliance engine
 const validation = await sdk.validateTransfer(
