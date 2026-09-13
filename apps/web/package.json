@@ -14,7 +14,6 @@
     "clean": "rm -rf .next dist"
   },
   "dependencies": {
-    "aos": "3.0.0-beta.6",
     "next": "15.1.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
@@ -23,7 +22,6 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4.0.3",
-    "@types/aos": "^3.0.7",
     "@types/node": "^22.13.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
