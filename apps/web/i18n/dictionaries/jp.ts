@@ -163,6 +163,16 @@ const jp: Dict = {
       floatBadge: "HKMA ライセンス対応済み",
       canvasLabel: "コンプライアンスネットワークメッシュのアニメーション",
       sealText: "FIDESORIGIN · HK STABLECOIN ORDINANCE READY · ",
+      screen: {
+        label: "ライブ · 任意アドレスをスクリーニング",
+        placeholder: "0x… Ethereum アドレスを貼り付け",
+        button: "スクリーニング",
+        checking: "スキャン中…",
+        invalid: "有効な 0x アドレス（42 文字）を入力してください",
+        error: "サービス利用不可——フルデモをお試しください",
+        scoreLabel: "リスク",
+        fullDemo: "フルデモ",
+      },
       metrics: [
         { value: "20,645+", label: "オンチェーンリスクアドレス" },
         { value: "<50ms", label: "スクリーニング遅延" },

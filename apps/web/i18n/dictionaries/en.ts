@@ -161,6 +161,16 @@ const en = {
       floatBadge: "HKMA License Ready",
       canvasLabel: "Compliance network mesh animation",
       sealText: "FIDESORIGIN · HK STABLECOIN ORDINANCE READY · ",
+      screen: {
+        label: "Live · Screen any address",
+        placeholder: "0x… paste an Ethereum address",
+        button: "Screen",
+        checking: "Screening…",
+        invalid: "Enter a valid 0x address (42 chars)",
+        error: "Service unavailable — try the full demo",
+        scoreLabel: "Risk",
+        fullDemo: "Full demo",
+      },
       metrics: [
         { value: "20,645+", label: "Risk addresses on-chain" },
         { value: "<50ms", label: "Screening latency" },

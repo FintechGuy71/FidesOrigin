@@ -74,7 +74,7 @@ export default async function LocalizedHome({
   const dict = getDictionary(lang);
   return (
     <>
-      <Hero d={dict.home.hero} />
+      <Hero d={dict.home.hero} lang={lang} />
       <Workflows d={dict.home.workflows} />
       <Features d={dict.home.features} />
       <Segments d={dict.home.segments} />
