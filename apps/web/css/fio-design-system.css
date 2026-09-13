@@ -1,80 +1,68 @@
 /* ============================================
-   FIDESORIGIN — BRAND DESIGN SYSTEM v2
-   Institutional Fintech. Restrained. Authoritative.
+   FIDESORIGIN — BRAND DESIGN SYSTEM v3
+   "Ledger Precision" — Deep navy × burnished bronze.
+   Institutional. Technical-drawing discipline. Zero decoration
+   that does not carry information.
 
    ⚠ 本文件是 --fio-* 设计令牌的【唯一真源】。
    不要在任何其它 CSS 文件里重复定义 :root { --fio-* }。
-   （历史上 css/style.css 曾重复定义一份并因加载顺序覆盖本文件，
-     导致 --font-serif 被改成自引用循环、全站标题字体失效。已修复。）
    ============================================ */
 
 @layer base {
   :root {
-    /* Core Palette — Deep, cold, institutional */
-    --fio-ink:        #070810;
-    --fio-ink-soft:   #0c0e16;
-    --fio-surface:    #12141d;
-    --fio-surface-2:  #181b26;
-    --fio-surface-3:  #1e2130;
-    --fio-elevated:   #262a3a;
-    /* 半透明遮罩。组件里曾散落 rgba(7,8,16,0.8/0.9/0.95) 三种手写副本 */
-    --fio-ink-scrim:  rgba(7, 8, 16, 0.9);
+    /* Core Palette — deep navy depths, derived from #162638 */
+    --fio-ink:        #0a141f;
+    --fio-ink-soft:   #0d1826;
+    --fio-surface:    #12202f;
+    --fio-surface-2:  #162638;
+    --fio-surface-3:  #1c2f42;
+    --fio-elevated:   #24384d;
+    --fio-ink-scrim:  rgba(10, 20, 31, 0.88);
+    --fio-panel-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
 
-    /* Borders — 与 legacy 的 --border / --border-light 对齐（同色值、同语义）
-       hairline = 组件里出现频率最高的 rgba(255,255,255,0.04) 手写副本 */
-    --fio-border:        #1e2130;
-    --fio-border-light:  #262a3a;
-    --fio-border-subtle: rgba(255, 255, 255, 0.05);
-    --fio-border-hairline: rgba(255, 255, 255, 0.04);
+    /* Borders — 暖白 hairline，技术图纸感 */
+    --fio-border:        #1c2f42;
+    --fio-border-light:  #24384d;
+    --fio-border-subtle: rgba(244, 241, 233, 0.06);
+    --fio-border-hairline: rgba(244, 241, 233, 0.05);
 
-    /* Typography colors
-       ⚠ 对比度必须按【最亮的常见底色】--bg-card #12141d 校准，而不是 --fio-ink。
-         旧口径按 #070810 算出的 "text-3 4.7:1" 在卡片底上只有 4.14:1，不达 AA。
-       全站三种常见底色的相对亮度（WCAG 2.1）：
-         --fio-ink       #070810  L=0.00256
-         --fio-ink-soft  #0c0e16  L=0.00450
-         --bg-card       #12141d  L=0.00717
-       实测（前景 → 上述三底）：
-         --fio-text   #e8eaf0  16.6 : 16.0 : 15.3   ✅
-         --fio-text-2 #8a8f9e   6.19 :  5.97 :  5.69  ✅
-         --fio-text-3 #7b8290   5.17 :  4.99 :  4.76  ✅（旧值 #717885 = 4.50/4.34/4.14，卡片底不达标）
-       --fio-text-4 已删除：历史值 1.86:1 不达标，且修复后全站零引用。 */
-    --fio-text:       #e8eaf0;
-    --fio-text-2:     #8a8f9e;
-    --fio-text-3:     #7b8290;
+    /* Typography colors — 暖白文字对深蓝底
+       实测对比度（对最亮常见底 --fio-surface #12202f, L≈0.0133）：
+         --fio-text   #f4f1e9  ≈ 15.9:1  ✅
+         --fio-text-2 #b3ac9c  ≈  7.5:1  ✅
+         --fio-text-3 #98917f  ≈  5.3:1  ✅ */
+    --fio-text:       #f4f1e9;
+    --fio-text-2:     #b3ac9c;
+    --fio-text-3:     #98917f;
 
-    /* Primary accent — Deep violet. Calm, modern, institutional */
-    --fio-accent:     #8b7ec8;
-    --fio-accent-dim: rgba(139, 126, 200, 0.12);
-    --fio-accent-glow:rgba(139, 126, 200, 0.06);
+    /* Primary metal — Burnished bronze. CTAs, seals, focus rings. */
+    --fio-gold:       #af915f;
+    --fio-gold-bright:#c0a271;
+    --fio-gold-dim:   rgba(175, 145, 95, 0.14);
+    --fio-gold-glow:  rgba(175, 145, 95, 0.08);
 
-    /* Warm accent — Burnished gold. For CTAs. Tasty. */
-    --fio-gold:       #c9a96e;
-    --fio-gold-dim:   rgba(201, 169, 110, 0.12);
-    --fio-gold-glow:  rgba(201, 169, 110, 0.08);
+    /* Highlight — Light bronze / cream. Strokes, tags, emphasis. */
+    --fio-accent:     #e3c892;
+    --fio-accent-dim: rgba(227, 200, 146, 0.12);
+    --fio-accent-glow:rgba(227, 200, 146, 0.05);
+    --fio-cream:      #fce1b6;
 
-    /* Secondary accent — Steel blue. Supporting elements. */
-    --fio-steel:      #6b8cae;
+    /* Secondary — Steel blue, same navy temperature. */
+    --fio-steel:      #7a94ab;
 
-    /* Semantic — 补足 dim/glow 三件套，原先只有单色，导致组件里手写 rgba() */
-    --fio-success:      #4ade80;
-    --fio-success-dim:  rgba(74, 222, 128, 0.12);
-    --fio-warn:         #fbbf24;
-    --fio-warn-dim:     rgba(251, 191, 36, 0.12);
-    --fio-danger:       #f87171;
-    --fio-danger-dim:   rgba(248, 113, 113, 0.12);
-    --fio-info:         #60a5fa;
-    --fio-info-dim:     rgba(96, 165, 250, 0.12);
+    /* Semantic — 同温层衍生（暖化，避免默认 Tailwind 色） */
+    --fio-success:      #58c98a;
+    --fio-success-dim:  rgba(88, 201, 138, 0.12);
+    --fio-warn:         #d9a94f;
+    --fio-warn-dim:     rgba(217, 169, 79, 0.12);
+    --fio-danger:       #d96a5f;
+    --fio-danger-dim:   rgba(217, 106, 95, 0.12);
+    --fio-info:         #7aa8c9;
+    --fio-info-dim:     rgba(122, 168, 201, 0.12);
 
     /* Typography
-       ⚠ 变量名必须以 -nf 结尾（next/font 注入），避免与消费名同名造成
-          自引用循环（--font-sans: var(--font-sans) 会让整条声明 IACVT 失效）。
-       ⚠ 三条链都必须带 CJK 回退：next/font 只加载 latin 子集
-          （app/_lib/fonts.ts: subsets:["latin"]），CJK 字形只能靠回退栈兜底。
-          标题体（--font-serif，被 .fio-heading-* 消费）此前只有
-          Space Grotesk + Segoe UI + Georgia —— 三者均无 CJK 字形，
-          cn/tw/jp 页面标题直接落到系统 serif（Windows 宋体 / macOS Songti），
-          与正文的无衬线（PingFang / 微软雅黑）风格割裂。 */
+       ⚠ 变量名必须以 -nf 结尾（next/font 注入），避免自引用循环。
+       ⚠ 三条链都必须带 CJK 回退。 */
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
                  "Noto Sans SC", sans-serif;
@@ -84,41 +72,28 @@
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
 
-    /* Radii — Slightly reduced for a sharper, more institutional feel
-       与 legacy.css 的 --radius-* 已统一为同一组值（原 legacy 为 6/10/14px） */
-    --radius-sm:      4px;
-    --radius-md:      8px;
-    --radius-lg:      12px;
+    /* Radii — sharp, institutional */
+    --radius-sm:      3px;
+    --radius-md:      6px;
+    --radius-lg:      10px;
 
     /* Motion */
     --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
 
-    /* Z-index 层级总表 — 全站唯一，禁止再出现裸数字
-       设计约束：导航 < 菜单遮罩 < 下拉菜单（否则遮罩会盖住菜单本身，
-       或像原本 998 < 1000 那样点导航关不掉语言菜单）。 */
-    --z-decor:     10;   /* 装饰层（canvas / 渐变 / 插图） */
-    --z-content:   20;   /* 正文内容层 */
-    --z-nav:       50;   /* 固定导航 */
-    --z-backdrop:  55;   /* 菜单遮罩层级（标尺保留位）。[AUDIT R2-047] legacy 语言菜单
-                            改用 pointerdown-outside 关闭后当前无消费者，但作为 z-index
-                            标尺的一环保留，供未来需要遮罩层的组件复用。 */
-    --z-dropdown:  60;   /* 下拉菜单 / 语言菜单 */
-    --z-sticky:    100;  /* 回到顶部等悬浮按钮 */
-    --z-overlay:   200;  /* 移动端全屏菜单 */
-    --z-toast:     300;  /* Toast 提示 */
-    --z-skip:      400;  /* 跳转到主内容（无障碍） */
-    --z-modal:     500;  /* 模态框 */
+    /* Z-index 层级总表 — 全站唯一，禁止再出现裸数字 */
+    --z-decor:     10;
+    --z-content:   20;
+    --z-nav:       50;
+    --z-backdrop:  55;
+    --z-dropdown:  60;
+    --z-sticky:    100;
+    --z-overlay:   200;
+    --z-toast:     300;
+    --z-skip:      400;
+    --z-modal:     500;
   }
 
-  /* CJK 字体回退栈。
-     ⚠ 必须放在本文件（base 层）而不是 css/legacy.css（legacy 层）：
-       CSS 级联层的优先级高于选择器特异性，base 层的 `:root` 会压掉
-       legacy 层的 `html[lang="ja"]`，把 CJK 回退栈整体失效。
-     ⚠ 原先只在 legacy.css 里定义，导致新版 cn/tw/jp 首页完全没有
-       中日韩字形回退，靠系统字体兜底，字重与字距均不一致。 */
-  /* ⚠ 三个块必须同时覆盖 sans / serif / mono —— 此前只覆盖 --font-sans，
-       导致 --font-serif / --font-mono 在 CJK 页面上无法被修正，
-       而这两者恰好是最需要修正的（.fio-heading-* 与 .fio-caption/.fio-pill）。 */
+  /* CJK 字体回退栈（必须留在 base 层，层优先级高于属性选择器） */
   html[lang="zh-CN"],
   html[lang="zh-Hans"] {
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
@@ -145,7 +120,6 @@
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
   }
-  /* 日文假名密度高，需要更宽松的行高 */
   html[lang="ja"] body {
     line-height: 1.8;
     letter-spacing: 0.01em;
@@ -153,7 +127,6 @@
 
   html {
     scroll-behavior: smooth;
-    /* 顶部固定导航 56px（h-14），锚点跳转时留出空间，避免标题被导航盖住 */
     scroll-padding-top: 3.5rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -168,26 +141,53 @@
 }
 
 @layer components {
-  /* ---- Gradients & Surfaces ---- */
+  /* ---- Surfaces ---- */
   .fio-gradient-hero {
     background:
-      radial-gradient(ellipse 70% 50% at 50% -5%, rgba(139,126,200,0.05) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 30% at 85% 40%, rgba(201,169,110,0.03) 0%, transparent 50%),
+      radial-gradient(ellipse 75% 55% at 50% -8%, rgba(227,200,146,0.06) 0%, transparent 62%),
+      radial-gradient(ellipse 45% 35% at 88% 45%, rgba(122,148,171,0.05) 0%, transparent 55%),
       var(--fio-ink);
-  }/* ---- Typography ---- */
+  }
+
+  /* 技术图纸角标 —— 四角 L 形刻线，"合规蓝图"签名式细节。
+     用 8 条 background 渐变实现，不增加 DOM、不占 pseudo。 */
+  .fio-ticks {
+    background-image:
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold)),
+      linear-gradient(var(--fio-gold), var(--fio-gold));
+    background-size:
+      10px 1px, 1px 10px,
+      10px 1px, 1px 10px,
+      10px 1px, 1px 10px,
+      10px 1px, 1px 10px;
+    background-position:
+      left 6px top 6px, left 6px top 6px,
+      right 6px top 6px, right 6px top 6px,
+      left 6px bottom 6px, left 6px bottom 6px,
+      right 6px bottom 6px, right 6px bottom 6px;
+    background-repeat: no-repeat;
+  }
+
+  /* ---- Typography ---- */
   .fio-heading-xl {
-    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    font-size: clamp(2.4rem, 5.4vw, 4.6rem);
     font-weight: 500;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
     font-family: var(--font-serif);
   }
 
   .fio-heading-lg {
-    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-size: clamp(1.7rem, 3.5vw, 2.7rem);
     font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: -0.01em;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
     font-family: var(--font-serif);
   }
   .fio-body-lg {
@@ -203,19 +203,51 @@
     color: var(--fio-text-3);
     font-family: var(--font-mono);
   }
-  /* CJK 排版适配 —— .fio-caption 的 mono + uppercase + 宽字距对中日文不适用，
-     且 JetBrains Mono 只加载了 latin 子集，CJK 会掉到系统字体导致字重错乱。 */
+  /* Eyebrow — 宽字距等宽标签 + 前置刻线，章节序号式编排 */
+  .fio-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--fio-gold);
+  }
+  .fio-eyebrow::before {
+    content: "";
+    display: inline-block;
+    width: 28px;
+    height: 1px;
+    background: var(--fio-gold);
+    opacity: 0.6;
+  }
+  /* CJK 排版适配 */
   :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-caption {
     font-family: var(--font-sans);
     letter-spacing: 0.04em;
     text-transform: none;
   }
-  /* CJK 全角字符需要更宽松的行高，负字距会互相挤压
-     [AUDIT FIX R2-043] .fio-heading-md 已从 :is() 移除：该类零消费且已删除 */
+  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-eyebrow {
+    font-family: var(--font-sans);
+    letter-spacing: 0.14em;
+    text-transform: none;
+  }
   :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) :is(.fio-heading-xl, .fio-heading-lg) {
-    line-height: 1.35;
+    line-height: 1.3;
     letter-spacing: 0;
-    font-style: normal; /* CJK 无真斜体，浏览器合成斜体视觉效果差 */
+    font-style: normal;
+  }
+
+  /* 等宽表格数字 —— 指标带专用 */
+  .fio-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-num {
+    font-family: var(--font-mono);
   }
 
   /* ---- Buttons ---- */
@@ -224,7 +256,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 24px;
+    padding: 11px 26px;
     border-radius: var(--radius-md);
     font-size: 0.85rem;
     font-weight: 500;
@@ -235,8 +267,6 @@
     letter-spacing: 0.01em;
   }
 
-  /* 焦点可见样式 —— 全站统一金色焦点环（对深底对比度 8.9:1），
-     此前 header / home-chrome / ModalVideo 各自用 indigo-500 / 400 / 200 三种颜色 */
   .fio-btn:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--fio-ink), 0 0 0 4px var(--fio-gold);
@@ -245,27 +275,47 @@
   .fio-btn-primary {
     background: var(--fio-gold);
     color: var(--fio-ink);
-    box-shadow: 0 0 20px rgba(201,169,110,0.2);
+    box-shadow: 0 0 24px rgba(175,145,95,0.22);
   }
   .fio-btn-primary:hover {
-    background: #d4b87a;
-    box-shadow: 0 0 30px rgba(201,169,110,0.35);
+    background: var(--fio-gold-bright);
+    box-shadow: 0 0 34px rgba(175,145,95,0.36);
     transform: translateY(-1px);
-  }  .fio-btn-ghost {
+  }
+  .fio-btn-ghost {
     background: transparent;
     color: var(--fio-text-2);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid var(--fio-border-subtle);
   }
   .fio-btn-ghost:hover {
     color: var(--fio-text);
-    background: rgba(255,255,255,0.03);
-    border-color: rgba(255,255,255,0.1);
-  }/* ---- Animations ---- */
+    background: rgba(244,241,233,0.03);
+    border-color: rgba(244,241,233,0.12);
+  }
+
+  /* ---- Rotating seal ---- */
+  @keyframes fio-spin {
+    to { transform: rotate(360deg); }
+  }
+  .fio-seal-ring {
+    animation: fio-spin 28s linear infinite;
+    transform-origin: 50% 50%;
+  }
+
+  /* ---- Screening ticker（横向滚动的事件流，无缝循环需内容×2） ---- */
+  @keyframes fio-ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .fio-ticker-track {
+    animation: fio-ticker 46s linear infinite;
+  }
+
+  /* ---- Animations ---- */
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
-  }/* 延迟类必须定义在动画类【之前】：animation 简写会把 animation-delay 重置为 0，
-     若顺序颠倒则 .fio-delay-* 全部静默失效。此处额外提高特异性做双保险。 */
+  }
   .fio-delay-1 { animation-delay: 0.1s; }
   .fio-delay-2 { animation-delay: 0.2s; }
   .fio-delay-3 { animation-delay: 0.3s; }
@@ -279,28 +329,31 @@
   .fio-animate-fade-up.fio-delay-2 { animation-delay: 0.2s; }
   .fio-animate-fade-up.fio-delay-3 { animation-delay: 0.3s; }
   .fio-animate-fade-up.fio-delay-4 { animation-delay: 0.4s; }
-  .fio-animate-fade-up.fio-delay-5 { animation-delay: 0.5s; }/* ---- Scrollbar ---- */
+  .fio-animate-fade-up.fio-delay-5 { animation-delay: 0.5s; }
+
+  /* ---- Scrollbar ---- */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+  ::-webkit-scrollbar-thumb { background: rgba(244,241,233,0.07); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(244,241,233,0.14); }
 
   /* ---- Selection ---- */
   ::selection {
-    background: rgba(139,126,200,0.2);
+    background: rgba(227,200,146,0.22);
     color: var(--fio-text);
   }
 }
 
-/* ---- 无障碍：尊重系统"减少动态效果"偏好 ----
-   此前全站（Hero canvas 无限重绘、animate-pulse/ping、fio-animate-*、AOS）
-   都没有任何 reduced-motion 保护。 */
+/* ---- 无障碍：尊重系统"减少动态效果"偏好 ---- */
 @media (prefers-reduced-motion: reduce) {
-  /* [AUDIT FIX R2-043] .fio-animate-fade-in 已从组合选择器移除：该类零消费且已删除 */
   .fio-animate-fade-up {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+  .fio-seal-ring,
+  .fio-ticker-track {
+    animation: none !important;
   }
 
   *,
