@@ -52,7 +52,13 @@ jobs:
 
       - name: Publish to GitHub Packages
         working-directory: packages/sdk
-        run: npm publish --access restricted
+        run: |
+          # [Fix] 显式写 .npmrc：setup-node 的 scope registry 只配了 registry 行，
+          # 未可靠注入 authToken，导致 npm publish 报 401 unauthenticated。
+          # GitHub Packages 标准做法：显式 registry + _authToken 两行。
+          echo "@fintechguy71:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm publish --access restricted
         env:
           # GitHub Packages 用 CI 自动注入的 GITHUB_TOKEN，无需用户配 npm 凭据
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
