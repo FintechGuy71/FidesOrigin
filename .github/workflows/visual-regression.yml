@@ -1,0 +1,79 @@
+name: Visual Regression
+
+# 视觉回归：关键页面 Playwright 截图对比。
+# 基线自举：snapshots 目录不存在时，本工作流生成基线并自动回提 main（[skip ci]），
+# 后续运行进入对比模式。字体渲染在 Win/Linux 有亚像素差，阈值 2% 只拦真实回归。
+
+on:
+  pull_request:
+    paths: ["apps/web/**", ".github/workflows/visual-regression.yml"]
+  push:
+    branches: [main]
+    paths: ["apps/web/**", ".github/workflows/visual-regression.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
+
+      - name: Install Playwright chromium
+        run: pnpm --filter @fidesorigin/web exec playwright install --with-deps chromium
+
+      - name: Build web (static export)
+        run: pnpm --filter @fidesorigin/web run build
+
+      - name: Bootstrap baselines (first run)
+        id: bootstrap
+        run: |
+          if [ ! -d apps/web/test/visual/visual.spec.ts-snapshots ]; then
+            if [ -z "${{ github.head_ref }}" ]; then
+              echo "snapshots missing on main push — nothing to do (baselines land via PR)"
+              echo "bootstrap=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
+            cd apps/web && pnpm exec playwright test --update-snapshots
+            cd ../..
+            git config user.name "visual-regression-bot"
+            git config user.email "bot@fidesorigin.com"
+            git add apps/web/test/visual/visual.spec.ts-snapshots/
+            git commit -m "test(web): 视觉回归基线自举 [skip ci]"
+            BRANCH="${{ github.head_ref }}"
+            git fetch origin "$BRANCH"
+            # 构建可能改写已跟踪的自动生成文件（如 next-env.d.ts），rebase 前收拢
+            git diff --quiet || git commit -am "chore: 收拢构建期生成文件 [skip ci]"
+            git rebase "origin/$BRANCH"
+            git push origin "HEAD:$BRANCH"
+          else
+            echo "bootstrap=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run visual comparison
+        if: steps.bootstrap.outputs.bootstrap != 'true'
+        run: |
+          if [ ! -d apps/web/test/visual/visual.spec.ts-snapshots ]; then
+            echo "::notice::快照基线尚未建立（首个 PR 正在自举）——本次跳过对比"
+            exit 0
+          fi
+          cd apps/web && pnpm exec playwright test
+
+      - name: Upload diff report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-report
+          path: apps/web/test-results/
+          retention-days: 7
