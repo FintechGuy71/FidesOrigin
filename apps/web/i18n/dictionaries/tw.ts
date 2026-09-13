@@ -163,6 +163,16 @@ const tw: Dict = {
       floatBadge: "已就緒 HKMA 牌照",
       canvasLabel: "合規網絡網格動畫",
       sealText: "FIDESORIGIN · HK STABLECOIN ORDINANCE READY · ",
+      screen: {
+        label: "即時 · 篩查任意地址",
+        placeholder: "0x… 貼上以太坊地址",
+        button: "篩查",
+        checking: "篩查中…",
+        invalid: "請輸入合法的 0x 地址（42 位）",
+        error: "服務暫不可用——請使用完整演示",
+        scoreLabel: "風險",
+        fullDemo: "完整演示",
+      },
       metrics: [
         { value: "20,645+", label: "鏈上風險地址" },
         { value: "<50ms", label: "篩查延遲" },

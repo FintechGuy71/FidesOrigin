@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import HeroScreen from "@/components/HeroScreen";
 import type { Dict } from "@/i18n/dictionaries/en";
+import type { Locale } from "@/i18n/locales";
 
 /* ================================================================
    HERO v4 — "Compliance Mesh"
@@ -19,7 +21,13 @@ type Particle = {
   phase: number;
 };
 
-export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
+export default function HeroHome({
+  d,
+  lang,
+}: {
+  d: Dict["home"]["hero"];
+  lang: Locale;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   /* ---- Compliance mesh: particle network with proximity links ---- */
@@ -188,6 +196,9 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                 {d.ctaGhost}
               </a>
             </div>
+
+            {/* Live screening — 真实产品能力前置 */}
+            <HeroScreen d={d.screen} lang={lang} />
           </div>
 
           {/* RIGHT — Live screening panel + rotating seal */}

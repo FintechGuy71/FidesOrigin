@@ -26,7 +26,7 @@ export default function Home() {
   const dict = getDictionary("en");
   return (
     <>
-      <Hero d={dict.home.hero} />
+      <Hero d={dict.home.hero} lang="en" />
       <Workflows d={dict.home.workflows} />
       <Features d={dict.home.features} />
       <Segments d={dict.home.segments} />
