@@ -37,6 +37,17 @@ export default function ContentCaseStudiesEN() {
                 <div className="label">Protected Volume</div>
               </div>
             </div>
+            <svg viewBox="0 0 320 96" aria-hidden="true" style={{"marginTop":"28px","width":"100%","maxWidth":"320px"}}>
+              <circle cx="48" cy="48" r="34" fill="none" stroke="var(--fio-surface-3)" strokeWidth="4" />
+              <circle cx="48" cy="48" r="34" fill="none" stroke="var(--fio-gold)" strokeWidth="4" strokeLinecap="round" transform="rotate(-90 48 48)" />
+              <text x="48" y="53" textAnchor="middle" fill="var(--fio-cream)" fontSize="17" fontFamily="var(--font-mono)" fontWeight="600">100%</text>
+              <line x1="104" y1="28" x2="300" y2="28" stroke="var(--fio-border-light)" strokeWidth="1" />
+              <line x1="104" y1="48" x2="260" y2="48" stroke="var(--fio-border-light)" strokeWidth="1" />
+              <line x1="104" y1="68" x2="284" y2="68" stroke="var(--fio-border-light)" strokeWidth="1" />
+              <circle cx="104" cy="28" r="3" fill="var(--fio-gold)" />
+              <circle cx="104" cy="48" r="3" fill="var(--fio-gold)" />
+              <circle cx="104" cy="68" r="3" fill="var(--fio-gold)" />
+            </svg>
           </div>
           <div className="uc-code">
             <div className="uc-code-header"><span>PolicyConfig.sol</span><span>Solidity</span></div>
@@ -70,6 +81,24 @@ export default function ContentCaseStudiesEN() {
                 <div className="label">Tokenized Assets</div>
               </div>
             </div>
+            <svg viewBox="0 0 320 96" aria-hidden="true" style={{"marginTop":"28px","width":"100%","maxWidth":"320px"}}>
+              <rect x="8" y="8" width="304" height="80" fill="none" stroke="var(--fio-border-light)" strokeWidth="1" />
+              <circle cx="34" cy="26" r="4" fill="var(--fio-gold)" opacity="0.35" />
+              <circle cx="96" cy="26" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="158" cy="26" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="220" cy="26" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="282" cy="26" r="4" fill="var(--fio-gold)" opacity="0.35" />
+              <circle cx="34" cy="50" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="96" cy="50" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="158" cy="50" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="220" cy="50" r="4" fill="var(--fio-gold)" opacity="0.35" />
+              <circle cx="282" cy="50" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="34" cy="74" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="96" cy="74" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="158" cy="74" r="4" fill="var(--fio-gold)" opacity="0.35" />
+              <circle cx="220" cy="74" r="4" fill="var(--fio-gold)" opacity="1" />
+              <circle cx="282" cy="74" r="4" fill="var(--fio-gold)" opacity="1" />
+            </svg>
           </div>
           <div className="uc-code">
             <div className="uc-code-header"><span>MultiPolicy.sol</span><span>Solidity</span></div>
@@ -104,6 +133,13 @@ export default function ContentCaseStudiesEN() {
                 <div className="label">Uptime</div>
               </div>
             </div>
+            <svg viewBox="0 0 320 96" aria-hidden="true" style={{"marginTop":"28px","width":"100%","maxWidth":"320px"}}>
+              <line x1="16" y1="34" x2="304" y2="34" stroke="var(--fio-surface-3)" strokeWidth="6" strokeLinecap="round" />
+              <line x1="16" y1="66" x2="40" y2="66" stroke="var(--fio-gold)" strokeWidth="6" strokeLinecap="round" />
+              <text x="52" y="70" fill="var(--fio-cream)" fontSize="13" fontFamily="var(--font-mono)" fontWeight="600">&lt;10ms</text>
+              <text x="16" y="22" fill="var(--fio-text-3)" fontSize="10" fontFamily="var(--font-mono)">MANUAL</text>
+              <circle cx="16" cy="66" r="4" fill="var(--fio-cream)" />
+            </svg>
           </div>
           <div className="uc-code">
             <div className="uc-code-header"><span>SafeFlowValidation.sol</span><span>Solidity</span></div>

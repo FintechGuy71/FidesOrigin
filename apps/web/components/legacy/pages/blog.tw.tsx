@@ -95,6 +95,18 @@ const PAGE_CSS = `
       .blog-hero { padding: 120px 0 40px; }
     }
 
+    .blog-thumb {
+      width: 190px;
+      aspect-ratio: 1200 / 630;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      align-self: center;
+    }
+    @media (max-width: 600px) {
+      .blog-thumb { width: 100%; }
+    }
     .blog-card:focus, .blog-card:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
@@ -126,6 +138,7 @@ export default function ContentBlogTW() {
       <div className="container">
         <div className="reveal">
           <Link href="/tw/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.png" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">概念定義</span>
@@ -140,6 +153,7 @@ export default function ContentBlogTW() {
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/tw/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/travel-rule-on-chain.png" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">監管</span>
@@ -153,6 +167,7 @@ export default function ContentBlogTW() {
         </div>
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/tw/blog/ofac-sanctions-screening-blockchain" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/ofac-sanctions-screening-blockchain.png" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">合規</span>
@@ -166,6 +181,7 @@ export default function ContentBlogTW() {
         </div>
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/tw/blog/hong-kong-stablecoin-license" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/hong-kong-stablecoin-license.png" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">監管</span>
@@ -179,6 +195,7 @@ export default function ContentBlogTW() {
         </div>
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/tw/blog/mica-stablecoin-compliance" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/mica-stablecoin-compliance.png" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">監管</span>
