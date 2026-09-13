@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import CountUp from "@/components/CountUp";
 import HeroScreen from "@/components/HeroScreen";
 import type { Dict } from "@/i18n/dictionaries/en";
 import type { Locale } from "@/i18n/locales";
@@ -356,7 +357,7 @@ export default function HeroHome({
             >
               <div className="px-2 text-center md:px-4">
                 <div className="fio-num text-2xl font-semibold md:text-3xl" style={{ color: "var(--fio-cream)" }}>
-                  {m.value}
+                  <CountUp value={m.value} />
                 </div>
                 <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--fio-text-3)" }}>
                   {m.label}

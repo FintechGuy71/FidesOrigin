@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
    WORKFLOWS v4 — Compliance blueprint. Numbered technical columns,
    hairline connectors, mono metadata.
+   滚动叙事：进入视口后连接线生长、节点依次点亮（数据流动语义）。
    ================================================================ */
 
 export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
@@ -13,8 +15,32 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
     { id: "engine", num: "02", label: d.step2Label, sub: d.step2Sub },
     { id: "chain", num: "03", label: d.step3Label, sub: d.step3Sub },
   ];
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const [lit, setLit] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLit(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setLit(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <section id="capabilities" style={{ background: "var(--fio-ink-soft)" }}>
+    <section id="capabilities" ref={sectionRef} style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="py-28 md:py-36">
           {/* Section header — left-aligned editorial grid */}
@@ -32,24 +58,36 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
 
           {/* Pipeline — numbered technical columns */}
           <div className="relative">
-            {/* Connecting hairline (desktop) */}
+            {/* Connecting hairline (desktop) — 进入视口后自左向右生长 */}
             <div
               aria-hidden="true"
-              className="absolute left-0 top-6 hidden h-px w-full md:block"
-              style={{ background: "var(--fio-border-light)" }}
+              className="absolute left-0 top-6 hidden h-px w-full origin-left transition-transform duration-1000 ease-out md:block"
+              style={{
+                background: "var(--fio-border-light)",
+                transform: lit ? "scaleX(1)" : "scaleX(0)",
+              }}
             />
             <div className="grid gap-12 md:grid-cols-3 md:gap-8">
               {flowSteps.map((step, i) => (
                 <div key={step.id} className="relative">
-                  {/* Node on the line */}
+                  {/* Node on the line — 依次点亮 */}
                   <div className="mb-8 flex items-center gap-4">
                     <span
                       className="fio-num relative z-[var(--z-content)] flex h-12 w-12 items-center justify-center border text-sm font-medium"
                       style={{
                         background: "var(--fio-ink-soft)",
-                        borderColor: i === 1 ? "var(--fio-gold)" : "var(--fio-border-light)",
-                        color: i === 1 ? "var(--fio-gold)" : "var(--fio-text)",
-                        boxShadow: i === 1 ? "0 0 24px var(--fio-gold-dim)" : "none",
+                        borderColor: lit
+                          ? i === 1
+                            ? "var(--fio-gold)"
+                            : "var(--fio-accent)"
+                          : "var(--fio-border-light)",
+                        color: lit
+                          ? i === 1
+                            ? "var(--fio-gold)"
+                            : "var(--fio-accent)"
+                          : "var(--fio-text)",
+                        boxShadow: lit && i === 1 ? "0 0 24px var(--fio-gold-dim)" : "none",
+                        transition: `border-color 0.5s var(--ease-out) ${0.3 + i * 0.35}s, color 0.5s var(--ease-out) ${0.3 + i * 0.35}s, box-shadow 0.5s var(--ease-out) ${0.3 + i * 0.35}s`,
                       }}
                     >
                       {step.num}
