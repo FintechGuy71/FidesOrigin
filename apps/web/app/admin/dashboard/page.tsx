@@ -28,11 +28,12 @@ const RISK_SCORE_MEDIUM = 40;
    数值凑巧 30s，但改 WS 退避策略会连带改刷新频率。 */
 const DASHBOARD_REFRESH_INTERVAL = 30000;
 
-// API 配置（网关，注意默认 base 带 /v1）
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://fidesorigin-api.vercel.app/v1";
-const AUTH_TOKEN_KEY = "fidesorigin_admin_token";
-const AUTH_REFRESH_KEY = "fidesorigin_admin_refresh";
+// API 配置
+/* [D1 Fix] admin 会话改为 httpOnly cookie（JS 不可读，根治 XSS 窃取 token）。
+   API 走同源 rewrite（/api/v1/* 反代到网关 fidesorigin-api.vercel.app），
+   同源使 cookie 成为第一方，避免跨域第三方 cookie 被浏览器拦截。
+   不再在 sessionStorage 存 token；fetch 一律 credentials: "include" 由浏览器自动带 cookie。 */
+const API_BASE = "/api/v1";
 // [L-24 FIX] 移除硬编码生产 WS 回退地址：环境变量未配置时不建立 WS 连接
 // （原实现静默指向生产 wss://api.fidesorigin.com/ws，环境错配难以察觉）
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "";
@@ -221,35 +222,28 @@ function adaptEvent(raw: Record<string, unknown>): RiskEvent {
   };
 }
 
-// 带凭证的请求：401 时自动用 refresh_token 换新 token 重试一次
+// 带凭证的请求：401 时自动用 httpOnly refresh cookie 换新 token 重试一次。
+// [D1 Fix] 凭证在 cookie（浏览器自动携带），前端不再读写 token。
 async function authedFetch(path: string, retry = true): Promise<Response> {
-  const token = window.sessionStorage.getItem(AUTH_TOKEN_KEY);
-  const doFetch = (t: string | null) =>
-    fetch(`${API_BASE}${path}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(t ? { Authorization: `Bearer ${t}` } : {}),
-      },
-    });
-
-  let response = await doFetch(token);
+  let response = await fetch(`${API_BASE}${path}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
   if (response.status === 401 && retry) {
-    const refreshToken = window.sessionStorage.getItem(AUTH_REFRESH_KEY);
-    if (refreshToken) {
-      const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
-        method: "POST",
+    // access 过期：refresh cookie 换新（网关读 cookie，前端不传值）
+    const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (refreshRes.ok) {
+      response = await fetch(`${API_BASE}${path}`, {
+        method: "GET",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
       });
-      if (refreshRes.ok) {
-        const data = await refreshRes.json();
-        window.sessionStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
-        if (data.refresh_token) {
-          window.sessionStorage.setItem(AUTH_REFRESH_KEY, data.refresh_token);
-        }
-        response = await doFetch(data.access_token);
-      }
     }
   }
   return response;
@@ -395,7 +389,8 @@ export default function DashboardPage() {
   /* [AUDIT FIX R2-059] 交易详情模态框：焦点管理 + Esc 关闭所需的 ref */
   const modalRef = useRef<HTMLDivElement>(null);
 
-  /* 鉴权门禁：与 public/admin/index.html 共用 sessionStorage token（网关真登录）。
+  /* [D1 Fix] 鉴权门禁改用 httpOnly cookie。cookie JS 不可读，无法像 sessionStorage
+     那样本地探测，改为水合后调 /auth/me 确认会话有效性（401 → 未登录）。
      初始为 null：SSR/水合完成前不渲染后台内容，避免未授权闪现。 */
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
@@ -404,10 +399,11 @@ export default function DashboardPage() {
   const [loginSubmitting, setLoginSubmitting] = useState(false);
 
   useEffect(() => {
-    setAuthed(
-      typeof window !== "undefined" &&
-        !!window.sessionStorage.getItem(AUTH_TOKEN_KEY)
-    );
+    if (typeof window === "undefined") return;
+    // 会话探测：cookie 存在且未过期 → 200；否则 401 → 登录表单
+    fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+      .then((res) => setAuthed(res.ok))
+      .catch(() => setAuthed(false));
   }, []);
 
   const tryLogin = async (e: React.FormEvent) => {
@@ -417,15 +413,13 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: usernameInput, password: pwdInput }),
       });
+      // [D1 Fix] token 已由网关 Set-Cookie 落进 httpOnly cookie，响应体不再含 token，
+      // 前端无需也读不到——登录成功仅看 2xx。
       if (res.ok) {
-        const data = await res.json();
-        window.sessionStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
-        if (data.refresh_token) {
-          window.sessionStorage.setItem(AUTH_REFRESH_KEY, data.refresh_token);
-        }
         setAuthed(true);
       } else if (res.status === 401) {
         setLoginError("用户名或密码错误");
@@ -454,9 +448,8 @@ export default function DashboardPage() {
       try {
         const data = await fetchDashboardData();
         if (data?.unauthorized) {
-          // token 失效且 refresh 失败：清凭证回登录页
-          window.sessionStorage.removeItem(AUTH_TOKEN_KEY);
-          window.sessionStorage.removeItem(AUTH_REFRESH_KEY);
+          // [D1 Fix] token 失效且 refresh 失败：cookie 由网关过期机制管理，
+          // 前端无需清 sessionStorage，直接回登录页
           setAuthed(false);
           return;
         }

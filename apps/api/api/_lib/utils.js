@@ -612,6 +612,7 @@ function withMiddleware(handler, requiredScope = SCOPE.READ) {
 // 验签密钥（JWT_SECRET_KEY/SECRET_KEY）仅在服务端，绝不进入任何响应体。
 function withAdminAuth(handler) {
   const { verifyAdminToken, isJwtVerifyConfigured } = require('./jwt');
+  const { readAccessCookie } = require('./cookies');
   return async function (req, res) {
     // 1. CORS（浏览器来源校验；服务端客户端放行）
     if (!checkOrigin(req, res)) return;
@@ -624,20 +625,26 @@ function withAdminAuth(handler) {
       const allowed = await limiter.checkRateLimit(req, res);
       if (!allowed) return;
     }
-    // 3. Bearer JWT 验签 + role=admin（失败一律 401，不泄露细节）
+    // 3. [D1 Fix] 凭证提取：优先 httpOnly cookie（新前端），回退 Authorization Bearer
+    //    （SDK/旧前端/服务端调用兼容）。cookie 路径下 JS 读不到 token，根治 XSS 窃取。
+    const cookieToken = readAccessCookie(req);
     const auth = req.headers.authorization || '';
     const match = auth.match(/^Bearer\s+(.+)$/i);
-    if (!match) {
+    const token = cookieToken || (match ? match[1] : null);
+    if (!token) {
       return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
     }
     if (isJwtVerifyConfigured()) {
       // 已配置密钥：网关本地验签（提前拦截无效 token，少打一次后端）
-      const payload = verifyAdminToken(match[1]);
+      const payload = verifyAdminToken(token);
       if (!payload) {
         return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
       }
       req.admin = payload;
     }
+    // [D1 Fix] 统一把凭证还原成 Bearer 头，供下游 handler 经 forwardAuth 透传给后端。
+    // 这样无论 token 来自 cookie 还是 Bearer，stats.js/events.js 都无需改动。
+    req.headers.authorization = `Bearer ${token}`;
     // 未配置密钥：不在网关本地验签，凭 Bearer 转发给后端，
     // 由后端 get_current_user（持 SECRET_KEY）做权威验签 —— 见 stats.js/events.js 的 forwardAuth。
     // 4. Run handler
