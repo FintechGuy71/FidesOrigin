@@ -34,6 +34,7 @@ import p_blog_why_on_chain_compliance_en from "@/components/legacy/pages/blog-wh
 import p_blog_why_on_chain_compliance_cn from "@/components/legacy/pages/blog-why-on-chain-compliance.cn";
 import p_blog_why_on_chain_compliance_tw from "@/components/legacy/pages/blog-why-on-chain-compliance.tw";
 import p_blog_why_on_chain_compliance_jp from "@/components/legacy/pages/blog-why-on-chain-compliance.jp";
+import p_brand_en from "@/components/legacy/pages/brand.en";
 import p_case_studies_en from "@/components/legacy/pages/case-studies.en";
 import p_changelog_en from "@/components/legacy/pages/changelog.en";
 import p_changelog_cn from "@/components/legacy/pages/changelog.cn";
@@ -111,6 +112,13 @@ export const pageDefs: Record<string, PageDef> = {
       cn: { title: "地址风险查询 | FidesOrigin", description: "实时查询以太坊地址风险。FidesOrigin扫描超过20,000个风险地址，涵盖OFAC、Chainalysis等来源。" },
       tw: { title: "地址風險查詢 | FidesOrigin", description: "即時查詢以太坊地址風險。FidesOrigin掃描超過20,000個風險地址，涵蓋OFAC、Chainalysis等來源。" },
       jp: { title: "アドレスリスクチェック | FidesOrigin", description: "イーサリアムアドレスのリスクをリアルタイムで確認。FidesOriginはOFAC、Chainalysisなど20,000件以上のリスクアドレスをスキャンします。" },
+      },
+    },
+    "brand": {
+      available: ["en"] as const,
+      wallet: false,
+      meta: {
+      en: { title: "Brand Assets — FidesOrigin", description: "FidesOrigin brand book: logo, palette, typography, and the Ledger Precision motif. Assets for press, partnerships, and integrations." },
       },
     },
     "blog": {
@@ -312,6 +320,7 @@ export const pageDefs: Record<string, PageDef> = {
 export const pageContent: Record<string, Partial<Record<Locale, ComponentType>>> = {
     "about": { en: p_about_en, cn: p_about_cn, tw: p_about_tw, jp: p_about_jp },
     "address-check": { en: p_address_check_en, cn: p_address_check_cn, tw: p_address_check_tw, jp: p_address_check_jp },
+    "brand": { en: p_brand_en },
     "blog": { en: p_blog_en, cn: p_blog_cn, tw: p_blog_tw, jp: p_blog_jp },
     "blog/hong-kong-stablecoin-license": { en: p_blog_hong_kong_stablecoin_license_en, cn: p_blog_hong_kong_stablecoin_license_cn, tw: p_blog_hong_kong_stablecoin_license_tw, jp: p_blog_hong_kong_stablecoin_license_jp },
     "blog/mica-stablecoin-compliance": { en: p_blog_mica_stablecoin_compliance_en, cn: p_blog_mica_stablecoin_compliance_cn, tw: p_blog_mica_stablecoin_compliance_tw, jp: p_blog_mica_stablecoin_compliance_jp },
