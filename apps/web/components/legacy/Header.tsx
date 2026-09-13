@@ -170,7 +170,7 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
         <div className="nav-inner">
           <a href={homeHref(lang)} className="nav-logo">
             <img
-              src="/brand/logo-dark-icon.png"
+              src="/brand/logo-icon-56.png"
               alt="FidesOrigin"
               className="nav-logo-icon"
               width={28}

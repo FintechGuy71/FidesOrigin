@@ -48,7 +48,7 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
                       style={{
                         background: "var(--fio-ink-soft)",
                         borderColor: i === 1 ? "var(--fio-gold)" : "var(--fio-border-light)",
-                        color: i === 1 ? "var(--fio-gold)" : "var(--fio-text-2)",
+                        color: i === 1 ? "var(--fio-gold)" : "var(--fio-text)",
                         boxShadow: i === 1 ? "0 0 24px var(--fio-gold-dim)" : "none",
                       }}
                     >

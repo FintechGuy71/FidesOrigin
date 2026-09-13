@@ -24,7 +24,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
           <div className="footer-brand">
             <a href={homeHref(lang)} className="nav-logo">
               <img
-                src="/brand/logo-dark-icon.png"
+                src="/brand/logo-icon-56.png"
                 alt="FidesOrigin"
                 className="nav-logo-icon"
                 width={28}
@@ -36,7 +36,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
             <p>{dict.footer.tagline}</p>
           </div>
           <div className="footer-col">
-            <h4>{dict.footer.product}</h4>
+            <h2>{dict.footer.product}</h2>
             {/* #features 是同页锚点，保留原生 <a>；其余站内链接改 next/link（R2-049） */}
             <a href={`${homeHref(lang)}#features`}>{dict.footer.features}</a>
             <Link href={localize("/use-cases/stablecoin-compliance", lang)} prefetch={false}>{dict.footer.useCases}</Link>
@@ -45,7 +45,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
             <Link href="/admin/dashboard" prefetch={false}>{dict.footer.dashboard}</Link>
           </div>
           <div className="footer-col">
-            <h4>{dict.footer.developers}</h4>
+            <h2>{dict.footer.developers}</h2>
             <Link href={localize("/docs", lang)} prefetch={false}>{dict.footer.documentation}</Link>
             <Link href={localize("/docs/api", lang)} prefetch={false}>{dict.footer.apiReference}</Link>
             <Link href={localize("/docs/sdk", lang)} prefetch={false}>SDK</Link>
@@ -62,7 +62,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
             </a>
           </div>
           <div className="footer-col">
-            <h4>{dict.footer.company}</h4>
+            <h2>{dict.footer.company}</h2>
             <a href="mailto:contact@fidesorigin.com">{dict.footer.contact}</a>
             <Link href={localize("/blog", lang)} prefetch={false}>{dict.footer.blog}</Link>
             <Link href={localize("/privacy", lang)} prefetch={false}>{dict.footer.privacy}</Link>

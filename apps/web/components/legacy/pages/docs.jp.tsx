@@ -36,35 +36,35 @@ export default function ContentDocsJP() {
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h3>API リファレンス</h3>
+          <h2>API リファレンス</h2>
           <p>住所リスクチェック、ルール管理、一括スクリーニング、リアルタイムモニタリングの REST API エンドポイント。</p>
         </Link>
         <Link href="/jp/docs/sdk" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
-          <h3>SDK</h3>
+          <h2>SDK</h2>
           <p>ウォレット統合、住所スクリーニング、Guard 統合、イベント購読用 JavaScript SDK。</p>
         </Link>
         <Link href="/jp/demo" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <h3>デモ</h3>
+          <h2>デモ</h2>
           <p>Sepolia テストネットでのインタラクティブデモ。アドレスのスクリーニング、リスクスコアの確認、Guard の動作を体験できます。</p>
         </Link>
         <Link href="/jp/blog" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
           </div>
-          <h3>ブログ</h3>
+          <h2>ブログ</h2>
           <p>オンチェーン・コンプライアンス、リスクエンジン、DeFi 規制の深掘り。</p>
         </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
           </div>
-          <h3>GitHub</h3>
+          <h2>GitHub</h2>
           <p>ソースコード、イシュー、コントリビューション。</p>
         </a>
       </div>
@@ -106,27 +106,27 @@ contract MyToken is CompliantStableCoin &#123;
       <h2>核心概念</h2>
       <div className="docs-concept-grid">
         <div className="docs-concept">
-          <h4>オンチェーン・リスク・エンフォースメント</h4>
+          <h3>オンチェーン・リスク・エンフォースメント</h3>
           <p>リスクチェックはトランザクション内で実行され、外部 API 呼び出しではありません。決定論的、ゼロレイテンシ、回避不可能。</p>
         </div>
         <div className="docs-concept">
-          <h4>トランザクション前 Guard</h4>
+          <h3>トランザクション前 Guard</h3>
           <p>V2.1 で Guard を導入。ガスゼロのトランザクション前インターセプトにより、トランザクションの送信前にリスクを評価します。ブロックと警告のしきい値は設定可能です。</p>
         </div>
         <div className="docs-concept">
-          <h4>リスクティア</h4>
+          <h3>リスクティア</h3>
           <p>5 レベル：UNKNOWN、LOW、MEDIUM、HIGH、CRITICAL。各ティアは、ComplianceEngine と Guard において異なるエンフォースメントアクションをトリガーします。</p>
         </div>
         <div className="docs-concept">
-          <h4>ポリシー・エンジン</h4>
+          <h3>ポリシー・エンジン</h3>
           <p>アセットごとに設定可能なルール：最大取引金額、日次制限、制裁住所ブロック、KYC 要件、クールダウン期間。</p>
         </div>
         <div className="docs-concept">
-          <h4>隔離金庫</h4>
+          <h3>隔離金庫</h3>
           <p>怪しい転送は、手動レビューまたは自動化条件が満たされるまで、隔離金庫に保持されます。</p>
         </div>
         <div className="docs-concept">
-          <h4>コンプライアンスルール</h4>
+          <h3>コンプライアンスルール</h3>
           <p>REST API 経由でプログラマブルなコンプライアンスルールの作成・更新・管理が可能。条件-アクションロジックによる優先度ベースの評価。</p>
         </div>
       </div>
@@ -182,35 +182,35 @@ contract MyToken is CompliantStableCoin &#123;
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128279;</div>
           <div>
-            <h4>RiskRegistryV2</h4>
+            <h3>RiskRegistryV2</h3>
             <p>20,000+ リスクプロファイル、制裁リスト、エンティティタグのオンチェーン・ストレージ。UUPS アップグレード可能プロキシ（<code>0x953f...E896</code>）。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#9881;&#65039;</div>
           <div>
-            <h4>ComplianceEngine</h4>
+            <h3>ComplianceEngine</h3>
             <p>ポリシー評価、転送フック、ホールド管理、隔離のオーケストレーション。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128737;&#65039;</div>
           <div>
-            <h4>PreTransactionGuard (V2.1)</h4>
+            <h3>PreTransactionGuard (V2.1)</h3>
             <p>ガスゼロのトランザクション前リスク評価。送信前にアドレスとトランザクションを評価し、ブロック/警告のしきい値は設定可能。GuardedComplianceEngine と統合します。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#129689;</div>
           <div>
-            <h4>CompliantStableCoin</h4>
+            <h3>CompliantStableCoin</h3>
             <p>組み込みコンプライアンス・フックを持つ ERC20 の例。独自のトークンに継承します。Sepolia の fUSD：<code>0x2245...95E9</code>。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128202;</div>
           <div>
-            <h4>Subgraph</h4>
+            <h3>Subgraph</h3>
             <p>リアルタイム・クエリと分析のためのオンチェーン・イベントのインデックス。</p>
           </div>
         </div>

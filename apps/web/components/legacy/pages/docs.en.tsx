@@ -39,28 +39,28 @@ export default function ContentDocsEN() {
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h3>API Reference</h3>
+          <h2>API Reference</h2>
           <p>REST API endpoints for address risk checks, rules management, batch screening, and real-time monitoring.</p>
         </Link>
         <Link href="/docs/sdk" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
-          <h3>SDK</h3>
+          <h2>SDK</h2>
           <p>JavaScript SDK for wallet integration, address screening, Guard integration, and event subscriptions.</p>
         </Link>
         <Link href="/demo" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <h3>Demo</h3>
+          <h2>Demo</h2>
           <p>Interactive demo on Sepolia testnet. Screen addresses, check risk scores, and see Guard in action.</p>
         </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
           </div>
-          <h3>GitHub</h3>
+          <h2>GitHub</h2>
           <p>Source code, issues, and contributions.</p>
         </a>
       </div>
@@ -102,27 +102,27 @@ contract MyToken is CompliantStableCoin &#123;
       <h2>Core Concepts</h2>
       <div className="docs-concept-grid">
         <div className="docs-concept">
-          <h4>On-Chain Risk Enforcement</h4>
+          <h3>On-Chain Risk Enforcement</h3>
           <p>Risk checks execute inside the transaction, not via external API calls. Deterministic, zero-latency, un-bypassable.</p>
         </div>
         <div className="docs-concept">
-          <h4>Pre-Transaction Guard</h4>
+          <h3>Pre-Transaction Guard</h3>
           <p>V2.1 introduces Guard — zero-gas pre-transaction interception. Assess risk before a transaction is even submitted, with configurable block and warn thresholds.</p>
         </div>
         <div className="docs-concept">
-          <h4>Risk Tiers</h4>
+          <h3>Risk Tiers</h3>
           <p>Five levels: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. Each tier triggers different enforcement actions in the ComplianceEngine and Guard.</p>
         </div>
         <div className="docs-concept">
-          <h4>Policy Engine</h4>
+          <h3>Policy Engine</h3>
           <p>Configurable rules per asset: max transaction amount, daily limits, sanctioned address blocking, KYC requirements, cooldown periods.</p>
         </div>
         <div className="docs-concept">
-          <h4>Quarantine Vault</h4>
+          <h3>Quarantine Vault</h3>
           <p>Suspicious transfers are held in escrow until manual review or automated criteria are met.</p>
         </div>
         <div className="docs-concept">
-          <h4>Compliance Rules</h4>
+          <h3>Compliance Rules</h3>
           <p>Create, update, and manage programmable compliance rules via REST API. Priority-based evaluation with condition-action logic.</p>
         </div>
       </div>
@@ -178,35 +178,35 @@ contract MyToken is CompliantStableCoin &#123;
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128279;</div>
           <div>
-            <h4>RiskRegistryV2</h4>
+            <h3>RiskRegistryV2</h3>
             <p>On-chain storage for 20,000+ risk profiles, sanctions lists, and entity tags. UUPS upgradeable proxy at <code>0x953f...E896</code>.</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#9881;&#65039;</div>
           <div>
-            <h4>ComplianceEngine</h4>
+            <h3>ComplianceEngine</h3>
             <p>Policy evaluation, transfer hooks, hold management, and quarantine orchestration.</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128737;&#65039;</div>
           <div>
-            <h4>PreTransactionGuard (V2.1)</h4>
+            <h3>PreTransactionGuard (V2.1)</h3>
             <p>Zero-gas pre-transaction risk assessment. Assess addresses and transactions before submission with configurable block/warn thresholds. Integrates with GuardedComplianceEngine.</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#129689;</div>
           <div>
-            <h4>CompliantStableCoin</h4>
+            <h3>CompliantStableCoin</h3>
             <p>Example ERC20 with built-in compliance hooks. Inherit for your own token. Sepolia fUSD at <code>0x2245...95E9</code>.</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128202;</div>
           <div>
-            <h4>Subgraph</h4>
+            <h3>Subgraph</h3>
             <p>Indexed on-chain events for real-time queries and analytics.</p>
           </div>
         </div>

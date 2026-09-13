@@ -36,35 +36,35 @@ export default function ContentDocsTW() {
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h3>API 參考</h3>
+          <h2>API 參考</h2>
           <p>地址風險檢查、規則管理和風險評估的 REST API 端點。</p>
         </Link>
         <Link href="/tw/docs/sdk" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
           </div>
-          <h3>SDK</h3>
+          <h2>SDK</h2>
           <p>用於錢包集成、地址篩選和事件訂閱的 JavaScript SDK。</p>
         </Link>
         <Link href="/tw/demo" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <h3>Demo</h3>
+          <h2>Demo</h2>
           <p>Sepolia 測試網上的互動式演示。篩查地址、檢視風險分數，並體驗 Guard 的實際效果。</p>
         </Link>
         <Link href="/tw/blog" className="docs-card" prefetch={false}>
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
           </div>
-          <h3>部落格</h3>
+          <h2>部落格</h2>
           <p>深入探討鏈上合規、風險引擎和 DeFi 監管。</p>
         </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
           </div>
-          <h3>GitHub</h3>
+          <h2>GitHub</h2>
           <p>源代碼、問題和貢獻。</p>
         </a>
       </div>
@@ -106,27 +106,27 @@ contract MyToken is CompliantStableCoin &#123;
       <h2>核心概念</h2>
       <div className="docs-concept-grid">
         <div className="docs-concept">
-          <h4>鏈上風險執行</h4>
+          <h3>鏈上風險執行</h3>
           <p>風險檢查在交易內部執行，而非通過外部 API 調用。確定性、零延遲、不可繞過。</p>
         </div>
         <div className="docs-concept">
-          <h4>交易前 Guard</h4>
+          <h3>交易前 Guard</h3>
           <p>V2.1 引入 Guard——零 gas 的交易前攔截。在交易提交之前即可評估風險，並可配置阻止與警告門檻。</p>
         </div>
         <div className="docs-concept">
-          <h4>風險等級</h4>
+          <h3>風險等級</h3>
           <p>五個級別：UNKNOWN、LOW、MEDIUM、HIGH、CRITICAL。每個級別在 ComplianceEngine 和 Guard 中觸發不同的執行操作。</p>
         </div>
         <div className="docs-concept">
-          <h4>策略引擎</h4>
+          <h3>策略引擎</h3>
           <p>每個資產可配置規則：最大交易金額、日限額、制裁地址攔截、KYC 要求、冷卻期。</p>
         </div>
         <div className="docs-concept">
-          <h4>隔離金庫</h4>
+          <h3>隔離金庫</h3>
           <p>可疑轉賬被託管在隔離金庫中，直到人工審核或滿足自動化條件。</p>
         </div>
         <div className="docs-concept">
-          <h4>合規規則</h4>
+          <h3>合規規則</h3>
           <p>透過 REST API 建立、更新與管理可程式化合規規則。基於優先級的評估，支援條件—動作邏輯。</p>
         </div>
       </div>
@@ -182,35 +182,35 @@ contract MyToken is CompliantStableCoin &#123;
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128279;</div>
           <div>
-            <h4>RiskRegistryV2</h4>
+            <h3>RiskRegistryV2</h3>
             <p>鏈上存儲 20,000+ 風險檔案、制裁名單和實體標籤。UUPS 可升級代理位於 <code>0x953f...E896</code>。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#9881;&#65039;</div>
           <div>
-            <h4>ComplianceEngine</h4>
+            <h3>ComplianceEngine</h3>
             <p>策略評估、轉賬鉤子、保留管理與隔離編排。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128737;&#65039;</div>
           <div>
-            <h4>PreTransactionGuard (V2.1)</h4>
+            <h3>PreTransactionGuard (V2.1)</h3>
             <p>零 gas 的交易前風險評估。在交易提交前評估地址與交易，可配置阻止／警告門檻。與 GuardedComplianceEngine 整合。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#129689;</div>
           <div>
-            <h4>CompliantStableCoin</h4>
+            <h3>CompliantStableCoin</h3>
             <p>內置合規鉤子的 ERC20 示例。繼承用於您自己的代幣。Sepolia 上的 fUSD 位於 <code>0x2245...95E9</code>。</p>
           </div>
         </div>
         <div className="docs-arch-item">
           <div className="docs-arch-icon">&#128202;</div>
           <div>
-            <h4>Subgraph</h4>
+            <h3>Subgraph</h3>
             <p>索引鏈上事件，用於實時查詢和分析。</p>
           </div>
         </div>

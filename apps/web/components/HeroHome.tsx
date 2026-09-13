@@ -284,7 +284,7 @@ export default function HeroHome({ d }: { d: Dict["home"]["hero"] }) {
                       <span
                         className="px-2 py-0.5 font-mono text-[0.6875rem]"
                         style={{
-                          color: tx.risk === "Low" ? "var(--fio-gold)" : "var(--fio-danger)",
+                          color: tx.risk === "Low" ? "var(--fio-accent)" : "var(--fio-danger-light)",
                           background: tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)",
                         }}
                       >

@@ -59,7 +59,7 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
                 <span className="text-xs font-medium" style={{ color: "var(--fio-text-2)" }}>
                   {badge.label}
                 </span>
-                <span className="bg-[var(--fio-gold-dim)] px-1.5 py-0.5 font-mono text-[0.6875rem] text-[var(--fio-gold)]">
+                <span className="bg-[var(--fio-gold-dim)] px-1.5 py-0.5 font-mono text-[0.6875rem] text-[var(--fio-accent)]">
                   {badge.status}
                 </span>
               </div>

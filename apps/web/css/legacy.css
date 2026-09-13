@@ -781,7 +781,7 @@ img { max-width: 100%; display: block; }
   max-width: 280px;
   line-height: 1.6;
 }
-.footer-col h4 {
+.footer-col h2 {
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 16px;
@@ -1200,7 +1200,7 @@ img { max-width: 100%; display: block; }
   margin-bottom: 14px;
   font-size: 1.1rem;
 }
-.docs-card h3 {
+.docs-card h2 {
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 6px 0;
@@ -1369,7 +1369,7 @@ img { max-width: 100%; display: block; }
   font-size: 1.25rem;
   flex-shrink: 0;
 }
-.docs-arch-item h4 {
+.docs-arch-item h3 {
   font-weight: 600;
   color: var(--text);
   margin: 0 0 2px 0;
@@ -1389,7 +1389,7 @@ img { max-width: 100%; display: block; }
 .docs-concept {
   padding: 20px;
 }
-.docs-concept h4 {
+.docs-concept h3 {
   font-weight: 600;
   color: var(--text);
   margin-bottom: 6px;
