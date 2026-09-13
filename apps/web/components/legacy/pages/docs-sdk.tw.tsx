@@ -68,6 +68,7 @@ export default function ContentDocsSdkTW() {
         </div>
         <pre><code>yarn add @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
+      <p className="docs-note"><strong>套件來源：</strong>SDK 已發佈到公共 npm registry（上方指令即規範安裝方式）。在公共 npm 首次發佈生效前，也可透過 GitHub Packages 安裝——在 <code>.npmrc</code> 中加入 <code>@fintechguy71:registry=https://npm.pkg.github.com</code> 並以 GitHub token 鑑權。</p>
 
       <h2>快速開始</h2>
 

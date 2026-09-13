@@ -45,11 +45,35 @@ const BLOG_LASTMOD: Record<string, string> = {
 };
 const LEGAL_LASTMOD = "2026-01-01";
 
+/* [FOLLOW-UP T3] 非博客/法务页的 lastModified 由「构建时刻 new Date()」改为
+   读取对应内容源文件（components/legacy/pages/<slug>.en.tsx）的 mtime。
+   ⚠ 诚实声明效果边界：本优化只在本地/保留 mtime 的构建环境生效；
+   在 Vercel/CI 上 git checkout 会把所有文件 mtime 统一为检出时刻，
+   此时退化为「全站同一时刻」（与原 new Date() 等价，不更差也不更好）。
+   博客页（真实发布日期表）与法务页（保守固定日期）的区分不受此影响——
+   那两类才是 sitemap 分级的实际价值所在。读文件失败回退构建时刻，不中断构建。 */
+function contentFileMtime(slug: string): Date | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs = require("fs");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const path = require("path");
+    const file = path.join(
+      process.cwd(),
+      "components/legacy/pages",
+      `${slug.replace(/\//g, "-")}.en.tsx`
+    );
+    return fs.statSync(file).mtime;
+  } catch {
+    return null;
+  }
+}
+
 function lastModFor(slug: string): Date {
   if (slug.startsWith("blog/") && BLOG_LASTMOD[slug]) return new Date(BLOG_LASTMOD[slug]);
   if (slug === "blog") return new Date("2026-08-05");
   if (slug === "privacy" || slug === "terms") return new Date(LEGAL_LASTMOD);
-  return new Date();
+  return contentFileMtime(slug) || new Date();
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
