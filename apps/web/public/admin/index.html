@@ -8,7 +8,7 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
-    <meta name="theme-color" content="#0a0a0a">
+    <meta name="theme-color" content="#0a141f">
     <meta name="robots" content="noindex, nofollow">
     <!-- Admin Authentication Layer：已移除写死口令与 prompt 门禁，
          改为 <body> 起始处的真实网关登录（sessionStorage token），见 body 顶部脚本。 -->
@@ -36,25 +36,25 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #334155;
-            --bg-hover: #475569;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            /* 原名 --accent-purple，但取值一直是品牌金 #c9a96e；
+            --bg-primary: #0a141f;
+            --bg-secondary: #0d1826;
+            --bg-card: #162638;
+            --bg-hover: #1c2f42;
+            --text-primary: #f4f1e9;
+            --text-secondary: #b3ac9c;
+            --text-muted: #98917f;
+            /* 原名 --accent-purple，但取值一直是品牌金 #af915f；
        名字与值矛盾，且仓库根 admin/index.html 的同名变量却是紫色 #8b5cf6。
        这里保持取值不变、仅纠正命名，避免与另一份拷贝混淆。 */
-      --accent-gold: #c9a96e;
-            --accent-cyan: #06b6d4;
+      --accent-gold: #af915f;
+            --accent-cyan: #7aa8c9;
             /* --accent-pink(#ec4899) 与 --info(#3b82f6) 已删除：定义后全文件
                零引用（--accent-pink 还是 Tailwind 默认 pink-500，不属品牌色）。
                ⚠ 保留 --border：全文件 15 处引用，删除会让所有边框失效。 */
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: rgba(148, 163, 184, 0.2);
+            --success: #58c98a;
+            --warning: #d9a94f;
+            --danger: #d96a5f;
+            --border: rgba(244, 241, 233, 0.2);
 
             /* 层级令牌 —— 与 css/fio-design-system.css 的 --z-* 同值同义。
                ⚠ 原先这里散落 100 / 998 / 999 / 1000 / 10000 五个裸数字，
@@ -237,7 +237,7 @@
             color: white;
         }
         
-        .btn-primary:hover { background: #7c3aed; }
+        .btn-primary:hover { background: #c0a271; }
         
         .btn-secondary {
             background: var(--bg-card);
@@ -388,7 +388,7 @@
         }
         
         tr:hover {
-            background: rgba(255,255,255,0.02);
+            background: rgba(244,241,233,0.02);
         }
         
         .address-cell {
@@ -407,32 +407,32 @@
         }
         
         .tag-vip {
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(217, 169, 79, 0.2);
             color: var(--warning);
         }
         
         .tag-grey {
-            background: rgba(148, 163, 184, 0.2);
+            background: rgba(244, 241, 233, 0.2);
             color: var(--text-secondary);
         }
         
         .tag-black {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(217, 106, 95, 0.2);
             color: var(--danger);
         }
         
         .tag-normal {
-            background: rgba(34, 197, 94, 0.2);
+            background: rgba(88, 201, 138, 0.2);
             color: var(--success);
         }
         
         .tag-admin {
-            background: rgba(139, 92, 246, 0.2);
+            background: rgba(227, 200, 146, 0.2);
             color: var(--accent-gold);
         }
         
         .tag-operator {
-            background: rgba(6, 182, 212, 0.2);
+            background: rgba(122, 168, 201, 0.2);
             color: var(--accent-cyan);
         }
 
@@ -441,7 +441,7 @@
            .badge（networkBadge/The Graph 状态徽章）无基础样式，全靠内联 style 硬撑；
            .tag-success 无样式 → 「自动拦截已启用」徽章与其他 tag 变体观感不一致。 */
         .tag-success {
-            background: rgba(34, 197, 94, 0.2);
+            background: rgba(88, 201, 138, 0.2);
             color: var(--success);
         }
 
@@ -460,8 +460,8 @@
             left: 12px;
             z-index: 10000;
             padding: 8px 16px;
-            background: var(--accent-gold, #f59e0b);
-            color: #0f172a;
+            background: var(--accent-gold, #d9a94f);
+            color: #0a141f;
             font-weight: 600;
             font-size: 0.875rem;
             border-radius: 0 0 8px 8px;
@@ -583,19 +583,19 @@
         }
         
         .alert-success {
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(88, 201, 138, 0.1);
             border: 1px solid var(--success);
             color: var(--success);
         }
         
         .alert-danger {
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(217, 106, 95, 0.1);
             border: 1px solid var(--danger);
             color: var(--danger);
         }
         
         .alert-warning {
-            background: rgba(245, 158, 11, 0.1);
+            background: rgba(217, 169, 79, 0.1);
             border: 1px solid var(--warning);
             color: var(--warning);
         }
@@ -711,7 +711,7 @@
         }
         .spinner {
             width: 18px; height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(244,241,233,0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -725,9 +725,9 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
         .toast.show { display: block; }
-        .toast-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
-        .toast-info { background: rgba(6,182,212,0.15); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
-        .toast-success { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+        .toast-error { background: rgba(217,106,95,0.15); color: #e89890; border: 1px solid rgba(217,106,95,0.3); }
+        .toast-info { background: rgba(122,168,201,0.15); color: #7aa8c9; border: 1px solid rgba(122,168,201,0.3); }
+        .toast-success { background: rgba(88,201,138,0.15); color: #58c98a; border: 1px solid rgba(88,201,138,0.3); }
         .table-loading { text-align: center; color: var(--text-secondary); padding: 24px; }
         .table-loading .spinner { margin-bottom: 8px; width: 24px; height: 24px; }
     </style>
@@ -763,24 +763,24 @@
     function renderLogin() {
 
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100vh;background:#070810;font-family:Inter,system-ui,sans-serif;padding:16px;';
+    wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a141f;font-family:Inter,system-ui,sans-serif;padding:16px;';
 
     var form = document.createElement('form');
-    form.style.cssText = 'width:100%;max-width:360px;background:#11131f;border:1px solid rgba(148,163,184,0.2);border-radius:12px;padding:32px;';
+    form.style.cssText = 'width:100%;max-width:360px;background:#12202f;border:1px solid rgba(244,241,233,0.2);border-radius:12px;padding:32px;';
 
     var title = document.createElement('h1');
     title.textContent = '管理员登录';
-    title.style.cssText = 'font-size:1.25rem;font-weight:600;color:#f8fafc;margin-bottom:8px;';
+    title.style.cssText = 'font-size:1.25rem;font-weight:600;color:#f4f1e9;margin-bottom:8px;';
 
     var sub = document.createElement('p');
     sub.textContent = '使用管理员账户登录以继续。';
-    sub.style.cssText = 'font-size:0.875rem;color:#94a3b8;margin-bottom:24px;';
+    sub.style.cssText = 'font-size:0.875rem;color:#b3ac9c;margin-bottom:24px;';
 
     function makeInput(id, type, placeholder, labelText, autoComplete) {
       var label = document.createElement('label');
       label.setAttribute('for', id);
       label.textContent = labelText;
-      label.style.cssText = 'display:block;font-size:0.875rem;color:#94a3b8;margin-bottom:4px;';
+      label.style.cssText = 'display:block;font-size:0.875rem;color:#b3ac9c;margin-bottom:4px;';
       var input = document.createElement('input');
       input.id = id;
       input.type = type;
@@ -788,7 +788,7 @@
       input.setAttribute('aria-label', labelText);
       input.autocomplete = autoComplete;
       input.required = true;
-      input.style.cssText = 'width:100%;background:#070810;border:1px solid rgba(148,163,184,0.2);border-radius:8px;padding:12px 16px;color:#f8fafc;font-size:0.9rem;margin-bottom:16px;outline:none;';
+      input.style.cssText = 'width:100%;background:#0a141f;border:1px solid rgba(244,241,233,0.2);border-radius:8px;padding:12px 16px;color:#f4f1e9;font-size:0.9rem;margin-bottom:16px;outline:none;';
       form.appendChild(label);
       form.appendChild(input);
       return input;
@@ -799,13 +799,13 @@
 
     var errorEl = document.createElement('p');
     errorEl.setAttribute('role', 'alert');
-    errorEl.style.cssText = 'display:none;font-size:0.875rem;color:#ef4444;margin-bottom:16px;';
+    errorEl.style.cssText = 'display:none;font-size:0.875rem;color:#d96a5f;margin-bottom:16px;';
     form.appendChild(errorEl);
 
     var btn = document.createElement('button');
     btn.type = 'submit';
     btn.textContent = '登录';
-    btn.style.cssText = 'width:100%;background:#c9a96e;color:#070810;border:none;border-radius:8px;padding:12px 16px;font-weight:500;font-size:0.9rem;cursor:pointer;';
+    btn.style.cssText = 'width:100%;background:#af915f;color:#0a141f;border:none;border-radius:8px;padding:12px 16px;font-weight:500;font-size:0.9rem;cursor:pointer;';
     form.appendChild(btn);
 
     form.addEventListener('submit', function (e) {
