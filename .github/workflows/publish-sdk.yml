@@ -1,4 +1,4 @@
-name: Publish SDK to GitHub Packages
+name: Publish SDK to npm
 
 on:
   push:
@@ -8,12 +8,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/sdk
     permissions:
       contents: read
-      packages: write
+      id-token: write   # [D2 Fix] 公共 npm 发布用 provenance（OIDC 可信发布）
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [INFO-4 FIX: pin]
@@ -35,18 +32,23 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [INFO-4 FIX: pin]
         with:
           node-version: '22'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@fidesorigin'
+          registry-url: 'https://registry.npmjs.org'
+
+      # [D2 Fix] monorepo：用 pnpm 安装（workspace 协议需要 pnpm），再构建 sdk。
+      # shared 已 vendor 进 sdk/src/_shared.ts，sdk 源码零内部引用，产物自包含。
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906aff7b6bcc4f8a6ec77f1f6f2f67f10a2b0bb # v4 [INFO-4 FIX: pin]
 
       - name: Install dependencies
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm install --ignore-scripts --no-frozen-lockfile --config.blockExoticSubdeps=false
 
-      - name: Build package
-        run: npm run build
+      - name: Build SDK (tsup, self-contained)
+        run: pnpm --filter @fintechguy71/fidesorigin-sdk run build
 
-      - name: Publish to GitHub Packages
-        run: npm publish --access restricted
+      - name: Publish to public npm
+        working-directory: packages/sdk
+        run: npm publish --access public --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # [D2 Fix] 公共 npm 需 NPM_TOKEN（在仓库 Settings → Secrets 添加，
+          # 用 npm Automation token）。provenance 需 id-token: write。
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

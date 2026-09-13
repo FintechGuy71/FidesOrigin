@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { Chain } from '@fidesorigin/shared';
+import type { Chain } from './types';
 import { FidesOriginClient } from './client';
 import type { ClientOptions, RiskCheckResult, BatchRiskCheckResult } from './types';
 import { FidesOriginError } from './error';

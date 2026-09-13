@@ -3,8 +3,8 @@
  * Real-time transaction monitoring and risk alerts
  */
 
-import type { TransactionEvent, WebSocketMessage } from '@fidesorigin/shared';
-import { WEBSOCKET_CONFIG } from '@fidesorigin/shared';
+import type { TransactionEvent, WebSocketMessage } from './_shared';
+import { WEBSOCKET_CONFIG } from './_shared';
 import { FidesOriginError } from './error';
 import type { WebSocketEventType } from './types';
 

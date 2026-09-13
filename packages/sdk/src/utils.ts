@@ -3,8 +3,8 @@
  * Address validation, formatting, and helper functions
  */
 
-import type { Chain } from '@fidesorigin/shared';
-import { CHAIN_NAMES, ADDRESS_LENGTHS, ADDRESS_PREFIXES } from '@fidesorigin/shared';
+import type { Chain } from './types';
+import { CHAIN_NAMES, ADDRESS_LENGTHS, ADDRESS_PREFIXES } from './_shared';
 import { FidesOriginError } from './error';
 
 /**
