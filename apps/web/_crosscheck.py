@@ -28,9 +28,10 @@ css_files = sorted(glob.glob(os.path.join(OUT, "_next", "static", "css", "*.css"
 all_css = "".join(read(f) for f in css_files)
 pages = [p for p in glob.glob(os.path.join(OUT, "**", "*.html"), recursive=True)]
 
-# ═══ 1. aos.css 显式入层（报告 §三-3.1）═══
-# 独立判定法：aos 的标志性选择器 [data-aos] 必须出现在某个 @layer 块内
-# （而不是顶层）。用括号计数法精确判断。
+# ═══ 1. AOS 已移除（v4 重设计后零消费）═══
+# 历史检查：aos.css [data-aos] 规则必须入层。
+# 现检查：产物中不再存在任何 [data-aos] 规则（AOS 已整体移除，
+# 省 ~29KB CSS + ~15KB JS）；若未来重新引入，必须显式入层。
 def in_layer(src, needle):
     idx = src.find(needle)
     if idx < 0:
@@ -47,8 +48,8 @@ def in_layer(src, needle):
     return depth
 
 d = in_layer(all_css, "[data-aos")
-check("aos.css 的 [data-aos] 规则在层内", d is not None and d > 0,
-      "括号深度=%s（>0 即入层）" % d)
+check("AOS 已移除（产物无 [data-aos] 规则）", d is None,
+      "已移除" if d is None else "仍存在 [data-aos] 规则（depth=%s）——若有意重新引入必须入层" % d)
 
 # ═══ 2. 尾斜杠清零（报告 §三-3.3）═══
 # 独立判定：站内 <a href> 只允许 / 或 /admin/（目录型）带尾斜杠

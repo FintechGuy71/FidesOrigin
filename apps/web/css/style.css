@@ -36,8 +36,8 @@
 @import 'tailwindcss';
 @import './fio-design-system.css';
 
-/* AOS —— 必须显式进层。详见文件头 ③。 */
-@import 'aos/dist/aos.css' layer(legacy);
+/* AOS 已移除（v4 重设计后零消费）。历史教训保留备查：任何 @import 的
+   第三方 CSS 必须显式指定层，否则以 unlayered 形式压制全部工具类。 */
 
 @plugin "@tailwindcss/forms" {
   strategy: base;
