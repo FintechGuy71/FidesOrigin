@@ -9,6 +9,27 @@
 // Request / Input Types
 // ============================================================================
 
+/** [D2 Fix] 制裁/风险标签枚举。
+   本文件曾被声明为 SDK 类型的 single source of truth，但引用了从未定义/导入的
+   RiskFlag（L103/L194），旧构建靠 `noEmitOnError:false` 掩盖；tsup 的严格 dts
+   构建会报 TS2304。补上与 packages/shared 一致的自包含定义。 */
+export type RiskFlag =
+  | 'sanctions'
+  | 'fraud'
+  | 'phishing'
+  | 'hack'
+  | 'mixer'
+  | 'darknet'
+  | 'scam'
+  | 'high_risk_exchange'
+  | 'ransomware'
+  | 'terrorism_financing'
+  | 'money_laundering'
+  | 'tornado_cash'
+  | 'suspicious_activity'
+  | 'peeling_chain'
+  | 'layering';
+
 export interface RiskCheckInput {
   /** Ethereum address to check */
   address: string;

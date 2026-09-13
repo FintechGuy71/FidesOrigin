@@ -3,7 +3,7 @@
  * Standardized error handling with error codes and context
  */
 
-import type { APIErrorResponse } from '@fidesorigin/shared';
+import type { APIErrorResponse } from './_shared';
 
 /** Error codes for SDK operations */
 export type ErrorCode =

@@ -1,6 +1,6 @@
 {
   "name": "@fintechguy71/fidesorigin-sdk",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "FidesOrigin client SDK for risk assessment and compliance",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -31,12 +31,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --noEmitOnError false; node scripts/build.mjs",
+    "build": "tsup",
     "clean": "rm -rf dist",
-    "dev": "tsc --watch"
+    "dev": "tsup --watch",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@fidesorigin/shared": "workspace:*",
     "ethers": "^6.0.0",
     "isomorphic-ws": "^5.0.0"
   },
@@ -46,10 +46,12 @@
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/ws": "^8.18.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "repository": {
     "type": "git",

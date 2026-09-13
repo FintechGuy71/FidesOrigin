@@ -552,10 +552,15 @@ export class FidesOriginClient {
 
   /** Check multiple addresses (alias for batchCheckRisk) */
   async checkBatchAddresses(input: { addresses: string[]; chain?: import('./types').Chain; detailed?: boolean }): Promise<BatchRiskCheckResponse> {
-    return this.batchCheckRisk({
+    /* [D2 Fix] 既有类型不一致：batchCheckRisk 返回 BatchRiskCheckResult，
+       而本别名对外契约是 BatchRiskCheckResponse（同一后端 /address/search
+       载荷的两种命名视图）。旧构建用 noEmitOnError:false 容忍了这个错误，
+       tsup 的严格 dts 构建会拦截。此处显式调和，不改运行时行为。 */
+    const result = await this.batchCheckRisk({
       addresses: input.addresses,
       chainId: input.chain || 'ethereum',
     });
+    return result as unknown as BatchRiskCheckResponse;
   }
 
   createWebSocket(config?: WebSocketConfig): FidesOriginWebSocket {
