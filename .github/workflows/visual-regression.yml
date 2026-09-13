@@ -53,6 +53,8 @@ jobs:
             git commit -m "test(web): 视觉回归基线自举 [skip ci]"
             BRANCH="${{ github.head_ref }}"
             git fetch origin "$BRANCH"
+            # 构建可能改写已跟踪的自动生成文件（如 next-env.d.ts），rebase 前收拢
+            git diff --quiet || git commit -am "chore: 收拢构建期生成文件 [skip ci]"
             git rebase "origin/$BRANCH"
             git push origin "HEAD:$BRANCH"
           else
