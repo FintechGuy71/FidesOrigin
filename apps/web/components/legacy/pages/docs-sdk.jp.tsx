@@ -174,7 +174,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <span>npm</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>npm install @fidesorigin/on-chain-sdk</code></pre>
+        <pre><code>npm install @fintechguy71/on-chain-sdk</code></pre>
       </div>
 
       <h3>On-Chain SDK の初期化</h3>
@@ -183,7 +183,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <span>TypeScript</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>import &#123; FidesOriginSDK &#125; from '@fidesorigin/on-chain-sdk';
+        <pre><code>import &#123; FidesOriginSDK &#125; from '@fintechguy71/on-chain-sdk';
 
 import &#123; JsonRpcProvider &#125; from 'ethers';
 
@@ -207,7 +207,7 @@ const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
           <span>TypeScript — Guard 評価</span>
           <button className="docs-code-copy" aria-label="コードをコピー">コピー</button>
         </div>
-        <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fidesorigin/on-chain-sdk';
+        <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fintechguy71/on-chain-sdk';
 
 // コンプライアンスエンジンで送金を検証
 const validation = await sdk.validateTransfer(

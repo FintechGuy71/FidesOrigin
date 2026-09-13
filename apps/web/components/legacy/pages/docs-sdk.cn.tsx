@@ -174,7 +174,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <span>npm</span>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
-        <pre><code>npm install @fidesorigin/on-chain-sdk</code></pre>
+        <pre><code>npm install @fintechguy71/on-chain-sdk</code></pre>
       </div>
 
       <h3>初始化 On-Chain SDK</h3>
@@ -183,7 +183,7 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <span>TypeScript</span>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
-        <pre><code>import &#123; FidesOriginSDK &#125; from '@fidesorigin/on-chain-sdk';
+        <pre><code>import &#123; FidesOriginSDK &#125; from '@fintechguy71/on-chain-sdk';
 
 import &#123; JsonRpcProvider &#125; from 'ethers';
 
@@ -207,7 +207,7 @@ const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
           <span>TypeScript — Guard 评估</span>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
-        <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fidesorigin/on-chain-sdk';
+        <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fintechguy71/on-chain-sdk';
 
 // 通过合规引擎验证转账
 const validation = await sdk.validateTransfer(
