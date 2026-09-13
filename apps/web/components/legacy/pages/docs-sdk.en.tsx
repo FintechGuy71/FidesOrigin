@@ -72,7 +72,7 @@ export default function ContentDocsSdkEN() {
         </div>
         <pre><code>yarn add @fintechguy71/fidesorigin-sdk</code></pre>
       </div>
-      <p className="docs-note"><strong>Package source:</strong> the SDK is published to the public npm registry (the command above is canonical). Until the first public publish lands, it is also available on GitHub Packages &mdash; add <code>@fintechguy71:registry=https://npm.pkg.github.com</code> to your <code>.npmrc</code> and authenticate with a GitHub token.</p>
+      <p className="docs-note"><strong>Package source:</strong> the SDK is published to <strong>GitHub Packages</strong>. To install, add <code>@fintechguy71:registry=https://npm.pkg.github.com</code> to your <code>.npmrc</code> and authenticate with a GitHub token (the command above then works). A public npmjs.org mirror is planned next.</p>
 
       <h2>Quick Start</h2>
 
