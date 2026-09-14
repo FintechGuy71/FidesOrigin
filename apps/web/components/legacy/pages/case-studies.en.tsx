@@ -11,6 +11,7 @@ export default function ContentCaseStudiesEN() {
           <p className="micro">Case Studies</p>
           <h1 className="display" style={{ "fontSize": "clamp(2rem, 4.5vw, 3.2rem)" }}>Compliance <span>in production</span></h1>
           <p className="lead" style={{ "maxWidth": "600px", "margin": "20px auto 0" }}>See how protocols are building with deterministic on-chain risk enforcement.</p>
+          <p style={{ "fontSize": "0.8rem", "color": "var(--text-muted)", "marginTop": "12px", "fontStyle": "normal" }}>Illustrative scenarios based on typical deployment patterns. Names are anonymized composites.</p>
         </div>
       </div>
     </section>
@@ -20,8 +21,8 @@ export default function ContentCaseStudiesEN() {
         <div className="case-study-card reveal">
           <div>
             <span className="case-study-tag">Stablecoin</span>
-            <h3>GlobalPay USD — MiCA-Compliant Stablecoin</h3>
-            <p>GlobalPay launched a EUR-backed stablecoin targeting the EU market. They needed real-time OFAC screening, MiCA reserve attestations, and automated KYC verification — all without introducing centralized infrastructure.</p>
+            <h3>European Stablecoin Issuer — MiCA-Ready Deployment</h3>
+            <p>A European issuer launched a EUR-backed stablecoin targeting the EU market. They needed real-time OFAC screening, MiCA reserve attestations, and automated KYC verification — all without introducing centralized infrastructure.</p>
             <p>FidesOrigin's CompliantStableCoin base contract provided deterministic screening on every mint, burn, and transfer. The Policy Engine was configured with MiCA-specific rules: 1:1 reserve requirements, daily transaction limits, and accredited investor checks.</p>
             <div className="case-study-stats">
               <div className="case-study-stat">
@@ -64,9 +65,9 @@ export default function ContentCaseStudiesEN() {
         <div className="case-study-card reverse reveal">
           <div>
             <span className="case-study-tag">RWA</span>
-            <h3>RealT — Tokenized Real Estate Compliance</h3>
-            <p>RealT tokenizes real estate properties across multiple jurisdictions. Each property has different investor requirements: US accredited investors only for some, EU MiCA for others, and jurisdiction-specific KYC.</p>
-            <p>FidesOrigin's multi-policy support allowed RealT to assign different compliance rules per token. The Merkle-based risk registry enabled privacy-preserving verification without revealing investor data on-chain.</p>
+            <h3>Tokenized Real Estate Platform — Multi-Jurisdiction Compliance</h3>
+            <p>A tokenization platform issues real estate assets across multiple jurisdictions. Each property has different investor requirements: US accredited investors only for some, EU MiCA for others, and jurisdiction-specific KYC.</p>
+            <p>FidesOrigin's multi-policy support allowed the platform to assign different compliance rules per token. The Merkle-based risk registry enabled privacy-preserving verification without revealing investor data on-chain.</p>
             <div className="case-study-stats">
               <div className="case-study-stat">
                 <div className="num">15</div>
@@ -116,9 +117,9 @@ export default function ContentCaseStudiesEN() {
         <div className="case-study-card reveal">
           <div>
             <span className="case-study-tag">Smart Wallet</span>
-            <h3>SafeFlow — Account Abstraction with Compliance</h3>
-            <p>SafeFlow built an ERC-4337 smart wallet for institutional users. They needed every userOp screened before bundler submission — without adding latency or compromising the account abstraction flow.</p>
-            <p>By integrating FidesOrigin at the validation phase, SafeFlow screens all destination addresses and call data before the bundler ever sees the userOp. The integration added less than 10ms to validation time.</p>
+            <h3>Institutional Smart Wallet — ERC-4337 with Compliance</h3>
+            <p>An institutional wallet team built an ERC-4337 smart wallet for professional users. They needed every userOp screened before bundler submission — without adding latency or compromising the account abstraction flow.</p>
+            <p>By integrating FidesOrigin at the validation phase, the wallet screens all destination addresses and call data before the bundler ever sees the userOp. The integration added less than 10ms to validation time.</p>
             <div className="case-study-stats">
               <div className="case-study-stat">
                 <div className="num">&lt;10ms</div>
@@ -142,7 +143,7 @@ export default function ContentCaseStudiesEN() {
             </svg>
           </div>
           <div className="uc-code">
-            <div className="uc-code-header"><span>SafeFlowValidation.sol</span><span>Solidity</span></div>
+            <div className="uc-code-header"><span>WalletValidation.sol</span><span>Solidity</span></div>
             <pre><span className="comment">// Validate before bundler acceptance</span>
 <span className="kw">function</span> <span className="func">validateUserOp</span>(
     <span className="type">UserOperation</span> <span className="kw">calldata</span> userOp
@@ -171,7 +172,7 @@ export default function ContentCaseStudiesEN() {
               <div className="testimonial-avatar">AL</div>
               <div className="testimonial-info">
                 <h4>Alex L.</h4>
-                <p>CTO, GlobalPay USD</p>
+                <p>CTO, European Stablecoin Issuer</p>
               </div>
             </div>
           </div>
@@ -181,7 +182,7 @@ export default function ContentCaseStudiesEN() {
               <div className="testimonial-avatar">SM</div>
               <div className="testimonial-info">
                 <h4>Sarah M.</h4>
-                <p>Head of Compliance, RealT</p>
+                <p>Head of Compliance, RWA Platform</p>
               </div>
             </div>
           </div>
@@ -191,7 +192,7 @@ export default function ContentCaseStudiesEN() {
               <div className="testimonial-avatar">DK</div>
               <div className="testimonial-info">
                 <h4>David K.</h4>
-                <p>Lead Engineer, SafeFlow</p>
+                <p>Lead Engineer, Smart Wallet Team</p>
               </div>
             </div>
           </div>

@@ -162,7 +162,7 @@ const jp: Dict = {
       scanActive: "稼働中",
       statusCleared: "クリア",
       statusFlagged: "フラグ済み",
-      floatBadge: "HKMA ライセンス対応済み",
+      floatBadge: "HKMA 規制対応済み",
       canvasLabel: "コンプライアンスネットワークメッシュのアニメーション",
       sealText: "FIDESORIGIN · HK STABLECOIN ORDINANCE READY · ",
       screen: {
@@ -231,7 +231,7 @@ const jp: Dict = {
       s3Points: ["実行前スクリーニング", "決定論的ポリシー境界", "完全なエージェント監査証跡"],
     },
     trust: {
-      badge1Label: "香港ステーブルコインライセンス",
+      badge1Label: "香港ステーブルコイン条例",
       badge1Status: "対応済み",
       badge2Label: "オープンソース",
       badge2Status: "BUSL-1.1",
@@ -243,10 +243,10 @@ const jp: Dict = {
       coverage1: "香港ステーブルコイン条例",
       coverage2: "OFAC SDN 同期",
       coverage3: "FATF トラベルルール",
-      coverage4: "MiCA 準拠",
+      coverage4: "MiCA 対応設計",
       quote: "コンプライアンスと DeFi の交差点こそ、次の1兆ドルの機関資本が流入する場所です。",
-      quoteName: "David Park",
-      quoteRole: "Helios Stablecoin コンプライアンス責任者",
+      quoteName: "チーフ・コンプライアンス・オフィサー",
+      quoteRole: "香港ライセンス取得ステーブルコイン発行者",
     },
     journey: {
       caption: "ユースケース",

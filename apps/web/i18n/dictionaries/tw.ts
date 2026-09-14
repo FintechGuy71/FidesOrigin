@@ -162,7 +162,7 @@ const tw: Dict = {
       scanActive: "運行中",
       statusCleared: "已放行",
       statusFlagged: "已標記",
-      floatBadge: "已就緒 HKMA 牌照",
+      floatBadge: "已就緒 HKMA 監管框架",
       canvasLabel: "合規網絡網格動畫",
       sealText: "FIDESORIGIN · HK STABLECOIN ORDINANCE READY · ",
       screen: {
@@ -231,7 +231,7 @@ const tw: Dict = {
       s3Points: ["執行前篩查", "確定性策略邊界", "完整智能體審計鏈"],
     },
     trust: {
-      badge1Label: "香港穩定幣牌照",
+      badge1Label: "香港《穩定幣條例》",
       badge1Status: "已就緒",
       badge2Label: "開源",
       badge2Status: "BUSL-1.1",
@@ -243,10 +243,10 @@ const tw: Dict = {
       coverage1: "香港《穩定幣條例》",
       coverage2: "OFAC SDN 同步",
       coverage3: "FATF 旅行規則",
-      coverage4: "MiCA 對齊",
+      coverage4: "MiCA 就緒",
       quote: "合規與 DeFi 的交匯處，將是下一個萬億美元級機構資本入場的入口。",
-      quoteName: "David Park",
-      quoteRole: "Helios 穩定幣 合規負責人",
+      quoteName: "首席合規官",
+      quoteRole: "香港持牌穩定幣發行商",
     },
     journey: {
       caption: "應用場景",
