@@ -1563,6 +1563,19 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 /* 栅格子项默认 min-width:auto，长内容会把轨道撑破；
    case-study-card 在 ≤900px 塌陷为单列时尤其明显。 */
 .case-study-card > * { min-width: 0; }
+/* 同上：uc-grid / 各卡片网格的宽代码块与长表格同样需要 min-width:0，
+   否则 375px 视口下 pre 内容会把整列撑到 3000px+（实测发现）。 */
+.uc-grid > *,
+.uc-features > *,
+.features-grid > *,
+.docs-cards > *,
+.docs-concept-grid > *,
+.pricing-grid > * { min-width: 0; }
+
+/* 内联 code 长串（URL/哈希/长地址）必须可断行，否则撑破移动端视口 */
+.docs-content code {
+  overflow-wrap: anywhere;
+}
 
 /* ⚠ .docs-note 在 docs-sdk.en.tsx 中使用，但 legacy.css 与该页 PAGE_CSS
    都没有对应规则 —— 类名是空壳，视觉全靠同行内联 style 撑着。 */
