@@ -35,6 +35,9 @@ import p_blog_why_on_chain_compliance_cn from "@/components/legacy/pages/blog-wh
 import p_blog_why_on_chain_compliance_tw from "@/components/legacy/pages/blog-why-on-chain-compliance.tw";
 import p_blog_why_on_chain_compliance_jp from "@/components/legacy/pages/blog-why-on-chain-compliance.jp";
 import p_brand_en from "@/components/legacy/pages/brand.en";
+import p_brand_cn from "@/components/legacy/pages/brand.cn";
+import p_brand_tw from "@/components/legacy/pages/brand.tw";
+import p_brand_jp from "@/components/legacy/pages/brand.jp";
 import p_case_studies_en from "@/components/legacy/pages/case-studies.en";
 import p_changelog_en from "@/components/legacy/pages/changelog.en";
 import p_changelog_cn from "@/components/legacy/pages/changelog.cn";
@@ -115,10 +118,13 @@ export const pageDefs: Record<string, PageDef> = {
       },
     },
     "brand": {
-      available: ["en"] as const,
+      available: ["en", "cn", "tw", "jp"] as const,
       wallet: false,
       meta: {
       en: { title: "Brand Assets — FidesOrigin", description: "FidesOrigin brand book: logo, palette, typography, and the Ledger Precision motif. Assets for press, partnerships, and integrations." },
+      cn: { title: "品牌资产 — FidesOrigin", description: "FidesOrigin 品牌手册：标识、色板、字体与账本精密母题。供媒体、合作伙伴与集成方使用。" },
+      tw: { title: "品牌資產 — FidesOrigin", description: "FidesOrigin 品牌手冊：標識、色板、字體與賬本精密母題。供媒體、合作夥伴與整合方使用。" },
+      jp: { title: "ブランドアセット — FidesOrigin", description: "FidesOrigin ブランドブック：ロゴ、パレット、タイポグラフィ、Ledger Precision モチーフ。プレス・パートナー・連携向け。" },
       },
     },
     "blog": {
@@ -320,7 +326,7 @@ export const pageDefs: Record<string, PageDef> = {
 export const pageContent: Record<string, Partial<Record<Locale, ComponentType>>> = {
     "about": { en: p_about_en, cn: p_about_cn, tw: p_about_tw, jp: p_about_jp },
     "address-check": { en: p_address_check_en, cn: p_address_check_cn, tw: p_address_check_tw, jp: p_address_check_jp },
-    "brand": { en: p_brand_en },
+    "brand": { en: p_brand_en, cn: p_brand_cn, tw: p_brand_tw, jp: p_brand_jp },
     "blog": { en: p_blog_en, cn: p_blog_cn, tw: p_blog_tw, jp: p_blog_jp },
     "blog/hong-kong-stablecoin-license": { en: p_blog_hong_kong_stablecoin_license_en, cn: p_blog_hong_kong_stablecoin_license_cn, tw: p_blog_hong_kong_stablecoin_license_tw, jp: p_blog_hong_kong_stablecoin_license_jp },
     "blog/mica-stablecoin-compliance": { en: p_blog_mica_stablecoin_compliance_en, cn: p_blog_mica_stablecoin_compliance_cn, tw: p_blog_mica_stablecoin_compliance_tw, jp: p_blog_mica_stablecoin_compliance_jp },

@@ -227,16 +227,16 @@ def strip_comments(src_text):
     return src_text
 
 
-# [例外] brand.en.tsx 是品牌资产页（/brand），展示色板 hex 值是其功能本身，
+# [例外] brand.*.tsx 是品牌资产页（/brand），展示色板 hex 值是其功能本身，
 # 色板 chip 底色也刻意用字面量保证与文本一致。其余组件零豁免。
-HEX_ALLOWLIST = ("components/legacy/pages/brand.en.tsx",)
+HEX_ALLOWLIST_PREFIX = "components/legacy/pages/brand."
 
 
 bad_hex = {}
 for p in src:
     if p.startswith("css"):
         continue
-    if p.replace("\\", "/") in HEX_ALLOWLIST:
+    if p.replace("\\", "/").startswith(HEX_ALLOWLIST_PREFIX):
         continue
     s = strip_comments(read(p))
     for m in re.finditer(r"#[0-9a-fA-F]{6}\b", s):
