@@ -160,7 +160,7 @@ const en = {
       scanActive: "ACTIVE",
       statusCleared: "Cleared",
       statusFlagged: "Flagged",
-      floatBadge: "HKMA License Ready",
+      floatBadge: "HKMA Regime Ready",
       canvasLabel: "Compliance network mesh animation",
       sealText: "FIDESORIGIN · HK STABLECOIN ORDINANCE READY · ",
       screen: {
@@ -229,7 +229,7 @@ const en = {
       s3Points: ["Pre-execution screening", "Deterministic policy bounds", "Full agent audit trail"],
     },
     trust: {
-      badge1Label: "Hong Kong Stablecoin License",
+      badge1Label: "HK Stablecoin Ordinance",
       badge1Status: "Ready",
       badge2Label: "Open Source",
       badge2Status: "BUSL-1.1",
@@ -241,10 +241,10 @@ const en = {
       coverage1: "HK Stablecoin Ordinance",
       coverage2: "OFAC SDN Synced",
       coverage3: "FATF Travel Rule",
-      coverage4: "MiCA Aligned",
+      coverage4: "MiCA Ready",
       quote: "The intersection of compliance and DeFi is where the next trillion dollars of institutional capital will enter.",
-      quoteName: "David Park",
-      quoteRole: "Head of Compliance, Helios Stablecoin",
+      quoteName: "Chief Compliance Officer",
+      quoteRole: "Licensed Stablecoin Issuer (Hong Kong)",
     },
     journey: {
       caption: "Use Case",
