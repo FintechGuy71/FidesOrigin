@@ -66,7 +66,15 @@ export default function Header({
       if (langOpen && langRef.current && !langRef.current.contains(target)) {
         setLangOpen(false);
       }
-      if (mobileOpen && mobileRef.current && !mobileRef.current.contains(target)) {
+      /* ⚠ 移动菜单切换按钮必须豁免 outside-close：
+         pointerdown（关闭）先于 click（toggle）触发，否则按钮点到的
+         永远是「先关再开」——菜单永远关不上（实测发现的真实 bug）。 */
+      if (
+        mobileOpen &&
+        mobileRef.current &&
+        !mobileRef.current.contains(target) &&
+        !(target instanceof Element && target.closest(`button[aria-controls="${mobileMenuId}"]`))
+      ) {
         setMobileOpen(false);
       }
     };
