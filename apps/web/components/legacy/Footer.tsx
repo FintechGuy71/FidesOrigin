@@ -65,6 +65,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
             <h2>{dict.footer.company}</h2>
             <a href="mailto:contact@fidesorigin.com">{dict.footer.contact}</a>
             <Link href={localize("/blog", lang)} prefetch={false}>{dict.footer.blog}</Link>
+            <Link href={localize("/brand", lang)} prefetch={false}>{dict.footer.brand}</Link>
             <Link href={localize("/privacy", lang)} prefetch={false}>{dict.footer.privacy}</Link>
             <Link href={localize("/terms", lang)} prefetch={false}>{dict.footer.terms}</Link>
           </div>

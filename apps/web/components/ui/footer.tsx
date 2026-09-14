@@ -101,6 +101,13 @@ export default function Footer({
             >
               {d.addressCheck}
             </Link>
+            <Link
+              href={href("/brand", lang)}
+              prefetch={false}
+              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+            >
+              {d.brand}
+            </Link>
             <a
               href="https://github.com/FintechGuy71/FidesOrigin"
               target="_blank"
