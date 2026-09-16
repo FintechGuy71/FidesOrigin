@@ -85,8 +85,10 @@ async function proxyToBackend(backendPath, options = {}) {
     return response;
   } catch (err) {
     // [ERR-FIX] Wrap network errors so callers get a predictable response shape.
+    // [AUDIT FIX 2026-09-17 B2-013] 不再把 err.message 透传给客户端
+    // （内网地址/堆栈片段可随 message 外泄）；细节仅落服务端日志。
     console.error('[proxyToBackend] Network error:', err.message);
-    return new Response(JSON.stringify({ error: 'Backend unavailable', detail: err.message }), {
+    return new Response(JSON.stringify({ error: 'Backend unavailable' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     });

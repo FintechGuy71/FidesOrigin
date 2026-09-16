@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Dict } from "@/i18n/dictionaries/en";
+// [AUDIT FIX 2026-09-17 R1-019] 端点配置收口到共享模块（原三处口径不一）
+import { PUBLIC_RISK_CHECK_URL } from "@/lib/risk-check";
 
 /* ================================================================
    ADDRESS CHECK — real address risk check (all locales).
@@ -54,11 +56,7 @@ const AC_CSS = `
 `;
 
 // 公开只读风险查询端点（apps/api 的 SCOPE.PUBLIC 通道，免 key，CORS+双限流保护）
-const PUBLIC_RISK_CHECK_URL =
-  /* [AUDIT FIX R2-032] 支持构建期环境变量覆盖，硬编码仅作回退
-     （与 app/admin/dashboard 的 API_BASE 口径一致）。 */
-  process.env.NEXT_PUBLIC_RISK_CHECK_URL ||
-  "https://fidesorigin-api.vercel.app/v1/public/risk-check";
+// 端点定义见 @/lib/risk-check（[AUDIT FIX 2026-09-17 R1-019] 单一真源）
 // [H-6 Fix] Subgraph URL from runtime config — no hardcoded URLs
 /* [AUDIT FIX R2-032] window.FIDESORIGIN_SUBGRAPH_URL 此前全站无任何注入点，
    空串兜底导致 subgraph 统计与兜底查询永久失效（统计恒显示 "--"）。
@@ -114,10 +112,21 @@ export default function AddressCheck({ dict }: { dict: D }) {
   const [result, setResult] = useState<Result | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "error" | "info" } | null>(null);
 
+  /* [AUDIT FIX 2026-09-17 R1-016] toast 定时器句柄：原实现不保存句柄，
+     连续两次 toast 时第一个定时器会提前清掉第二条；卸载后仍触发 setState。 */
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const showToast = (message: string, type: "error" | "info" = "error") => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
+    toastTimer.current = setTimeout(() => setToast(null), 5000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   // Load stats on mount
   useEffect(() => {
@@ -211,6 +220,10 @@ export default function AddressCheck({ dict }: { dict: D }) {
   };
 
   const checkAddress = async () => {
+    /* [AUDIT FIX 2026-09-17 R1-017] 重入守卫：按钮有 disabled={loading}，但
+       输入框 Enter（onKeyDown）不检查 loading → 可并发发起查询，慢的旧响应
+       后到会覆盖新结果。 */
+    if (loading) return;
     const value = input.trim().toLowerCase();
 
     if (!value || !value.match(/^0x[a-f0-9]{40}$/)) {

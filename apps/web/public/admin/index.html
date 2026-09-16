@@ -1091,8 +1091,10 @@
                 <div class="charts-grid">
                     <div class="chart-container full-width">
                         <div class="chart-title">实时交易流量</div>
-                        <div class="chart-wrapper">
-                            <canvas id="realtimeChart"></canvas>
+                        <!-- [AUDIT FIX 2026-09-17 R1-006/B2-003] 原图表为 Math.random() 伪数据，
+                             已移除；接入真实 TPS 数据源前显示诚实占位。 -->
+                        <div class="chart-wrapper" style="display:flex;align-items:center;justify-content:center;min-height:120px;color:#94a3b8;">
+                            暂无实时交易流量数据源，接入链上指标后启用
                         </div>
                     </div>
                 </div>
@@ -1133,14 +1135,17 @@
                         <p>管理用户地址与风控标签</p>
                     </div>
                     <div class="header-actions">
-                        <button type="button" class="btn btn-primary" data-action="openAddCustomerModal">+ 新增客户</button>
+                        <!-- [AUDIT FIX 2026-09-17 B2-004] 功能未实现：原为 alert 占位。
+                             禁用并明示，消除虚假可供性。 -->
+                        <button type="button" class="btn btn-primary" disabled title="功能开发中，暂未开放">+ 新增客户（开发中）</button>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">客户列表</div>
-                        <input type="text" class="form-input" style="width: 300px;" placeholder="搜索地址..." id="customerSearch">
+                        <!-- [AUDIT FIX 2026-09-17 B2-004] 搜索功能未实现（无 JS 消费方），禁用避免虚假可供性 -->
+                        <input type="text" class="form-input" style="width: 300px;" placeholder="搜索地址（功能开发中）..." id="customerSearch" disabled>
                     </div>
                     <div class="card-body">
                         <table>
@@ -1209,7 +1214,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">当前限额配置</div>
-                        <button type="button" class="btn btn-primary" data-action="saveLimits">保存修改</button>
+                        <button type="button" class="btn btn-primary" disabled title="限额配置写路径未接入合约，当前为只读预览">保存修改（开发中）</button>
                     </div>
                     <div class="card-body">
                         <table>
@@ -1224,21 +1229,21 @@
                             <tbody id="limitsTable">
                                 <tr>
                                     <td><span class="tag tag-vip">VIP</span></td>
-                                    <td><input type="number" class="form-input" id="vipDaily" value="100000"></td>
-                                    <td><input type="number" class="form-input" id="vipSingle" value="50000"></td>
-                                    <td><input type="checkbox" checked id="vipEnabled"></td>
+                                    <td><input type="number" class="form-input" id="vipDaily" value="100000" disabled></td>
+                                    <td><input type="number" class="form-input" id="vipSingle" value="50000" disabled></td>
+                                    <td><input type="checkbox" checked id="vipEnabled" disabled></td>
                                 </tr>
                                 <tr>
                                     <td><span class="tag tag-normal">普通</span></td>
-                                    <td><input type="number" class="form-input" id="normalDaily" value="10000"></td>
-                                    <td><input type="number" class="form-input" id="normalSingle" value="5000"></td>
-                                    <td><input type="checkbox" checked id="normalEnabled"></td>
+                                    <td><input type="number" class="form-input" id="normalDaily" value="10000" disabled></td>
+                                    <td><input type="number" class="form-input" id="normalSingle" value="5000" disabled></td>
+                                    <td><input type="checkbox" checked id="normalEnabled" disabled></td>
                                 </tr>
                                 <tr>
                                     <td><span class="tag tag-grey">灰名单</span></td>
-                                    <td><input type="number" class="form-input" id="greyDaily" value="1000"></td>
-                                    <td><input type="number" class="form-input" id="greySingle" value="500"></td>
-                                    <td><input type="checkbox" checked id="greyEnabled"></td>
+                                    <td><input type="number" class="form-input" id="greyDaily" value="1000" disabled></td>
+                                    <td><input type="number" class="form-input" id="greySingle" value="500" disabled></td>
+                                    <td><input type="checkbox" checked id="greyEnabled" disabled></td>
                                 </tr>
                                 <tr>
                                     <td><span class="tag tag-black">黑名单</span></td>
@@ -1457,7 +1462,8 @@
                                 <option value="">全部</option>
                                 <option value="active">待处理</option>
                                 <option value="released">已释放</option>
-                                <option value="frozen">永久冻结</option>
+                                <!-- [AUDIT FIX 2026-09-17 R1-010] 移除「永久冻结」选项：
+                                     subgraph holdRecords 无 frozen 状态字段，该选项恒为空结果。 -->
                             </select>
                         </div>
                     </div>
@@ -1588,7 +1594,7 @@
                     </div>
                     <div class="header-actions">
                         <button type="button" class="btn btn-secondary" data-action="loadLogs">刷新</button>
-                        <button type="button" class="btn btn-primary" data-action="exportLogs">导出</button>
+                        <button type="button" class="btn btn-primary" disabled title="导出功能开发中，暂未开放">导出（开发中）</button>
                     </div>
                 </div>
 
@@ -1744,16 +1750,16 @@
                             <input type="text" class="form-input" id="contractAddress" value="0x2245A8FCf6aca017327eA8950Ba510e9596595E9">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">网络</label>
-                            <select class="form-select" id="networkSelect">
+                            <label class="form-label">网络（当前固定 Sepolia，多网络支持开发中）</label>
+                            <select class="form-select" id="networkSelect" disabled>
                                 <option value="sepolia">Sepolia Testnet</option>
                                 <option value="goerli">Goerli Testnet</option>
                                 <option value="localhost">Localhost</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">RPC URL</label>
-                            <input type="text" class="form-input" id="rpcUrl" value="https://ethereum-sepolia-rpc.publicnode.com">
+                            <label class="form-label">RPC URL（自定义 RPC 开发中）</label>
+                            <input type="text" class="form-input" id="rpcUrl" value="https://ethereum-sepolia-rpc.publicnode.com" disabled>
                         </div>
                         <button type="button" class="btn btn-primary" data-action="saveSettings">保存设置</button>
                     </div>

@@ -13,26 +13,13 @@ import {
   canonicalUrl,
   hreflangAlternates,
   isPrefixedLocale,
-  type PrefixedLocale,
 } from "@/i18n/locales";
+/* [AUDIT FIX 2026-09-17 R1-023] 首页 title/description 单一真源收口到
+   app/_lib/site.ts 的 homeMeta（原 HOME_META 与 site.ts localeCopy 双真源
+   且文案互相矛盾）。 */
+import { homeMeta } from "@/app/_lib/site";
 
 /* Localized homepages: /cn/ /tw/ /jp/ */
-
-const HOME_META: Record<PrefixedLocale, { title: string; description: string }> = {
-  cn: {
-    title: "FidesOrigin — 实时链上合规",
-    description: "原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。",
-  },
-  tw: {
-    title: "FidesOrigin — 可程式化鏈上合規",
-    description: "原生鏈上執行的可程式合規。面向穩定幣、RWA和AI智能體。",
-  },
-  jp: {
-    title: "FidesOrigin — プログラマブル・オンチェーン・コンプライアンス",
-    description:
-      "オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。",
-  },
-};
 
 export async function generateMetadata({
   params,
@@ -41,7 +28,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   if (!isPrefixedLocale(lang)) return {};
-  const m = HOME_META[lang];
+  const m = homeMeta[lang];
   return {
     title: m.title,
     description: m.description,

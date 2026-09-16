@@ -132,7 +132,8 @@ export default function ContentContactEN() {
             {status === "error" && (
               <p role="alert" style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.9rem", "color": "var(--fio-danger)" }}>
                 {errorMsg}{" "}
-                或直接邮件 <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px" }}>contact@fidesorigin.com</a>
+                {/* [AUDIT FIX 2026-09-17 B2-010] 英文页错误提示原为中文残留 */}
+                or email us directly at <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px" }}>contact@fidesorigin.com</a>
               </p>
             )}
             <p style={{ "textAlign": "center", "marginTop": "16px", "fontSize": "0.8rem", "color": "var(--text-muted)" }}>Prefer email? Reach us at <a href="mailto:contact@fidesorigin.com" style={{ "color": "var(--accent)", "textDecoration": "underline", "textUnderlineOffset": "3px" }}>contact@fidesorigin.com</a></p>

@@ -9,7 +9,8 @@
 //   前端 fidesorigin.com 与网关 fidesorigin-api.vercel.app 不同域。直接让网关
 //   跨域 Set-Cookie 会被现代浏览器当作第三方 cookie 拦截（Safari 全拦、
 //   Chrome 逐步淘汰）。因此官网 vercel.json 加了同源 rewrite：
-//     fidesorigin.com/v1/:path*  →  https://fidesorigin-api.vercel.app/v1/:path*
+//     fidesorigin.com/api/v1/:path*  →  https://fidesorigin-api.vercel.app/v1/:path*
+//   （[AUDIT FIX 2026-09-17] 注释此前误写为 /v1/:path*，实际 rewrite 源路径带 /api 前缀）
 //   浏览器地址栏始终是 fidesorigin.com，cookie 成为第一方 host-only cookie，
 //   可靠投递，不受第三方 cookie 拦截影响。
 //

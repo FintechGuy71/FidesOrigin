@@ -56,17 +56,15 @@ export const CHAIN_EXPLORERS: Record<string, string> = {
 } as const;
 
 // ============================================================================
-// Contract Addresses (Sample / Placeholder)
+// Contract Addresses
 // ============================================================================
 
-/** FidesOrigin registry contract addresses by chain */
+/* [AUDIT FIX 2026-09-17 R1-028] 原 FIDES_REGISTRY_ADDRESSES 六个链的值全是
+   非法占位符 '0xFidesOriginRegistry...'（非 hex、不可用于任何调用），却作为
+   公共导出 API 存在。当前仅 Sepolia 有真实部署（与 DEPLOYED.md v3.1.0 对齐），
+   主网及其他链部署后按链补充，不再放出占位符。 */
 export const FIDES_REGISTRY_ADDRESSES: Record<string, string> = {
-  ethereum: '0xFidesOriginRegistry...',
-  polygon: '0xFidesOriginRegistry...',
-  bsc: '0xFidesOriginRegistry...',
-  arbitrum: '0xFidesOriginRegistry...',
-  optimism: '0xFidesOriginRegistry...',
-  base: '0xFidesOriginRegistry...',
+  sepolia: '0x953f985f38f94d6159c0600d1f15D543895cE896', // RiskRegistry (v3.1.0)
 } as const;
 
 // ============================================================================

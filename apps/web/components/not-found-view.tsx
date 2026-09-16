@@ -31,7 +31,7 @@ export default function NotFoundView({ lang = "en" }: { lang?: Locale }) {
       </h1>
       <p className="mb-10 max-w-md text-sm leading-relaxed text-[var(--fio-text-3)]">{d.body}</p>
       <div className="flex flex-col items-center gap-3 sm:flex-row">
-        {/* ⚠ 不要写尾斜杠：静态导出的产物是 out/cn.html，不是 out/cn/index.html */}
+        {/* 无尾斜杠：静态导出产物是 out/cn.html；localize("/", lang) 已修复为 "/cn"（2026-09-17 B2-017） */}
         <a href={localize("/", lang) || "/"} className="fio-btn fio-btn-primary">
           {d.home}
         </a>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { Dict } from "@/i18n/dictionaries/en";
+// [AUDIT FIX 2026-09-17 R1-019] 端点配置收口到共享模块（原三处口径不一）
+import { PUBLIC_RISK_CHECK_URL } from "@/lib/risk-check";
 
 /* ================================================================
    DEMO EXPERIENCE — interactive demo page content (all locales).
@@ -95,7 +97,7 @@ const DEMO_CSS = `
 const SAMPLE_ADDRESS = "0x0330070fd38ec3bb94f58fa55d40368271e9e54a"; // OFAC 在册制裁地址（链上 sanctioned=true，演示即出真实 HIGH 结果）
 
 // 公开只读风险查询端点（apps/api SCOPE.PUBLIC，免 key）
-const PUBLIC_RISK_CHECK_URL = "https://fidesorigin-api.vercel.app/v1/public/risk-check";
+// 端点定义见 @/lib/risk-check（[AUDIT FIX 2026-09-17 R1-019] 单一真源）
 
 type D = Dict["demo"];
 
@@ -162,7 +164,9 @@ export default function DemoExperience({ dict }: { dict: D }) {
       score,
       level,
       flags: (data.tags || []).join(", ") || dict.sanctionsNone,
-      date: (data.last_updated_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+      /* [AUDIT FIX 2026-09-17 R1-020] API 未返回更新时间时原实现用**当天日期**
+         填充「Last updated」，虚报数据新鲜度。缺失时显示占位符。 */
+      date: (data.last_updated_at || "").slice(0, 10) || "—",
     });
   };
 

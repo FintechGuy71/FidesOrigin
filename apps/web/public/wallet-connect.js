@@ -7,6 +7,97 @@
 (function () {
   'use strict';
 
+  /* [AUDIT FIX 2026-09-17 R1-018] address-check 页四语言共用本脚本，原实现
+     用户可见文案全部硬编码英文 → /cn /tw /jp 页面中英混杂。按 <html lang>
+     （en / zh-CN / zh-TW / ja）选择文案，缺键回退英文。 */
+  var WC_LANG = (document.documentElement.lang || 'en').toLowerCase();
+  var WC_I18N = {
+    'zh-cn': {
+      noWallet: '未检测到钱包。请安装 MetaMask 或其他 Web3 钱包。',
+      connectFirst: '请先连接钱包账户。',
+      switchSepolia: '请在钱包中切换至 Sepolia 测试网。',
+      connRejected: '连接已拒绝',
+      connFailed: '连接失败',
+      checking: '查询中…',
+      sanctioned: '已制裁',
+      highRisk: '高风险',
+      medRisk: '中风险',
+      compliant: '合规',
+      riskScore: '风险评分',
+      profileScore: '档案评分',
+      sanctionedLabel: '制裁名单',
+      yes: '是', no: '否', na: '无记录',
+      lastUpdated: '最近更新',
+      queryFailed: '查询失败',
+      queryError: '无法查询合约',
+      installWallet: '请安装 MetaMask 或其他 Web3 钱包后再连接。下载: https://metamask.io'
+    },
+    'zh-tw': {
+      noWallet: '未偵測到錢包。請安裝 MetaMask 或其他 Web3 錢包。',
+      connectFirst: '請先連接錢包帳戶。',
+      switchSepolia: '請在錢包中切換至 Sepolia 測試網。',
+      connRejected: '連接已拒絕',
+      connFailed: '連接失敗',
+      checking: '查詢中…',
+      sanctioned: '已制裁',
+      highRisk: '高風險',
+      medRisk: '中風險',
+      compliant: '合規',
+      riskScore: '風險評分',
+      profileScore: '檔案評分',
+      sanctionedLabel: '制裁名單',
+      yes: '是', no: '否', na: '無記錄',
+      lastUpdated: '最近更新',
+      queryFailed: '查詢失敗',
+      queryError: '無法查詢合約',
+      installWallet: '請安裝 MetaMask 或其他 Web3 錢包後再連接。下載: https://metamask.io'
+    },
+    'ja': {
+      noWallet: 'ウォレットが検出されません。MetaMask などの Web3 ウォレットをインストールしてください。',
+      connectFirst: '先にウォレットアカウントを接続してください。',
+      switchSepolia: 'ウォレットで Sepolia テストネットに切り替えてください。',
+      connRejected: '接続が拒否されました',
+      connFailed: '接続に失敗しました',
+      checking: '確認中…',
+      sanctioned: '制裁対象',
+      highRisk: '高リスク',
+      medRisk: '中リスク',
+      compliant: '適合',
+      riskScore: 'リスクスコア',
+      profileScore: 'プロファイルスコア',
+      sanctionedLabel: '制裁リスト',
+      yes: 'はい', no: 'いいえ', na: '記録なし',
+      lastUpdated: '最終更新',
+      queryFailed: 'クエリ失敗',
+      queryError: 'コントラクトを照会できません',
+      installWallet: '接続するには MetaMask などの Web3 ウォレットをインストールしてください。ダウンロード: https://metamask.io'
+    }
+  };
+  var WC_EN = {
+    noWallet: 'No wallet detected. Please install MetaMask or another Web3 wallet.',
+    connectFirst: 'Please connect a wallet account.',
+    switchSepolia: 'Please switch to Sepolia Testnet in your wallet.',
+    connRejected: 'Connection rejected',
+    connFailed: 'Connection failed',
+    checking: 'Checking…',
+    sanctioned: 'SANCTIONED',
+    highRisk: 'HIGH RISK',
+    medRisk: 'MEDIUM RISK',
+    compliant: 'COMPLIANT',
+    riskScore: 'Risk Score',
+    profileScore: 'Profile Score',
+    sanctionedLabel: 'Sanctioned',
+    yes: 'Yes', no: 'No', na: 'N/A',
+    lastUpdated: 'Last Updated',
+    queryFailed: 'Query Failed',
+    queryError: 'Unable to query contract',
+    installWallet: 'Please install MetaMask or another Web3 wallet to connect. Download: https://metamask.io'
+  };
+  function t(key) {
+    var dict = WC_I18N[WC_LANG] || WC_EN;
+    return dict[key] || WC_EN[key] || key;
+  }
+
   // Non-blocking notification helper
   function showNotification(message, type) {
     var existing = document.querySelector('.wallet-notification');
@@ -226,13 +317,13 @@
       await loadEthers();
       const eth = getEthereum();
       if (!eth) {
-        showNotification('No wallet detected. Please install MetaMask or another Web3 wallet.', 'error');
+        showNotification(t('noWallet'), 'error');
         return;
       }
 
       const accounts = await eth.request({ method: 'eth_requestAccounts' });
       if (!accounts || accounts.length === 0) {
-        showNotification('Please connect a wallet account.', 'warning');
+        showNotification(t('connectFirst'), 'warning');
         return;
       }
 
@@ -254,7 +345,7 @@
       if (!networkKey) {
         const switched = await switchToSepolia(eth);
         if (!switched) {
-          showNotification('Please switch to Sepolia Testnet in your wallet.', 'warning');
+          showNotification(t('switchSepolia'), 'warning');
           return;
         }
         provider = new ethersLib.BrowserProvider(eth);
@@ -282,9 +373,9 @@
     } catch (err) {
       // console.error('Wallet connect error:', err);
       if (err.code === 4001) {
-        setText('wallet-status', 'Connection rejected');
+        setText('wallet-status', t('connRejected'));
       } else {
-        setText('wallet-status', 'Connection failed');
+        setText('wallet-status', t('connFailed'));
       }
     } finally {
       if (btn) btn.disabled = false;
@@ -325,11 +416,14 @@
   async function queryCompliance() {
     if (!contract || !currentAddress) return;
 
-    setText('compliance-status', 'Checking…');
+    setText('compliance-status', t('checking'));
     show('compliance-result', true);
     const resultEl = el('compliance-result');
     if (resultEl) {
-      resultEl.classList.remove('compliant', 'non-compliant', 'error');
+      /* [AUDIT FIX 2026-09-17 B2-006] 清除列表补 'warning'：原列表缺它，
+         先查中风险（warning）再查合规（compliant）时两类共存，而 CSS 中
+         .warning 优先级高于 .compliant → COMPLIANT 结果被染成告警黄。 */
+      resultEl.classList.remove('compliant', 'non-compliant', 'warning', 'error');
     }
 
     try {
@@ -349,19 +443,19 @@
 
       if (isSanctioned) {
         resultClass = 'non-compliant';
-        badgeText = 'SANCTIONED';
+        badgeText = t('sanctioned');
         badgeClass = 'status-danger';
       } else if (!isCompliant || score >= 80) {
         resultClass = 'non-compliant';
-        badgeText = 'HIGH RISK';
+        badgeText = t('highRisk');
         badgeClass = 'status-danger';
       } else if (score >= 40) {
         resultClass = 'warning';
-        badgeText = 'MEDIUM RISK';
+        badgeText = t('medRisk');
         badgeClass = 'status-warning';
       } else {
         resultClass = 'compliant';
-        badgeText = 'COMPLIANT';
+        badgeText = t('compliant');
         badgeClass = 'status-safe';
       }
 
@@ -370,15 +464,15 @@
 
       const updatedDate = lastUpdated > 0
         ? new Date(Number(lastUpdated) * 1000).toLocaleDateString()
-        : 'N/A';
+        : t('na');
 
       const riskClass = score >= 80 ? 'risk-score-high' : score >= 40 ? 'risk-score-medium' : 'risk-score-low';
 
       if (detailsEl) {
-        detailsEl.appendChild(createComplianceRow('Risk Score', String(score), riskClass));
-        detailsEl.appendChild(createComplianceRow('Profile Score', String(profileScore), ''));
-        detailsEl.appendChild(createComplianceRow('Sanctioned', isSanctioned ? 'Yes' : 'No', ''));
-        detailsEl.appendChild(createComplianceRow('Last Updated', updatedDate, ''));
+        detailsEl.appendChild(createComplianceRow(t('riskScore'), String(score), riskClass));
+        detailsEl.appendChild(createComplianceRow(t('profileScore'), String(profileScore), ''));
+        detailsEl.appendChild(createComplianceRow(t('sanctionedLabel'), isSanctioned ? t('yes') : t('no'), ''));
+        detailsEl.appendChild(createComplianceRow(t('lastUpdated'), updatedDate, ''));
       }
 
     } catch (err) {
@@ -386,13 +480,13 @@
       if (resultEl) resultEl.classList.add('error');
 
       const statusEl = clearElement('compliance-status');
-      if (statusEl) statusEl.appendChild(createBadge('Query Failed', 'status-error'));
+      if (statusEl) statusEl.appendChild(createBadge(t('queryFailed'), 'status-error'));
 
       const detailsEl = clearElement('compliance-details');
       if (detailsEl) {
         const errDiv = document.createElement('div');
         errDiv.className = 'compliance-error';
-        errDiv.textContent = err.message || 'Unable to query contract';
+        errDiv.textContent = err.message || t('queryError');
         detailsEl.appendChild(errDiv);
       }
     }
@@ -437,7 +531,7 @@
   function init() {
     if (!hasWallet()) {
       var noWalletHandler = function() {
-        showNotification('Please install MetaMask or another Web3 wallet to connect. Download: https://metamask.io', 'error');
+        showNotification(t('installWallet'), 'error');
       };
       bindClick('wallet-btn', noWalletHandler);
       bindClick('mobile-wallet-btn', noWalletHandler);

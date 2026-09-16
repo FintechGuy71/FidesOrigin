@@ -23,6 +23,17 @@ function _badge(text, className) {
   return _create('span', { text, className: 'tag ' + className });
 }
 
+/* [AUDIT FIX 2026-09-17 R1-007] <tr> 的合法子元素只有 td/th。
+   原实现多处 tr.appendChild(_badge(...))（span 直挂 tr）以及
+   _create('td').appendChild(badge) || _create('td')（appendChild 返回 badge，
+   badge 被挂到 tr 下）——浏览器 foster-parenting 会把这些 span 提升到表格
+   之外，导致列错位/布局破坏。统一用 td 包裹 badge。 */
+function _badgeCell(text, className) {
+  const td = _create('td');
+  td.appendChild(_badge(text, className));
+  return td;
+}
+
 /** Clear all children from an element */
 function _clear(id) {
   const e = _el(id);
@@ -128,6 +139,20 @@ const SUBGRAPH_URL =
 const CONTRACT_ADDRESS = sessionStorage.getItem('contractAddress') || SEPOLIA_ADDRESSES.CompliantStableCoin;
 
 let provider, signer, contract, userAddress;
+/* [AUDIT FIX 2026-09-17 R1-008] 发行方策略读写发生在 ComplianceEngine
+   （Diamond 引擎），不是 CompliantStableCoin。独立的策略合约实例。 */
+let policyContract = null;
+
+/* ComplianceEngine 策略相关 ABI（与 apps/contracts/contracts/ComplianceEngine.sol
+   及 PolicyEngine.sol 的 struct IssuerPolicy 逐字对应）：
+   setIssuerPolicy(address token, IssuerPolicy policy)
+   getIssuerPolicy(address issuer) view returns (IssuerPolicy)
+   合约无 rollbackToVersion —— 链上不存在策略版本回滚，原 UI 的回滚按钮
+   调用的是不存在的函数（必然失败），已移除。 */
+const POLICY_ABI = [
+  "function setIssuerPolicy(address token, tuple(uint256 maxTxAmount, uint256 dailyLimit, bool allowMediumRisk, bool allowHighRisk, bool blockMixer, bool requireDestinationKYC, uint256 cooldownPeriod, address[] blockedTokens) policy)",
+  "function getIssuerPolicy(address issuer) view returns (tuple(uint256 maxTxAmount, uint256 dailyLimit, bool allowMediumRisk, bool allowHighRisk, bool blockMixer, bool requireDestinationKYC, uint256 cooldownPeriod, address[] blockedTokens))"
+];
 let charts = {};
 
 // ========== The Graph Subgraph Queries ==========
@@ -322,7 +347,7 @@ async function loadSubgraphComplianceChecks(decision) {
 
           tr.appendChild(_cell(check.reason || '-', ''));
           tr.appendChild(_cell(date, ''));
-          tr.appendChild(_badge('已处理', 'badge-success'));
+          tr.appendChild(_badgeCell('已处理', 'badge-success'));
           tbody.appendChild(tr);
         });
       }
@@ -511,9 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'connectMetaMask': connectMetaMask(); break;
       case 'loadBlockedTransfers': loadBlockedTransfers(); break;
       case 'refreshMonitor': refreshMonitor(); break;
-      case 'openAddCustomerModal': openAddCustomerModal(); break;
       case 'openTagModal': openTagModal(); break;
-      case 'saveLimits': saveLimits(); break;
       case 'openTimelockConfigModal': openTimelockConfigModal(); break;
       case 'loadPendingOperations': loadPendingOperations(); break;
       case 'openAddSignerModal': openAddSignerModal(); break;
@@ -524,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'emergencyPause': emergencyPause(); break;
       case 'emergencyUnpause': emergencyUnpause(); break;
       case 'loadLogs': loadLogs(); break;
-      case 'exportLogs': exportLogs(); break;
       case 'loadPolicies': loadPolicies(); break;
       case 'openPolicyModal': openPolicyModal(); break;
       case 'loadSubgraphComplianceChecks': loadSubgraphComplianceChecks(); break;
@@ -616,37 +638,10 @@ function initCharts() {
     options: chartConfig
   });
 
-  charts.realtime = new Chart(document.getElementById('realtimeChart'), {
-    type: 'line',
-    data: {
-      labels: Array.from({length: 20}, (_, i) => i),
-      datasets: [{
-        label: '实时TPS',
-        data: Array.from({length: 20}, () => 0),
-        borderColor: '#c9a96e',
-        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      ...chartConfig,
-      animation: { duration: 0 },
-      scales: {
-        x: { display: false },
-        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
-      }
-    }
-  });
-
-  setInterval(() => {
-    if (charts.realtime) {
-      const data = charts.realtime.data.datasets[0].data;
-      data.shift();
-      data.push(Math.floor(Math.random() * 10) + 5);
-      charts.realtime.update();
-    }
-  }, 2000);
+  /* [AUDIT FIX 2026-09-17 R1-006/B2-003] 「实时TPS」图表原由 Math.random()
+     伪随机数驱动（每 2 秒编造一条曲线）——合规产品的运营后台不得展示虚构
+     实时指标（同仓 M-15 修复原则）。无真实 TPS 数据源，图表与定时器整体移除，
+     HTML 侧替换为「暂无实时数据源」说明。 */
 }
 
 async function connectWallet() {
@@ -683,6 +678,8 @@ async function connectMetaMask() {
     userAddress = await signer.getAddress();
 
     contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    // [R1-008] 策略读写走 ComplianceEngine（策略不在代币合约上）
+    policyContract = new ethers.Contract(SEPOLIA_ADDRESSES.ComplianceEngine, POLICY_ABI, signer);
 
     const ws = _el('walletStatus');
     if (ws) ws.className = 'wallet-status connected';
@@ -719,7 +716,10 @@ async function loadContractData() {
     const info = await contract.getContractInfo();
 
     const ts = _el('totalSupply');
-    if (ts) ts.textContent = Number(ethers.formatUnits(info.totalSupply, 18)).toLocaleString();
+    /* [AUDIT FIX 2026-09-17 R1-012] 原硬编码 formatUnits(..., 18)，而
+       CompliantStableCoin TOKEN_DECIMALS = 6 → 总供应量被放大 10^12 倍。
+       改用 getContractInfo 返回的 decimals 字段动态格式化。 */
+    if (ts) ts.textContent = Number(ethers.formatUnits(info.totalSupply, Number(info.decimals ?? 6))).toLocaleString();
 
     const totalTagged = Number(info.vipCount) + Number(info.greyCount) + Number(info.blackCount);
     const tt = _el('totalTagged');
@@ -733,6 +733,14 @@ async function loadContractData() {
     if (cs) {
       cs.textContent = info.paused ? '已暂停' : '正常';
       cs.style.color = info.paused ? 'var(--danger)' : 'var(--success)';
+    }
+    /* [AUDIT FIX 2026-09-17 B2-004] 紧急暂停页的 pauseStatus 原为硬编码
+       「合约运行正常」静态文案，与合约真实 paused 状态无关。接入真实状态。 */
+    const ps = _el('pauseStatus');
+    if (ps) {
+      ps.innerHTML = info.paused
+        ? '<div style="font-size: 4rem; margin-bottom: 16px;">⏸️</div><div style="font-size: 1.5rem; font-weight: 600; color: var(--danger);">合约已暂停</div><div style="color: var(--text-secondary); margin-top: 8px;">转账、铸造等操作已被阻止</div>'
+        : '<div style="font-size: 4rem; margin-bottom: 16px;">✅</div><div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">合约运行正常</div><div style="color: var(--text-secondary); margin-top: 8px;">所有功能正常运行</div>';
     }
     const ss = _el('signerStatus');
     if (ss) ss.textContent = '签名者: ' + info.signerCount;
@@ -786,7 +794,7 @@ async function loadQuarantineRecords() {
   await loadQuarantineRecordsFromSubgraph();
 }
 
-async function loadQuarantineRecordsFromSubgraph() {
+async function loadQuarantineRecordsFromSubgraph(statusFilter = '') {
   const tbody = _clear('quarantineTable');
   if (!tbody) return;
   _loading('quarantineTable', '加载中...');
@@ -812,8 +820,14 @@ async function loadQuarantineRecordsFromSubgraph() {
       let totalHeld = 0n;
       let pendingCount = 0;
       let frozenCount = 0;
+      // [R1-010] 应用状态下拉过滤
+      const records = statusFilter === 'active'
+        ? data.holdRecords.filter(r => !r.released)
+        : statusFilter === 'released'
+        ? data.holdRecords.filter(r => r.released)
+        : data.holdRecords;
 
-      data.holdRecords.forEach(record => {
+      records.forEach(record => {
         const amount = BigInt(record.amount);
         const amountFormatted = ethers.formatUnits(amount, 6);
         totalHeld += amount;
@@ -828,13 +842,7 @@ async function loadQuarantineRecordsFromSubgraph() {
         tr.appendChild(_cell(_fmtTime(record.timestamp), ''));
         tr.appendChild(_cell(record.reason || '-', ''));
 
-        let statusBadge;
-        if (record.released) {
-          statusBadge = _badge('已释放', 'tag-success');
-        } else {
-          statusBadge = _badge('待处理', 'tag-warning');
-        }
-        tr.appendChild(_create('td').appendChild(statusBadge) || _create('td'));
+        tr.appendChild(_badgeCell(record.released ? '已释放' : '待处理', record.released ? 'tag-success' : 'tag-warning'));
 
         const tdActions = _create('td');
         if (!record.released) {
@@ -867,17 +875,22 @@ async function loadQuarantineRecordsFromSubgraph() {
 }
 
 async function releaseFunds(recordId) {
-  if (!confirm('确认释放记录 ' + recordId + ' 的隔离资金？')) return;
-  alert('释放交易已提交（演示模式）');
+  /* [AUDIT FIX 2026-09-17 R1-011] 原为演示桩：confirm 后仅 alert 假成功，
+     不产生任何链上交易——运营人员会得到虚假反馈。隔离资金释放在
+     QuarantineVault 合约上，当前后台未接入该合约写路径；在接入前明确
+     拒绝操作并说明，不再伪装成功。 */
+  alert('释放功能尚未接入链上执行路径（QuarantineVault 写操作未接通）。\n记录 ' + recordId + ' 未被修改，请通过合约多签流程处理。');
 }
 
-async function freezePermanently(recordId) {
-  if (!confirm('⚠️ 警告：永久冻结后资金将无法恢复！\n\n确认永久冻结记录 ' + recordId + '？')) return;
-  alert('永久冻结交易已提交（演示模式）');
-}
+/* [R1-011] freezePermanently 已删除：同样是无链上交易的演示桩，且全站
+   无任何按钮引用（死代码）。 */
 
+/* [AUDIT FIX 2026-09-17 R1-010] 原实现直接全量重载，下拉过滤值完全被忽略。
+   现把筛选值传入并按 released 标志做前端过滤（subgraph holdRecords 无 frozen
+   状态字段，「永久冻结」选项已从下拉移除——见 index.html 同步修改）。 */
 async function filterQuarantineRecords() {
-  loadQuarantineRecords();
+  const sel = _el('filterStatus');
+  await loadQuarantineRecordsFromSubgraph(sel ? sel.value : '');
 }
 
 async function loadIncomingBlocks() {
@@ -917,7 +930,7 @@ async function loadIncomingBlocksFromSubgraph() {
         tr.appendChild(_cell(_fmtAddr(check.from), 'address-cell'));
         tr.appendChild(_cell(_fmtAddr(check.to), 'address-cell'));
         tr.appendChild(_cell(ethers.formatUnits(check.amount, 6), ''));
-        tr.appendChild(_badge('黑名单', 'tag-black'));
+        tr.appendChild(_badgeCell('黑名单', 'tag-black'));
         tr.appendChild(_cell(_fmtAddr(check.transactionHash), 'address-cell'));
         tbody.appendChild(tr);
       });
@@ -964,7 +977,7 @@ async function loadBlockedTransfers() {
         const tr = _create('tr');
         tr.appendChild(_cell(date, ''));
         tr.appendChild(_cell(_fmtAddr(check.from), 'address-cell'));
-        tr.appendChild(_badge(tagLabel, tagClass));
+        tr.appendChild(_badgeCell(tagLabel, tagClass));
         tr.appendChild(_cell(check.reason || '-', ''));
         tr.appendChild(_cell(ethers.formatUnits(check.amount, 6), ''));
         tbody.appendChild(tr);
@@ -1014,7 +1027,7 @@ async function refreshMonitor() {
         tr.appendChild(_cell(_fmtAddr(check.from), 'address-cell'));
         tr.appendChild(_cell(_fmtAddr(check.to), 'address-cell'));
         tr.appendChild(_cell(ethers.formatUnits(check.amount, 6), ''));
-        tr.appendChild(_badge(statusLabels[check.decision] || check.decision, statusColors[check.decision] || 'tag-grey'));
+        tr.appendChild(_badgeCell(statusLabels[check.decision] || check.decision, statusColors[check.decision] || 'tag-grey'));
         tbody.appendChild(tr);
       });
     } else {
@@ -1086,7 +1099,7 @@ async function loadTags() {
     .forEach(item => {
       const tr = _create('tr');
       tr.appendChild(_cell(item.addr, 'address-cell'));
-      tr.appendChild(_cell(tagNameMap[item.level] || '', '').appendChild(_badge(tagNameMap[item.level] || '', tagClassMap[item.level] || '')) || _create('td'));
+      tr.appendChild(_badgeCell(tagNameMap[item.level] || '', tagClassMap[item.level] || ''));
       tr.appendChild(_cell(item.reason, ''));
       tr.appendChild(_cell('--', ''));
 
@@ -1155,8 +1168,8 @@ async function loadSigners() {
       const isCurrentUser = addr.toLowerCase() === (userAddress ? userAddress.toLowerCase() : '');
       const tr = _create('tr');
       tr.appendChild(_cell(addr + (isCurrentUser ? ' (你)' : ''), 'address-cell'));
-      tr.appendChild(_badge('签名者', 'tag-admin'));
-      tr.appendChild(_badge('活跃', 'tag-success'));
+      tr.appendChild(_badgeCell('签名者', 'tag-admin'));
+      tr.appendChild(_badgeCell('活跃', 'tag-success'));
 
       const tdAction = _create('td');
       const btnRemove = _create('button', { text: '移除', className: 'btn btn-sm btn-danger' });
@@ -1461,37 +1474,40 @@ function startDataPolling() {
 }
 
 async function loadPolicies() {
-  if (!contract) return;
+  /* [AUDIT FIX 2026-09-17 R1-008] 原实现读 contract.getContractInfo() 的
+     maxTxAmount/dailyLimit/allowMediumRisk 等字段——该 11 元组里没有这些字段，
+     策略页所有字段恒显示 '--'。改为读 ComplianceEngine.getIssuerPolicy(token)。 */
+  if (!policyContract) return;
   try {
-    const info = await contract.getContractInfo();
+    const policy = await policyContract.getIssuerPolicy(CONTRACT_ADDRESS);
 
     const pmt = _el('policyMaxTx');
-    if (pmt) pmt.textContent = info.maxTxAmount ? ethers.formatUnits(info.maxTxAmount, 6) + ' fUSD' : '--';
+    if (pmt) pmt.textContent = policy.maxTxAmount > 0n ? ethers.formatUnits(policy.maxTxAmount, 6) + ' fUSD' : '--';
     const pdl = _el('policyDailyLimit');
-    if (pdl) pdl.textContent = info.dailyLimit ? ethers.formatUnits(info.dailyLimit, 6) + ' fUSD' : '--';
+    if (pdl) pdl.textContent = policy.dailyLimit > 0n ? ethers.formatUnits(policy.dailyLimit, 6) + ' fUSD' : '--';
     const pam = _el('policyAllowMedium');
-    if (pam) pam.textContent = info.allowMediumRisk !== undefined ? (info.allowMediumRisk ? '\u2705 允许' : '\u274c 禁止') : '--';
+    if (pam) pam.textContent = policy.allowMediumRisk ? '\u2705 允许' : '\u274c 禁止';
     const pah = _el('policyAllowHigh');
-    if (pah) pah.textContent = info.allowHighRisk !== undefined ? (info.allowHighRisk ? '\u2705 允许' : '\u274c 禁止') : '--';
+    if (pah) pah.textContent = policy.allowHighRisk ? '\u2705 允许' : '\u274c 禁止';
     const pbm = _el('policyBlockMixer');
-    if (pbm) pbm.textContent = info.blockMixer !== undefined ? (info.blockMixer ? '\u2705 拦截' : '\u274c 放行') : '--';
+    if (pbm) pbm.textContent = policy.blockMixer ? '\u2705 拦截' : '\u274c 放行';
     const pkyc = _el('policyRequireKYC');
-    if (pkyc) pkyc.textContent = info.requireKYC !== undefined ? (info.requireKYC ? '\u2705 需要' : '\u274c 不需要') : '--';
+    if (pkyc) pkyc.textContent = policy.requireDestinationKYC ? '\u2705 需要' : '\u274c 不需要';
 
     const tbody = _clear('policyHistoryTable');
     if (tbody) {
       const tr = _create('tr');
-      tr.appendChild(_cell('v' + (info.policyVersion || 0), ''));
-      tr.appendChild(_cell(info.maxTxAmount ? ethers.formatUnits(info.maxTxAmount, 6) : '--', ''));
-      tr.appendChild(_cell(info.dailyLimit ? ethers.formatUnits(info.dailyLimit, 6) : '--', ''));
-      tr.appendChild(_cell(info.allowMediumRisk !== undefined ? (info.allowMediumRisk ? '是' : '否') : '--', ''));
-      tr.appendChild(_cell(info.allowHighRisk !== undefined ? (info.allowHighRisk ? '是' : '否') : '--', ''));
-      tr.appendChild(_cell(new Date().toLocaleString(), ''));
+      tr.appendChild(_cell('当前策略', ''));
+      tr.appendChild(_cell(policy.maxTxAmount > 0n ? ethers.formatUnits(policy.maxTxAmount, 6) : '--', ''));
+      tr.appendChild(_cell(policy.dailyLimit > 0n ? ethers.formatUnits(policy.dailyLimit, 6) : '--', ''));
+      tr.appendChild(_cell(policy.allowMediumRisk ? '是' : '否', ''));
+      tr.appendChild(_cell(policy.allowHighRisk ? '是' : '否', ''));
+      tr.appendChild(_cell('链上实时读取', ''));
 
+      // [R1-008] 合约无 rollbackToVersion（链上不存在策略版本机制），
+      // 原「回滚」按钮调用不存在的函数必然失败，已移除。
       const tdAction = _create('td');
-      const btnRollback = _create('button', { text: '回滚', className: 'btn btn-sm btn-secondary' });
-      btnRollback.onclick = function() { rollbackPolicy(0); };
-      tdAction.appendChild(btnRollback);
+      tdAction.textContent = '-';
       tr.appendChild(tdAction);
 
       tbody.appendChild(tr);
@@ -1507,7 +1523,13 @@ function openPolicyModal() {
 }
 
 async function submitPolicy() {
-  if (!contract) { alert('请先连接钱包'); return; }
+  /* [AUDIT FIX 2026-09-17 R1-008] 原实现三处致命错误：
+     ① ABI 未声明 setIssuerPolicy（ethers v6 调未声明函数直接 TypeError）；
+     ② 调错合约——策略在 ComplianceEngine，不在 CompliantStableCoin；
+     ③ 参数签名错误——真实签名是 setIssuerPolicy(address token, IssuerPolicy
+        struct)，原为 7 个散装位置参数且缺 cooldownPeriod/blockedTokens。
+     现按合约源码（ComplianceEngine.sol:445 + PolicyEngine.sol:104 struct）对齐。 */
+  if (!policyContract) { alert('请先连接钱包'); return; }
   try {
     const maxTx = _el('policyMaxTxInput');
     const dailyLimit = _el('policyDailyLimitInput');
@@ -1516,15 +1538,18 @@ async function submitPolicy() {
     const blockMixer = _el('policyBlockMixerInput');
     const requireKYC = _el('policyRequireKYCInput');
 
-    const tx = await contract.setIssuerPolicy(
-      await signer.getAddress(),
-      ethers.parseUnits((maxTx ? maxTx.value : '1000000') || '1000000', 6),
-      ethers.parseUnits((dailyLimit ? dailyLimit.value : '500') || '500', 6),
-      allowMedium ? allowMedium.checked : false,
-      allowHigh ? allowHigh.checked : false,
-      blockMixer ? blockMixer.checked : false,
-      requireKYC ? requireKYC.checked : false
-    );
+    const policy = {
+      maxTxAmount: ethers.parseUnits((maxTx ? maxTx.value : '1000000') || '1000000', 6),
+      dailyLimit: ethers.parseUnits((dailyLimit ? dailyLimit.value : '500') || '500', 6),
+      allowMediumRisk: allowMedium ? allowMedium.checked : false,
+      allowHighRisk: allowHigh ? allowHigh.checked : false,
+      blockMixer: blockMixer ? blockMixer.checked : false,
+      requireDestinationKYC: requireKYC ? requireKYC.checked : false,
+      cooldownPeriod: 0,
+      blockedTokens: []
+    };
+
+    const tx = await policyContract.setIssuerPolicy(CONTRACT_ADDRESS, policy);
     await tx.wait();
     alert('策略更新成功!');
     closeModal('policyModal');
@@ -1533,19 +1558,8 @@ async function submitPolicy() {
     alert('策略更新失败: ' + error.message);
   }
 }
-
-async function rollbackPolicy(version) {
-  if (!contract) { alert('请先连接钱包'); return; }
-  if (!confirm('确定要回滚到版本 ' + version + ' 吗?')) return;
-  try {
-    const tx = await contract.rollbackToVersion(await signer.getAddress(), version);
-    await tx.wait();
-    alert('回滚成功!');
-    loadPolicies();
-  } catch (error) {
-    alert('回滚失败: ' + error.message);
-  }
-}
+/* [R1-008] rollbackPolicy 已删除：合约不存在 rollbackToVersion / 策略版本机制，
+   原实现是对不存在函数的空调用 + 虚假「回滚成功」反馈。 */
 
 async function filterComplianceLogs() {
   const decision = _el('filterDecision');
@@ -1581,17 +1595,8 @@ function removeSigner(addr) {
     .catch(err => alert('移除失败: ' + err.message));
 }
 
-function openAddCustomerModal() {
-  alert('新增客户功能开发中...');
-}
-
-function saveLimits() {
-  alert('限额配置保存功能开发中...');
-}
-
-function exportLogs() {
-  alert('导出功能开发中...');
-}
+/* [AUDIT FIX 2026-09-17 B2-004] openAddCustomerModal / saveLimits / exportLogs
+   三个 alert 占位桩已随按钮禁用一并移除（见 index.html 对应按钮的 disabled 标注）。 */
 
 function viewProfile(id) {
   alert('查看地址: ' + id);

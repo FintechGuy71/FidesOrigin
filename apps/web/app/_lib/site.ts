@@ -98,6 +98,32 @@ export const adminMetadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
+/**
+ * 语言首页的 title/description 单一真源（供 app/[lang]/(home)/page.tsx 使用）。
+ * [AUDIT FIX 2026-09-17 R1-023] 此前此处 localeCopy 与 page.tsx 的 HOME_META
+ * 是两处真源且文案互相矛盾（page 级覆盖 layout 级，localeCopy 被永久遮蔽）。
+ * 现统一到本模块：layout 回退用 localeCopy，首页用 homeMeta。
+ */
+export const homeMeta: Record<Locale, { title: string; description: string }> = {
+  en: {
+    title: siteMetadata.title as string,
+    description: siteMetadata.description as string,
+  },
+  cn: {
+    title: "FidesOrigin — 实时链上合规",
+    description: "原生链上执行的可编程合规。面向稳定币、RWA和AI智能体。",
+  },
+  tw: {
+    title: "FidesOrigin — 可程式化鏈上合規",
+    description: "原生鏈上執行的可程式合規。面向穩定幣、RWA和AI智能體。",
+  },
+  jp: {
+    title: "FidesOrigin — プログラマブル・オンチェーン・コンプライアンス",
+    description:
+      "オンチェーンリスクコントロールエンジン。すべての取引を即時スクリーニングし、疑わしい資金を隔離し、ポリシーを決定論的に実行——オフチェーンへの依存はゼロ。",
+  },
+};
+
 /** JSON-LD structured data for SEO */
 export const jsonLd = {
   "@context": "https://schema.org",
@@ -114,11 +140,9 @@ export const jsonLd = {
       "@type": "WebSite",
       url: "https://fidesorigin.com",
       name: "FidesOrigin",
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://fidesorigin.com/?q={search_term_string}",
-        "query-input": "required name=search_term_string",
-      },
+      /* [AUDIT FIX 2026-09-17 B2-011] 移除 potentialAction SearchAction：
+         全站不存在搜索功能，?q= 无消费者——虚假结构化数据可被 Google
+         判为 spammy markup。 */
     },
     {
       "@type": "SoftwareApplication",

@@ -96,7 +96,7 @@ export default function ContentDocsApiTW() {
         <h4>查詢參數</h4>
         <ul>
           <li><code>chainId</code>（選填）— 鏈 ID，預設為 1（以太坊）。支援 <code>sepolia</code>（11155111）、<code>base</code>（8453）等。</li>
-          <li><code>amount</code>（選填）— 用於上下文感知評估的交易金額。</li>
+          <li><code>amount</code>（選填）— 預留欄位：為前向相容而接受，目前不參與評估。</li>
         </ul>
         <h4>響應</h4>
         <div className="docs-code-block">

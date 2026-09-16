@@ -9,8 +9,8 @@ import { hreflangAlternates, localize, type Locale } from "@/i18n/locales";
 
    ⚠ 两条硬性约束：
    1) URL 一律不带尾斜杠。静态导出未开 trailingSlash，产物是 out/cn.html
-      而不是 out/cn/index.html；原先 `push("", l)` 会生成 /cn/，与产物
-      路径不一致（站内 canonical/hreflang 用 /cn，sitemap 却用 /cn/）。
+      而不是 out/cn/index.html。2026-09-17 起 localize("/", l) 已修复为
+      无尾斜杠，sitemap、canonical、hreflang 三方口径一致（均为 /cn）。
    2) 必须输出 hreflang alternates。多语言信号一半在 <head>、一半在
       sitemap；原先 74 条 URL 全无 alternates，等于放弃了一半。
    ================================================================ */
@@ -79,9 +79,10 @@ function lastModFor(slug: string): Date {
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
   const push = (path: string, locale: Locale, priority: number, available?: readonly Locale[]) => {
-    // 首页特殊处理：localize("", l) 得到 "/cn" 而不是 "/cn/"。
-    // 其余页面走 localize("/slug", l)，不会产生尾斜杠。
-    const localized = path === "/" ? (locale === "en" ? "" : `/${locale}`) : localize(path, locale);
+    /* [AUDIT FIX 2026-09-17 R1-005/B2-002] localize("/", l) 已修复为无尾斜杠
+       （"/cn" 而非 "/cn/"），sitemap 的 <loc>、xhtml:link 与页面 canonical/
+       hreflang 现为同一 URL，首页特判随之简化为直接调 localize。 */
+    const localized = localize(path, locale);
     // slug 键：首页用 "/"，其余去掉前导斜杠以匹配 BLOG_LASTMOD 等表
     const slugKey = path === "/" ? "/" : path.replace(/^\//, "");
     entries.push({

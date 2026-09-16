@@ -95,7 +95,7 @@ export default function ContentDocsApiJP() {
         <h4>クエリパラメータ</h4>
         <ul>
           <li><code>chainId</code>（オプション）— チェーン ID。デフォルトは 1（Ethereum）。<code>sepolia</code>（11155111）、<code>base</code>（8453）などをサポートします。</li>
-          <li><code>amount</code>（オプション）— コンテキストを考慮した評価のための取引金額。</li>
+          <li><code>amount</code>（オプション）— 予約フィールド：前方互換のため受け付けますが、現在は評価に使用されません。</li>
         </ul>
         <h4>レスポンス</h4>
         <div className="docs-code-block">
