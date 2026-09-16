@@ -58,6 +58,11 @@ export function langPrefix(locale: Locale): string {
 /** Build a localized path: localize("pricing", "cn") -> "/cn/pricing" */
 export function localize(path: string, locale: Locale): string {
   const p = path.startsWith("/") ? path : `/${path}`;
+  /* [AUDIT FIX 2026-09-17 R1-005/B2-002] 语言首页三方口径冲突：
+     原实现 localize("/", "cn") = "/cn/"（带尾斜杠），而 vercel.json 把 /cn/
+     307 到 /cn、sitemap 的 <loc> 也用 /cn —— canonical/hreflang 指向会跳转的
+     URL。统一为无尾斜杠：path="/" 时返回 "/cn"（EN 为 "/"）。 */
+  if (p === "/") return langPrefix(locale) || "/";
   return `${langPrefix(locale)}${p}`;
 }
 

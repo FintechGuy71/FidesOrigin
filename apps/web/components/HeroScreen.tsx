@@ -3,15 +3,14 @@
 import { useState } from "react";
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
+// [AUDIT FIX 2026-09-17 R1-019] 端点配置收口到共享模块（原三处口径不一）
+import { PUBLIC_RISK_CHECK_URL } from "@/lib/risk-check";
 
 /* ================================================================
    HERO LIVE SCREENING — 首屏内嵌真实地址筛查。
    直接调用公开只读端点（SCOPE.PUBLIC，免 key），
    让访客 10 秒内体验产品 —— "This is live" 是最强信任信号。
    ================================================================ */
-
-const PUBLIC_RISK_CHECK_URL =
-  "https://fidesorigin-api.vercel.app/v1/public/risk-check";
 
 type ApiResponse = {
   risk_score?: number;

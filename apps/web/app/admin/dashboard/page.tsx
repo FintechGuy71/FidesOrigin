@@ -75,9 +75,9 @@ interface RiskEvent {
   type: string;
   address: string;
   amount: string;
-  risk: "极高" | "高" | "中";
+  risk: "极高" | "高" | "中" | "低";
   time: string;
-  status: "已拦截" | "审核中" | "已标记";
+  status: "已拦截" | "审核中" | "已标记" | "误报";
   timestamp?: number;
 }
 
@@ -85,7 +85,9 @@ interface RiskEvent {
 function useDashboardWebSocket(
   url: string,
   onStatsUpdate: (stats: DashboardStats) => void,
-  onNewEvent: (event: RiskEvent) => void
+  onNewEvent: (event: RiskEvent) => void,
+  /* [AUDIT FIX 2026-09-17 R1-004] 与数据拉取的 authed 门禁对齐：未登录不建 WS */
+  enabled: boolean = true
 ) {
   const ws = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -93,6 +95,10 @@ function useDashboardWebSocket(
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+  /* [AUDIT FIX 2026-09-17 R1-003] 主动关闭标志：此前 disconnect() 调 ws.close()
+     后 onclose 异步触发仍无条件 setTimeout(connect) → 组件卸载后又 new WebSocket，
+     泄漏连接与定时器。disconnect 置位后 onclose 不再重连。 */
+  const closedByUser = useRef(false);
 
   const connect = useCallback(() => {
     /* [AUDIT FIX R2-056] WS_URL 未配置（空串）时不得构造 WebSocket：
@@ -100,7 +106,8 @@ function useDashboardWebSocket(
        LiveTransactionStream 的 useWebSocket 有 `if (!url) return;`），
        导致未配置环境下每次打开页面必抛错，且 LiveIndicator 永显"连接中"。
        与 LiveTransactionStream 对齐：空 URL 直接跳过连接。 */
-    if (!url) return;
+    if (!url || !enabled) return;
+    closedByUser.current = false;
     try {
       ws.current = new WebSocket(url);
 
@@ -127,6 +134,7 @@ function useDashboardWebSocket(
 
       ws.current.onclose = () => {
         setIsConnected(false);
+        if (closedByUser.current) return; // [R1-003] 主动关闭/卸载后不重连
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
           const delay = Math.min(WS_INITIAL_RETRY_DELAY * Math.pow(WS_RETRY_MULTIPLIER, reconnectAttempts.current), WS_MAX_RETRY_DELAY);
@@ -141,9 +149,10 @@ function useDashboardWebSocket(
     } catch {
       setError("Failed to create WebSocket connection");
     }
-  }, [url, onStatsUpdate, onNewEvent]);
+  }, [url, onStatsUpdate, onNewEvent, enabled]);
 
   const disconnect = useCallback(() => {
+    closedByUser.current = true; // [R1-003] 阻止 onclose 里的重连定时器
     if (reconnectTimeout.current) {
       clearTimeout(reconnectTimeout.current);
     }
@@ -161,51 +170,81 @@ function useDashboardWebSocket(
 }
 
 // 后端返回的 snake_case 统计结构
+/* [AUDIT FIX 2026-09-17 R1-001] 后端 /api/v1/dashboard/summary 实际返回
+   嵌套结构 { today_blocked: { value, change }, ... }（backend/controllers/dashboard.py
+   的 _metric()），原适配层按扁平数字读取 → 统计卡显示 "[object Object]"。
+   现同时兼容嵌套 {value,change} 与扁平字段两种形态。 */
+interface BackendMetric {
+  value?: number;
+  change?: number | null;
+}
 interface BackendStats {
-  today_blocked?: number;
+  today_blocked?: number | BackendMetric;
   today_blocked_change?: number;
-  risk_addresses?: number;
+  risk_addresses?: number | BackendMetric;
   risk_addresses_change?: number;
-  compliance_rate?: number;
+  compliance_rate?: number | BackendMetric;
   compliance_rate_change?: number;
-  monitored_transactions?: number;
+  monitored_transactions?: number | BackendMetric;
   monitored_transactions_change?: number;
   risk_trend?: { time: string; score: number }[];
   riskTrend?: { time: string; score: number }[];
+}
+
+function metricValue(m: number | BackendMetric | undefined, flat?: number): number {
+  if (typeof m === "number") return m;
+  if (m && typeof m.value === "number") return m.value;
+  return flat ?? 0;
+}
+
+function metricChange(m: number | BackendMetric | undefined, flat?: number): number {
+  if (m && typeof m === "object" && typeof m.change === "number") return m.change;
+  return flat ?? 0;
 }
 
 // snake_case → camelCase 适配层
 function adaptStats(raw: BackendStats): DashboardStats {
   return {
     riskTrend: raw.risk_trend ?? raw.riskTrend,
-    todayBlocked: raw.today_blocked ?? 0,
-    todayBlockedChange: raw.today_blocked_change ?? 0,
-    riskAddresses: raw.risk_addresses ?? 0,
-    riskAddressesChange: raw.risk_addresses_change ?? 0,
-    complianceRate: raw.compliance_rate ?? 0,
-    complianceRateChange: raw.compliance_rate_change ?? 0,
-    monitoredTransactions: raw.monitored_transactions ?? 0,
-    monitoredTransactionsChange: raw.monitored_transactions_change ?? 0,
+    todayBlocked: metricValue(raw.today_blocked),
+    todayBlockedChange: metricChange(raw.today_blocked, raw.today_blocked_change),
+    riskAddresses: metricValue(raw.risk_addresses),
+    riskAddressesChange: metricChange(raw.risk_addresses, raw.risk_addresses_change),
+    complianceRate: metricValue(raw.compliance_rate),
+    complianceRateChange: metricChange(raw.compliance_rate, raw.compliance_rate_change),
+    monitoredTransactions: metricValue(raw.monitored_transactions),
+    monitoredTransactionsChange: metricChange(raw.monitored_transactions, raw.monitored_transactions_change),
   };
 }
 
 // 后端事件 → RiskEvent 适配层
+/* [AUDIT FIX 2026-09-17 R1-002] 后端事件枚举为大写（backend/models.py:
+   RiskLevel=LOW/MEDIUM/HIGH/CRITICAL/UNKNOWN, EventStatus=PENDING/CONFIRMED/
+   FALSE_POSITIVE/UNDER_REVIEW），原映射表只有小写/中文键 → 所有事件等级/状态
+   全部落入 ?? 兜底，HIGH/CRITICAL 被系统性降级显示为「中」。
+   现统一 toUpperCase 归一后映射，并补全 LOW/UNKNOWN 与全部后端状态枚举。 */
 function adaptEvent(raw: Record<string, unknown>): RiskEvent {
   const riskMap: Record<string, RiskEvent["risk"]> = {
-    critical: "极高",
-    "极高": "极高",
-    high: "高",
-    "高": "高",
-    medium: "中",
-    "中": "中",
+    CRITICAL: "极高",
+    HIGH: "高",
+    MEDIUM: "中",
+    LOW: "低",
+    UNKNOWN: "中",
   };
   const statusMap: Record<string, RiskEvent["status"]> = {
-    blocked: "已拦截",
-    "已拦截": "已拦截",
-    reviewing: "审核中",
-    "审核中": "审核中",
-    flagged: "已标记",
-    "已标记": "已标记",
+    BLOCKED: "已拦截",
+    CONFIRMED: "已拦截",
+    PENDING: "审核中",
+    UNDER_REVIEW: "审核中",
+    REVIEWING: "审核中",
+    FALSE_POSITIVE: "误报",
+    FLAGGED: "已标记",
+  };
+  const riskZhMap: Record<string, RiskEvent["risk"]> = {
+    "极高": "极高", "高": "高", "中": "中", "低": "低",
+  };
+  const statusZhMap: Record<string, RiskEvent["status"]> = {
+    "已拦截": "已拦截", "审核中": "审核中", "已标记": "已标记", "误报": "误报",
   };
   const riskRaw = String(raw.risk ?? raw.risk_level ?? "中");
   const statusRaw = String(raw.status ?? "已标记");
@@ -215,9 +254,9 @@ function adaptEvent(raw: Record<string, unknown>): RiskEvent {
     type: String(raw.type ?? raw.event_type ?? ""),
     address: String(raw.address ?? ""),
     amount: String(raw.amount ?? ""),
-    risk: riskMap[riskRaw] ?? "中",
+    risk: riskMap[riskRaw.toUpperCase()] ?? riskZhMap[riskRaw] ?? "中",
     time: String(raw.time ?? raw.created_at ?? ""),
-    status: statusMap[statusRaw] ?? "已标记",
+    status: statusMap[statusRaw.toUpperCase()] ?? statusZhMap[statusRaw] ?? "已标记",
     timestamp: ts,
   };
 }
@@ -491,7 +530,8 @@ export default function DashboardPage() {
   }, []);
 
   // WebSocket 连接
-  const { isConnected } = useDashboardWebSocket(WS_URL, handleStatsUpdate, handleNewEvent);
+  // [AUDIT FIX 2026-09-17 R1-004] 未登录（authed !== true）不建立 WS 连接
+  const { isConnected } = useDashboardWebSocket(WS_URL, handleStatsUpdate, handleNewEvent, authed === true);
 
   /* [AUDIT FIX R2-057] 变化率此前恒以 `+` 前缀拼接：后端下发 -5 时显示 "+-5%"；
      且 changeType 按卡片写死，不随数值符号变化——下降的拦截量也显示绿色。
@@ -694,13 +734,17 @@ export default function DashboardPage() {
                   <p className="text-2xl sm:text-3xl font-semibold text-white mt-2">
                     {loading ? "-" : card.value}
                   </p>
-                  <p
-                    className={`text-sm mt-1 ${
-                      card.changeType === "positive" ? "text-emerald-400" : "text-red-400"
-                    }`}
-                  >
-                    {card.change} 较昨日
-                  </p>
+                  {/* [AUDIT FIX 2026-09-17 R1-021] 无数据时 change 为空串，
+                      此前残留孤立文案「 较昨日」；有数据时才渲染整行。 */}
+                  {card.change && (
+                    <p
+                      className={`text-sm mt-1 ${
+                        card.changeType === "positive" ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
+                      {card.change} 较昨日
+                    </p>
+                  )}
                 </div>
                 <div className="p-3 bg-[var(--fio-surface-2)]/50 rounded-lg text-[var(--fio-text-2)]">
                   <card.icon />
@@ -894,6 +938,8 @@ export default function DashboardPage() {
                               ? "critical"
                               : event.risk === "高"
                               ? "high"
+                              : event.risk === "低"
+                              ? "low"
                               : "medium"
                           }
                           text={event.risk}

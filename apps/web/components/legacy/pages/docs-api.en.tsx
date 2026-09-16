@@ -67,7 +67,7 @@ export default function ContentDocsApiEN() {
         <h4>Query Parameters</h4>
         <ul>
           <li><code>chainId</code> (optional) — Chain ID, defaults to 1 (Ethereum). Supports <code>sepolia</code> (11155111), <code>base</code> (8453), etc.</li>
-          <li><code>amount</code> (optional) — Transaction amount for context-aware assessment.</li>
+          <li><code>amount</code> (optional) — Reserved field; accepted for forward compatibility but not currently used in the assessment.</li>
         </ul>
         <h4>Response</h4>
         <div className="docs-code-block">

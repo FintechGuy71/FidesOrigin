@@ -24,7 +24,8 @@ export default function AdminRootLayout({
 }) {
   /* 同上：scroll-behavior 由 css/fio-design-system.css 的 @layer base 提供 */
   return (
-    <html lang="en">
+    // [AUDIT FIX 2026-09-17 B2-009] 全中文后台此前声明 lang="en"（WCAG 3.1.1）
+    <html lang="zh-CN">
       <body className={`${fontVariableClassNames} font-sans antialiased`}>{children}</body>
     </html>
   );

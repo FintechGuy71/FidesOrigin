@@ -32,10 +32,9 @@ const AUTH_REQUIRED = process.env.AUTH_REQUIRED !== 'false';
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 
 const CACHE_TTL = 3600; // seconds
-const KNOWN_CHAIN_IDS = new Set([
-  1, 10, 25, 56, 137, 250, 42161, 43114, 8453, 7777777, 324, 59144, 5000, 42220, 33139,
-  5, 11155111, 80001, 421613, 84532, 17000, 1440002,
-]);
+/* [AUDIT FIX 2026-09-17 R1-027] 原 KNOWN_CHAIN_IDS 白名单定义后全仓零消费，
+   「已知链白名单」名存实亡。isValidChainId 保持范围校验（接受任意合法 EVM
+   chain id，避免误伤新链），删除死常量，消除两套口径并存的误导。 */
 const CHAIN_ID_TO_NAME = {
   1: 'ethereum', 10: 'optimism', 56: 'bsc', 137: 'polygon',
   42161: 'arbitrum', 8453: 'base', 324: 'zksync', 59144: 'linea',
@@ -602,7 +601,8 @@ function withMiddleware(handler, requiredScope = SCOPE.READ) {
         return sendError(res, 400, 'BAD_REQUEST', err.message || 'Invalid request');
       }
       console.error('Handler error:', err);
-      return sendError(res, 500, 'SERVER_ERROR', err.message || 'Internal server error');
+      // [AUDIT FIX 2026-09-17 B2-013] 500 对外固定文案，err.message 仅落日志
+      return sendError(res, 500, 'SERVER_ERROR', 'Internal server error');
     }
   };
 }
@@ -652,7 +652,8 @@ function withAdminAuth(handler) {
       return await handler(req, res);
     } catch (err) {
       console.error('Handler error:', err);
-      return sendError(res, 500, 'SERVER_ERROR', err.message || 'Internal server error');
+      // [AUDIT FIX 2026-09-17 B2-013] 500 对外固定文案，err.message 仅落日志
+      return sendError(res, 500, 'SERVER_ERROR', 'Internal server error');
     }
   };
 }

@@ -95,7 +95,7 @@ export default function ContentDocsApiCN() {
         <h4>查询参数</h4>
         <ul>
           <li><code>chainId</code>（可选）— 链 ID，默认为 1（以太坊）。支持 <code>sepolia</code>（11155111）、<code>base</code>（8453）等。</li>
-          <li><code>amount</code>（可选）— 用于上下文感知评估的交易金额。</li>
+          <li><code>amount</code>（可选）— 预留字段：为前向兼容而接受，当前不参与评估。</li>
         </ul>
         <h4>响应</h4>
         <div className="docs-code-block">

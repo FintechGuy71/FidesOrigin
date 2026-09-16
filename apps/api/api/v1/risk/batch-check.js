@@ -9,6 +9,8 @@ const {
 
 // POST /v1/risk/batch-check
 // Body: { addresses: string[], chainId?: number | string, amount?: string }
+/* [AUDIT FIX 2026-09-17 B2-015] amount 当前不参与评估（保留字段，向后兼容），
+   文档四语言已同步标注"预留/暂未使用"，不再声称其用于上下文感知评估。 */
 async function handler(req, res) {
   if (req.method !== 'POST') {
     return sendError(res, 405, 'BAD_REQUEST', 'Method not allowed');

@@ -59,9 +59,13 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+  /* [AUDIT FIX 2026-09-17 R1-003] 主动关闭标志：disconnect 后 onclose 仍会
+     异步触发并重连 → 卸载后泄漏 WebSocket 与定时器。与 dashboard 同款修复。 */
+  const closedByUser = useRef(false);
 
   const connect = useCallback(() => {
     if (!url) return;
+    closedByUser.current = false;
 
     try {
       ws.current = new WebSocket(url);
@@ -83,6 +87,7 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
 
       ws.current.onclose = () => {
         setIsConnected(false);
+        if (closedByUser.current) return; // [R1-003] 主动关闭/卸载后不重连
         // 自动重连
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
@@ -101,6 +106,7 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
   }, [url, onMessage]);
 
   const disconnect = useCallback(() => {
+    closedByUser.current = true; // [R1-003] 阻止 onclose 里的重连定时器
     if (reconnectTimeout.current) {
       clearTimeout(reconnectTimeout.current);
     }
