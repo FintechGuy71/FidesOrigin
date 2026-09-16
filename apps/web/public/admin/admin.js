@@ -1445,7 +1445,7 @@ async function loadLogsFromSubgraph() {
 }
 
 function loadSettings() {
-  const savedAddress = localStorage.getItem('contractAddress');
+  const savedAddress = sessionStorage.getItem('contractAddress');
   if (savedAddress) {
     const ca = _el('contractAddress');
     if (ca) ca.value = savedAddress;
