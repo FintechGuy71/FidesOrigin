@@ -9,16 +9,25 @@
         "PolicyEngine": "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA",
         "ComplianceEngine": "0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E",
         "FidesCompliance": "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5",
-        "QuarantineVault": "0x6803E163259B07F58111f56423aB0732858196Be",
+        "QuarantineVault": "0xa5Db586Fd93F49582405803eaB99C147267EfCbE",
         "MerkleRiskRegistry": "0x31A034efbe22eDc1a78ceb37F52BA869D869c33B",
-        "FidesOriginTimelock": "0x04B2Fc88b57AE8d8E6cE26d93294E3511cFbb247",
+        "FidesOriginTimelock": "0x02c7e72a10E9893Fd5bE12B62CA67954035a1DFA",
         "TestUSD": "0x34c76eE51f3A063365279f510dA9503dF809D374",
         "CompliantStableCoin": "0x2245A8FCf6aca017327eA8950Ba510e9596595E9"
       },
       "proxies": {
-        "RiskRegistry": { "proxy": "0x953f985f38f94d6159c0600d1f15D543895cE896", "implementation": "0x2426e26f6182052eD4a6B0b0ac176Dc42B2C5F08" },
-        "PolicyEngine": { "proxy": "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA", "implementation": "0x0A0db0D56A345710591174726270CAe544D9b0e2" },
-        "FidesCompliance": { "proxy": "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5", "implementation": "0xD104b05442F5032f6BCF7a4F90dfff58D9a4FBf3" }
+        "RiskRegistry": {
+          "proxy": "0x953f985f38f94d6159c0600d1f15D543895cE896",
+          "implementation": "0x2426e26f6182052eD4a6B0b0ac176Dc42B2C5F08"
+        },
+        "PolicyEngine": {
+          "proxy": "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA",
+          "implementation": "0x0A0db0D56A345710591174726270CAe544D9b0e2"
+        },
+        "FidesCompliance": {
+          "proxy": "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5",
+          "implementation": "0xD104b05442F5032f6BCF7a4F90dfff58D9a4FBf3"
+        }
       },
       "diamond": {
         "$comment": "ComplianceEngine 为 Diamond 架构（EIP-2535），实现逻辑分布在 6 个 facets",
@@ -56,7 +65,9 @@
         "FidesCompliance_v3.0.4_proxy": "0xaEB8ffDC51C62c37b456593F4C5E68D291Ce552b",
         "CompliantStableCoin_admin_config": "0xA058c5c0dD7791Ffc6A7EF14C01034d0f9F32a2B",
         "CompliantStableCoin_v3.0.4": "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A",
-        "TestUSD_v3.0.4": "0xeF90F9FdB868EDA98b337CbF54111b8539533ED2"
+        "TestUSD_v3.0.4": "0xeF90F9FdB868EDA98b337CbF54111b8539533ED2",
+        "QuarantineVault_preR3": "0x6803E163259B07F58111f56423aB0732858196Be",
+        "FidesOriginTimelock_preR3": "0x04B2Fc88b57AE8d8E6cE26d93294E3511cFbb247"
       }
     }
   },
