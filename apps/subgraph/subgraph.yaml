@@ -183,8 +183,8 @@ dataSources:
     network: sepolia
     source:
       abi: QuarantineVault
-      address: "0x6803E163259B07F58111f56423aB0732858196Be"
-      startBlock: 11550000
+      address: "0xa5Db586Fd93F49582405803eaB99C147267EfCbE"
+      startBlock: 11730000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

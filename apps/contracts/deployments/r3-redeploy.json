@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-09-18T13:04:49.672Z",
+  "QuarantineVault": "0xa5Db586Fd93F49582405803eaB99C147267EfCbE",
+  "FidesOriginTimelock": "0x02c7e72a10E9893Fd5bE12B62CA67954035a1DFA",
+  "notes": "R3 补部署：D-M1 批量释放单条失败不再整批回滚；D-M2 executor 持 CANCELLER_ROLE"
+}
