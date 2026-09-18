@@ -1,0 +1,27 @@
+{
+  "$comment": "R3 审计修复合约升级提案记录（propose 阶段完成于 2026-09-18T12:28Z，48h 时间锁后执行 upgrade-r3-execute.js）",
+  "admin": "0x5F6Ae278e7a62E64F9F467a91B693f372b84a374",
+  "proposedAt": "2026-09-18T12:28:00Z",
+  "executeAfter": "2026-09-20T12:28:00Z",
+  "implementations": {
+    "RiskRegistry": "0x3F2856D2C0Ed2FeBf6ae20AFfD488F2588bea817",
+    "PolicyEngine": "0x7E2a41B7330aD4Ffec2CaBB2BBD11541fbF73dd2",
+    "FidesCompliance": "0x0f11220069B5Ad9fe1246Ff6981a6Fb083B3421d"
+  },
+  "facets": {
+    "WalletComplianceFacet": "0x012e3074325c324D69119eAeCA5911495fcf9D92",
+    "AssetComplianceFacet": "0x21c40C012729891431f8b111190f11fA6F7114eF",
+    "DiamondLoupeFacet": "0x19D3B58E62e6ba8469BA9FB0e02E61b792692621"
+  },
+  "oldFacets": {
+    "WalletComplianceFacet": "0x3C99EF323832FB723A6eff4A43B03A03b8CC3917",
+    "AssetComplianceFacet": "0xD80Ccee6167818E307bbAF436060003EeB6e415d",
+    "DiamondLoupeFacet": "0x3d9C891145226Bc49D43a82Ec3cc95Ff526EBeE3"
+  },
+  "proposals": {
+    "RiskRegistry": "0x151c0d5e2005b95f2516fd486a0d15fa66c686864df4f88d4da3129143f2e780",
+    "PolicyEngine": "0x67b4084f08e0b7a37dc1f91066cf3c0ec7915e22fd70d1d887617c6fd02926d8",
+    "FidesCompliance": "0x71f74e165612429551c45bc7f8d92d67dc5cde01bdea4853f943daf23808680b",
+    "DiamondCut": "0x6720472cef67ea9269558e4c59c19e666f83422a83d016f78ff19d819a07e992"
+  }
+}
