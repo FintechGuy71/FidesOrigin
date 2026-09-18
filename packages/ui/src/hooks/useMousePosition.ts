@@ -61,8 +61,9 @@ export function useMousePosition(options: UseMousePositionOptions = {}): MousePo
         setPosition({
           x,
           y,
-          normalizedX: normalize ? x / rect.width : x,
-          normalizedY: normalize ? y / rect.height : y,
+          // [AUDIT FIX 2026-09-18 R3-L13] 元素零尺寸（display:none）时除零 → NaN
+          normalizedX: normalize && rect.width > 0 ? x / rect.width : x,
+          normalizedY: normalize && rect.height > 0 ? y / rect.height : y,
           isInside,
         });
       } else {

@@ -513,6 +513,9 @@ contract PolicyEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         address issuer
     ) external onlyRole(COMPLIANCE_ENGINE_ROLE) nonReentrant returns (ActionType decision, string memory reason) {
         (decision, reason) = _evaluateTransfer(from, to, amount, issuer);
+        // [AUDIT FIX 2026-09-18 R3-M8] 事件已声明但从未 emit →
+        // subgraph PolicyEvaluation 实体恒空。补发射。
+        emit TransferEvaluated(from, to, amount, decision);
 
         // 原子记录：仅在 ALLOW 时更新每日累计
         if (decision == ActionType.ALLOW) {

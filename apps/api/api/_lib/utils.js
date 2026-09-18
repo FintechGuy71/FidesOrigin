@@ -157,13 +157,18 @@ function normalizeAddress(address) {
 
 function isValidChainId(chainId) {
   if (chainId === undefined || chainId === null) return false;
+  // [AUDIT FIX 2026-09-18 R3] 原实现 Number('0x1')/Number(' 1 ') 均通过 →
+  // 原样转发后端导致解析不一致。仅接受纯十进制数字（number 或全数字字符串）。
+  if (typeof chainId === 'string' && !/^\d+$/.test(chainId)) return false;
+  if (typeof chainId !== 'string' && typeof chainId !== 'number') return false;
   const id = Number(chainId);
   if (!Number.isInteger(id) || id <= 0 || id > 0xffffffff) return false;
   return true;
 }
 
 function getChainName(chainId) {
-  return CHAIN_ID_TO_NAME[Number(chainId)] || 'ethereum';
+  // [AUDIT FIX 2026-09-18 R3] 未知链原回落 'ethereum'，会把其它链数据误标为主网
+  return CHAIN_ID_TO_NAME[Number(chainId)] || 'unknown';
 }
 
 // ==================== Error Helpers ====================
@@ -431,10 +436,11 @@ if (!_kv) {
   );
 }
 
+/* [AUDIT FIX 2026-09-18 R3-C1] 原 nextId 为实例内存计数器，多 serverless
+   实例会分配出相同的 rule_N → KV 中重复 id，后续更新/删除只命中第一条。
+   改用随机 ID 消除碰撞。 */
 function generateRuleId() {
-  const id = memoryRulesStore.nextId;
-  memoryRulesStore.nextId += 1;
-  return `rule_${id}`;
+  return `rule_${crypto.randomUUID()}`;
 }
 
 async function _loadRules() {
@@ -470,6 +476,9 @@ async function getRules() {
   return _loadRules();
 }
 
+/* [AUDIT FIX 2026-09-18 R3-C1] KV 无 CAS/事务，并发写仍存在
+   「读-改-写」丢失窗口；现已把窗口缩到最小（写前立即重读 KV 快照）。
+   需要强一致时应迁移到带事务的存储。 */
 async function addRule(rule) {
   await _loadRules();
   memoryRulesStore.rules.push(rule);
@@ -590,7 +599,13 @@ function withMiddleware(handler, requiredScope = SCOPE.READ) {
     if (!checkApiKey(req, res, requiredScope)) return;
     // 4. JSON body parsing for POST/PUT/PATCH
     if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.headers['content-type']?.includes('application/json')) {
-      await parseBody(req);
+      /* [AUDIT FIX 2026-09-18 R3-C2] parseBody 超限 reject 原在 try 之外 →
+         未捕获 rejection，客户端拿不到 413（且 req.destroy 后表现为连接重置）。 */
+      try {
+        await parseBody(req);
+      } catch (err) {
+        return sendError(res, 413, 'PAYLOAD_TOO_LARGE', 'Request body too large');
+      }
     }
     // 5. Run handler
     try {

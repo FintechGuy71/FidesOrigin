@@ -4,6 +4,7 @@ import {
   AddressRisk,
   RiskCheckOptions,
   BatchRiskCheckRequest,
+  BatchRiskCheckInput,
   BatchRiskCheckResponse,
   RiskLevel
 } from './types';
@@ -49,7 +50,21 @@ export async function checkAddress(
   // [MEDIUM Fix #15] 使用缓存的 singleton client
   const client = getCachedClient(baseUrl, apiKey);
   
-  return client.checkRisk({ address, chainId: 1, ...riskOptions });
+  /* [AUDIT FIX 2026-09-18 R3] checkRisk 返回 RiskCheckResult（risk_score/risk_level
+     顶层字段），而本函数契约是 AddressRisk（risk:{score,level} 嵌套）。显式映射。 */
+  const r = await client.checkRisk({ address, chainId: 1, ...riskOptions });
+  return {
+    address: r.address,
+    chain: r.chain,
+    type: r.addressType || 'unknown',
+    risk: {
+      score: r.risk_score ?? 0,
+      level: (r.risk_level || 'low') as import('./types').RiskLevel,
+      confidence: 1.0,
+    },
+    flags: (r.risk_factors || []).map(f => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
+    assessedAt: r.timestamp || new Date().toISOString(),
+  };
 }
 
 /**
@@ -75,7 +90,26 @@ export async function checkBatchAddresses(
   // [MEDIUM Fix #15] 使用缓存的 singleton client
   const client = getCachedClient(baseUrl, apiKey);
   
-  return client.batchCheckRisk({ addresses, chainId: 1, ...(chain ? { chainId: chain as any } : {}), ...(detailed ? { amount: '0' } : {}) });
+  // [AUDIT FIX 2026-09-18 R3-L10] 原把 detailed 布尔误映射为 amount:'0' 参数
+  // 发往 API（金额字段被污染）。detailed 仅影响返回粒度，不应产生 amount。
+  /* [AUDIT FIX 2026-09-18 R3] batchCheckRisk 返回 BatchRiskCheckResult
+     （results: RiskCheckResult[]），契约是 BatchRiskCheckResponse
+     （results: AddressRisk[]）。显式映射（与 client.checkBatchAddresses 同逻辑）。 */
+  const result = await client.batchCheckRisk({ addresses, chainId: 1, ...(chain ? { chainId: chain as any } : {}) });
+  return {
+    results: result.results.map((r) => ({
+      address: r.address,
+      chain: r.chain,
+      type: r.addressType || 'unknown',
+      risk: {
+        score: r.risk_score ?? 0,
+        level: (r.risk_level || 'low') as import('./types').RiskLevel,
+        confidence: 1.0,
+      },
+      flags: (r.risk_factors || []).map(f => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
+      assessedAt: r.timestamp || new Date().toISOString(),
+    })),
+  };
 }
 
 /**
@@ -249,22 +283,22 @@ export class RiskAssessor {
    */
   async check(address: string, options?: RiskCheckOptions): Promise<AddressRisk> {
     const result = await this.client.checkRisk({ address, chainId: 1, ...options });
+    /* [AUDIT FIX 2026-09-18 R3-M14] 原读不存在的 overallScore/flags →
+       undefined.map TypeError。RiskCheckResult 真实字段为 risk_score/risk_level/
+       risk_factors。 */
     return {
       address: result.address,
       chain: result.chain,
       type: result.addressType,
       risk: {
-        score: result.overallScore,
-        level: result.overallLevel as RiskLevel,
+        score: result.risk_score ?? result.overallScore ?? 0,
+        level: (result.risk_level ?? result.overallLevel ?? 'low') as RiskLevel,
         confidence: 1.0,
       },
-      flags: result.flags.map(f => ({
-        id: f.id || '',
-        name: f.name || '',
-        category: f.category || '',
-        severity: f.severity || 'low',
-        description: f.description || '',
-      })),
+      // [R3] RiskFactor 仅 name/weight/score/description；RiskFlag 为字符串联合
+      flags: (result.risk_factors ?? result.flags ?? []).map(f =>
+        (typeof f === 'string' ? f : f.name || 'suspicious_activity') as import('./types').RiskFlag
+      ),
       assessedAt: result.timestamp,
     };
   }
@@ -276,25 +310,21 @@ export class RiskAssessor {
     addresses: string[],
     options?: Omit<BatchRiskCheckInput, 'addresses'>
   ): Promise<BatchRiskCheckResponse> {
+    // [AUDIT FIX 2026-09-18 R3] 与单地址同款契约修正：读 risk_score/risk_level/
+    // risk_factors 真实字段，flags 映射为 RiskFlag 字符串联合
     const result = await this.client.batchCheckRisk({ addresses, chainId: options?.chainId || 1 });
     return {
       results: result.results.map(r => ({
         address: r.address,
         chain: r.chain,
-        type: r.addressType,
+        type: r.addressType || 'unknown',
         risk: {
-          score: r.overallScore,
-          level: r.overallLevel as RiskLevel,
+          score: r.risk_score ?? 0,
+          level: (r.risk_level || 'low') as RiskLevel,
           confidence: 1.0,
         },
-        flags: r.flags.map(f => ({
-          id: f.id || '',
-          name: f.name || '',
-          category: f.category || '',
-          severity: f.severity || 'low',
-          description: f.description || '',
-        })),
-        assessedAt: r.timestamp,
+        flags: (r.risk_factors || []).map(f => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
+        assessedAt: r.timestamp || new Date().toISOString(),
       })),
       failed: [],
     };

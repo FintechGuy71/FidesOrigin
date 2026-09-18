@@ -33,9 +33,15 @@ contract AssetComplianceFacet is BaseFacet, IAssetCompliance {
 
         ) = s.riskRegistry.getProfile(addr);
         score = sc;
+        // [AUDIT FIX 2026-09-18 R3-M5] 原对无档案地址恒 fail-closed，完全不读
+        // s.blockUnknownProfiles 开关，与同 Diamond 的 ComplianceCoreFacet（默认
+        // fail-open）语义矛盾——同一地址在 checkTransfer 放行、在 validateTransfer
+        // 阻断。统一为遵守开关。
         if (!exists) {
-            blocked = true;
-            reason = "No profile - fail closed";
+            if (s.blockUnknownProfiles) {
+                blocked = true;
+                reason = "No profile - fail closed";
+            }
         } else if (sanctioned) {
             blocked = true;
             reason = "Sanctioned";
@@ -62,6 +68,23 @@ contract AssetComplianceFacet is BaseFacet, IAssetCompliance {
         if (
             msg.sender != from && !hasRole(OPERATOR_ROLE, msg.sender)
         ) revert UnauthorizedCaller(msg.sender);
+        return _validateTransferLogic(from, to, amount, assetContract);
+    }
+
+    /* [AUDIT FIX 2026-09-18 R3-H3] 提取无鉴权的内部校验逻辑，供
+       WalletComplianceFacet 在同 Diamond 上下文内复用（原外部自调用
+       IAssetCompliance(address(this)) 会把 msg.sender 变成 Diamond 自身，
+       撞上本函数的 OPERATOR 鉴权 → 恒 revert，TRANSFER 分支功能性瘫痪）。 */
+    function _validateTransferLogic(
+        address from,
+        address to,
+        uint256 amount,
+        address assetContract
+    )
+        internal
+        view
+        returns (Decision decision, string memory reason)
+    {
         if (from == address(0) || to == address(0))
             return (Decision.BLOCK, "Invalid address");
         LibComplianceStorage.AppStorage storage s = LibComplianceStorage

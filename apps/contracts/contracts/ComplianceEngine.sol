@@ -179,6 +179,8 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
 
     function proposeUpgrade(address newImpl) external onlyRole(ADMIN_ROLE) returns (bytes32 proposalId) {
         if (newImpl == address(0)) revert InvalidAddress();
+        // [AUDIT FIX 2026-09-18 R3-L1] 防升级到 EOA/无代码地址永久锁死代理
+        if (newImpl.code.length == 0) revert InvalidAddress();
         proposalId = keccak256(abi.encode(newImpl, block.chainid, block.timestamp));
         upgradeProposals[proposalId] = block.timestamp + upgradeTimelockDelay;
         implementationToProposal[newImpl] = proposalId;
@@ -267,6 +269,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
             checkHistory.push(rec);
         }
 
+        // [AUDIT FIX 2026-09-18 R3-H2] 原只写 storage 不 emit →
+        // subgraph ComplianceCheck 实体与 totalComplianceChecks 恒为 0。
+        emit ComplianceCheckPerformed(addr, riskScore, isCompliant, block.timestamp, block.number, "address");
     }
 
     function checkTransfer(address from, address to, uint256 amount, address token)
@@ -323,6 +328,14 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
                 if (act == PolicyEngine.ActionType.QUARANTINE) {
                     return (Decision.HOLD, r2);
                 }
+                /* [AUDIT FIX 2026-09-18 R3-M7] 原只处理 BLOCK/QUARANTINE，
+                   FLAG_FOR_REVIEW/REQUIRE_KYC/REQUIRE_AML 被静默当 ALLOW →
+                   F-21 保守默认失效。三类审前动作统一按 HOLD 处理。 */
+                if (act == PolicyEngine.ActionType.FLAG_FOR_REVIEW
+                    || act == PolicyEngine.ActionType.REQUIRE_KYC
+                    || act == PolicyEngine.ActionType.REQUIRE_AML) {
+                    return (Decision.HOLD, r2);
+                }
             } catch {
                 // fail-open：策略引擎不可用时不阻断主流程（需运维监控开启状态）
             }
@@ -360,6 +373,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
     function quarantineTransaction(
         address from, address to, uint256 amount, address token, string memory reason
     ) external onlyRole(OPERATOR_ROLE) whenNotPaused nonReentrant returns (bytes32 quarantineId) {
+        // [AUDIT FIX 2026-09-18 R3-L11] from=0 的记录会撞 releaseQuarantine 的
+        // r.from==address(0) 判定 → QuarantineNotFound 永久卡死。入口处拒绝。
+        if (from == address(0)) revert InvalidAddress();
         quarantineId = keccak256(abi.encodePacked(
             block.timestamp, block.number, quarantineNonce++,
             from, to, amount, token, msg.sender
@@ -380,6 +396,9 @@ contract ComplianceEngine is Initializable, AccessControlUpgradeable, PausableUp
         if (r.released) revert AlreadyReleased();
         if (r.from == address(0)) revert QuarantineNotFound();
         r.released = true;
+        // [AUDIT FIX 2026-09-18 R3-H1] 原不 emit 已声明的 QuarantineReleased →
+        // subgraph handleQuarantineReleased 永不触发，HoldRecord.released 恒 false。
+        emit QuarantineReleased(quarantineId, msg.sender, block.timestamp);
     }
 
     function getQuarantineRecord(bytes32 id) external view returns (QuarantineRecord memory) {

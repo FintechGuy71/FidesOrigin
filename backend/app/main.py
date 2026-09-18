@@ -340,7 +340,23 @@ class ContentSizeLimitMiddleware:
                     raise RuntimeError("Request body too large")
             return message
         
-        await self.app(scope, _sized_receive, send)
+        # [AUDIT FIX 2026-09-18 R3-M19] 原 _sized_receive 抛 RuntimeError 无任何
+        # 映射 → chunked 超限客户端收到 500。捕获后按 413 响应。
+        try:
+            await self.app(scope, _sized_receive, send)
+        except RuntimeError as e:
+            if "too large" in str(e):
+                await send({
+                    "type": "http.response.start",
+                    "status": 413,
+                    "headers": [(b"content-type", b"application/json")]
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": b'{"error": {"code": "REQUEST_TOO_LARGE", "message": "Request body too large"}}'
+                })
+            else:
+                raise
 
 
 app.add_middleware(ContentSizeLimitMiddleware, max_body_size=settings.MAX_BODY_SIZE_BYTES)

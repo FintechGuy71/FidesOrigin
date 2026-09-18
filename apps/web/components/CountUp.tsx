@@ -22,6 +22,9 @@ export default function CountUp({ value, className, style }: {
   /* 初始即终值：IO 未触发（后台标签/未滚动到）时永远显示正确数字；
      仅当确认进入视口且允许动效时才回零播放 count-up。 */
   const [text, setText] = useState(value);
+  // [AUDIT FIX 2026-09-18 R3] value 在元素不可见时变更会无限期显示旧数值
+  // （IO 未触发不执行 setText）。prop 变更时立即同步为最新终值。
+  useEffect(() => { setText(value); }, [value]);
 
   useEffect(() => {
     if (Number.isNaN(target)) return;

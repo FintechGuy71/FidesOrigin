@@ -68,15 +68,21 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
     closedByUser.current = false;
 
     try {
-      ws.current = new WebSocket(url);
+      /* [AUDIT FIX 2026-09-18 R3-M1] effect 重建竞态：cleanup 的 disconnect()
+         置 closedByUser=true，新 effect 的 connect() 同步复位为 false，旧 socket
+         的 onclose 异步晚到 → 误判为"被动断开"而重连 → 多一条无人持有的连接。
+         用实例身份守卫：onclose/onerror 只认自己创建的 socket。 */
+      const socket = new WebSocket(url);
+      ws.current = socket;
 
-      ws.current.onopen = () => {
+      socket.onopen = () => {
         setIsConnected(true);
         setError(null);
         reconnectAttempts.current = 0;
       };
 
-      ws.current.onmessage = (event) => {
+      socket.onmessage = (event) => {
+        if (ws.current !== socket) return; // [R3-M1] 过期实例的消息不再投递
         try {
           const data = JSON.parse(event.data);
           onMessage(data);
@@ -85,7 +91,8 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
         }
       };
 
-      ws.current.onclose = () => {
+      socket.onclose = () => {
+        if (ws.current !== socket) return; // [R3-M1] 过期实例不触发重连/状态变更
         setIsConnected(false);
         if (closedByUser.current) return; // [R1-003] 主动关闭/卸载后不重连
         // 自动重连
@@ -96,7 +103,8 @@ function useWebSocket(url: string | undefined, onMessage: (data: WebSocketMessag
         }
       };
 
-      ws.current.onerror = (_event) => {
+      socket.onerror = (_event) => {
+        if (ws.current !== socket) return; // [R3-M1]
         setError("WebSocket connection error");
         setIsConnected(false);
       };
@@ -241,7 +249,10 @@ export default function LiveTransactionStream({
   // WebSocket 接收消息
   const handleWebSocketMessage = useCallback((data: WebSocketMessage) => {
     if (data.type === "transaction" && data.transaction) {
+      /* [AUDIT FIX 2026-09-18 R3] 原不校验字段：缺 timestamp → "NaNh ago"，
+         未知 riskLevel → className 拼出字面量 "undefined"。 */
       const newTx = data.transaction;
+      if (typeof newTx.timestamp !== "number" || !Number.isFinite(newTx.timestamp)) return;
       setTransactions((prev) => {
         const exists = prev.some((tx) => tx.id === newTx.id);
         if (exists) return prev;

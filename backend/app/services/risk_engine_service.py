@@ -109,7 +109,8 @@ class SanctionedListStrategy(RiskRuleStrategy):
         if tags:
             for t in tags:
                 ts = str(t)
-                if any(m in ts for m in self.MARKERS):
+                # [R3-L7] 精确匹配防子串误判
+                if any(m == ts for m in self.MARKERS):
                     hit = True
                     break
 
@@ -119,7 +120,7 @@ class SanctionedListStrategy(RiskRuleStrategy):
             # None 传入 float() 抛 TypeError → 接口 500（实测 10/11 在册地址查询失败）。
             # 同一缺口存在于全部策略与 RiskFactor 构造，此处统一加防御。
             weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
-            return min(impact, 100) * weight, "OFAC/SDN 官方制裁名单在册"
+            return min(min(impact, 100) * weight, 100),  # [R3-M1] 钳制上界防 RiskFactor 校验 500 "OFAC/SDN 官方制裁名单在册"
 
         return 0, ""
 
@@ -157,7 +158,8 @@ class RiskListStrategy(RiskRuleStrategy):
         if tags:
             for t in tags:
                 ts = str(t)
-                if any(m in ts for m in self.MARKERS):
+                # [R3-L7] 精确匹配防子串误判（"anti-phishing" 等）
+                if any(m == ts for m in self.MARKERS):
                     hit = True
                     break
 
@@ -165,7 +167,7 @@ class RiskListStrategy(RiskRuleStrategy):
             # 风险名单默认 75 分（HIGH），低于制裁的 100/CRITICAL
             impact = float(rule.risk_score_impact if rule.risk_score_impact is not None else 75)
             weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
-            return min(impact, 100) * weight, "链上风险名单在册（钓鱼/诈骗等风险情报）"
+            return min(min(impact, 100) * weight, 100),  # [R3-M1] 钳制上界防 RiskFactor 校验 500 "链上风险名单在册（钓鱼/诈骗等风险情报）"
 
         return 0, ""
 
@@ -297,11 +299,13 @@ class RiskEngineService:
     """
     
     # 风险等级阈值
+    # [AUDIT FIX 2026-09-18 R3-M11] 与 packages/shared RISK_THRESHOLDS 对齐
+    # （原 30/60/85 边界与全站其它表面 30/70/90 矛盾，边界分数归类错误）
     RISK_THRESHOLDS = {
         RiskLevel.LOW: (0, 30),
-        RiskLevel.MEDIUM: (30, 60),
-        RiskLevel.HIGH: (60, 85),
-        RiskLevel.CRITICAL: (85, 100),
+        RiskLevel.MEDIUM: (30, 70),
+        RiskLevel.HIGH: (70, 90),
+        RiskLevel.CRITICAL: (90, 100),
     }
     
     # 策略映射表
@@ -352,13 +356,27 @@ class RiskEngineService:
             strategy = strategy_class()
             return await strategy.evaluate(address, chain, rule, self.db, self.blockscout)
         
-        # 自定义规则：使用 risk_score_impact 累加
+        # 自定义规则（无注册策略）：使用 risk_score_impact 累加
         # [FIX] 必须 float() 转换：risk_score_impact 是 Numeric 列，读出来是 Decimal，
         # 直接与 float total_score 相加会抛 "unsupported operand +=: float and Decimal"
         # （生产实证：scam_list 规则在旧引擎无策略时走此兜底 → 500）。
+        # [AUDIT FIX 2026-09-18 R3-H9] 原实现对所有被查询地址无条件加分——
+        # 规则引擎没有通用 condition 求值器（condition JSON 由各策略自行解释），
+        # 无策略规则的 condition 永远不会被评估。合规产品上"全局静默加分器"
+        # 不可接受：现在仅当规则显式声明 condition.always_apply=true 时才加分，
+        # 否则记警告日志并计 0 分（规则仍可见、不生效、不 500）。
+        condition = rule.condition or {}
+        if not condition.get("always_apply"):
+            logger.warning(
+                "custom_rule_no_strategy_skipped",
+                rule_name=rule.name,
+                rule_id=str(rule.id),
+                hint="自定义规则无注册策略：设置 condition.always_apply=true 才会无条件加分"
+            )
+            return 0.0, rule.description or ""
         impact = float(rule.risk_score_impact or 0)
         weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
-        score = impact * weight
+        score = min(impact * weight, 100)  # [R3-M1] 钳制上界
         return score, rule.description or ""
     
     async def calculate_address_risk(
@@ -385,11 +403,16 @@ class RiskEngineService:
                     return 0, RiskLevel.LOW, []
                 
                 logger.info("risk_cache_hit", address=address, chain=chain)
-                return (
-                    cached["score"],
-                    RiskLevel(cached["level"]),
-                    [RiskFactor(**f) for f in cached["factors"]]
-                )
+                # [AUDIT FIX 2026-09-18 R3-L6] 缓存条目形状校验：异版本/残缺条目
+                # （缺键/非法 level）原直接 KeyError/ValueError → 500。失败则回退重算。
+                try:
+                    return (
+                        float(cached["score"]),
+                        RiskLevel(cached["level"]),
+                        [RiskFactor(**f) for f in cached.get("factors", [])]
+                    )
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.warning("risk_cache_entry_invalid", address=address, error=str(e))
         
         logger.info("risk_calculation_started", address=address, chain=chain)
         
@@ -518,7 +541,7 @@ class RiskEngineService:
             tx_data = await self.blockscout.get_transaction(tx_hash)
             
             from_addr = tx_data.get("from", {}).get("hash", "")
-            to_addr = tx_data.get("to", {}).get("hash", "")
+            to_addr = (tx_data.get("to") or {}).get("hash", "")  # [R3-M10] to 可为 null
             value_wei = int(tx_data.get("value", "0"))
             value_eth = value_wei / 10**18
             
@@ -558,7 +581,7 @@ class RiskEngineService:
                 total_score += min(value_eth / 1000 * 20, 30)
             
             # 检查合约调用
-            if tx_data.get("to", {}).get("is_contract"):
+            if (tx_data.get("to") or {}).get("is_contract"):  # [R3-M10] to 可为 null
                 indicators.append({
                     "type": "contract_call",
                     "contract": to_addr,

@@ -237,7 +237,11 @@ export class FidesOriginSDK {
 
   /** Get a CompliantStableCoin contract instance */
   getStableCoinContract(address: string): Contract {
-    return new ethers.Contract(address, CompliantStableCoinABI, this.signer || this.provider);
+    // [AUDIT FIX 2026-09-18 R3-L14] 原直接使用地址（构造函数的零地址/校验和
+    // 验证被绕过）。补 ethers.getAddress 校验（非法/零地址抛错）。
+    const checked = ethers.getAddress(address);
+    if (checked === ethers.ZeroAddress) throw new Error('Zero address not allowed');
+    return new ethers.Contract(checked, CompliantStableCoinABI, this.signer || this.provider);
   }
 
   /** Simulate a stablecoin transfer */
@@ -266,7 +270,8 @@ export class FidesOriginSDK {
     if (!/^0x[0-9a-fA-F]{64}$/.test(holdId)) throw new Error('Invalid hold ID');
     const tx = await this.complianceEngine.releaseHold(holdId);
     const receipt = await tx.wait();
-    if (receipt.status !== 1) throw new Error('Transaction failed: releaseHold reverted');
+    // [R3-L14] tx.wait() 在网络异常时可返回 null
+    if (!receipt || receipt.status !== 1) throw new Error('Transaction failed: releaseHold reverted or dropped');
     return receipt;
   }
 

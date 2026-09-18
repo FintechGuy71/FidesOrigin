@@ -150,6 +150,9 @@ export class KmsSigner extends AbstractSigner {
     offset += this._derLengthSize(derSig, offset);
     let rStart = offset;
     if (derSig[rStart] === 0x00 && rLen > 32) rStart++;
+    // [AUDIT FIX 2026-09-18 R3-L15] 畸形 DER 防护：长度越界/超长直接拒绝，
+    // 不再静默截断（截断会导致 r/s 错位且 offset 失步）
+    if (rStart + rLen > derSig.length) throw new Error('Invalid DER signature: r exceeds buffer');
     const r = derSig.subarray(rStart, rStart + Math.min(rLen, 32));
     offset += rLen;
 
@@ -161,6 +164,7 @@ export class KmsSigner extends AbstractSigner {
     offset += this._derLengthSize(derSig, offset);
     let sStart = offset;
     if (derSig[sStart] === 0x00 && sLen > 32) sStart++;
+    if (sStart + sLen > derSig.length) throw new Error('Invalid DER signature: s exceeds buffer');
     const s = derSig.subarray(sStart, sStart + Math.min(sLen, 32));
 
     const rHex = '0x' + r.toString('hex').padStart(64, '0');
@@ -196,7 +200,12 @@ export class KmsSigner extends AbstractSigner {
         const recovered =
           '0x' + ethers.keccak256('0x' + pubKey.slice(4)).slice(26);
         if (recovered.toLowerCase() === address.toLowerCase()) {
-          return rHex + sNormalized.slice(2) + v.toString(16).padStart(2, '0');
+          // [AUDIT FIX 2026-09-18 R3-H7] EIP-155 下 v=35+2*chainId，
+          // Sepolia(11155111) 的 v=22310257 → hex '1546c71'（7 位奇数长度），
+          // padStart(2) 无法补齐 → 拼接出奇数长度签名，Signature.from 必抛异常。
+          // 先补到偶数长度（hex 字节对齐），不再硬编码 2 位。
+          const vHex = v.toString(16);
+          return rHex + sNormalized.slice(2) + (vHex.length % 2 ? '0' + vHex : vHex);
         }
       } catch {
         // try next v

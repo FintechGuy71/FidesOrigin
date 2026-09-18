@@ -59,7 +59,10 @@ export const RiskRegistryABI = [
   "function removeTag(address account, bytes32 tag)",
   "function registerContract(address contractAddr, bytes32 contractType, bool verified, uint8 riskScore)",
   
-  "function getRiskProfile(address account) view returns (uint8 riskScore, uint8 tier, bytes32[] tags, bool isSanctioned, uint256 lastUpdated)",
+  // [AUDIT FIX 2026-09-18 R3-M21] 字段顺序与合约源码对齐：RiskRegistryV2.sol:577
+  // 实际返回 (riskScore, tier, tags, lastUpdated, sanctioned)——原把 isSanctioned
+  // 与 lastUpdated 颠倒 → 大数时间戳被读成制裁标志，所有地址误报已制裁。
+  "function getRiskProfile(address account) view returns (uint8 riskScore, uint8 tier, bytes32[] tags, uint256 lastUpdated, bool isSanctioned)",
   "function getRiskTier(address account) view returns (uint8)",
   "function getRiskScore(address account) view returns (uint8)",
   "function isSanctioned(address account) view returns (bool)",

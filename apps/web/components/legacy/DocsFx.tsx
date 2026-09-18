@@ -33,6 +33,8 @@ export default function DocsFx({ copyLabel, copiedLabel }: Props) {
       const block = btn.closest(".docs-code-block");
       const code = block?.querySelector("pre");
       if (!code) return;
+      // [AUDIT FIX 2026-09-18 R3] 原无 .catch：权限被拒/非安全上下文时
+      // 未捕获 rejection，且按钮停在"已复制"假象。失败时恢复原样。
       navigator.clipboard.writeText(code.textContent || "").then(() => {
         btn.textContent = copiedLabel;
         btn.classList.add("copied");
@@ -44,6 +46,9 @@ export default function DocsFx({ copyLabel, copiedLabel }: Props) {
             btn.classList.remove("copied");
           }, 2000)
         );
+      }).catch(() => {
+        btn.textContent = copyLabel;
+        btn.classList.remove("copied");
       });
     };
     document.addEventListener("click", onCopy);

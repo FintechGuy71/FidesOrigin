@@ -16,6 +16,8 @@ export default function ContentContactEN() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // [AUDIT FIX 2026-09-18 R3-M3] 重入守卫：表单内 Enter 绕过按钮 disabled → 重复 POST
+    if (status === "submitting") return;
     const form = e.currentTarget;
     const fd = new FormData(form);
     setStatus("submitting");

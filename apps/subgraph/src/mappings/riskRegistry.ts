@@ -6,9 +6,10 @@ import {
 } from '../../generated/schema';
 import {
   RiskProfileUpdated,
+  RiskProfileRemoved,
   AddressTagged,
 } from '../../generated/RiskRegistry/RiskRegistry';
-import { ethereum, BigInt, Address, Bytes, log } from '@graphprotocol/graph-ts';
+import { ethereum, BigInt, Address, Bytes, log, store } from '@graphprotocol/graph-ts';
 import { getRiskTier } from './shared/riskTier';
 
 function getOrCreateStats(): ProtocolStats {
@@ -161,5 +162,18 @@ export function handleAddressTagged(event: AddressTagged): void {
   log.info('[handleAddressTagged] account={} tag={}', [account, tag]);
 }
 
-
-
+// [AUDIT FIX 2026-09-18 R3-L13] 原未订阅删除事件 → 删除的档案在索引中永久残留
+export function handleRiskProfileRemoved(event: RiskProfileRemoved): void {
+  let account = event.params.addr.toHexString();
+  let profile = RiskProfile.load(account);
+  if (profile) {
+    // 物理删除档案实体；审计痕迹由链上事件本身承载
+    store.remove('RiskProfile', account);
+  }
+  let sanctioned = SanctionedAddress.load(account);
+  if (sanctioned) {
+    sanctioned.isActive = false;
+    sanctioned.removedAt = event.block.timestamp;
+    sanctioned.save();
+  }
+}

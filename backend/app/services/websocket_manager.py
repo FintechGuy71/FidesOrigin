@@ -3,7 +3,7 @@ FidesOrigin WebSocket 管理器（重构版）
 观察者模式：连接管理 + 消息广播 + 订阅过滤
 """
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Set
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -137,6 +137,9 @@ class WebSocketManager:
         try:
             websocket = self.active_connections[client_id]
             await websocket.send_json(message.model_dump())
+            # [AUDIT FIX 2026-09-18 R3-M12] connection_times 原只在 connect 时写入，
+            # 心跳/消息不刷新 → 正常保活连接在 300s 被误判为 stale 强关。
+            self.connection_times[client_id] = datetime.now(timezone.utc)
             return True
         except Exception as e:
             logger.warning(

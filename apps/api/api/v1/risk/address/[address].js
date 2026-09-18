@@ -21,8 +21,9 @@ async function handler(req, res) {
     return sendError(res, 400, 'INVALID_ADDRESS', 'Invalid Ethereum address format');
   }
 
-  // Default chainId for address lookup; SDK doesn't pass chainId for this endpoint
-  const chainId = 1;
+  // [AUDIT FIX 2026-09-18 R3] 默认链与 /v1/risk/check、/v1/public/risk-check
+  // 对齐为 Sepolia(11155111)——v3.1.0 仅部署测试网，默认主网造成跨端点口径分裂
+  const chainId = 11155111;
   const riskData = await getRiskData();
   const result = buildAddressRisk(address, chainId, riskData);
 

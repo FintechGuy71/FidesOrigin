@@ -53,13 +53,6 @@ export default function ContentDocsJP() {
           <h2>デモ</h2>
           <p>Sepolia テストネットでのインタラクティブデモ。アドレスのスクリーニング、リスクスコアの確認、Guard の動作を体験できます。</p>
         </Link>
-        <Link href="/jp/blog" className="docs-card" prefetch={false}>
-          <div className="docs-card-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          </div>
-          <h2>ブログ</h2>
-          <p>オンチェーン・コンプライアンス、リスクエンジン、DeFi 規制の深掘り。</p>
-        </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>

@@ -264,11 +264,14 @@ export default function AddressCheck({ dict }: { dict: D }) {
 
     if (apiData) {
       const score = apiData.risk_score ?? 0;
-      const level = apiData.risk_level || dict.unknown;
+      /* [AUDIT FIX 2026-09-18 R3] API 返回的 risk_level 为小写（文档示例
+         "risk_level": "low"），原实现与大写枚举比较 → HIGH 地址落进绿色
+         低风险徽章（合规判断静默反转）。统一大写归一（与 HeroScreen 同口径）。 */
+      const level = String(apiData.risk_level || dict.unknown).toUpperCase();
       const factors = apiData.risk_factors || [];
       const tags = apiData.tags || [];
-      const isHigh = level === "HIGH" || level === "CRITICAL" || score >= 80;
-      const isMid = !isHigh && (level === "MEDIUM" || score >= 40);
+      const isHigh = level === "HIGH" || level === "CRITICAL" || score >= 70; // [R3-L14] 阈值统一 shared RISK_THRESHOLDS
+      const isMid = !isHigh && (level === "MEDIUM" || score >= 30); // [R3-L14]
       setResult({
         badgeClass: isHigh ? "risk-black" : isMid ? "risk-grey" : "risk-safe",
         badgeText: isHigh

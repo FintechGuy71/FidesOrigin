@@ -40,6 +40,8 @@ export default function HeroScreen({
   const [state, setState] = useState<State>({ kind: "idle" });
 
   const submit = async () => {
+    // [AUDIT FIX 2026-09-18 R3-M2] 重入守卫：Enter 键绕过按钮 disabled
+    if (state.kind === "checking") return;
     if (!isAddress(value)) {
       setState({ kind: "invalid" });
       return;

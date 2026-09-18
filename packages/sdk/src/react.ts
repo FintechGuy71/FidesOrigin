@@ -13,6 +13,9 @@ import { FidesOriginError } from './error';
 interface BatchRiskItem {
   address?: string;
   chain?: string;
+  // [AUDIT FIX 2026-09-18 R3-M13] 后端真实字段（RiskCheckResult 顶层）
+  risk_score?: number;
+  risk_level?: string;
   risk?: {
     score?: number;
     level?: string;
@@ -265,8 +268,10 @@ export function useBatchRiskCheck(options: ClientOptions = {}): UseBatchRiskChec
         data: typedResult.results.map((r: BatchRiskItem) => ({
           address: r.address || '',
           chain: r.chain || 'ethereum',
-          overallScore: r.risk?.score || 0,
-          overallLevel: (r.risk?.level as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+          // [AUDIT FIX 2026-09-18 R3-M13] 原读不存在的 r.risk 子对象 → 恒 0/medium。
+          // batchCheckRisk 返回 RiskCheckResult（risk_score/risk_level 顶层字段）。
+          overallScore: r.risk?.score ?? r.risk_score ?? 0,
+          overallLevel: (r.risk?.level ?? r.risk_level ?? 'medium') as 'low' | 'medium' | 'high' | 'critical',
           scores: r.scores || [],
           flags: r.flags || [],
           addressType: r.type || 'unknown',

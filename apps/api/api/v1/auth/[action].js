@@ -78,8 +78,11 @@ async function handler(req, res) {
   let backendPath;
   let payload;
   if (action === 'login') {
-    if (!body.username || !body.password) {
-      return sendError(res, 400, 'BAD_REQUEST', 'username and password are required');
+    // [AUDIT FIX 2026-09-18 R3] 原仅验真值：对象/数组 payload 会无意义打到后端
+    if (typeof body.username !== 'string' || typeof body.password !== 'string'
+        || !body.username || !body.password
+        || body.username.length > 200 || body.password.length > 200) {
+      return sendError(res, 400, 'BAD_REQUEST', 'username and password are required (string, max 200 chars)');
     }
     backendPath = '/api/v1/auth/login';
     payload = { username: body.username, password: body.password };

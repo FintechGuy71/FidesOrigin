@@ -186,7 +186,8 @@ function showToast(message, type) {
   if (!toast) return;
   toast.textContent = message;
   toast.className = 'toast toast-' + type + ' show';
-  setTimeout(() => toast.classList.remove('show'), 5000);
+  if (window._toastTimer) clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => toast.classList.remove('show'), 5000);
 }
 
 async function loadSubgraphStats() {
@@ -213,7 +214,8 @@ async function loadSubgraphStats() {
       if (elChecks) elChecks.textContent = s.totalComplianceChecks || '0';
       if (elBlocked) elBlocked.textContent = s.totalBlocked || '0';
       if (elSanctioned) elSanctioned.textContent = s.totalSanctioned || '0';
-      if (elHeld) elHeld.textContent = s.totalFundsHeld || '0';
+      // [R3-L2] totalFundsHeld 为 6 位 decimals 原始值，与隔离页口径一致格式化
+      if (elHeld) elHeld.textContent = s.totalFundsHeld ? Number(ethers.formatUnits(s.totalFundsHeld, 6)).toLocaleString() : '0';
     }
   } catch (error) {
     console.error('加载统计失败:', error);
@@ -252,8 +254,9 @@ async function loadSubgraphRiskProfiles() {
       if (checkData && checkData.complianceChecks) {
         checkData.complianceChecks.forEach(c => {
           const addr = c.from;
-          if (addr && !lastCheckMap[addr]) {
-            lastCheckMap[addr] = c.timestamp;
+          const key = addr.toLowerCase(); // [R3-L8] 与 profile.id（小写）对齐
+          if (addr && !lastCheckMap[key]) {
+            lastCheckMap[key] = c.timestamp;
           }
         });
       }
@@ -262,7 +265,7 @@ async function loadSubgraphRiskProfiles() {
 
       data.riskProfiles.forEach(profile => {
         const tagTime = _fmtTime(profile.lastUpdated);
-        const lastTx = lastCheckMap[profile.id] ? _fmtTime(lastCheckMap[profile.id]) : '-';
+        const lastTx = lastCheckMap[profile.id.toLowerCase()] ? _fmtTime(lastCheckMap[profile.id.toLowerCase()]) : '-';
         const tags = (profile.tags || []).join(', ') || '-';
 
         const tr = _create('tr');
@@ -419,6 +422,7 @@ async function loadSubgraphChartData() {
       const grey = profiles.filter(p => p.tier === 'MEDIUM').length;
       const black = profiles.filter(p => p.tier === 'HIGH' || p.isSanctioned).length;
       charts.risk.data.datasets[0].data = [vip, normal, grey, black];
+      charts.risk._subgraphLoaded = true; // [R3-L4] 标记数据归属，防合约版覆盖
       charts.risk.update();
     }
 
@@ -448,7 +452,7 @@ async function loadSubgraphChartData() {
         { label: '20:00', allow: 0, block: 0 }
       ];
       txData.complianceChecks.forEach(c => {
-        const h = new Date(c.timestamp * 1000).getHours();
+        const h = new Date(c.timestamp * 1000).getUTCHours(); // [R3-L3] 与 UTC epoch 过滤口径一致
         const binIndex = Math.floor(h / 4);
         if (bins[binIndex]) {
           if (c.decision === 'ALLOW') bins[binIndex].allow++;
@@ -514,7 +518,9 @@ async function checkNetwork() {
 // ========== Original Functions ==========
 
 document.addEventListener('DOMContentLoaded', () => {
-  initCharts();
+  // [AUDIT FIX 2026-09-18 R3-L5] chart.min.js 加载失败时 new Chart 抛错会中止
+  // 整个回调（事件委托与设置加载全部不注册 → 整页功能死亡）。隔离失败域。
+  try { initCharts(); } catch (e) { console.error('图表初始化失败:', e); }
   loadSettings();
 
   // Change event listeners for filter selects (CSP compliance)
@@ -534,6 +540,8 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'closeModal': closeModal(el.dataset.modal); break;
       case 'connectWallet': connectWallet(); break;
       case 'connectMetaMask': connectMetaMask(); break;
+      // [AUDIT FIX 2026-09-18 R3] viewProfile 原无 dispatch 分支 → 死按钮
+      case 'viewProfile': viewProfile(el.dataset.address || ''); break;
       case 'loadBlockedTransfers': loadBlockedTransfers(); break;
       case 'refreshMonitor': refreshMonitor(); break;
       case 'openTagModal': openTagModal(); break;
@@ -678,6 +686,15 @@ async function connectMetaMask() {
     userAddress = await signer.getAddress();
 
     contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+    /* [AUDIT FIX 2026-09-18 R3] 原实现不监听 accountsChanged/chainChanged：
+       切换账户后 UI 显示旧身份而 signer 用新账户签名（身份不一致）；
+       切换网络后读写静默打到错误的链。切换后重新初始化连接。 */
+    if (!window.ethereum._fidesListenersBound) {
+      window.ethereum._fidesListenersBound = true;
+      window.ethereum.on('accountsChanged', function () { location.reload(); });
+      window.ethereum.on('chainChanged', function () { location.reload(); });
+    }
     // [R1-008] 策略读写走 ComplianceEngine（策略不在代币合约上）
     policyContract = new ethers.Contract(SEPOLIA_ADDRESSES.ComplianceEngine, POLICY_ABI, signer);
 
@@ -745,7 +762,10 @@ async function loadContractData() {
     const ss = _el('signerStatus');
     if (ss) ss.textContent = '签名者: ' + info.signerCount;
 
-    if (charts.risk) {
+    /* [AUDIT FIX 2026-09-18 R3-L4] 原实现与 loadSubgraphChartData 双写同一图表
+       且 normal 恒 0 → 加载顺序决定「普通」分片被谁抹掉。合约版改为只在
+       subgraph 数据尚未到达时写入（互不覆盖）。 */
+    if (charts.risk && !charts.risk._subgraphLoaded) {
       charts.risk.data.datasets[0].data = [
         Number(info.vipCount), 0, Number(info.greyCount), Number(info.blackCount)
       ];
@@ -863,7 +883,8 @@ async function loadQuarantineRecordsFromSubgraph(statusFilter = '') {
       const pr = _el('pendingRelease');
       if (pr) pr.textContent = pendingCount;
       const pf = _el('permanentlyFrozen');
-      if (pf) pf.textContent = '0';
+      // [AUDIT FIX 2026-09-18 R3-L1] 原硬编码 '0' 伪装成真实指标；subgraph 无此状态字段
+    if (pf) pf.textContent = '—';
     } else {
       _empty('quarantineTable', '暂无隔离记录', 8);
     }
@@ -929,7 +950,9 @@ async function loadIncomingBlocksFromSubgraph() {
         tr.appendChild(_cell(date, ''));
         tr.appendChild(_cell(_fmtAddr(check.from), 'address-cell'));
         tr.appendChild(_cell(_fmtAddr(check.to), 'address-cell'));
-        tr.appendChild(_cell(ethers.formatUnits(check.amount, 6), ''));
+        // [AUDIT FIX 2026-09-18 R3] 本表是 receive() 拦截的 ETH 转账（表头「金额 (ETH)」），
+        // ETH 为 18 位 decimals——原按 6 位格式化会把 0.01 ETH 显示成 10,000,000,000.01。
+        tr.appendChild(_cell(ethers.formatUnits(check.amount, 18), ''));
         tr.appendChild(_badgeCell('黑名单', 'tag-black'));
         tr.appendChild(_cell(_fmtAddr(check.transactionHash), 'address-cell'));
         tbody.appendChild(tr);
@@ -1219,8 +1242,14 @@ async function updateRequiredSigs() {
     alert('请先连接钱包');
     return;
   }
+  // [AUDIT FIX 2026-09-18 R3-L9] 前端范围校验（input min/max 可被绕过）
+  const reqVal = parseInt(newRequired ? newRequired.value : '2', 10);
+  if (!Number.isInteger(reqVal) || reqVal < 1 || reqVal > 20) {
+    alert('所需签名数必须为 1-20 的整数');
+    return;
+  }
   try {
-    const tx = await contract.updateRequiredSignatures(newRequired ? newRequired.value : 2);
+    const tx = await contract.updateRequiredSignatures(reqVal);
     await tx.wait();
     alert('更新成功!');
   } catch (error) {
@@ -1282,8 +1311,14 @@ async function submitTimelockConfig() {
     alert('请先连接钱包');
     return;
   }
+  // [AUDIT FIX 2026-09-18 R3-L9] 前端范围校验：0/负数天数不应直接上链
+  const daysVal = parseFloat(days ? days.value : '2');
+  if (!Number.isFinite(daysVal) || daysVal <= 0 || daysVal > 365) {
+    alert('时间锁天数必须为 0-365 之间的正数');
+    return;
+  }
   try {
-    const delayInSeconds = (days ? days.value : 2) * 24 * 60 * 60;
+    const delayInSeconds = Math.floor(daysVal * 24 * 60 * 60);
     const tx = await contract.updateTimelockDelay(delayInSeconds);
     await tx.wait();
     alert('时间锁配置已提交，等待多签确认!');
@@ -1455,7 +1490,13 @@ function loadSettings() {
 function saveSettings() {
   const address = _el('contractAddress');
   if (address) {
-    sessionStorage.setItem('contractAddress', address.value);
+    /* [AUDIT FIX 2026-09-18 R3-L6] 原不校验格式：存入非法值后下次加载
+       new ethers.Contract 抛错，用户只看到误导性的「连接失败」。 */
+    if (!isValidAddress(address.value.trim())) {
+      alert('合约地址格式无效（应为 0x 开头的 42 位十六进制）');
+      return;
+    }
+    sessionStorage.setItem('contractAddress', address.value.trim());
     alert('设置已保存（会话级别），刷新页面后生效');
   }
 }

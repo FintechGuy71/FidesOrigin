@@ -74,8 +74,12 @@ contract FidesOriginTimelock is TimelockController {
         address[] memory executors,
         address admin
     ) TimelockController(MIN_DELAY, proposers, executors, admin) {
-        // 授予自身 CANCELLER_ROLE，以便在紧急模式切换时批量取消 pending operations
-        _grantRole(CANCELLER_ROLE, address(this));
+        /* [AUDIT FIX 2026-09-18 R3-M2] 原给 address(this) 授 CANCELLER_ROLE——
+           super.cancel 走内部调用路径，msg.sender 仍是外部 executor，自授权无效。
+           改为给每个 executor 授权（能执行紧急切换者即可批量取消遗留操作）。 */
+        for (uint256 i = 0; i < executors.length; i++) {
+            _grantRole(CANCELLER_ROLE, executors[i]);
+        }
     }
     
     // ============ Emergency Functions ============
@@ -146,6 +150,10 @@ contract FidesOriginTimelock is TimelockController {
         for (uint256 i = pendingOperations.length; i > 0; i--) {
             bytes32 id = pendingOperations[i - 1];
             if (isOperationPending(id)) {
+                // [AUDIT FIX 2026-09-18 R3-M2] super.cancel 的 onlyRole(CANCELLER_ROLE)
+                // 校验外部调用者（executor）。构造函数已改为给每个 executor 授予
+                // CANCELLER_ROLE（executeEmergencyModeChange 本就 onlyRole(EXECUTOR_ROLE)，
+                // 权限语义一致：能执行紧急切换者即可取消遗留操作）。
                 super.cancel(id);
                 cancelled++;
             }

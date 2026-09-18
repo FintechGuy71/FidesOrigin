@@ -56,6 +56,8 @@ function getErrorCode(status: number): ErrorCode {
       return "BAD_REQUEST";
     case 401:
       return "UNAUTHORIZED";
+    case 403:
+      return "FORBIDDEN"; // [AUDIT FIX 2026-09-18 R3-L11] 原 403 落 API_ERROR→500 被误重试
     case 404:
       return "NOT_FOUND";
     case 429:
@@ -205,7 +207,12 @@ async function fetchWithRetry<T>(
         throw err;
       }
 
-      return (await response.json()) as T;
+      // [AUDIT FIX 2026-09-18 R3-M17] 204/空 body 时 response.json() 抛
+      // SyntaxError 会落入 NETWORK_ERROR 重试 → 实际成功的 DELETE 被重试。
+      if (response.status === 204) return undefined as T;
+      const text = await response.text();
+      if (!text) return undefined as T;
+      return JSON.parse(text) as T;
     } catch (error) {
       if (error instanceof FidesOriginError) {
         lastError = error;
@@ -447,7 +454,9 @@ export class FidesOriginClient {
     };
 
     return fetchWithRetry<BatchRiskCheckResult>(
-      buildUrl(this.baseUrl, '/api/v1/address/search'),
+      // [AUDIT FIX 2026-09-18 R3-H8] 原指向 /api/v1/address/search（后端仅注册
+      // GET 且语义为搜索）→ 405 必败。指向后端新增的 POST /batch-check。
+      buildUrl(this.baseUrl, '/api/v1/address/batch-check'),
       {
         method: 'POST',
         body: JSON.stringify(body),
@@ -560,7 +569,24 @@ export class FidesOriginClient {
       addresses: input.addresses,
       chainId: input.chain || 'ethereum',
     });
-    return result as unknown as BatchRiskCheckResponse;
+    /* [AUDIT FIX 2026-09-18 R3-M14] 原裸断言把 RiskCheckResult[] 当
+       AddressRisk[]（后者是 risk:{score,level} 嵌套形状）→ 消费端读
+       results[i].risk.level 得 undefined。显式映射为契约形状。 */
+    return {
+      results: result.results.map((r) => ({
+        address: r.address,
+        chain: r.chain,
+        type: r.addressType || 'unknown',
+        risk: {
+          score: r.risk_score ?? 0,
+          level: (r.risk_level || 'low') as RiskLevel,
+          confidence: 1.0,
+        },
+        // [R3] RiskFactor 仅有 name/weight/score/description → 映射为 RiskFlag 字符串联合
+        flags: (r.risk_factors || []).map((f) => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
+        assessedAt: r.timestamp || new Date().toISOString(),
+      })),
+    };
   }
 
   createWebSocket(config?: WebSocketConfig): FidesOriginWebSocket {

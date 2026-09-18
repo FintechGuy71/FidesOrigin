@@ -27,6 +27,14 @@ async function handler(req, res) {
   if (typeof body.email !== 'string' || !EMAIL_RE.test(body.email)) {
     return sendError(res, 400, 'BAD_REQUEST', 'invalid email address');
   }
+  // [AUDIT FIX 2026-09-18 R3] 原只验存在性：1MB 内任意长度字符串/对象原样
+  // 转发后端入库（存储型垃圾填充）。补类型+长度上限。
+  for (const [field, max] of [['name', 200], ['email', 320], ['company', 200], ['message', 5000], ['website', 500]]) {
+    const v = body[field];
+    if (v !== undefined && v !== null && (typeof v !== 'string' || v.length > max)) {
+      return sendError(res, 400, 'BAD_REQUEST', `invalid field: ${field}`);
+    }
+  }
 
   try {
     // [Contact Fix] website 为蜜罐字段：原样透传，由后端识别并丢弃机器人提交

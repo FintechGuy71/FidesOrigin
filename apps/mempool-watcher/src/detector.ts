@@ -54,9 +54,10 @@ export const RULES: RuleDef[] = [
   },
   {
     name: 'tornado_cash_mixer',
+    // [AUDIT FIX 2026-09-18 R3-W6] 原要求「命中地址 AND value>1ETH」双条件 →
+    // 0.1 ETH 档小额存款全部漏检。命中受制裁混币器地址本身即高危。
     indicators: [
-      (tx) => TORNADO_CASH_ADDRESSES.some(a => tx.to?.toLowerCase() === a),
-      (tx) => tx.value > ethers.parseEther('1')
+      (tx) => TORNADO_CASH_ADDRESSES.some(a => tx.to?.toLowerCase() === a)
     ],
     riskScore: 100,
     action: 'BLOCK'
@@ -129,6 +130,12 @@ export class DetectionEngine {
     const now = Date.now();
     const WINDOW_MS = 3600000; // 1 小时滑动窗口
 
+    // [AUDIT FIX 2026-09-18 R3-W4] 只交易一次的地址条目永久驻留（空桶清理只在
+    // 同地址再次 evaluate 时发生）→ 长跑内存缓涨。容量上限 + 最老键淘汰。
+    if (this.txHistory.size > 100000) {
+      const oldest = this.txHistory.keys().next().value;
+      if (oldest) this.txHistory.delete(oldest);
+    }
     if (!this.txHistory.has(from)) {
       this.txHistory.set(from, { entries: [] });
     }

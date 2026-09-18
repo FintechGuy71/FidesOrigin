@@ -67,6 +67,29 @@ class AddressRiskDetailResponse(AddressRiskResponse):
     recent_events: List["RiskEventResponse"] = Field(default_factory=list, description="最近风险事件")
 
 
+class BatchRiskCheckRequestModel(BaseModel):
+    """[AUDIT FIX 2026-09-18 R3-H8] 批量风险查询请求（与 SDK BatchRiskCheckInput 对齐）"""
+    addresses: List[str] = Field(..., min_length=1, max_length=100, description="地址列表（最多 100 个）")
+    chainId: Optional[int] = Field(default=None, description="链 ID（默认 11155111 Sepolia）")
+    amount: Optional[str] = Field(default=None, description="交易金额（预留字段，当前不参与评估）")
+
+
+class BatchRiskCheckResultItem(BaseResponse):
+    """批量查询的单地址结果（与 SDK RiskCheckResult 对齐）"""
+    address: str
+    chain: str
+    risk_score: float
+    risk_level: str
+    risk_factors: List[Dict[str, Any]] = Field(default_factory=list)
+    timestamp: Optional[str] = None
+
+
+class BatchRiskCheckResponseModel(BaseResponse):
+    """批量查询响应（与 SDK BatchRiskCheckResult 对齐）"""
+    results: List[BatchRiskCheckResultItem]
+    summary: Dict[str, int]
+
+
 class AddressRiskReportRequest(BaseModel):
     """上报可疑地址请求"""
     address: str = Field(..., min_length=42, max_length=42, description="可疑地址")
@@ -204,13 +227,15 @@ class RiskRuleListResponse(BaseModel):
 
 class RiskEventResponse(BaseResponse):
     """风险事件响应"""
-    id: UUID
+    # [AUDIT FIX 2026-09-18 R3-H6] 与 models.RiskEvent 对齐：id 为 BigInteger
+    # （原声明 UUID 必触发 ValidationError 500）；description/details 均可空。
+    id: int
     event_type: str
     severity: str
     address: str
     tx_hash: Optional[str]
-    description: str
-    details: Dict[str, Any]
+    description: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
     triggered_rules: List[str]
     is_notified: bool
     created_at: datetime

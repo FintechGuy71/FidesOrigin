@@ -185,6 +185,9 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     // [M-6 FIX] QuarantineVaultProposed 事件已移除（随死引用）
 
     event WhitelistUpdated(address indexed account, bool status, address indexed admin, uint256 timestamp);
+    // [AUDIT FIX 2026-09-18 R3-M9] 提案与生效分离：原提案时即 emit 同签名
+    // WhitelistUpdated → subgraph 把"提案"记成"已生效"，审计台账失真。
+    event WhitelistProposed(address indexed account, bool status, address indexed admin, uint256 timestamp);
     event UpgradeProposed(bytes32 indexed proposalId, address indexed newImplementation, uint256 executeAfter);
     event UpgradeExecuted(bytes32 indexed proposalId, address indexed newImplementation);
     
@@ -348,7 +351,10 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
         if (address(riskRegistry) == address(0)) revert RiskRegistryNotSet();
         riskScore = _getRiskScore(account);
         isSanctioned = riskRegistry.isSanctioned(account);
-        lastUpdated = _riskProfileLastUpdated[account];
+        /* [AUDIT FIX 2026-09-18 R3-L4] 原读 _riskProfileLastUpdated——该映射唯一的
+           写入点是"本次检查时间"（L600），把检查时间谎报为档案更新时间。
+           改从 RiskRegistry 读真实档案更新时间；检查时间请用 addressLastCheckTime。 */
+        (, , lastUpdated, , , , ,) = riskRegistry.getProfile(account);
         return (riskScore, isSanctioned, lastUpdated);
     }
 
@@ -891,7 +897,7 @@ contract FidesCompliance is Initializable, AccessControlUpgradeable, PausableUpg
     function proposeWhitelist(address account, bool status) external onlyRole(ADMIN_ROLE) {
         if (account == address(0)) revert InvalidAddress();
         _pendingWhitelist = PendingWhitelist(account, status, block.timestamp);
-        emit WhitelistUpdated(account, status, msg.sender, block.timestamp);
+        emit WhitelistProposed(account, status, msg.sender, block.timestamp); // [R3-M9] 提案事件
     }
 
     /**

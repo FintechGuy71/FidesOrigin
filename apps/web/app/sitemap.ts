@@ -25,7 +25,10 @@ export const dynamic = "force-static";
    法务页（privacy/terms）极少变更（yearly）。 */
 function changeFreqFor(slug: string): "daily" | "weekly" | "monthly" | "yearly" {
   if (slug === "/") return "weekly";
-  if (slug.startsWith("blog")) return "yearly";
+  // [AUDIT FIX 2026-09-18 R3-L15] 博客索引页随新文发布更新（monthly），
+  // 单篇文章发布后基本不改（yearly）——原 startsWith("blog") 把索引页也判为 yearly
+  if (slug === "blog") return "monthly";
+  if (slug.startsWith("blog/")) return "yearly";
   if (slug === "privacy" || slug === "terms") return "yearly";
   if (slug === "changelog") return "weekly";
   return "monthly";

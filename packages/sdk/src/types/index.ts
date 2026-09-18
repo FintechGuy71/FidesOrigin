@@ -402,12 +402,15 @@ export interface ComplianceRule {
 // WebSocket Types
 // ============================================================================
 
+/* [AUDIT FIX 2026-09-18 R3-M16] 原事件名（'risk.update' 等）与实现
+   （websocket.ts on() 的 switch）完全分裂——按类型订阅回调静默丢弃。
+   对齐到实现侧真实支持的事件名。 */
 export type WebSocketEventType =
-  | 'risk.update'
-  | 'alert.new'
-  | 'rule.match'
-  | 'connection.established'
-  | 'connection.closed'
+  | 'transaction'
+  | 'risk_alert'
+  | 'compliance_alert'
+  | 'connect'
+  | 'disconnect'
   | 'error';
 
 export interface WebSocketMessage {
@@ -501,6 +504,9 @@ export interface WebSocketConfig {
 // ============================================================================
 
 export interface UseRiskCheckOptions {
+  /** [AUDIT FIX 2026-09-18 R3-M15] 原类型无 client 字段但 hook 实现与文档示例
+      均从 options 解构 client → 按类型传参必 undefined。 */
+  client?: FidesOriginClient;
   /** SDK client options (will construct a new client) */
   options?: ClientOptions;
   /** Polling interval in milliseconds (0 to disable) */
@@ -574,6 +580,9 @@ export interface FidesOriginClient {
 
   /** Check multiple addresses */
   batchCheckRisk(input: BatchRiskCheckInput): Promise<BatchRiskCheckResult>;
+
+  /** [AUDIT FIX 2026-09-18 R3] react/useRiskCheck.ts 在用此别名（客户端实现中存在） */
+  checkBatchAddresses(input: { addresses: string[]; chain?: Chain; detailed?: boolean }): Promise<BatchRiskCheckResponse>;
 
   /** Get latest address risk snapshot */
   getAddressRisk(address: string): Promise<AddressRisk>;

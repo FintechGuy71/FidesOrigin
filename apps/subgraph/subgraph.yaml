@@ -28,6 +28,9 @@ dataSources:
         # 实体自部署起零索引。
         - event: RiskProfileUpdated(indexed address,uint256,uint8,bool)
           handler: handleRiskProfileUpdated
+        # [AUDIT FIX 2026-09-18 R3-L13] 原未订阅删除事件 → 删除的档案在索引中永久残留
+        - event: RiskProfileRemoved(indexed address,uint256,uint8,bool,uint256)
+          handler: handleRiskProfileRemoved
         - event: AddressTagged(indexed address,indexed bytes32)
           handler: handleAddressTagged
         # [AUDIT-FIX] 删除 SanctionAdded / SanctionRemoved / ContractRegistered 订阅：

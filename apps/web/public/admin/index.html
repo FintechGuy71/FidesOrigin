@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://rpc.ankr.com https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -12,7 +12,10 @@
     <meta name="robots" content="noindex, nofollow">
     <!-- Admin Authentication Layer：已移除写死口令与 prompt 门禁，
          改为 <body> 起始处的真实网关登录（sessionStorage token），见 body 顶部脚本。 -->
-    <!-- [SEC-001/SEC-002 Fix] CSP for static admin page: no nonces, script-src 'self' only, external scripts self-hosted -->
+    <!-- [SEC-001/SEC-002 Fix] CSP: 外部脚本全部自托管。
+         [AUDIT FIX 2026-09-18 R3] 更正注释与现实矛盾：本页 body 顶部有内联鉴权
+         脚本，script-src 必须含 'unsafe-inline'（原注释声称 'self' only 不成立）。
+         同步移除零引用的 rpc.ankr.com、补 object-src 'none'（与 vercel.json 对齐）。 -->
     <title>FidesOrigin Admin - 运营后台 v3.1.0 (Sepolia)</title>
     <meta name="description" content="FidesOrigin 运营后台 - 实时监控链上合规数据、风险扫描统计、合约管理。">
     <meta property="og:title" content="FidesOrigin Admin - 运营后台">
@@ -754,10 +757,15 @@
       renderLogin();
     }
 
+    /* [AUDIT FIX 2026-09-18 R3] 鉴权探测窗口期隐藏整页：
+       原实现 fetch 异步返回前未认证用户可见完整后台 UI 并可交互。 */
+    document.documentElement.style.visibility = 'hidden';
+
     // 会话探测：/auth/me 用 httpOnly access cookie 在后端权威校验
     fetch(API_BASE + '/auth/me', { credentials: 'include' }).then(function (res) {
       if (!res.ok) showLoginForm(); // 401 → 未登录，渲染登录表单
       // 200 → 已登录，脚本继续加载后台
+      document.documentElement.style.visibility = '';
     }).catch(function () { showLoginForm(); });
 
     function renderLogin() {
@@ -948,7 +956,7 @@
                         <button type="button" id="connectBtn" class="btn btn-primary" data-action="connectWallet">
                             🔗 连接 MetaMask
                         </button>
-                        <button type="button" class="btn btn-secondary">📅 今日</button>
+                        <button type="button" class="btn btn-secondary" disabled title="日期筛选功能开发中">📅 今日（开发中）</button>
                     </div>
                 </div>
 

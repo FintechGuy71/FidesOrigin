@@ -151,6 +151,7 @@ class BlockscoutService:
                 self._failure_count = state.get("failure_count", self._failure_count)
                 self._circuit_open = state.get("circuit_open", self._circuit_open)
                 if self._circuit_open:
+                    self._circuit_opened_at = asyncio.get_event_loop().time()
                     logger.info("blockscout_circuit_state_restored_from_redis",
                                failure_count=self._failure_count)
         except Exception as e:
@@ -177,9 +178,14 @@ class BlockscoutService:
         return self._semaphore
 
     def _check_circuit(self):
-        """检查断路器状态"""
+        """检查断路器状态（[AUDIT FIX 2026-09-18 R3-H4] 半开探测：
+        原实现断路器打开后永久拒绝直到进程重启。现超过冷却期（CIRCUIT_TTL）
+        放行一次试探请求，成功则由 _record_success 关闭断路器）"""
         if self._circuit_open:
-            raise CircuitBreakerOpenException()
+            opened_at = getattr(self, "_circuit_opened_at", None)
+            if opened_at is None or (asyncio.get_event_loop().time() - opened_at) < self.CIRCUIT_TTL:
+                raise CircuitBreakerOpenException()
+            logger.info("blockscout_circuit_half_open_probe")
 
     async def _record_success(self):
         """记录成功,重置失败计数并持久化"""
@@ -199,6 +205,7 @@ class BlockscoutService:
         self._failure_count += 1
         if self._failure_count >= self._circuit_threshold:
             self._circuit_open = True
+            self._circuit_opened_at = asyncio.get_event_loop().time()
             logger.error(
                 "blockscout_circuit_opened",
                 failure_count=self._failure_count,

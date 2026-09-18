@@ -52,7 +52,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
   hardhat: {
     id: 31337,
     name: "Hardhat Local",
-    rpcEnv: "HARDAT_RPC",
+    rpcEnv: "HARDHAT_RPC", // [AUDIT FIX 2026-09-18 R3-L8] 原拼写错误 HARDAT_RPC → 环境变量永不生效
     fallbackRpc: "http://127.0.0.1:8545",
     explorer: "",
     subgraph: "",
