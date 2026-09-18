@@ -120,7 +120,8 @@ class SanctionedListStrategy(RiskRuleStrategy):
             # None 传入 float() 抛 TypeError → 接口 500（实测 10/11 在册地址查询失败）。
             # 同一缺口存在于全部策略与 RiskFactor 构造，此处统一加防御。
             weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
-            return min(min(impact, 100) * weight, 100),  # [R3-M1] 钳制上界防 RiskFactor 校验 500 "OFAC/SDN 官方制裁名单在册"
+            # [R3-M1] 钳制上界防 RiskFactor 校验 500
+            return min(min(impact, 100) * weight, 100), "OFAC/SDN 官方制裁名单在册"
 
         return 0, ""
 
@@ -167,7 +168,8 @@ class RiskListStrategy(RiskRuleStrategy):
             # 风险名单默认 75 分（HIGH），低于制裁的 100/CRITICAL
             impact = float(rule.risk_score_impact if rule.risk_score_impact is not None else 75)
             weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
-            return min(min(impact, 100) * weight, 100),  # [R3-M1] 钳制上界防 RiskFactor 校验 500 "链上风险名单在册（钓鱼/诈骗等风险情报）"
+            # [R3-M1] 钳制上界防 RiskFactor 校验 500
+            return min(min(impact, 100) * weight, 100), "链上风险名单在册（钓鱼/诈骗等风险情报）"
 
         return 0, ""
 
