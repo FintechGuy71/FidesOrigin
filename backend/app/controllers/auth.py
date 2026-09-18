@@ -221,7 +221,8 @@ def _get_admin_password_hash() -> bytes:
         _admin_password_hash = pwd.encode()
     else:
         # 明文密码：哈希后缓存，并发出安全警告
-        _admin_password_hash = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt())
+        # [AUDIT FIX 2026-09-18 R3-L5] 与校验侧一致先 prehash（>72 字节密码两侧输入必须相同）
+        _admin_password_hash = bcrypt.hashpw(_prehash_password_for_bcrypt(pwd), bcrypt.gensalt())
         logger.warning(
             "admin_password_plaintext_detected",
             message="ADMIN_PASSWORD is stored in plaintext. "

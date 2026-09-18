@@ -445,11 +445,11 @@
         resultClass = 'non-compliant';
         badgeText = t('sanctioned');
         badgeClass = 'status-danger';
-      } else if (!isCompliant || score >= 80) {
+      } else if (!isCompliant || score >= 70) { // [AUDIT FIX 2026-09-18 R3-L14] 阈值统一为 shared RISK_THRESHOLDS（high≥70）
         resultClass = 'non-compliant';
         badgeText = t('highRisk');
         badgeClass = 'status-danger';
-      } else if (score >= 40) {
+      } else if (score >= 30) { // [R3-L14] medium≥30
         resultClass = 'warning';
         badgeText = t('medRisk');
         badgeClass = 'status-warning';
@@ -466,7 +466,7 @@
         ? new Date(Number(lastUpdated) * 1000).toLocaleDateString()
         : t('na');
 
-      const riskClass = score >= 80 ? 'risk-score-high' : score >= 40 ? 'risk-score-medium' : 'risk-score-low';
+      const riskClass = score >= 70 ? 'risk-score-high' : score >= 30 ? 'risk-score-medium' : 'risk-score-low'; // [R3-L14]
 
       if (detailsEl) {
         detailsEl.appendChild(createComplianceRow(t('riskScore'), String(score), riskClass));

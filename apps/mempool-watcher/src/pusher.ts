@@ -107,7 +107,8 @@ export async function startPusher(
   watcher.on('transaction', (tx) => {
     const result = detector.evaluate(tx);
     
-    if (result.matched && result.riskScore >= 80) {
+    // [AUDIT FIX 2026-09-18 R3-W5] 原硬编码 80，配置的 highConfidenceThreshold 从未被读取
+    if (result.matched && result.riskScore >= (pusher['config'].highConfidenceThreshold ?? 80)) {
       // 高置信度 → 立即推送
       /* [AUDIT FIX 2026-09-17 R1-015②] from/to 区分处置：
          to（对手方）允许满分直写制裁缓存；from（发送方）只允许档案更新，

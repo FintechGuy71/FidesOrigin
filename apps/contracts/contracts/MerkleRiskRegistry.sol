@@ -232,6 +232,11 @@ contract MerkleRiskRegistry is AccessControl, ReentrancyGuard, Pausable {
         // M-09 FIX: 签名过期时间检查
         require(deadline >= block.timestamp, "Signature expired");
 
+        // [AUDIT FIX 2026-09-18 R3-L6] 原不校验 riskScore/tier 上界——签名+proof
+        // 路径可写入越界值（其它写入路径均有界）。
+        require(riskScore <= 100, "Risk score out of range");
+        require(riskTier <= 4, "Risk tier out of range");
+
         // [Critical-1] 统一 Leaf 格式，与 verifyAddress / batchVerify 一致
         bytes32 leaf = _leaf(addr, riskScore, riskTier);
 

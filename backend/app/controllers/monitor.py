@@ -42,6 +42,15 @@ _pending_auth_count = 0
 _pending_auth_lock = asyncio.Lock()
 
 
+async def _release_pending_auth():
+    # [AUDIT FIX 2026-09-18 R3] 预认证计数器统一释放口。
+    # 原实现仅在主循环 finally 递减，认证失败/超时/连接失败的早退路径
+    # 全部跳过递减 → 100 次失败尝试后计数器永久占满，端点假死。
+    global _pending_auth_count
+    async with _pending_auth_lock:
+        _pending_auth_count = max(0, _pending_auth_count - 1)
+
+
 async def _validate_origin(websocket: WebSocket) -> bool:
     """[HIGH Fix #9] 验证 WebSocket 请求的 Origin header"""
     origin = websocket.headers.get("origin", "")
@@ -121,14 +130,17 @@ async def monitor_stream(
 
         if auth_msg.get("type") != "auth" or not auth_msg.get("api_key"):
             await websocket.close(code=4001, reason="Authentication required: send {\"type\": \"auth\", \"api_key\": \"...\"}")
+            await _release_pending_auth()
             return
 
         api_key = auth_msg["api_key"]
     except asyncio.TimeoutError:
         await websocket.close(code=4001, reason="Authentication timeout")
+        await _release_pending_auth()
         return
     except (json.JSONDecodeError, KeyError):
         await websocket.close(code=4001, reason="Invalid auth message")
+        await _release_pending_auth()
         return
 
     # [Audit Fix #9] 验证 API Key
@@ -142,6 +154,7 @@ async def monitor_stream(
         # [Audit Fix #9] 增加随机延迟到 100-500ms，防止时序攻击
         await asyncio.sleep(secrets.randbelow(400) / 1000 + 0.1)
         await websocket.close(code=4001, reason="Invalid API key")
+        await _release_pending_auth()
         return
 
     # [INFO-1 FIX] 验证通过后解除引用（非安全擦除，仅缩短生命周期）
@@ -158,6 +171,7 @@ async def monitor_stream(
     # 连接管理
     connected = await manager.connect(websocket, client_id, subscription)
     if not connected:
+        await _release_pending_auth()
         return
 
     try:
@@ -185,8 +199,10 @@ async def monitor_stream(
                         "event": "initial_risk",
                         "address": address,
                         "risk_score": addr_risk.risk_score,
-                        "risk_level": addr_risk.risk_level.value,
-                        "status": addr_risk.status.value
+                        # [AUDIT FIX 2026-09-18 R3-M9] ORM String 列读回为 plain str 时
+                        # .value 抛 AttributeError → 初始推送崩溃断连
+                        "risk_level": addr_risk.risk_level.value if hasattr(addr_risk.risk_level, "value") else addr_risk.risk_level,
+                        "status": addr_risk.status.value if hasattr(addr_risk.status, "value") else addr_risk.status
                     }
                 ))
 
@@ -255,9 +271,7 @@ async def monitor_stream(
     except Exception as e:
         logger.error("websocket_error", client_id=client_id, error=str(e))
     finally:
-        # [S-5 Fix] Decrement pre-auth counter on exit
-        async with _pending_auth_lock:
-            _pending_auth_count = max(0, _pending_auth_count - 1)
+        await _release_pending_auth()
         manager.disconnect(client_id)
 
 

@@ -10,13 +10,13 @@
 /** Chain ID mapping for supported networks */
 export const CHAIN_IDS: Record<string, number> = {
   ethereum: 1,
-  bitcoin: 0, // Bitcoin doesn't use EIP-155
+  bitcoin: -1, // [AUDIT FIX 2026-09-18 R3-L9] 原 0 与 solana:0 碰撞；非 EIP-155 链用 -1 哨兵
   polygon: 137,
   bsc: 56,
   arbitrum: 42161,
   optimism: 10,
   base: 8453,
-  solana: 0, // Solana doesn't use EIP-155
+  solana: -2, // [R3-L9] 同上，非 EIP-155 链各自唯一哨兵
 } as const;
 
 /** Chain names for display */

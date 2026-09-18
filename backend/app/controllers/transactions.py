@@ -156,8 +156,13 @@ async def get_transaction(
                 analyzed_at=None,
                 created_at=datetime.now(timezone.utc)
             )
-        except Exception:
-            raise NotFoundException("Transaction", tx_hash)
+        except NotFoundException:
+            raise
+        except Exception as e:
+            # [AUDIT FIX 2026-09-18 R3-M8] 原把一切异常伪装成 404——上游超时/500
+            # 被误报为"交易不存在"。上游故障如实上报 502。
+            logger.error("transaction_fetch_upstream_error", tx_hash=tx_hash, error=str(e))
+            raise
     
     # 计算 ETH 值
     value_eth = int(tx.value) / 10**18 if tx.value else 0

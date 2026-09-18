@@ -34,9 +34,15 @@ contract WalletComplianceFacet is BaseFacet, IWalletCompliance {
 
         ) = s.riskRegistry.getProfile(addr);
         score = sc;
+        // [AUDIT FIX 2026-09-18 R3-M5] 原对无档案地址恒 fail-closed，完全不读
+        // s.blockUnknownProfiles 开关，与同 Diamond 的 ComplianceCoreFacet（默认
+        // fail-open）语义矛盾——同一地址在 checkTransfer 放行、在 validateTransfer
+        // 阻断。统一为遵守开关。
         if (!exists) {
-            blocked = true;
-            reason = "No profile - fail closed";
+            if (s.blockUnknownProfiles) {
+                blocked = true;
+                reason = "No profile - fail closed";
+            }
         } else if (sanctioned) {
             blocked = true;
             reason = "Sanctioned";
@@ -61,14 +67,24 @@ contract WalletComplianceFacet is BaseFacet, IWalletCompliance {
     {
         (bool b, , string memory r) = _checkRisk(walletOwner);
         if (b) return (IAssetCompliance.Decision.BLOCK, r);
-        if (op.opType == OperationType.TRANSFER)
-            return
-                IAssetCompliance(address(this)).validateTransfer(
-                    walletOwner,
-                    op.target,
-                    op.value,
-                    walletContract
-                );
+        if (op.opType == OperationType.TRANSFER) {
+            /* [AUDIT FIX 2026-09-18 R3-H3] 原外部自调用会把 msg.sender 变为
+               Diamond 自身 → AssetComplianceFacet 鉴权恒 revert。改为在共享存储上
+               内联相同的校验逻辑（Diamond 上下文内无需跨合约调用）。 */
+            LibComplianceStorage.AppStorage storage s2 = LibComplianceStorage.diamondStorage();
+            if (address(s2.riskRegistry) == address(0))
+                return (IAssetCompliance.Decision.BLOCK, "Registry not set");
+            (bool b1, , string memory r1) = _checkRisk(op.target);
+            if (b1) return (IAssetCompliance.Decision.BLOCK, r1);
+            IAssetCompliance.IssuerPolicy memory p = s2.issuerPolicies[walletContract];
+            if (p.maxTxAmount > 0 && op.value > p.maxTxAmount)
+                return (IAssetCompliance.Decision.BLOCK, "Max tx");
+            if (p.dailyLimit > 0) {
+                if (s2.dailySpent[walletOwner][block.timestamp / 1 days] + op.value > p.dailyLimit)
+                    return (IAssetCompliance.Decision.BLOCK, "Daily limit exceeded");
+            }
+            return (IAssetCompliance.Decision.ALLOW, "Transfer allowed");
+        }
         return (IAssetCompliance.Decision.ALLOW, "Op allowed");
     }
 

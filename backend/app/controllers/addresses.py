@@ -2,6 +2,7 @@
 FidesOrigin 地址 Controller（重构版）
 API 层：处理 HTTP 请求，委托 Service 层处理业务逻辑
 """
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
@@ -18,6 +19,9 @@ from app.core.exceptions import (
 from app.core.logging import get_logger
 from app.schemas import (
     AddressRiskDetailResponse,
+    BatchRiskCheckRequestModel,
+    BatchRiskCheckResponseModel,
+    BatchRiskCheckResultItem,
     AddressRiskReportRequest,
     AddressRiskReportResponse,
     AddressRiskResponse,
@@ -33,6 +37,74 @@ router = APIRouter(prefix="/api/v1/address", tags=["地址风险"])
 
 
 from app.core.security import get_current_user
+
+
+
+# [AUDIT FIX 2026-09-18 R3-H8] SDK batchCheckRisk 以 POST 请求
+# /api/v1/address/search，而后端仅有 GET /search（搜索语义完全不同）→ 405。
+# 新增语义正确的批量端点。
+_CHAIN_ID_TO_NAME = {1: "ethereum", 11155111: "sepolia", 8453: "base", 137: "polygon", 42161: "arbitrum"}
+
+
+@router.post(
+    "/batch-check",
+    response_model=BatchRiskCheckResponseModel,
+    summary="批量地址风险查询",
+    description="批量计算最多 100 个地址的风险评分",
+    responses={
+        400: {"model": ErrorResponse, "description": "请求参数错误"},
+        401: {"model": ErrorResponse, "description": "未授权"},
+        429: {"model": ErrorResponse, "description": "请求过于频繁"},
+    }
+)
+async def batch_check_addresses(
+    payload: BatchRiskCheckRequestModel,
+    db: AsyncSession = Depends(get_db),
+    engine: RiskEngineService = Depends(get_risk_engine),
+    current_user: str = Depends(get_current_user)
+):
+    """批量风险查询（逐地址复用单地址评分管线，单地址失败不影响整体）"""
+    chain = _CHAIN_ID_TO_NAME.get(payload.chainId or 11155111, "sepolia")
+
+    results: List[BatchRiskCheckResultItem] = []
+    summary = {"total": 0, "highRisk": 0, "mediumRisk": 0, "lowRisk": 0}
+
+    for raw_address in payload.addresses:
+        address = validate_address(raw_address)
+        try:
+            risk_score, risk_level, risk_factors = await engine.calculate_address_risk(
+                address, chain
+            )
+            level = risk_level.value if hasattr(risk_level, "value") else str(risk_level)
+            results.append(BatchRiskCheckResultItem(
+                address=address,
+                chain=chain,
+                risk_score=risk_score,
+                risk_level=level,
+                risk_factors=[f.model_dump() if hasattr(f, "model_dump") else dict(f) for f in (risk_factors or [])],
+                timestamp=datetime.now(timezone.utc).isoformat(),
+            ))
+            summary["total"] += 1
+            if level in ("high", "critical", "HIGH", "CRITICAL"):
+                summary["highRisk"] += 1
+            elif level in ("medium", "MEDIUM"):
+                summary["mediumRisk"] += 1
+            else:
+                summary["lowRisk"] += 1
+        except Exception as e:
+            # 单地址失败不拖垮整批：返回 unknown 占位并记日志
+            logger.warning("batch_check_address_failed", address=address, error=str(e))
+            results.append(BatchRiskCheckResultItem(
+                address=address,
+                chain=chain,
+                risk_score=0.0,
+                risk_level="unknown",
+                risk_factors=[],
+                timestamp=datetime.now(timezone.utc).isoformat(),
+            ))
+            summary["total"] += 1
+
+    return BatchRiskCheckResponseModel(results=results, summary=summary)
 
 
 @router.get(

@@ -503,7 +503,17 @@ contract QuarantineVault is AccessControl, ReentrancyGuard {
             // 原实现先标记 released 再转账：转账失败时 continue 不回滚，
             // 记录永久卡在"已释放"状态但资金未到账，且无法再补救。
             // [L-4 FIX] ETH 分支已移除（隔离入口强制 ERC20，ETH 记录不可能存在）
-            IERC20(record.token).safeTransfer(record.originalOwner, record.amount);
+            /* [AUDIT FIX 2026-09-18 R3-M1] 原 safeTransfer 失败即整笔 revert →
+               某条记录的接收方被 token 合约拉黑时，整批（含正常记录）全部无法释放，
+               与上文"前置检查失败 emit+continue"的语义矛盾。改为单条失败跳过。 */
+            // safeTransfer 是库函数（非外部调用）不能 try/catch——改用低级 call 并校验返回值
+            (bool ok, bytes memory retData) = record.token.call(
+                abi.encodeCall(IERC20.transfer, (record.originalOwner, record.amount))
+            );
+            if (!ok || (retData.length > 0 && !abi.decode(retData, (bool)))) {
+                emit BatchReleaseFailed(recordId, "TransferFailed");
+                continue;
+            }
 
             // 转账成功后才更新状态与统计
             record.released = true;

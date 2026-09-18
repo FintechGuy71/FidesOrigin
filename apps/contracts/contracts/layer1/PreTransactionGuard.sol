@@ -20,6 +20,9 @@ contract PreTransactionGuard is IPreTransactionGuard, AccessControl {
     constructor(address _riskRegistry) {
         riskRegistry = RiskRegistry(_riskRegistry);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // [AUDIT FIX 2026-09-18 R3-L10] 原只授 DEFAULT_ADMIN_ROLE，OPERATOR_ROLE
+        // 无人持有 → updateSanctionedCache 初始不可用。部署者同时持 OPERATOR_ROLE。
+        _grantRole(OPERATOR_ROLE, msg.sender);
     }
     
     function assessAddress(address addr) external view override returns (RiskAssessment memory) {

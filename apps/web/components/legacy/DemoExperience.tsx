@@ -146,6 +146,8 @@ export default function DemoExperience({ dict }: { dict: D }) {
   const [risk, setRisk] = useState<RiskState>({ kind: "idle" });
 
   const runScreen = async () => {
+    // [AUDIT FIX 2026-09-18 R3-M4] 重入守卫（与 AddressCheck 同口径）
+    if (screen.kind === "checking") return;
     const address = screenAddress.trim().toLowerCase();
     setScreen({ kind: "checking" });
     const data = await fetchRisk(address);
@@ -156,7 +158,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
     const score = data.risk_score ?? 0;
     const level = data.risk_level || "UNKNOWN";
     const sanctioned = (data.tags || []).length > 0 || level === "CRITICAL";
-    const safe = !(sanctioned || level === "HIGH" || score >= 80);
+    const safe = !(sanctioned || level === "HIGH" || level === "CRITICAL" || score >= 70); // [R3-L14] 阈值统一 + CRITICAL 兜底
     setScreen({
       kind: "done",
       address,
@@ -171,6 +173,8 @@ export default function DemoExperience({ dict }: { dict: D }) {
   };
 
   const runRisk = async () => {
+    // [AUDIT FIX 2026-09-18 R3-M4] 重入守卫
+    if (risk.kind === "analyzing") return;
     const address = riskAddress.trim().toLowerCase();
     setRisk({ kind: "analyzing" });
     const data = await fetchRisk(address);

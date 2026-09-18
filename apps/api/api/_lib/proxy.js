@@ -47,12 +47,19 @@ async function proxyToBackend(backendPath, options = {}) {
 
     const callerHeaders = { ...(options.headers || {}) };
     // [F-7 FIX] 调用方不得覆盖服务端凭证与签名头
-    delete callerHeaders['X-API-Key'];
-    delete callerHeaders['x-api-key'];
+    // [AUDIT FIX 2026-09-18 R3] 原按两种大小写形式删除，'X-Api-Key' 等变体可穿透；
+    // 改为大小写不敏感遍历删除，并补剥离 HMAC 签名头（防调用方伪造签名字段）。
+    for (const k of Object.keys(callerHeaders)) {
+      const lk = k.toLowerCase();
+      if (lk === 'x-api-key' || lk === 'x-request-timestamp' || lk === 'x-request-signature') {
+        delete callerHeaders[k];
+      }
+    }
     if (!options.forwardAuth) {
       // 未显式要求透传时，剥离客户端 Authorization，防止凭证被意外转发
-      delete callerHeaders['Authorization'];
-      delete callerHeaders['authorization'];
+      for (const k of Object.keys(callerHeaders)) {
+        if (k.toLowerCase() === 'authorization') delete callerHeaders[k];
+      }
     }
 
     const headers = {

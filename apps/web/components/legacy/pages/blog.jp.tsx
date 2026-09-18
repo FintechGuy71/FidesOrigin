@@ -137,21 +137,6 @@ export default function ContentBlogJP() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
-          <Link href="/jp/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.png" alt="" loading="lazy" />
-            <div>
-              <div style={{ "marginBottom": "8px" }}>
-                <span className="tag">カテゴリー定義</span>
-                <span className="date">2026年6月</span>
-              </div>
-              <h2>なぜオンチェーンか：API ベースコンプライアンスの終焉</h2>
-              <p>API ベースのコンプライアンスはアーキテクチャ的な誤りだ。未来はオンチェーンリスクエンフォースメント：決定論的、ゼロレイテンシー、迂回不可能。</p>
-            </div>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </Link>
-        </div>
-
-        <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/jp/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
             <img className="blog-thumb" src="/brand/covers/travel-rule-on-chain.png" alt="" loading="lazy" />
             <div>
@@ -161,6 +146,21 @@ export default function ContentBlogJP() {
               </div>
               <h2>オンチェーンのトラベルルール：FATF がステーブルコイン送金に求めるもの</h2>
               <p>2026 年のステーブルコイン送金における FATF トラベルルール要件と、決済前コンプライアンスにおいてオンチェーン実行が API セントリックなスクリーニングに勝る理由。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/jp/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.png" alt="" loading="lazy" />
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">カテゴリー定義</span>
+                <span className="date">2026年6月</span>
+              </div>
+              <h2>なぜオンチェーンか：API ベースコンプライアンスの終焉</h2>
+              <p>API ベースのコンプライアンスはアーキテクチャ的な誤りだ。未来はオンチェーンリスクエンフォースメント：決定論的、ゼロレイテンシー、迂回不可能。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
           </Link>

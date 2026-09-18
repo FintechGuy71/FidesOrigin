@@ -61,7 +61,10 @@ export interface MasonryLayout {
 export function useMasonry<T extends MasonryItem>(
   options: UseMasonryOptions<T>
 ): MasonryLayout {
-  const { items, columns, gap = 16, animate = true } = options;
+  const { items, columns: rawColumns, gap = 16, animate = true } = options;
+  // [AUDIT FIX 2026-09-18 R3-L12] columns=0 时 Math.min(...[]) 为 Infinity →
+  // indexOf 得 -1 → cols[-1].push TypeError。钳到至少 1 列。
+  const columns = Math.max(1, rawColumns || 1);
 
   const layout = useRef<MasonryLayout>({
     columns: Array.from({ length: columns }, () => []),

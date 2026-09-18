@@ -59,8 +59,12 @@ async function handleCreate(req, res) {
   const body = req.body || {};
   const { name, description, conditions, actions, priority } = body;
 
-  if (!name || typeof name !== 'string') {
-    return sendError(res, 400, 'BAD_REQUEST', 'Missing or invalid field: name');
+  if (!name || typeof name !== 'string' || name.length > 200) {
+    return sendError(res, 400, 'BAD_REQUEST', 'Missing or invalid field: name (string, max 200 chars)');
+  }
+  // [AUDIT FIX 2026-09-18 R3] 原 typeof NaN==='number' 可通过 → 入库后 JSON 序列化为 null
+  if (priority !== undefined && (!Number.isFinite(priority))) {
+    return sendError(res, 400, 'BAD_REQUEST', 'Invalid field: priority (must be a finite number)');
   }
   if (!Array.isArray(conditions) || conditions.length === 0) {
     return sendError(res, 400, 'BAD_REQUEST', 'Missing or invalid field: conditions (must be a non-empty array)');

@@ -14,6 +14,7 @@ export type ErrorCode =
   | 'API_ERROR'
   | 'RATE_LIMITED'
   | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
   | 'NOT_FOUND'
   | 'SERVER_ERROR'
   | 'TIMEOUT'
@@ -30,6 +31,7 @@ export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   API_ERROR: 500,
   RATE_LIMITED: 429,
   UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
   NOT_FOUND: 404,
   SERVER_ERROR: 500,
   TIMEOUT: 0,

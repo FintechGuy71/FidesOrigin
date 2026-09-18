@@ -70,8 +70,10 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     (addr: string): boolean => {
       const trimmed = addr.trim();
       if (!trimmed || trimmed.length === 0) return false;
-      const lengths = ADDRESS_LENGTHS[chain];
-      const prefixes = ADDRESS_PREFIXES[chain];
+      // [AUDIT FIX 2026-09-18 R3-M18] chain 为开放 string，映射表外的值
+      // （如 'sepolia'）使 lengths 为 undefined → 组件崩溃。回退 EVM 默认。
+      const lengths = ADDRESS_LENGTHS[chain] ?? ADDRESS_LENGTHS.ethereum;
+      const prefixes = ADDRESS_PREFIXES[chain] ?? ADDRESS_PREFIXES.ethereum ?? [];
       if (trimmed.length < lengths.min || trimmed.length > lengths.max) return false;
       if (prefixes.length > 0) {
         return prefixes.some((prefix) => trimmed.startsWith(prefix));

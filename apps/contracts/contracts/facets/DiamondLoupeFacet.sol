@@ -42,11 +42,35 @@ contract DiamondLoupeFacet is IDiamondLoupe {
             }
         }
 
-        // H-06 FIX: 使用缓存的 facetSelectors 替代 O(n) 遍历
+        /* [AUDIT FIX 2026-09-18 R3-L12] 原返回每个 facet 的全量 selectors 而非
+           分页窗口内的 selectors（offset/limit 语义被破坏：跨窗口调用会拿到
+           重复的窗口外 selectors）。改为只收集窗口内 selectors。 */
         facets_ = new Facet[](uniqueCount);
+        uint256[] memory facetIndex = new uint256[](uniqueCount);
+        // 统计窗口内每个 facet 的 selector 数量
+        for (uint256 i = offset; i < end; i++) {
+            address facet = LibDiamond.getFacetAddress(selectors[i]);
+            for (uint256 j = 0; j < uniqueCount; j++) {
+                if (uniqueFacets[j] == facet) {
+                    facetIndex[j]++;
+                    break;
+                }
+            }
+        }
         for (uint256 i = 0; i < uniqueCount; i++) {
             facets_[i].facetAddress = uniqueFacets[i];
-            facets_[i].functionSelectors = LibDiamond.getFacetSelectors(uniqueFacets[i]);
+            facets_[i].functionSelectors = new bytes4[](facetIndex[i]);
+        }
+        // 填充窗口内 selectors
+        uint256[] memory cursor = new uint256[](uniqueCount);
+        for (uint256 i = offset; i < end; i++) {
+            address facet = LibDiamond.getFacetAddress(selectors[i]);
+            for (uint256 j = 0; j < uniqueCount; j++) {
+                if (uniqueFacets[j] == facet) {
+                    facets_[j].functionSelectors[cursor[j]++] = selectors[i];
+                    break;
+                }
+            }
         }
     }
 

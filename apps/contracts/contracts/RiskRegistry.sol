@@ -363,6 +363,9 @@ contract RiskRegistry is
         delete profile.tags;
         for (uint256 i = 0; i < tags.length; i++) {
             profile.tags.push(tags[i]);
+            // [AUDIT FIX 2026-09-18 R3-M8] 事件已声明但从未 emit →
+            // subgraph handleAddressTagged 死订阅，RiskProfile.tags 恒 []。补发射。
+            emit AddressTagged(addr, tags[i]);
         }
 
         // 更新高风险列表

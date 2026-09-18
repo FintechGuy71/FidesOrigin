@@ -13,7 +13,13 @@ async function handler(req, res) {
   }
 
   try {
-    const response = await proxyToBackend('/api/v1/dashboard/events', {
+    // [AUDIT FIX 2026-09-18 R3] 原实现丢弃全部查询参数 → 事件流只能取默认第一页
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(req.query || {})) {
+      if (typeof v === 'string') qs.set(k, v);
+    }
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    const response = await proxyToBackend('/api/v1/dashboard/events' + suffix, {
       method: 'GET',
       forwardAuth: true,
       headers: { Authorization: req.headers.authorization },

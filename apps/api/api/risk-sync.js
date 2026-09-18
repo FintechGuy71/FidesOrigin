@@ -9,10 +9,10 @@ const { checkRateLimit } = require('./_middleware/rateLimit');
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 const CACHE_TTL = 3600;
 
+/* [AUDIT FIX 2026-09-18 R3] ETHERSCAN_API_KEY 全文件无任何调用消费，
+   原强制校验造成「配置齐全却 503」。保留惰性函数但不再强制（无消费方）。 */
 function _ensureEtherscanKey() {
-  if (!ETHERSCAN_API_KEY) {
-    throw new ApiConfigError('Upstream data source not configured');
-  }
+  // no-op: 当前数据源（MetaMask phishing config + 预设名单）无需 Etherscan key
 }
 
 class ApiConfigError extends Error {}
@@ -37,8 +37,10 @@ function checkOrigin(req, res) {
   // 浏览器来源仍按白名单校验（严格相等，防 fidesorigin.com.evil.com 类绕过）
   const origin = req.headers.origin || req.headers.referer || '';
   if (!origin) return true;
+  // [AUDIT FIX 2026-09-18 R3-C4] 原用 NODE_ENV==='production' 嗅探：
+  // staging/自托管（NODE_ENV≠production）时任意 Origin 放行。仅显式 development 放行。
   const allowed = ALLOWED_ORIGINS.includes(origin);
-  if (!allowed && process.env.NODE_ENV === 'production') {
+  if (!allowed && process.env.NODE_ENV !== 'development') {
     res.status(403).json({ error: 'Forbidden: Origin not allowed' });
     return false;
   }
@@ -68,8 +70,9 @@ function _timingSafeEqualStr(a, b) {
 function checkApiKey(req, res) {
   const key = req.headers['x-api-key'];
 
-  // 开发环境：如果配置了 TEST_API_KEY，则强制要求传入（安全开发模式）
-  if (process.env.NODE_ENV !== 'production') {
+  // [AUDIT FIX 2026-09-18 R3-C4] 仅显式 development 进入测试模式；
+  // staging/预览/自托管一律视为生产口径
+  if (process.env.NODE_ENV === 'development') {
     if (TEST_API_KEY) {
       if (!key || !_timingSafeEqualStr(key, TEST_API_KEY)) {
         res.status(401).json({ error: 'Unauthorized: Invalid or missing test API key' });
@@ -79,8 +82,12 @@ function checkApiKey(req, res) {
     return true; // 未配置 TEST_API_KEY 时保持向后兼容
   }
 
-  // 生产环境：强制要求 RISK_SYNC_API_KEY
-  if (!RISK_SYNC_API_KEY || !key || !_timingSafeEqualStr(key, RISK_SYNC_API_KEY)) {
+  // 生产环境：强制要求 RISK_SYNC_API_KEY；未配置时 fail-closed（503 而非放行）
+  if (!RISK_SYNC_API_KEY) {
+    res.status(503).json({ error: 'Service misconfigured: RISK_SYNC_API_KEY not set' });
+    return false;
+  }
+  if (!key || !_timingSafeEqualStr(key, RISK_SYNC_API_KEY)) {
     res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
     return false;
   }
@@ -121,6 +128,18 @@ function httpGet(url, headers = {}, retries = 3) {
   return new Promise((resolve, reject) => {
     const attempt = (remainingRetries) => {
       const req = https.get(url, { headers, timeout: 15000 }, (res) => {
+        // [AUDIT FIX 2026-09-18 R3] 原不校验状态码：GitHub 限流/404 的 HTML
+        // 错误页被当数据解析 → 钓鱼名单静默清零。非 2xx 按失败重试。
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          if (remainingRetries > 0) {
+            console.warn(`HTTP ${res.statusCode}, retrying... (${remainingRetries} retries left)`);
+            setTimeout(() => attempt(remainingRetries - 1), 1000);
+          } else {
+            reject(new Error(`HTTP ${res.statusCode} from upstream`));
+          }
+          return;
+        }
         let data = '';
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
@@ -174,22 +193,18 @@ async function fetchMetamaskPhishing() {
     }
     return [];
   } catch (error) {
+    // [AUDIT FIX 2026-09-18 R3] 原静默返回 [] 且结果被写入 1 小时缓存——
+    // 数据源故障对外表现为「无风险地址」。抛错让上层返回 502，不污染缓存。
     console.error('Metamask fetch error:', error);
-    return [];
+    throw error;
   }
 }
 
 // 2. 预设地址
 function getPresetAddresses() {
   return [
-    {
-      address: '0x1234567890123456789012345678901234567890',
-      tag: 'Test_Blacklist',
-      source: 'FidesOrigin',
-      risk: 'CRITICAL',
-      category: 'Sanctions',
-      metadata: { reason: 'Test address for development' }
-    },
+    // [AUDIT FIX 2026-09-18 R3] 原含 0x1234...7890 测试占位地址，作为 CRITICAL
+    // 制裁数据进入生产响应 → 消费者把占位地址当真。已剔除。
     {
       address: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
       tag: 'Known_Hacker',
@@ -224,7 +239,18 @@ module.exports = async function handler(req, res) {
   if (!checkApiKey(req, res)) return;
   
   // 4. 强制刷新参数
-  const forceRefresh = req.query?.refresh === 'true';
+  /* [AUDIT FIX 2026-09-18 R3-C5] 原 ?refresh=true 无条件绕过缓存，每次触发
+     从 GitHub 拉取 ~5MB → 认证调用方可循环放大出站流量（费用/配额 DoS）。
+     加 60 秒全局冷却（多实例下以 KV 为准，内存为降级）。 */
+  let forceRefresh = req.query?.refresh === 'true';
+  if (forceRefresh) {
+    const nowMs = Date.now();
+    if (nowMs - (global._riskSyncLastRefresh || 0) < 60000) {
+      forceRefresh = false; // 冷却期内静默降级为缓存读取
+    } else {
+      global._riskSyncLastRefresh = nowMs;
+    }
+  }
 
   // [L-17 FIX] 上游依赖惰性校验（原实现模块加载即 throw）
   try {
@@ -324,7 +350,9 @@ module.exports = async function handler(req, res) {
 
     return res.json({
       success: true,
-      source: 'live',
+      // [AUDIT FIX 2026-09-18 R3] 上游数据源失败时如实标注 degraded
+      source: metamaskData.status === 'fulfilled' ? 'live' : 'degraded',
+      ...(metamaskData.status !== 'fulfilled' ? { degradedSources: ['metamask-phishing'] } : {}),
       fetchedAt: new Date(now).toISOString(),
       data: result
     });

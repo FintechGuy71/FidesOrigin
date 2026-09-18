@@ -70,8 +70,12 @@ export function useRiskCheck(
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
+    // [AUDIT FIX 2026-09-18 R3-M15] 请求令牌 + abort 检查：address 快速切换时
+    // 旧响应后到会覆盖新 address 的状态。
+    const myController = abortControllerRef.current;
     try {
       const result = await client.getAddressRisk(address);
+      if (myController.signal.aborted) return; // 已被更新的请求取代
       
       setState({
         loading: false,
@@ -79,6 +83,7 @@ export function useRiskCheck(
         data: result
       });
     } catch (err) {
+      if (myController.signal.aborted) return;
       const error = err as ApiError;
       
       setState({

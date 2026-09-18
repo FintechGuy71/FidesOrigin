@@ -23,7 +23,7 @@ const HASH_PREVIEW_LENGTH = 20;
 const ADDRESS_TAIL_LENGTH = 6;
 const HASH_TAIL_LENGTH = 8;
 const RISK_SCORE_HIGH = 70;
-const RISK_SCORE_MEDIUM = 40;
+const RISK_SCORE_MEDIUM = 30; // [AUDIT FIX 2026-09-18 R3-L14] 与 shared RISK_THRESHOLDS 对齐（medium≥30）
 /* [AUDIT FIX] 仪表盘数据轮询间隔。此前复用 WS_MAX_RETRY_DELAY（WS 重连退避上限），
    数值凑巧 30s，但改 WS 退避策略会连带改刷新频率。 */
 const DASHBOARD_REFRESH_INTERVAL = 30000;
@@ -109,40 +109,52 @@ function useDashboardWebSocket(
     if (!url || !enabled) return;
     closedByUser.current = false;
     try {
-      ws.current = new WebSocket(url);
+      // [AUDIT FIX 2026-09-18 R3-M1] 与 LiveTransactionStream 同款实例身份守卫
+      const socket = new WebSocket(url);
+      ws.current = socket;
 
-      ws.current.onopen = () => {
+      socket.onopen = () => {
         setIsConnected(true);
         setError(null);
         reconnectAttempts.current = 0;
         // 订阅仪表盘数据
-        ws.current?.send(JSON.stringify({ type: "subscribe", channel: "dashboard" }));
+        socket.send(JSON.stringify({ type: "subscribe", channel: "dashboard" }));
       };
 
-      ws.current.onmessage = (event) => {
+      socket.onmessage = (event) => {
+        if (ws.current !== socket) return; // [R3-M1] 过期实例不投递
         try {
           const data = JSON.parse(event.data);
           if (data.type === "stats" && data.stats) {
-            onStatsUpdate(data.stats);
+            /* [AUDIT FIX 2026-09-18 R3] WS 推送原样绕过适配层：后端 WS 下发的
+               snake_case 字段会让统计卡显示 "—"，事件的大写枚举让等级/状态
+               比较全部落空。与 REST 路径一致走 adapt*。 */
+            onStatsUpdate(adaptStats(data.stats as Record<string, unknown>));
           } else if (data.type === "event" && data.event) {
-            onNewEvent(data.event);
+            onNewEvent(adaptEvent(data.event as Record<string, unknown>));
           }
         } catch (_e) {
           console.error("WebSocket message parse error:", _e);
         }
       };
 
-      ws.current.onclose = () => {
+      socket.onclose = () => {
+        if (ws.current !== socket) return; // [R3-M1] 过期实例不触发重连
         setIsConnected(false);
         if (closedByUser.current) return; // [R1-003] 主动关闭/卸载后不重连
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
           const delay = Math.min(WS_INITIAL_RETRY_DELAY * Math.pow(WS_RETRY_MULTIPLIER, reconnectAttempts.current), WS_MAX_RETRY_DELAY);
           reconnectTimeout.current = setTimeout(connect, delay);
+        } else {
+          /* [AUDIT FIX 2026-09-18 R3] 原实现重连耗尽后静默死亡——
+             LiveIndicator 恒显"连接中..."，运营无法察觉监控失联。 */
+          setError("实时监控连接已断开（重连失败），请刷新页面重试");
         }
       };
 
-      ws.current.onerror = () => {
+      socket.onerror = () => {
+        if (ws.current !== socket) return; // [R3-M1]
         setError("WebSocket connection error");
         setIsConnected(false);
       };
@@ -205,7 +217,7 @@ function metricChange(m: number | BackendMetric | undefined, flat?: number): num
 // snake_case → camelCase 适配层
 function adaptStats(raw: BackendStats): DashboardStats {
   return {
-    riskTrend: raw.risk_trend ?? raw.riskTrend,
+    riskTrend: (Array.isArray(raw.risk_trend) ? raw.risk_trend : Array.isArray(raw.riskTrend) ? raw.riskTrend : []) as DashboardStats["riskTrend"],
     todayBlocked: metricValue(raw.today_blocked),
     todayBlockedChange: metricChange(raw.today_blocked, raw.today_blocked_change),
     riskAddresses: metricValue(raw.risk_addresses),
@@ -415,7 +427,10 @@ function formatTimeAgo(timestamp: number): string {
   const minutes = Math.floor(seconds / FORMATTING.minute);
   if (minutes < FORMATTING.minute) return `${minutes}分钟前`;
   const hours = Math.floor(minutes / FORMATTING.minute);
-  return `${hours}小时前`;
+  // [AUDIT FIX 2026-09-18 R3-L13] 超过 24 小时不再显示 "50小时前"
+  if (hours < 24) return `${hours}小时前`;
+  const days = Math.floor(hours / 24);
+  return `${days}天前`;
 }
 
 export default function DashboardPage() {
@@ -522,7 +537,8 @@ export default function DashboardPage() {
 
   const handleNewEvent = useCallback((event: RiskEvent) => {
     setEvents((prev) => {
-      const newEvent = { ...event, timestamp: Date.now() };
+      // [R3] 保留后端事件时间；仅在缺失时才用到达时间兜底
+      const newEvent = { ...event, timestamp: event.timestamp ?? Date.now() };
       const exists = prev.some((e) => e.id === event.id);
       if (exists) return prev;
       return [newEvent, ...prev].slice(0, MAX_EVENTS_DISPLAY);
@@ -531,7 +547,7 @@ export default function DashboardPage() {
 
   // WebSocket 连接
   // [AUDIT FIX 2026-09-17 R1-004] 未登录（authed !== true）不建立 WS 连接
-  const { isConnected } = useDashboardWebSocket(WS_URL, handleStatsUpdate, handleNewEvent, authed === true);
+  const { isConnected, error: wsError } = useDashboardWebSocket(WS_URL, handleStatsUpdate, handleNewEvent, authed === true);
 
   /* [AUDIT FIX R2-057] 变化率此前恒以 `+` 前缀拼接：后端下发 -5 时显示 "+-5%"；
      且 changeType 按卡片写死，不随数值符号变化——下降的拦截量也显示绿色。
@@ -714,6 +730,9 @@ export default function DashboardPage() {
                 </span>
               )}
               <LiveIndicator isConnected={isConnected} wsConfigured={!!WS_URL} />
+              {wsError && (
+                <span className="text-xs text-red-400 ml-2">{wsError}</span>
+              )}
             </div>
           </div>
         </div>
@@ -785,7 +804,7 @@ export default function DashboardPage() {
             <div className="h-48 flex items-end justify-between gap-2">
               {riskTrendData.length === 0 ? (
                 <div className="flex h-full w-full items-center justify-center text-sm text-[var(--fio-text-2)]">
-                  No trend data available
+                  暂无趋势数据
                 </div>
               ) : riskTrendData.map((point, i) => {
                 const height = `${Math.max(MIN_BAR_HEIGHT_PERCENT, point.score)}%`;
@@ -810,14 +829,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Risk Type Distribution */}
+          {/* 风险类型分布 */}
           <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-6">Risk Type Distribution</h2>
+            <h2 className="text-lg font-semibold text-white mb-6">风险类型分布</h2>
             {/* ⚠ 原先这里是一份硬编码的百分比（35/28/15/22），永远是同一组数字。
                 改为从真实事件列表派生；无事件时显示占位符。 */}
             {events.length === 0 ? (
               <div className="py-8 text-center text-sm text-[var(--fio-text-2)]">
-                No risk events recorded
+                暂无风险事件记录
               </div>
             ) : (
             <div className="grid grid-cols-2 gap-4">

@@ -5,6 +5,7 @@ FidesOrigin 地址 Repository（重构版）
 from typing import List, Optional
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -90,7 +91,22 @@ class AddressRepository:
             report_count=0
         )
         self.db.add(new_record)
-        await self.db.flush()
+        try:
+            await self.db.flush()
+        except IntegrityError:
+            # [AUDIT FIX 2026-09-18 R3-L16] 并发首查同一新地址的读-改-写竞态：
+            # 另一方已插入 → 回滚后重读既有记录并走更新分支
+            await self.db.rollback()
+            existing = await self.get_by_address(address, chain)
+            if existing:
+                existing.risk_score = risk_score
+                existing.risk_level = risk_level
+                existing.risk_factors = [f.model_dump() for f in risk_factors]
+                existing.status = status
+                await self.db.flush()
+                await self.db.refresh(existing)
+                return existing
+            raise
         await self.db.refresh(new_record)
         logger.info(
             "address_risk_created",
@@ -179,7 +195,7 @@ class AddressRepository:
         
         if risk_level:
             try:
-                level = RiskLevel(risk_level.lower())
+                level = RiskLevel(risk_level.upper())  # [AUDIT FIX 2026-09-18 R3-M2] 枚举值为大写
                 base_query = base_query.where(AddressRisk.risk_level == level)
             except ValueError:
                 # [H-3 Fix] 无效的风险等级不再静默忽略，而是抛出验证异常
@@ -263,7 +279,7 @@ class AddressRepository:
         
         if severity:
             try:
-                level = RiskLevel(severity.lower())
+                level = RiskLevel(severity.upper())  # [R3-M2] 同上
                 query = query.where(RiskEvent.severity == level)
             except ValueError:
                 # [H-3 Fix] 无效的严重程度不再静默忽略，而是抛出验证异常

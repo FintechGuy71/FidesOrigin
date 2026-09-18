@@ -9,7 +9,14 @@ import { BigInt, log } from '@graphprotocol/graph-ts'
 
 export function handleFundsFrozen(event: FundsFrozen): void {
   let id = event.params.recordId.toHexString()
-  let record = new QuarantineRecord(id)
+  /* [AUDIT FIX 2026-09-18 R3-M10] 原对已有 recordId 新建覆盖 → 原始隔离时间
+     与原因被改写丢失（审计台账失真）。已存在时只标记 frozen 状态字段。 */
+  let record = QuarantineRecord.load(id)
+  if (record !== null) {
+    // 已存在（先有 FundsQuarantined 再有 FundsFrozen）：保留原始 reason/timestamp
+    return
+  }
+  record = new QuarantineRecord(id)
   record.owner = event.params.originalOwner.toHexString()
   record.asset = event.params.token.toHexString()
   record.amount = event.params.amount

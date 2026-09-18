@@ -18,6 +18,7 @@ P0-4 Fix: 从 Redis Pub/Sub 迁移到 Redis Streams
 """
 import asyncio
 import json
+import time  # [AUDIT FIX 2026-09-18 R3-M7] send_to_dlq/retry_dlq_message 用到但原只在函数内 import
 import uuid
 from dataclasses import dataclass, asdict
 from typing import Any, Callable, Dict, List, Optional, Set
@@ -445,6 +446,40 @@ class MessageQueue:
         
         while self._running:
             try:
+                # [AUDIT FIX 2026-09-18 R3-M6] 原实现只 xreadgroup 读新消息（">"），
+                # 处理失败的消息永久滞留 pending：注释声称的"自动重投"不存在，
+                # retry_count 永远为 0 → MAX_RETRY/DLQ 路径不可达。
+                # 先用 XAUTOCLAIM 认领超时未确认的 pending 消息重投。
+                try:
+                    claimed = await redis_client.xautoclaim(
+                        self.STREAM_RISK_UPDATES,
+                        self.CONSUMER_GROUP,
+                        self.CONSUMER_NAME,
+                        min_idle_time=60000,
+                        start_id="0-0",
+                        count=5,
+                    )
+                    for cid, cfields in (claimed[1] if claimed and len(claimed) > 1 else []):
+                        cdata = json.loads(cfields.get("data", "{}"))
+                        cenvelope = MessageEnvelope.from_dict(cdata)
+                        cenvelope.retry_count += 1  # 重投计数，驱动 DLQ 阈值
+                        if cenvelope.retry_count >= self.MAX_RETRY_COUNT:
+                            await self.send_to_dlq(cenvelope, "Max retry exceeded")
+                            await self.acknowledge_message(cid)
+                            continue
+                        handlers = self._handlers.get(cenvelope.type, [])
+                        ok = True
+                        for h in handlers:
+                            try:
+                                await h(cenvelope)
+                            except Exception as he:
+                                ok = False
+                                logger.warning("reclaimed_message_handler_failed", error=str(he))
+                        if ok and handlers:
+                            await self.acknowledge_message(cid)
+                except Exception as ce:
+                    logger.warning("pending_reclaim_failed", error=str(ce))
+
                 # 使用 XREADGROUP 从消费者组读取消息
                 # count=1 逐条处理，block=BLOCK_TIMEOUT 毫秒阻塞等待
                 messages = await redis_client.xreadgroup(

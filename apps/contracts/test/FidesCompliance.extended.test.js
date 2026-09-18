@@ -551,8 +551,10 @@ describe('FidesCompliance Extended', function () {
     // [M-5 FIX] 白名单已改为两步时间锁（propose + 48h + execute）：
     // 测试用 evm 时间推进越过 SETTER_DELAY 后验证生效/移除。
     it('should allow admin to add and remove from whitelist via two-step timelock', async function () {
+      // [AUDIT FIX 2026-09-18 R3-M9] 提案与生效事件已分离：提案 emit
+      // WhitelistProposed，WhitelistUpdated 只在执行时发出（subgraph 台账不再失真）
       await expect(fidesCompliance.connect(owner).proposeWhitelist(addr1.address, true))
-        .to.emit(fidesCompliance, 'WhitelistUpdated');
+        .to.emit(fidesCompliance, 'WhitelistProposed');
       // 未到时间锁不可执行
       await expect(fidesCompliance.connect(owner).executeWhitelistUpdate())
         .to.be.revertedWithCustomError(fidesCompliance, 'TooEarly');

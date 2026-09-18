@@ -137,21 +137,6 @@ export default function ContentBlogTW() {
     <section className="section" style={{ "paddingTop": "60px" }}>
       <div className="container">
         <div className="reveal">
-          <Link href="/tw/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.png" alt="" loading="lazy" />
-            <div>
-              <div style={{ "marginBottom": "8px" }}>
-                <span className="tag">概念定義</span>
-                <span className="date">2026 年 6 月</span>
-              </div>
-              <h2>為何鏈上：API 合規模式的終結</h2>
-              <p>基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。</p>
-            </div>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
-          </Link>
-        </div>
-
-        <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/tw/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
             <img className="blog-thumb" src="/brand/covers/travel-rule-on-chain.png" alt="" loading="lazy" />
             <div>
@@ -161,6 +146,21 @@ export default function ContentBlogTW() {
               </div>
               <h2>鏈上旅行規則：FATF 對穩定幣轉帳的要求</h2>
               <p>2026 年穩定幣轉帳的 FATF 旅行規則要求，以及結算前合規中鏈上執行為何優於 API 中心化篩查。</p>
+            </div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+
+        <div className="reveal" style={{ "marginTop": "16px" }}>
+          <Link href="/tw/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
+            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.png" alt="" loading="lazy" />
+            <div>
+              <div style={{ "marginBottom": "8px" }}>
+                <span className="tag">概念定義</span>
+                <span className="date">2026 年 6 月</span>
+              </div>
+              <h2>為何鏈上：API 合規模式的終結</h2>
+              <p>基於 API 的合規是一種架構層面的錯誤。未來屬於鏈上風險執行：確定性、零延遲、無法繞過的原生執行。</p>
             </div>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" /></svg>
           </Link>

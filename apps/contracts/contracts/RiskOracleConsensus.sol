@@ -245,6 +245,13 @@ abstract contract RiskOracleConsensus is RiskOracleStorage {
 
         emit OracleResponseReceived(msg.sender, account, responseHash, currentConfirmations);
 
+        // [AUDIT FIX 2026-09-18 R3-M3] confirmedUpdates 一旦置位永久吞掉后续
+        // 更新（无自动复位路径，必须 ADMIN 手动 resetConfirmations → 运营单点）。
+        // 提案内容变化（新 responseHash 首次出现）时自动复位，重新走共识。
+        if (confirmedUpdates[account] && currentConfirmations == 1) {
+            confirmedUpdates[account] = false;
+        }
+
         // 检查是否达到所需确认数
         if (currentConfirmations >= requiredOracleConfirmations && !confirmedUpdates[account]) {
             // H-02 FIX: Enforce updateCooldown before registry update

@@ -46,7 +46,7 @@ export default function HeroHome({
     const cHot = cs.getPropertyValue("--fio-gold").trim();
     const cHotDim = cs.getPropertyValue("--fio-gold-dim").trim();
     const cCream = cs.getPropertyValue("--fio-accent").trim();
-    if (!cLine || !cNode || !cHot || !cCream) return;
+    if (!cLine || !cNode || !cHot || !cHotDim || !cCream) return; // [AUDIT FIX 2026-09-18 R3] 原漏 cHotDim → 金色光晕静默消失
 
     let w = 0, h = 0;
     let particles: Particle[] = [];

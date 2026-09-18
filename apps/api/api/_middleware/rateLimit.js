@@ -88,14 +88,25 @@ function cleanupMemoryStore() {
     }
   }
 }
-// Clean every 5 minutes to prevent unbounded growth in long-running processes.
-setInterval(cleanupMemoryStore, 5 * 60 * 1000);
+/* [AUDIT FIX 2026-09-18 R3] serverless 冻结/复用模型下模块级 setInterval
+   不可靠且挂住事件循环。改为惰性清理：每次写入时若距上次清理超 5 分钟则顺带执行。 */
+let _lastCleanup = 0;
+function lazyCleanupMemoryStore(now) {
+  if (now - _lastCleanup > 5 * 60 * 1000) {
+    _lastCleanup = now;
+    cleanupMemoryStore();
+  }
+}
 
 // ── IP extraction ─────────────────────────────────────────────────────────
 // [M-12 FIX] 代理头默认不受信任：客户端可伪造 x-real-ip / x-forwarded-for
 // 无限轮换绕过限流。默认仅取 TCP 对端地址；仅在 TRUST_PROXY=true（部署于
 // 会剥离/覆写这些头的可信反向代理之后）时才信任代理头。
-const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
+/* [AUDIT FIX 2026-09-18 R3-C3] 原实现默认只取 socket.remoteAddress——
+   Vercel serverless 上该值恒为 undefined → 所有客户端共享 'unknown' 桶，
+   任一攻击者即可让全站 429。Vercel 边缘会覆写代理头（客户端伪造的会被
+   平台剥离），VERCEL 环境下可信代理头。 */
+const TRUST_PROXY = process.env.TRUST_PROXY === 'true' || !!process.env.VERCEL;
 
 function getClientIp(req) {
   if (TRUST_PROXY) {
@@ -125,6 +136,9 @@ async function checkRateLimitRedis(ip, now, opts) {
 
   try {
     const results = await pipeline.exec();
+    // [AUDIT FIX 2026-09-18 R3] 命令级错误（如 key 类型冲突）原被忽略 →
+    // count=undefined → undefined > max 恒 false → 限流静默失效。转为整体失败走降级。
+    if (results[0][0]) throw results[0][0];
     const count = results[0][1]; // result of incr
     if (count > max) {
       return { allowed: false, count };
@@ -138,6 +152,7 @@ async function checkRateLimitRedis(ip, now, opts) {
 
 // ── Fixed-window counter logic (Memory) ─────────────────────────────────────
 function checkRateLimitMemory(ip, now, opts) {
+  lazyCleanupMemoryStore(now); // [R3] 替代模块级 setInterval
   const { max, window, prefix } = opts;
   const key = `${prefix}:${ip}`;
   const record = memoryStore.get(key);

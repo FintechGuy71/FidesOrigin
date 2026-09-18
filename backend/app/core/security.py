@@ -120,7 +120,10 @@ async def create_refresh_token(username: str, family_id: str = None) -> dict:
                 expire=JWT_REFRESH_EXPIRE_MINUTES * 60
             )
         except Exception:
-            pass  # Redis 不可用时降级（token 仍然有效但不支持旋转检测）
+            # [AUDIT FIX 2026-09-18 R3-L4] 降级期间旋转/重放检测失效是安全事件，
+            # 原仅静默 pass。升 error 级并说明影响面。
+            logger.error("refresh_token_rotation_store_unavailable",
+                         impact="replay detection and family revocation disabled while Redis is down")
     
     # [Auth Fix] 返回 username 供 /refresh 路由签发新 access token
     return {"token": token, "family_id": family, "jti": jti, "username": username}
@@ -377,7 +380,9 @@ class RequestSigner:
         timestamp: str,
         body: str = ""
     ) -> str:
-        """生成请求签名"""
+        """生成请求签名
+        [R3-L2] path 参数可携带 query string（path?query），签名覆盖面含 query。
+        """
         message = f"{method}\n{path}\n{timestamp}\n{body}"
         signature = hmac.new(
             self.secret,
@@ -478,7 +483,9 @@ async def request_signature_middleware(
             pass
         
         signer = get_request_signer()
-        if not signer.verify(request.method, request.url.path, timestamp, signature, body):
+        # [AUDIT FIX 2026-09-18 R3-L2] 原签名消息不含 query string → 可篡改 query
+        path_with_query = request.url.path + (("?" + request.url.query) if request.url.query else "")
+        if not signer.verify(request.method, path_with_query, timestamp, signature, body):
             logger.warning("request_signature_invalid", path=request.url.path, method=request.method)
             from fastapi.responses import JSONResponse
             return JSONResponse(
@@ -575,7 +582,7 @@ class RateLimiter:
         self._last_local_cleanup: int = 0
         self._local_cleanup_interval: int = 60  # 每 60 秒触发一次全局清理
     
-    async def is_allowed(self, key: str) -> bool:
+    async def is_allowed(self, key: str, limit: int = None) -> bool:
         """
         检查是否允许请求
 
@@ -584,6 +591,8 @@ class RateLimiter:
 
         Args:
             key: 限流键（IP + API Key 或用户 ID）
+            limit: [AUDIT FIX 2026-09-18 R3-H5] 可选的自定义每分钟限额
+                   （None 时用 settings.RATE_LIMIT_REQUESTS_PER_MINUTE）
 
         Returns:
             bool: 是否允许
@@ -601,7 +610,7 @@ class RateLimiter:
                 # 首次请求，设置窗口过期时间
                 await cache.expire(cache_key, 60)
 
-            if count > self.requests_per_minute:
+            if count > (limit or self.requests_per_minute):
                 return False
             return True
 
@@ -761,16 +770,19 @@ async def verify_api_key(
             logger.warning("api_key_expired", api_key_id=str(key_record.id))
             return False
         
-        # [S-12 Fix] 强制 API Key 配额限制
-        key_record.request_count += 1
-        if key_record.rate_limit > 0 and key_record.request_count > key_record.rate_limit:
-            logger.warning(
-                "api_key_rate_limit_exceeded",
-                api_key_id=str(key_record.id),
-                rate_limit=key_record.rate_limit,
-                request_count=key_record.request_count
-            )
-            return False
+        # [AUDIT FIX 2026-09-18 R3-H5] 原实现 request_count 终身单调递增却与
+        # rate_limit（每分钟配额语义）比较 → 累计第 1001 次调用后 key 永久失效。
+        # 改为滑动窗口限流（复用 RateLimiter 的 Redis 原子 INCR，每分钟窗口）。
+        key_record.request_count += 1  # 仅作统计用途，不再参与配额判定
+        if key_record.rate_limit > 0:
+            limiter = RateLimiter()
+            if not await limiter.is_allowed(f"apikey:{key_record.id}", limit=key_record.rate_limit):
+                logger.warning(
+                    "api_key_rate_limit_exceeded",
+                    api_key_id=str(key_record.id),
+                    rate_limit=key_record.rate_limit
+                )
+                return False
         
         # [S-4 Fix] 更新最后使用时间 — 不调用 db.commit()，
         # 让请求级事务统一处理，避免破坏原子性
@@ -784,7 +796,8 @@ async def verify_api_key(
         # [M-EH-1 Fix] 不再捕获所有异常并返回 False（会掩盖系统错误如数据库连接失败）。
         # 所有"密钥无效"的业务场景（未找到、过期、超限）均已在上文显式处理。
         # 到达此处的异常均为系统级错误，应向上传播由全局异常处理器处理。
-        logger.error("api_key_verification_system_error", error_type=type(Exception).__name__)
+        # [R3-L1] error_type 取捕获实例的真实类型（原取类 Exception 恒失真）
+        logger.error("api_key_verification_system_error", error_type=type(e).__name__)
         raise
 
 
@@ -833,6 +846,11 @@ def _get_client_ip(request: Request) -> str:
         )
         return direct_ip
     
+    # [AUDIT FIX 2026-09-18 R3-M5] 直连来源不在可信代理列表时，XFF 可能是
+    # 攻击者伪造（绕过 CDN 直连源站）——整体忽略该头。
+    if direct_ip not in trusted_proxies:
+        return direct_ip
+
     # 解析 X-Forwarded-For 链（从左到右：客户端 -> 最近代理）
     ips = [ip.strip() for ip in forwarded_for.split(",")]
     
@@ -865,9 +883,12 @@ async def rate_limit_middleware(
     
     api_key = request.headers.get("X-API-Key", "")
     
-    # 构建限流键 - 对匿名用户更严格
+    # 构建限流键
+    # [AUDIT FIX 2026-09-18 R3-M4] 原对已提供的 key 只用 key 前缀作键，
+    # 且验证发生在限流之后 → 攻击者每请求换随机 X-API-Key 即换桶，IP 限流
+    # 完全失效（含登录爆破）。限流键始终包含 IP 维度。
     if api_key:
-        rate_key = f"api:{api_key[:16]}"
+        rate_key = f"api:{api_key[:16]}:ip:{client_ip}"
     else:
         rate_key = f"ip:{client_ip}"
     
@@ -884,10 +905,7 @@ async def rate_limit_middleware(
             path=request.url.path
         )
         
-        raise RateLimitException(
-            message="Rate limit exceeded",
-            retry_after=60
-        )
+        raise RateLimitException(retry_after=60)
     
     # 继续处理请求
     response = await call_next(request)

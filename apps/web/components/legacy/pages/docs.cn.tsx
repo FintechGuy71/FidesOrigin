@@ -56,13 +56,6 @@ export default function ContentDocsCN() {
           <h2>Demo</h2>
           <p>Sepolia 测试网上的交互式演示。筛查地址、查看风险分数，并体验 Guard 的实际效果。</p>
         </Link>
-        <Link href="/cn/blog" className="docs-card" prefetch={false}>
-          <div className="docs-card-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          </div>
-          <h2>博客</h2>
-          <p>深入探讨链上合规、风险引擎和 DeFi 监管。</p>
-        </Link>
         <a href="https://github.com/FintechGuy71/FidesOrigin" className="docs-card" target="_blank" rel="noopener">
           <div className="docs-card-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
