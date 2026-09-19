@@ -29,10 +29,22 @@ async function main() {
   if (signer.address.toLowerCase() !== ADMIN.toLowerCase()) throw new Error("signer != ADMIN");
 
   // ── UUPS 升级 × 3 ──────────────────────────────────────────────────
+  // 提案 ID 方案按合约而异（2026-09-19 预检发现）：
+  //   RiskRegistry / FidesCompliance → implementationToProposal(newImpl) 映射
+  //   PolicyEngine → keccak256(abi.encode(newImpl, chainId)) 计算值
+  const CHAIN_ID = 11155111n;
   for (const name of ["RiskRegistry", "PolicyEngine", "FidesCompliance"]) {
     const proxy = new ethers.Contract(ADDR[name], UUPS_ABI, signer);
     const newImpl = rec.implementations[name];
-    const pid = await proxy.implementationToProposal(newImpl);
+    let pid;
+    try {
+      pid = await proxy.implementationToProposal(newImpl);
+    } catch {
+      // PolicyEngine：无映射，按源码规则计算
+      pid = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address", "uint256"], [newImpl, CHAIN_ID]
+      ));
+    }
     if (pid === ethers.ZeroHash) { console.log(name, "无提案或已执行，跳过"); continue; }
     const after = await proxy.upgradeProposals(pid);
     const now = BigInt(Math.floor(Date.now() / 1000));
