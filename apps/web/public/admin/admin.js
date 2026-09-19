@@ -135,7 +135,7 @@ const SEPOLIA_ADDRESSES = window.SEPOLIA_ADDRESSES || Object.freeze({
    （在 admin-config.js 或页面注入即可覆盖，便于切换版本/私有部署）。 */
 const SUBGRAPH_URL =
   (typeof window !== 'undefined' && window.FIDESORIGIN_SUBGRAPH_URL) ||
-  'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3';
+  'https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/version/latest';
 const CONTRACT_ADDRESS = sessionStorage.getItem('contractAddress') || SEPOLIA_ADDRESSES.CompliantStableCoin;
 
 let provider, signer, contract, userAddress;

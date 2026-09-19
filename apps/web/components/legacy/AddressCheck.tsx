@@ -68,7 +68,7 @@ const SUBGRAPH_URL =
     (window as unknown as { FIDESORIGIN_SUBGRAPH_URL?: string })
       .FIDESORIGIN_SUBGRAPH_URL) ||
   process.env.NEXT_PUBLIC_SUBGRAPH_URL ||
-  "https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.0.3";
+  "https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/version/latest";
 
 type D = Dict["addressCheck"];
 
