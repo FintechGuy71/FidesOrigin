@@ -1,6 +1,10 @@
 # Subgraph Deployment Status Report
 
 > ⚠️ **已被取代 (2026-08-25)**：本文档为 2026-08-07 的历史快照。当前权威部署状态见 **DEPLOYED.md**（v3.1.0），机器可读注册表见 `packages/config/deployments.json`。
+>
+> ✅ **状态更新 (2026-09-20)**：下文「Deployment Prerequisites Checklist」的全部 11 项**均已实际完成**（核验时间 2026-09-20）：
+> FidesCompliance/CompliantStableCoin 地址已更新、QuarantineVault 数据源+ABI+mapping 已建、GuardCheck/GuardBlocked 实体与 handler 已加、RiskTier CRITICAL(=4) 映射已补、startBlock 已核验、codegen/build/deploy 均已完成且 subgraph 健康（`hasIndexingErrors:false`）。
+> 下文 Pending 标记与 `# TODO` 为历史快照原文，**不再反映真实状态**，仅作存档保留。
 
 > Generated: 2026-08-07
 > Network: Sepolia Testnet (Chain ID 11155111)
@@ -64,7 +68,7 @@ QuarantineVault is currently **not indexed** by the subgraph. It emits `FundsHel
   source:
     abi: QuarantineVault
     address: '0xF5593e26b2560b9fc71de729EA2D86F979dfd76b'
-    startBlock: 7650000 # TODO: verify actual deployment block
+    startBlock: 7650000 # 已核验（实际部署用 11730000，见 subgraph.yaml）
   mapping:
     kind: ethereum/events
     apiVersion: 0.0.9
@@ -194,17 +198,17 @@ Before deploying the updated subgraph, complete the following:
 
 | #   | Task                                                            | Status     |
 | --- | --------------------------------------------------------------- | ---------- |
-| 1   | Update FidesCompliance address in `subgraph.yaml`               | ⏳ Pending |
-| 2   | Update CompliantStableCoin address in `subgraph.yaml`           | ⏳ Pending |
-| 3   | Add QuarantineVault data source to `subgraph.yaml`              | ⏳ Pending |
-| 4   | Create `abis/QuarantineVault.json`                              | ⏳ Pending |
-| 5   | Create `src/mappings/quarantineVault.ts`                        | ⏳ Pending |
-| 6   | Add GuardCheck/GuardBlocked entities to `schema.graphql`        | ⏳ Pending |
-| 7   | Update `src/mappings/fidesCompliance.ts` to handle Guard events | ⏳ Pending |
-| 8   | Fix RiskTier mapping for CRITICAL tier (value 4)                | ⏳ Pending |
-| 9   | Verify `startBlock` values for all data sources                 | ⏳ Pending |
-| 10  | Run `graph codegen` and `graph build`                           | ⏳ Pending |
-| 11  | Deploy with `graph deploy`                                      | ⏳ Pending |
+| 1   | Update FidesCompliance address in `subgraph.yaml`               | ✅ Done (2026-09-20) |
+| 2   | Update CompliantStableCoin address in `subgraph.yaml`           | ✅ Done (2026-09-20) |
+| 3   | Add QuarantineVault data source to `subgraph.yaml`              | ✅ Done (2026-09-20) |
+| 4   | Create `abis/QuarantineVault.json`                              | ✅ Done (2026-09-20) |
+| 5   | Create `src/mappings/quarantineVault.ts`                        | ✅ Done (2026-09-20) |
+| 6   | Add GuardCheck/GuardBlocked entities to `schema.graphql`        | ✅ Done (2026-09-20) |
+| 7   | Update `src/mappings/fidesCompliance.ts` to handle Guard events | ✅ Done (2026-09-20) |
+| 8   | Fix RiskTier mapping for CRITICAL tier (value 4)                | ✅ Done (2026-09-20) |
+| 9   | Verify `startBlock` values for all data sources                 | ✅ Done (2026-09-20) |
+| 10  | Run `graph codegen` and `graph build`                           | ✅ Done (2026-09-20) |
+| 11  | Deploy with `graph deploy`                                      | ✅ Done (2026-09-20) |
 
 ---
 

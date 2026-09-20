@@ -40,3 +40,7 @@ pyjwt==2.8.0
 structlog==24.1.0
 tenacity==8.2.3
 asgi-lifespan==2.1.0
+# [2026-09-20] 用 fakeredis 替换 Redis 不可用时的 pytest.skip，使分布式锁/
+# 消息队列/缓存的 Redis 路径在 CI（无 Redis 服务）也能确定性执行。
+# lua extra 提供 EVAL 支持（释放锁的 Lua 脚本需要）。
+fakeredis[lua]==2.21.3
