@@ -321,7 +321,11 @@ importers:
         specifier: ^8.65.0
         version: 8.65.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
 
-  packages/config: {}
+  packages/config:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.21
 
   packages/on-chain-sdk:
     dependencies:

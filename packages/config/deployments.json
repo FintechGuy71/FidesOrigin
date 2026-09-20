@@ -1,5 +1,5 @@
 {
-  "$comment": "FidesOrigin 合约地址唯一注册表（G-01 FIX R2）。所有前端/后端/subgraph/脚本必须从此文件读取，禁止硬编码。当前生产代：v3.1.0（2026-08-24 全新部署，审计修复版）。人类可读权威文档见 DEPLOYED.md；历史各代见 docs/audit-history/ 与 CONTRACT_DEPLOYMENT_STATUS.md。",
+  "$comment": "FidesOrigin 合约地址唯一注册表（G-01 FIX R2）。所有前端/后端/subgraph/脚本必须从此文件读取，禁止硬编码。当前生产代：v3.1.0（2026-08-24 全新部署，审计修复版）。2026-09-20 R3 审计升级：UUPS 代理（RiskRegistry/PolicyEngine/FidesCompliance）的 implementation 与 Diamond 的 facet（Wallet/Asset/Loupe）已原地替换为修复版（proxy 地址不变，故版本号保持 v3.1.0）；QuarantineVault/FidesOriginTimelock 因不可升级已重部署（见 current 段新地址）。人类可读权威文档见 DEPLOYED.md；历史各代见 docs/audit-history/ 与 CONTRACT_DEPLOYMENT_STATUS.md。",
   "version": "3.1.0",
   "networks": {
     "sepolia": {
@@ -18,15 +18,15 @@
       "proxies": {
         "RiskRegistry": {
           "proxy": "0x953f985f38f94d6159c0600d1f15D543895cE896",
-          "implementation": "0x2426e26f6182052eD4a6B0b0ac176Dc42B2C5F08"
+          "implementation": "0x3F2856D2C0Ed2FeBf6ae20AFfD488F2588bea817"
         },
         "PolicyEngine": {
           "proxy": "0xCA12BB2daD2a6D429277823366D8C88a490EDDeA",
-          "implementation": "0x0A0db0D56A345710591174726270CAe544D9b0e2"
+          "implementation": "0x7E2a41B7330aD4Ffec2CaBB2BBD11541fbF73dd2"
         },
         "FidesCompliance": {
           "proxy": "0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5",
-          "implementation": "0xD104b05442F5032f6BCF7a4F90dfff58D9a4FBf3"
+          "implementation": "0x0f11220069B5Ad9fe1246Ff6981a6Fb083B3421d"
         }
       },
       "diamond": {
@@ -34,10 +34,10 @@
         "diamond": "0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E",
         "facets": {
           "DiamondCutFacet": "0x496A674FACE2722b7dD62b25d58F73BF7D141a99",
-          "DiamondLoupeFacet": "0x3d9C891145226Bc49D43a82Ec3cc95Ff526EBeE3",
+          "DiamondLoupeFacet": "0x19D3B58E62e6ba8469BA9FB0e02E61b792692621",
           "ComplianceCoreFacet": "0x96cA1BD56bC5390Bac134Da165318f0C3e3FC20B",
-          "AssetComplianceFacet": "0xD80Ccee6167818E307bbAF436060003EeB6e415d",
-          "WalletComplianceFacet": "0x3C99EF323832FB723A6eff4A43B03A03b8CC3917",
+          "AssetComplianceFacet": "0x21c40C012729891431f8b111190f11fA6F7114eF",
+          "WalletComplianceFacet": "0x012e3074325c324D69119eAeCA5911495fcf9D92",
           "AdminFacet": "0xdB06c51C26bc3e8fdF541EcC31b3669F4E5cD7A7"
         }
       },
@@ -67,7 +67,13 @@
         "CompliantStableCoin_v3.0.4": "0x5028Dc7DA99bf461ed60a226c7CEf0bf7f77BF9A",
         "TestUSD_v3.0.4": "0xeF90F9FdB868EDA98b337CbF54111b8539533ED2",
         "QuarantineVault_preR3": "0x6803E163259B07F58111f56423aB0732858196Be",
-        "FidesOriginTimelock_preR3": "0x04B2Fc88b57AE8d8E6cE26d93294E3511cFbb247"
+        "FidesOriginTimelock_preR3": "0x04B2Fc88b57AE8d8E6cE26d93294E3511cFbb247",
+        "RiskRegistry_impl_preR3": "0x2426e26f6182052eD4a6B0b0ac176Dc42B2C5F08",
+        "PolicyEngine_impl_preR3": "0x0A0db0D56A345710591174726270CAe544D9b0e2",
+        "FidesCompliance_impl_preR3": "0xD104b05442F5032f6BCF7a4F90dfff58D9a4FBf3",
+        "DiamondLoupeFacet_preR3": "0x3d9C891145226Bc49D43a82Ec3cc95Ff526EBeE3",
+        "AssetComplianceFacet_preR3": "0xD80Ccee6167818E307bbAF436060003EeB6e415d",
+        "WalletComplianceFacet_preR3": "0x3C99EF323832FB723A6eff4A43B03A03b8CC3917"
       }
     }
   },

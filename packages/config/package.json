@@ -19,5 +19,8 @@
   ],
   "scripts": {
     "clean": "echo 'No build artifacts'"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0"
   }
 }

@@ -23,5 +23,16 @@
     "PolicyEngine": "0x67b4084f08e0b7a37dc1f91066cf3c0ec7915e22fd70d1d887617c6fd02926d8",
     "FidesCompliance": "0x71f74e165612429551c45bc7f8d92d67dc5cde01bdea4853f943daf23808680b",
     "DiamondCut": "0x6720472cef67ea9269558e4c59c19e666f83422a83d016f78ff19d819a07e992"
+  },
+  "executedAt": "2026-09-20T12:42:24Z",
+  "executeTxs": {
+    "RiskRegistry": "0xfa40ee4afcc1040bd1b653ed55128dc272d277bcfd3b97ab8d4e92d52ff76dc1",
+    "PolicyEngine": "0xf8d663cbbf7ef54729a5829414b0d03cb59d50583e75b2fc7d564d10d5926dcf",
+    "FidesCompliance": "0x9c6a60b4cb35c587edcf9c63ce5134e49adb1ec6de79541b281dcd76b9e91254",
+    "DiamondCut": "0x259de99354edf64c5a0545c31fafed092f9525baf36fb53f829ece4b2d7fb8aa"
+  },
+  "verified": {
+    "RiskRegistryImplSlot": "0x3F2856D2C0Ed2FeBf6ae20AFfD488F2588bea817",
+    "WalletComplianceFacetSelectors": 8
   }
 }

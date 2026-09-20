@@ -1,0 +1,74 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/contracts/contracts/**'
+      - '.github/workflows/security-scan.yml'
+  pull_request:
+    paths:
+      - 'apps/contracts/contracts/**'
+      - '.github/workflows/security-scan.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# [2026-09-20 #6] 深度安全扫描落地为可重复 CI 关卡。
+# 当前实现 Slither 静态分析（High/Critical 卡门禁）。
+# Mythril 符号执行 / Echidna fuzzing 因依赖 solc 二进制 + 构建复杂度，
+# 以 workflow_dispatch 手动触发形式提供（见下方 job），不阻塞 PR。
+jobs:
+  slither:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [pin]
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4 [pin]
+        with:
+          version: 11.6.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [pin]
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5 [pin]
+        with:
+          python-version: '3.12'
+
+      - name: Install contract deps
+        working-directory: apps/contracts
+        run: pnpm install --ignore-scripts --no-frozen-lockfile --config.block-exotic-subdeps=false
+
+      - name: Compile contracts
+        working-directory: apps/contracts
+        run: npx hardhat compile
+
+      - name: Install Slither
+        run: pip install slither-analyzer==0.11.6 solc-select
+
+      - name: Run Slither (hardhat build-info)
+        working-directory: apps/contracts
+        # foundry.toml 会让 crytic 误探测 foundry 平台并尝试跑 forge；
+        # 强制 hardhat 框架，直接复用已编译的 artifacts/build-info（无需 solc 二进制）。
+        run: |
+          slither . --compile-force-framework hardhat \
+            --filter-paths "node_modules|test|examples|mocks|deprecated" \
+            --json slither-report.json || true
+
+      - name: Slither gate (block on High/Critical)
+        working-directory: apps/contracts
+        run: python scripts/slither_gate.py slither-report.json --max-high 0 --max-critical 0
+
+      - name: Upload Slither report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4 [pin]
+        with:
+          name: slither-report
+          path: apps/contracts/slither-report.json
+          if-no-files-found: warn

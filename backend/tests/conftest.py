@@ -78,6 +78,22 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+# ==================== Fake Redis Fixture ====================
+# [2026-09-20] 用 fakeredis 替换"Redis 不可用即 pytest.skip"的旧模式。
+# CI 无 Redis 服务，原本 5+ 处分布式锁/消息队列/缓存测试恒被跳过（测试盲区）。
+# 注入 fakeredis.aioredis.FakeRedis 后这些路径在 CI 也能确定性执行。
+# decode_responses=True 与生产 redis.Redis(decode_responses=True) 行为一致。
+@pytest_asyncio.fixture
+async def fake_redis():
+    """函数级 fakeredis 客户端；每个测试独立实例，测试后关闭。"""
+    import fakeredis.aioredis
+    client = fakeredis.aioredis.FakeRedis(decode_responses=True)
+    try:
+        yield client
+    finally:
+        await client.aclose()
+
+
 # ==================== Mock Blockscout Service ====================
 class MockBlockscoutService:
     """Mock Blockscout 服务，避免测试时发起外部 HTTP 请求"""
@@ -196,7 +212,10 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
         from asgi_lifespan import LifespanManager
         
         async with LifespanManager(app) as manager:
-            transport = ASGITransport(app=manager.app)
+            # [2026-09-20 #5] raise_app_exceptions=False：让未处理异常经 app 的
+            # general_exception_handler 变成 500 响应，而非穿透到测试。默认 True 会使
+            # 整个测试套件无法验证异常处理中间件（上游故障路径恒被异常绕过）。
+            transport = ASGITransport(app=manager.app, raise_app_exceptions=False)
             # [Fix #7] 仅在 noauth 标记时注入 Authorization header 以跳过 CSRF 检查
             # 真实认证测试不注入，确保测试真实的认证流程
             client_headers = {}
@@ -217,7 +236,8 @@ async def client(request, db_session) -> AsyncGenerator[AsyncClient, None]:
                 yield app
         
         async with manual_lifespan():
-            transport = ASGITransport(app=app)
+            # [2026-09-20 #5] 同上：异常经 handler 变 500 响应，忠实复现生产行为
+            transport = ASGITransport(app=app, raise_app_exceptions=False)
             client_headers = {}
             if noauth_marker:
                 client_headers = {"Authorization": "Bearer test-api-key"}

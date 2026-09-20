@@ -129,7 +129,10 @@ class TransactionBase(BaseModel):
 
 class TransactionResponse(BaseResponse):
     """交易响应模型"""
-    id: int  # 改为 int 匹配 BigInteger
+    # [2026-09-20] id 改为 Optional：blockscout 回退路径（DB 无记录、从上游取）
+    # 构造 TransactionResponse(id=None) —— 原 id:int 不可空导致该成功路径恒 500，
+    # 且因测试被 skip 从未暴露。DB 路径的 id 仍为 BigInteger 整型。
+    id: Optional[int] = None
     tx_hash: str
     chain: str
     address: str

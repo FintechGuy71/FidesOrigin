@@ -213,18 +213,29 @@ class TestCacheConnection:
     """缓存连接测试"""
 
     @pytest.mark.asyncio
-    async def test_connect_and_close(self):
-        """测试连接和关闭 - 需要 Redis 可用"""
-        service = CacheService()
-        # 尝试连接，如果 Redis 不可用会报错
-        try:
+    async def test_connect_and_close(self, fake_redis):
+        """测试连接和关闭。
+
+        [2026-09-20] 原实现 try/except + pytest.skip("Redis not available")，
+        在 CI（无 Redis 服务）恒被跳过。改为注入 fakeredis：patch redis.Redis
+        返回 fake 客户端，真实验证 connect/close 的状态迁移与 L1/L2 读写往返。
+        """
+        import fakeredis.aioredis
+
+        with patch("app.services.cache_service.redis.Redis", return_value=fake_redis):
+            service = CacheService()
             await service.connect()
-            assert service._redis is not None
+            assert service._redis is not None, "connect 后 _redis 应已建立"
+
+            # 连接后可经 redis 属性访问，且 L2 读写往返生效
+            written = await service.set("conn:key", "conn:value")
+            assert written is True, "Redis 已连接时 set 应写入 L2 并返回 True"
+            # 清 L1 强制回源 L2
+            service._local_cache.clear()
+            assert await service.get("conn:key") == "conn:value"
+
             await service.close()
-            assert service._redis is None
-        except Exception:
-            # Redis 不可用，跳过
-            pytest.skip("Redis not available")
+            assert service._redis is None, "close 后 _redis 应置空"
 
     def test_redis_property_not_connected(self, cache_service):
         """测试未连接时访问 redis 属性"""
