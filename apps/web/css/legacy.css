@@ -826,17 +826,6 @@ img { max-width: 100%; display: block; }
   opacity: 1;
   transform: translateY(0);
 }
-.animate-fadeInUp {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.animate-delay-1 { animation-delay: 0.1s; }
-.animate-delay-2 { animation-delay: 0.2s; }
-.animate-delay-3 { animation-delay: 0.35s; }
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
-}
 
 /* ─── Scroll-to-top ─────────────────────────────────────────────── */
 .scroll-top {
@@ -926,18 +915,11 @@ img { max-width: 100%; display: block; }
 #mobile-wallet-disconnect:hover {
   color: var(--danger);
   border-color: var(--danger);
-}.code-copy-btn.copied {
-  background: var(--success-dim);
-  color: var(--success);
-  border-color: rgba(88,201,138,0.3);
 }/* Section intro centered text */
 .section-intro {
   text-align: center;
   max-width: 600px;
   margin: 0 auto;
-}
-.section-intro.wide {
-  max-width: 800px;
 }
 
 /* Secondary background */
@@ -962,7 +944,7 @@ img { max-width: 100%; display: block; }
 .compliance-details {
   margin-top: 12px;
 }@media (prefers-reduced-motion: reduce) {
-  .reveal, .animate-fadeInUp {
+  .reveal {
     opacity: 1;
     transform: none;
     animation: none;

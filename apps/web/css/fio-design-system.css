@@ -197,14 +197,6 @@
     line-height: 1.7;
     color: var(--fio-text-2);
   }
-  .fio-caption {
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-weight: 500;
-    color: var(--fio-text-3);
-    font-family: var(--font-mono);
-  }
   /* Eyebrow — 宽字距等宽标签 + 前置刻线，章节序号式编排 */
   .fio-eyebrow {
     display: inline-flex;
@@ -226,11 +218,6 @@
     opacity: 0.6;
   }
   /* CJK 排版适配 */
-  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-caption {
-    font-family: var(--font-sans);
-    letter-spacing: 0.04em;
-    text-transform: none;
-  }
   :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-eyebrow {
     font-family: var(--font-sans);
     letter-spacing: 0.14em;
@@ -304,15 +291,6 @@
     transform-origin: 50% 50%;
   }
 
-  /* ---- Screening ticker（横向滚动的事件流，无缝循环需内容×2） ---- */
-  @keyframes fio-ticker {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-  .fio-ticker-track {
-    animation: fio-ticker 46s linear infinite;
-  }
-
   /* ---- Animations ---- */
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(20px); }
@@ -353,8 +331,7 @@
     opacity: 1 !important;
     transform: none !important;
   }
-  .fio-seal-ring,
-  .fio-ticker-track {
+  .fio-seal-ring {
     animation: none !important;
   }
 
