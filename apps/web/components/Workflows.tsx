@@ -42,7 +42,7 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
   return (
     <section id="capabilities" ref={sectionRef} style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="py-28 md:py-36">
+        <div className="py-[var(--section-py)] md:py-[var(--section-py-lg)]">
           {/* Section header — left-aligned editorial grid */}
           <div className="grid gap-10 pb-16 md:grid-cols-12 md:pb-24">
             <div className="md:col-span-6">

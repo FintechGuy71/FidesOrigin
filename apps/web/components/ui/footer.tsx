@@ -67,28 +67,28 @@ export default function Footer({
             <Link
               href={href("/pricing", lang)}
               prefetch={false}
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.pricing}
             </Link>
             <Link
               href={href("/docs", lang)}
               prefetch={false}
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.docs}
             </Link>
             <Link
               href={href("/blog", lang)}
               prefetch={false}
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.blog}
             </Link>
             <Link
               href={href("/demo", lang)}
               prefetch={false}
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.demo}
             </Link>
@@ -97,14 +97,14 @@ export default function Footer({
             <Link
               href={href("/address-check", lang)}
               prefetch={false}
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.addressCheck}
             </Link>
             <Link
               href={href("/brand", lang)}
               prefetch={false}
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.brand}
             </Link>
@@ -112,13 +112,13 @@ export default function Footer({
               href="https://github.com/FintechGuy71/FidesOrigin"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.github}
             </a>
             <a
               href="mailto:contact@fidesorigin.com"
-              className="text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)]"
+              className="inline-block py-2.5 text-sm text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm"
             >
               {d.contact}
             </a>

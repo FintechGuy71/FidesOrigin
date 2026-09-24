@@ -76,10 +76,21 @@ export default function HeroHome({
     const LINK_DIST = () => Math.min(w, h) * 0.16;
     let frame = 0;
     let t = 0;
+    /* [AUDIT FIX 2026-09-25 R6-11] 性能精修：首屏粒子网络是常驻 rAF 循环。
+       ① 文档隐藏（切后台标签）时 rAF 已被浏览器节流但回调仍排队，显式暂停；
+       ② hero 滚出视口后继续绘制纯浪费 GPU/CPU —— IO 观察，离屏即停，
+       回屏恢复。两者都不改变任何视觉结果（回屏后从当前状态续画）。 */
+    let running = true;
+    let inView = true;
 
-    const draw = () => {
-      frame = requestAnimationFrame(draw);
+    const loop = () => {
+      frame = requestAnimationFrame(loop);
+      if (!running || !inView) return;
       t += 0.016;
+      drawFrame();
+    };
+
+    const drawFrame = () => {
       ctx.clearRect(0, 0, w, h);
 
       const dpr = window.devicePixelRatio || 1;
@@ -137,11 +148,23 @@ export default function HeroHome({
         }
       }
     };
-    draw();
+
+    const onVisibility = () => { running = !document.hidden; };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    const io = new IntersectionObserver(
+      (entries) => { inView = entries[0].isIntersecting; },
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
+    loop();
 
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", onVisibility);
+      io.disconnect();
     };
   }, []);
 
@@ -149,7 +172,13 @@ export default function HeroHome({
     <section className="relative overflow-hidden fio-gradient-hero">
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 z-[var(--z-decor)]"
+        /* [AUDIT FIX 2026-09-25 R6-1] 必须显式 h-full w-full：canvas 是 replaced
+           element，absolute + inset-0 不会拉伸它（CSS2.1 §10.3.8：绝对定位替换元素
+           width:auto 取固有尺寸，over-constrained 时忽略 right）→ 此前恒为默认
+           300×150 贴在左上角；且 resize() 把 offsetWidth×dpr 写回 width 属性，
+           HiDPI 下固有尺寸每轮 resize 翻倍（dpr=2 → 600px）造成移动端横向溢出。
+           显式 CSS 尺寸切断「属性尺寸=固有尺寸=布局尺寸」的自反馈环。 */
+        className="pointer-events-none absolute inset-0 h-full w-full z-[var(--z-decor)]"
         aria-label={d.canvasLabel}
         role="img"
       />
@@ -352,7 +381,10 @@ export default function HeroHome({
           {d.metrics.map((m, i) => (
             <div
               key={m.label}
-              className={`py-7 md:py-9 ${i === 0 ? "" : "md:border-l"} ${i % 2 === 1 ? "border-l md:border-l" : ""}`}
+              /* [AUDIT FIX 2026-09-25 R6-9] 原条件类串会产出重复的
+                 md:border-l（i 为奇数时两个分支都追加）；化简为单一表达式：
+                 移动端奇数列加左分隔线，桌面端除首列外加左分隔线。 */
+              className={`py-7 md:py-9 ${i % 2 === 1 ? "border-l" : ""} ${i > 0 ? "md:border-l" : ""}`}
               style={{ borderColor: "var(--fio-border-hairline)" }}
             >
               <div className="px-2 text-center md:px-4">
