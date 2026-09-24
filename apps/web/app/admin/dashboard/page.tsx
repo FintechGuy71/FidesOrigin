@@ -658,7 +658,7 @@ export default function DashboardPage() {
       <div className="flex min-h-screen items-center justify-center bg-[var(--fio-ink)] px-4">
         <form
           onSubmit={tryLogin}
-          className="w-full max-w-sm rounded-xl border border-[var(--fio-border)] bg-[var(--fio-surface)] p-8"
+          className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--fio-border)] bg-[var(--fio-surface)] p-8"
         >
           {/* [AUDIT FIX R2-066] 登录表单原为英文，与主体中文界面混杂。
               后台受众为运营团队，统一为中文。 */}
@@ -678,7 +678,7 @@ export default function DashboardPage() {
             placeholder="请输入用户名"
             aria-label="管理员用户名"
             autoComplete="username"
-            className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
+            className="mb-4 w-full rounded-[var(--radius-md)] border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
           <label htmlFor="admin-password" className="mb-1 block text-sm text-[var(--fio-text-2)]">
             密码
@@ -694,7 +694,7 @@ export default function DashboardPage() {
             placeholder="请输入密码"
             aria-label="管理员密码"
             autoComplete="current-password"
-            className="mb-4 w-full rounded-lg border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
+            className="mb-4 w-full rounded-[var(--radius-md)] border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
           {loginError && (
             <p className="mb-4 text-sm text-[var(--fio-danger)]" role="alert">
@@ -704,7 +704,7 @@ export default function DashboardPage() {
           <button
             type="submit"
             disabled={loginSubmitting}
-            className="w-full rounded-lg bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)] disabled:opacity-50"
+            className="w-full rounded-[var(--radius-md)] bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)] disabled:opacity-50"
           >
             {loginSubmitting ? "登录中..." : "登录"}
           </button>
@@ -745,7 +745,7 @@ export default function DashboardPage() {
           {statCards.map((card, index) => (
             <div
               key={index}
-              className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6 hover:border-[var(--fio-border-light)] transition-colors"
+              className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-[var(--radius-lg)] p-6 hover:border-[var(--fio-border-light)] transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -765,7 +765,7 @@ export default function DashboardPage() {
                     </p>
                   )}
                 </div>
-                <div className="p-3 bg-[var(--fio-surface-2)]/50 rounded-lg text-[var(--fio-text-2)]">
+                <div className="p-3 bg-[var(--fio-surface-2)]/50 rounded-[var(--radius-md)] text-[var(--fio-text-2)]">
                   <card.icon />
                 </div>
               </div>
@@ -776,7 +776,7 @@ export default function DashboardPage() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Risk Trend Chart */}
-          <div className="lg:col-span-2 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6">
+          <div className="lg:col-span-2 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-[var(--radius-lg)] p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-white">风险趋势监控</h2>
               <div className="flex gap-2">
@@ -787,7 +787,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               {riskTrendData.map((point, i) => (
-                <div key={i} className="text-center p-3 rounded-lg bg-[var(--fio-surface-2)]">
+                <div key={i} className="text-center p-3 rounded-[var(--radius-md)] bg-[var(--fio-surface-2)]">
                   <div className={`text-xl font-semibold ${
                     /* [AUDIT FIX R2-016] 此前误用 MAX_EVENTS_DISPLAY(50)/MAX_EVENT_NAME_LENGTH(30)
                        当风险分阈值，与同页柱状图（RISK_SCORE_HIGH=70/MEDIUM=40）配色矛盾：
@@ -830,7 +830,7 @@ export default function DashboardPage() {
           </div>
 
           {/* 风险类型分布 */}
-          <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl p-6">
+          <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-[var(--radius-lg)] p-6">
             <h2 className="text-lg font-semibold text-white mb-6">风险类型分布</h2>
             {/* ⚠ 原先这里是一份硬编码的百分比（35/28/15/22），永远是同一组数字。
                 改为从真实事件列表派生；无事件时显示占位符。 */}
@@ -841,7 +841,7 @@ export default function DashboardPage() {
             ) : (
             <div className="grid grid-cols-2 gap-4">
               {riskTypeDistribution.map((item) => (
-                <div key={item.name} className="text-center p-4 bg-[var(--fio-surface-2)] rounded-lg">
+                <div key={item.name} className="text-center p-4 bg-[var(--fio-surface-2)] rounded-[var(--radius-md)]">
                   <div className={`text-2xl font-bold ${item.textColor}`}>{item.percent}%</div>
                   <div className="text-sm text-[var(--fio-text-2)] mt-1">{item.name}</div>
                   <div className="mt-2 h-1.5 bg-[var(--fio-surface-3)] rounded-full overflow-hidden">
@@ -884,7 +884,7 @@ export default function DashboardPage() {
         />
 
         {/* Recent Events Table */}
-        <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl overflow-hidden mb-8">
+        <div className="bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-[var(--radius-lg)] overflow-hidden mb-8">
           <div className="p-6 border-b border-[var(--fio-border)]">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">最近风险事件</h2>
@@ -1004,7 +1004,7 @@ export default function DashboardPage() {
             <div
               key={index}
               aria-disabled="true"
-              className="p-4 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-xl text-left opacity-70"
+              className="p-4 bg-[var(--fio-surface)] border border-[var(--fio-border)] rounded-[var(--radius-lg)] text-left opacity-70"
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-white">{action.title}</h3>
@@ -1031,7 +1031,7 @@ export default function DashboardPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="tx-detail-title"
-            className="bg-[var(--fio-surface)] border border-[var(--fio-border-light)] rounded-2xl p-6 max-w-lg w-full"
+            className="bg-[var(--fio-surface)] border border-[var(--fio-border-light)] rounded-[var(--radius-lg)] p-6 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

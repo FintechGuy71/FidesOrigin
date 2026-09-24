@@ -18,7 +18,7 @@ export default function HomeContact({
   return (
     <section id="contact" style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="border-t py-24 md:py-32" style={{ borderColor: "var(--fio-border-hairline)" }}>
+        <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           <div
             className="fio-ticks relative mx-auto max-w-4xl border px-6 py-16 text-center md:px-16 md:py-24"
             style={{
@@ -27,7 +27,9 @@ export default function HomeContact({
                 "radial-gradient(ellipse 70% 60% at 50% 0%, var(--fio-gold-glow) 0%, transparent 65%), var(--fio-surface)",
             }}
           >
-            <div className="fio-eyebrow mb-6" style={{ justifyContent: "center" }}>
+            {/* [AUDIT FIX 2026-09-25 R6-10] 同 Trust：inline-flex 的居中由父级
+                text-center 承担，删除无效的 justifyContent 内联声明。 */}
+            <div className="fio-eyebrow mb-6">
               {d.caption}
             </div>
             <h2 className="fio-heading-lg mb-6" style={{ color: "var(--fio-text)" }}>

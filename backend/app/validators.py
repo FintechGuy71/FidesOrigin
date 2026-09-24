@@ -16,10 +16,6 @@ TX_HASH_RE = re.compile(r"^0x[a-fA-F0-9]{64}$")
 # 链类型白名单
 SUPPORTED_CHAINS = {"ethereum", "bsc", "polygon", "arbitrum", "optimism", "base"}
 
-
-# 链类型白名单
-SUPPORTED_CHAINS = {"ethereum", "bsc", "polygon", "arbitrum", "optimism", "base"}
-
 # [LOW Fix #3] 各链地址格式正则
 CHAIN_ADDRESS_PATTERNS = {
     "ethereum": re.compile(r"^0x[a-fA-F0-9]{40}$"),

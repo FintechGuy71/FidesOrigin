@@ -43,8 +43,14 @@ async function handler(req, res) {
   }
 
   try {
+    /* [AUDIT FIX 2026-09-24 F1] 后端 /api/v1/address/{address}/risk 读取的查询
+       参数名是 `chain`（链名），不是 `chainId`（数字）——原 ?chainId= 被后端
+       静默忽略。本端点的 chainId 入参保留（公开 API 契约），但转发时显式
+       传后端真正识别的 chain=ethereum（v3.1.0 数据阶段后端所有 AddressRisk
+       记录统一以 "ethereum" 为键，见 backend risk_sync_service 与
+       addresses.py batch-check 的注释）。数据按链重键后应改回语义映射。 */
     const response = await proxyToBackend(
-      `/api/v1/address/${address}/risk?chainId=${encodeURIComponent(effectiveChainId)}`
+      `/api/v1/address/${address}/risk?chain=ethereum`
     );
     const data = await response.json();
     return res.status(response.status).json(data);

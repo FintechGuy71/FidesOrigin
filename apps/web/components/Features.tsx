@@ -227,7 +227,7 @@ export default function Features({ d }: { d: Dict["home"]["features"] }) {
   return (
     <section id="features" style={{ background: "var(--fio-ink)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="border-t py-28 md:py-36" style={{ borderColor: "var(--fio-border-hairline)" }}>
+        <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           {/* Header — left editorial */}
           <div className="grid gap-10 md:grid-cols-12">
             <div className="md:col-span-6">

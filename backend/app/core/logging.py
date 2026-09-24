@@ -67,8 +67,11 @@ def _recurse_mask(data: Any) -> Any:
             else:
                 # 检查值本身是否匹配敏感模式
                 if isinstance(v, str):
+                    # [AUDIT FIX 2026-09-24 B11] 原 pattern.match 仅匹配串首——
+                    # "error at 0x<64hex> done" 之类中段嵌入的私钥/Bearer 凭证
+                    # 完全逃过脱敏。改用 search 全串扫描。
                     for pattern in _SENSITIVE_VALUE_PATTERNS:
-                        if pattern.match(v):
+                        if pattern.search(v):
                             masked[k] = _mask_value(v)
                             break
                     else:
@@ -80,7 +83,7 @@ def _recurse_mask(data: Any) -> Any:
         return [_recurse_mask(item) for item in data]
     elif isinstance(data, str):
         for pattern in _SENSITIVE_VALUE_PATTERNS:
-            if pattern.match(data):
+            if pattern.search(data):  # [AUDIT FIX 2026-09-24 B11] 同上
                 return _mask_value(data)
         return data
     return data

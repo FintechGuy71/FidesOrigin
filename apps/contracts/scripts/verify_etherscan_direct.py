@@ -7,7 +7,7 @@ FidesOrigin v3.1.0 — Etherscan V2 直接验证（Python 版，走系统代理�
   3. 提交 solidity-standard-json-input 验证，轮询结果
 
 用法：
-  python scripts/verify_etherscan_direct.py   （ETHERSCAN_API_KEY 环境变量或下方默认值）
+  python scripts/verify_etherscan_direct.py   （需设置 ETHERSCAN_API_KEY 环境变量）
 """
 
 import json
@@ -17,7 +17,12 @@ import time
 import urllib.parse
 import urllib.request
 
-API_KEY = os.environ.get("ETHERSCAN_API_KEY", "ABQJNS57VYBYH7K3MSCQB4TWKVSB54QPXC")
+# [AUDIT FIX 2026-09-24] 原代码把真实 Etherscan API Key 硬编码为默认值（已泄露，应立即轮换）。
+# 改为必须从环境变量读取，缺失时直接报错退出。
+API_KEY = os.environ.get("ETHERSCAN_API_KEY")
+if not API_KEY:
+    print("错误：请先设置 ETHERSCAN_API_KEY 环境变量。", file=sys.stderr)
+    sys.exit(1)
 V2 = "https://api.etherscan.io/v2/api"
 CHAIN_ID = "11155111"
 ROOT = os.path.join(os.path.dirname(__file__), "..")

@@ -113,12 +113,9 @@ export default function HeroScreen({
           aria-label={d.label}
           spellCheck={false}
           autoComplete="off"
-          className="min-w-0 flex-1 border px-3 py-2 font-mono text-xs outline-none transition-colors"
-          style={{
-            background: "var(--fio-surface)",
-            borderColor: "var(--fio-border)",
-            color: "var(--fio-text)",
-          }}
+          /* [AUDIT FIX 2026-09-25 R6-2/R6-4] 聚焦环与配色收口到 .fio-input
+             （设计系统组件层），替换原内联 style + 浏览器默认蓝聚焦环。 */
+          className="fio-input min-w-0 flex-1 px-3 py-2 font-mono text-xs outline-none"
         />
         <button
           onClick={submit}

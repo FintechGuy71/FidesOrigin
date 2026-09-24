@@ -209,7 +209,7 @@ function getProfile(address addr) external view returns (
 
 ```bash
 # 设置环境
-export ORACLE_KEY=0xd0ccc2bcf9a74f56ba241721f3b4688e9cdf1a4a06b9c1c02745d7d658429b91
+export ORACLE_KEY=<REDACTED>  # [AUDIT FIX 2026-09-24] 原文泄露真实私钥，已脱敏；该值应视为已泄露并立即轮换
 export RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 export CHAIN_ID=11155111
 

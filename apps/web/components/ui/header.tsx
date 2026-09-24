@@ -281,8 +281,11 @@ export default function Header({
         {/* h-11 w-11 = 44×44，满足触控目标最小尺寸。
             原写法 h-8 w-8(32px) 与内联 minHeight/minWidth:44px 互相打架，
             实际渲染 44px 但类名表达的却是 32px，改动时极易误判。 */}
+        {/* [AUDIT FIX 2026-09-25 R6-3] 补 focus:outline-none：该按钮仅有
+            focus-visible 环，普通 :focus（如触屏点击后）会残留浏览器默认
+            蓝 outline，与全站金色环语言冲突。 */}
         <button
-          className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] md:hidden focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)]"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={d.toggleMenu}
           aria-expanded={mobileOpen}

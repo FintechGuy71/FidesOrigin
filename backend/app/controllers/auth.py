@@ -73,7 +73,11 @@ async def _check_account_lockout(username: str) -> Optional[str]:
     now = time.time()
 
     redis = await _get_redis_client()
-    if redis:
+    # [AUDIT FIX 2026-09-24 B3] CacheService 未连接时 get/set 返回软默认值
+    # （None/False）而非抛异常——原实现因此把"未连接"误判为"无锁定记录"，
+    # 账户锁定在 Redis 启动期未连接时被静默禁用，内存 fallback 成为死代码。
+    # 显式检查连接状态，未连接直接走内存 fallback。
+    if redis and redis.is_connected:
         try:
             key = _get_lockout_key(username)
             raw = await redis.get(key)
@@ -130,7 +134,9 @@ async def _record_login_failure(username: str):
     now = time.time()
 
     redis = await _get_redis_client()
-    if redis:
+    # [AUDIT FIX 2026-09-24 B3] 同 _check_account_lockout：未连接时 set() 静默
+    # 返回 False，失败计数从未真正写入 → 锁定机制静默失效。显式走内存 fallback。
+    if redis and redis.is_connected:
         try:
             key = _get_lockout_key(username)
             raw = await redis.get(key)
@@ -184,7 +190,9 @@ async def _record_login_success(username: str):
     [HIGH-2 FIX] 登录成功后清除失败记录。
     """
     redis = await _get_redis_client()
-    if redis:
+    # [AUDIT FIX 2026-09-24 B3] 同上：未连接时 delete() 静默返回 0，
+    # 锁定记录不被清除。显式走内存 fallback。
+    if redis and redis.is_connected:
         try:
             await redis.delete(_get_lockout_key(username))
             return
@@ -329,14 +337,16 @@ async def login(body: LoginRequest):
         # 获取当前失败次数（仅用于服务端日志）
         failed_count = 0
         redis = await _get_redis_client()
-        if redis:
+        if redis and redis.is_connected:  # [AUDIT FIX 2026-09-24 B3] 同锁定助手
             try:
                 raw = await redis.get(_get_lockout_key(body.username))
                 if raw:
                     data = json.loads(raw) if isinstance(raw, str) else json.loads(raw.decode())
                     failed_count = data.get("failed_count", 0)
-            except Exception:
-                pass
+            except Exception as e:
+                # [AUDIT FIX 2026-09-22] 原静默 pass：失败计数读取失败仅影响服务端
+                # 日志中的 remaining_attempts 展示，降级为 debug 级记录即可。
+                logger.debug("login_failed_count_read_error", username=body.username[:16], error=str(e))
         else:
             record = _login_attempts_fallback.get(body.username)
             if record:

@@ -46,7 +46,7 @@ SECRET_KEY: str = os.environ.get("SECRET_KEY", "change-me-in-production")
 | 维度 | 评估项 | 状态 | 严重程度 | 说明 |
 |------|--------|------|----------|------|
 | **安全** | .env密钥泄露 | 🚨 **致命** | P0 | `data-sync/.env` 包含 **明文生产密钥**：`CHAINALYSIS_API_KEY`、`ETHERSCAN_API_KEY`、`SYNC_PRIVATE_KEY`（完整私钥）、`RISK_REGISTRY_CONTRACT`。这些密钥已提交到git历史中，即使删除文件也无法从历史中移除，必须立即轮换所有密钥 |
-| **安全** | 私钥使用 | 🚨 **严重** | P0 | `SYNC_PRIVATE_KEY=0xd0ccc2bcf9a74f56ba241721f3b4688e9cdf1a4a06b9c1c02745d7d658429b91` 在 `data-sync/.env`、`blockchainService.js`、`daily-sync.js`、`update-merkle-root.js` 中多处使用，资金面临直接盗取风险 |
+| **安全** | 私钥使用 | 🚨 **严重** | P0 | `SYNC_PRIVATE_KEY=<REDACTED>`（[AUDIT FIX 2026-09-22] 原文再次泄露完整私钥，已脱敏；该值应视为已泄露并立即轮换）在 `data-sync/.env`、`blockchainService.js`、`daily-sync.js`、`update-merkle-root.js` 中多处使用，资金面临直接盗取风险 |
 | **安全** | RPC URL硬编码 | ⚠️ 中等 | P2 | `update-merkle-root.js` 使用硬编码 `https://rpc.moderato.tempo.xyz`；`blockchainService.js` 使用公开 Infura key `9aa3d95b3bc440fa88ea12eaa4456161` |
 | **架构** | 数据库一致性 | ⚠️ 高 | P1 | `data-sync/.env` 使用 `DATABASE_URL="file:./data/riskdb.sqlite"`（SQLite），但 `backend/docker-compose.yml` 使用 PostgreSQL；两套数据存储，Prisma schema 与 backend models 可能不一致 |
 | **架构** | 服务耦合 | ⚠️ 中等 | P2 | `data-sync/src/index.js`（旧版）和 `data-sync/src/syncService.js`（新版）并存，存在两套数据同步逻辑；`data-sync/scripts/` 下还有多个独立脚本，代码重复率高 |
@@ -69,9 +69,9 @@ SECRET_KEY: str = os.environ.get("SECRET_KEY", "change-me-in-production")
 ```javascript
 // data-sync/.env - 生产密钥明文泄露
 DATABASE_URL="file:./data/riskdb.sqlite"
-CHAINALYSIS_API_KEY="f52c25172e4c1e5de8004bcce58a62287fe91ab97aee2c3f008a3d8b5ee3d3d0"
-ETHERSCAN_API_KEY="IW7DG5MV445CEWHBP5FQCYZTXHQJN6RGV9"
-SYNC_PRIVATE_KEY="0xd0ccc2bcf9a74f56ba241721f3b4688e9cdf1a4a06b9c1c02745d7d658429b91"
+CHAINALYSIS_API_KEY="<REDACTED>"   // [AUDIT FIX 2026-09-22] 原审计文档二次泄露真实密钥，已脱敏
+ETHERSCAN_API_KEY="<REDACTED>"     // [AUDIT FIX 2026-09-22] 同上
+SYNC_PRIVATE_KEY="<REDACTED>"      // [AUDIT FIX 2026-09-22] 私钥已脱敏；原值应视为已泄露并轮换
 RISK_REGISTRY_CONTRACT="0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3"
 
 // data-sync/src/services/databaseService.js:19 - 逐条处理，无批量

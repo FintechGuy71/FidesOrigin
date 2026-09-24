@@ -131,15 +131,19 @@ async def get_transaction(
         try:
             tx_data = await blockscout.get_transaction(tx_hash)
             
-            value_wei = int(tx_data.get("value", "0"))
+            value_wei = int(tx_data.get("value") or 0)  # [AUDIT FIX 2026-09-24] value 为 null 时兜底 0
             value_eth = value_wei / 10**18
-            
+
+            # [AUDIT FIX 2026-09-24 B9] from 键存在但值为 null 时 None.get() 抛
+            # AttributeError——与 to 的既有防护（R3-M10）对齐。
+            from_obj = tx_data.get("from") or {}
+            from_hash = from_obj.get("hash", "")
             return TransactionResponse(
                 id=None,
                 tx_hash=tx_hash,
                 chain=chain,
-                address=tx_data.get("from", {}).get("hash", ""),
-                from_address=tx_data.get("from", {}).get("hash", ""),
+                address=from_hash,
+                from_address=from_hash,
                 to_address=tx_data.get("to", {}).get("hash", "") if tx_data.get("to") else "",
                 value=str(value_wei),
                 value_eth=value_eth,

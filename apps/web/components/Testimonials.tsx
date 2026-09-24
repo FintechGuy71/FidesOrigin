@@ -16,7 +16,7 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
   return (
     <section style={{ background: "var(--fio-ink)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="border-t py-28 md:py-36" style={{ borderColor: "var(--fio-border-hairline)" }}>
+        <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           {/* Section header — left editorial */}
           <div className="grid gap-10 pb-16 md:grid-cols-12 md:pb-24">
             <div className="md:col-span-6">

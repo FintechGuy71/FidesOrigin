@@ -3,7 +3,6 @@ FidesOrigin 缓存服务(重构版)
 Redis 连接池管理 + 多级缓存策略 + 缓存穿透保护
 """
 import json
-import pickle
 import json as _json_compat  # [LOW Fix #25] 使用 JSON 替代 pickle
 from datetime import datetime, timezone
 from typing import Any, List, Optional, TypeVar, Union
@@ -28,7 +27,7 @@ class CacheService:
     - 连接池管理(自动复用连接)
     - 多级缓存:内存(L1)+ Redis(L2)
     - 缓存穿透保护:布隆过滤器 + 空值缓存
-    - 序列化:JSON(字符串)/ pickle(二进制)
+    - 序列化:仅 JSON（pickle 已移除，见 [AUDIT FIX 2026-09-22]）
     """
 
     def __init__(self):
@@ -75,6 +74,17 @@ class CacheService:
         if self._redis is None:
             raise RuntimeError("Cache service not connected. Call connect() first.")
         return self._redis
+
+    # [AUDIT FIX 2026-09-24 B2] 公开连接状态探测。
+    # 背景：CacheService 在未连接时对 get/set/incr 等一律返回软默认值
+    # （None/False/1）而非抛异常。这使 security.RateLimiter 与 auth 登录锁定
+    # 等"异常→本地降级"的错误处理路径在 Redis 启动期未连接时永远不会触发，
+    # 安全控制（限流/账户锁定）被静默禁用。调用方现在可以用该属性显式判断
+    # 连接状态并走降级路径。
+    @property
+    def is_connected(self) -> bool:
+        """是否已建立 Redis 连接（connect() 成功过且未被 close）"""
+        return self._redis is not None
 
     # L1 内存缓存默认 TTL(秒),比 Redis 更短以平衡一致性和性能
     L1_DEFAULT_TTL = 60
@@ -217,27 +227,26 @@ class CacheService:
     # 如果必须缓存二进制对象,建议使用 JSON 序列化替代方案。
 
     async def get_object(self, key: str) -> Optional[Any]:
-        """获取二进制对象缓存([LOW Fix #25] 改为 JSON 反序列化)"""
+        """获取对象缓存([LOW Fix #25] 仅 JSON 反序列化，pickle 反序列化已移除)"""
         if self._redis is None:
             return None
-        value = await self._redis.get(key)
-        if value is None:
-            return None
+        # [AUDIT FIX 2026-09-24 B20] 把 redis.get 移入 try：decode_responses=True 时
+        # 遗留的非 UTF-8 二进制数据（如历史 pickle 载荷）会在 redis 客户端解码阶段
+        # 抛 UnicodeDecodeError——原位置在 try 之外，异常直接穿透本方法。
         try:
-            # [LOW Fix #25] 优先尝试 JSON 解析
+            value = await self._redis.get(key)
+            if value is None:
+                return None
+            # [AUDIT FIX 2026-09-22] 移除 pickle.loads 回退：pickle 反序列化存在
+            # 任意代码执行（RCE）风险——任何能写 Redis 的实体（含被攻破的内部服务）
+            # 都可借此执行代码。get_object 无生产调用方，旧 pickle 数据已随
+            # JSON 迁移废弃，安全优于向后兼容。
             if isinstance(value, bytes):
                 value = value.decode()
             return _json_compat.loads(value)
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            # 回退到 pickle(向后兼容旧数据)
-            logger.warning("cache_pickle_fallback_decode", key=key)
-            try:
-                if isinstance(value, str):
-                    value = value.encode()
-                return pickle.loads(value)
-            except pickle.PickleError:
-                logger.warning("cache_object_decode_failed", key=key)
-                return None
+        except (json.JSONDecodeError, UnicodeDecodeError, TypeError, ValueError) as e:
+            logger.warning("cache_object_decode_failed", key=key, error=str(e))
+            return None
 
     async def set_object(
         self,
@@ -245,16 +254,17 @@ class CacheService:
         value: Any,
         expire: Optional[int] = None
     ) -> bool:
-        """设置二进制对象缓存([LOW Fix #25] 改为 JSON 序列化)"""
+        """设置对象缓存([LOW Fix #25] 仅 JSON 序列化，pickle 回退已移除)"""
         if self._redis is None:
             return False
-        # [LOW Fix #25] 使用 JSON 序列化替代 pickle
+        # [AUDIT FIX 2026-09-22] 移除 pickle.dumps 回退，与 get_object 的 JSON-only
+        # 语义保持一致；不可 JSON 序列化的对象如实报错并记日志，不再静默降级。
+        # （不使用 default=str，避免把任意对象静默字符串化后再读回时发生类型突变。）
         try:
-            return await self._redis.set(key, _json_compat.dumps(value, default=str), ex=expire)
-        except (TypeError, ValueError):
-            # 无法 JSON 序列化时回退到 pickle(向后兼容)
-            logger.warning("cache_pickle_fallback_encode", key=key)
-            return await self._redis.set(key, pickle.dumps(value), ex=expire)
+            return await self._redis.set(key, _json_compat.dumps(value), ex=expire)
+        except (TypeError, ValueError) as e:
+            logger.warning("cache_object_encode_failed", key=key, error=str(e))
+            return False
 
     # ==================== Hash 操作 ====================
 

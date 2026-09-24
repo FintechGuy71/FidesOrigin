@@ -17,10 +17,14 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
   return (
     <section id="security" style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="py-24 md:py-32">
+        <div className="py-[var(--section-py)] md:py-[var(--section-py-lg)]">
           {/* Coverage band */}
           <div className="mb-20 text-center">
-            <div className="fio-eyebrow mb-8 justify-center" style={{ justifyContent: "center" }}>
+            {/* [AUDIT FIX 2026-09-25 R6-10] 原写法 className="justify-center"
+                + 内联 justifyContent 均无效：.fio-eyebrow 是 inline-flex，
+                justify-content 不作用于 inline 级盒；居中由父级 text-center
+                承担（本容器已有）。删除两处死声明。 */}
+            <div className="fio-eyebrow mb-8">
               {d.coverageCaption}
             </div>
             <div className="grid grid-cols-2 gap-px md:grid-cols-4" style={{ background: "var(--fio-border-hairline)", border: "1px solid var(--fio-border-hairline)" }}>

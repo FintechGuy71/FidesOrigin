@@ -569,11 +569,12 @@ class MessageQueue:
     async def close(self) -> None:
         """关闭消息队列"""
         await self.stop_subscriber()
-        
+
         if self._redis:
-            await self._redis.close()
+            # [AUDIT FIX 2026-09-24 B16] close() 是弃用别名，归一到 aclose()。
+            await self._redis.aclose()
             self._redis = None
-        
+
         logger.info("message_queue_closed")
 
 

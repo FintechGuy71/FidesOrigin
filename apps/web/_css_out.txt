@@ -1,0 +1,121 @@
+defined: 322, used: 733
+
+== used but NOT defined in css/ (77) ==
+  -bottom-2  <- ['Features.tsx']
+  -fio-border  <- ['LiveTransactionStream.tsx']
+  -fio-gold  <- ['LiveTransactionStream.tsx', 'header.tsx']
+  -fio-surface  <- ['LiveTransactionStream.tsx']
+  -fio-surface-2  <- ['LiveTransactionStream.tsx']
+  -fio-surface-3  <- ['LiveTransactionStream.tsx']
+  -fio-text  <- ['LiveTransactionStream.tsx', 'header.tsx']
+  -fio-text-2  <- ['header.tsx', 'page.tsx']
+  -fio-text-3  <- ['header.tsx']
+  -fio-warn  <- ['LiveTransactionStream.tsx']
+  -fio-warn-dim  <- ['LiveTransactionStream.tsx']
+  -right-5  <- ['HeroHome.tsx']
+  -top-8  <- ['HeroHome.tsx']
+  -translate-x-1/2  <- ['Features.tsx']
+  AUDIT  <- ['page.tsx']
+  FIX  <- ['page.tsx']
+  MAX_EVENTS_DISPLAY  <- ['page.tsx']
+  MAX_EVENT_NAME_LENGTH  <- ['page.tsx']
+  MEDIUM  <- ['page.tsx']
+  R2-016  <- ['page.tsx']
+  RISK_SCORE_HIGH  <- ['page.tsx']
+  RISK_SCORE_MEDIUM  <- ['page.tsx']
+  ac-hero  <- ['AddressCheck.tsx']
+  ac-result  <- ['AddressCheck.tsx']
+  ac-search  <- ['AddressCheck.tsx']
+  ac-stat-box  <- ['AddressCheck.tsx']
+  ac-stats  <- ['AddressCheck.tsx']
+  badgeClass  <- ['AddressCheck.tsx']
+  changeType  <- ['page.tsx']
+  chevron  <- ['Header.tsx']
+  color  <- ['page.tsx']
+  confirmed  <- ['page.tsx']
+  current  <- ['header.tsx']
+  danger  <- ['DemoExperience.tsx']
+  demo-btn  <- ['DemoExperience.tsx']
+  demo-card  <- ['DemoExperience.tsx']
+  demo-grid  <- ['DemoExperience.tsx']
+  demo-hero  <- ['DemoExperience.tsx']
+  demo-input  <- ['DemoExperience.tsx']
+  demo-result  <- ['DemoExperience.tsx']
+  demo-tab  <- ['DemoExperience.tsx']
+  demo-tabs  <- ['DemoExperience.tsx']
+  detail-label  <- ['AddressCheck.tsx']
+  detail-row  <- ['AddressCheck.tsx']
+  detail-value  <- ['AddressCheck.tsx']
+  disabled:opacity-50  <- ['page.tsx']
+  done  <- ['DemoExperience.tsx']
+  event  <- ['page.tsx']
+  failed  <- ['page.tsx']
+  flagged  <- ['page.tsx']
+  focus-visible  <- ['LiveTransactionStream.tsx', 'header.tsx']
+  focus-visible:outline-none  <- ['header.tsx', 'page.tsx']
+  focus-visible:ring-2  <- ['header.tsx', 'page.tsx']
+  focus-visible:ring-[var(--fio-gold)]  <- ['header.tsx', 'page.tsx']
+  group  <- ['HeroHome.tsx', 'HomeContact.tsx', 'Segments.tsx']
+  hover  <- ['LiveTransactionStream.tsx', 'header.tsx']
+  id  <- ['DemoExperience.tsx']
+  isConnected  <- ['page.tsx']
+  isPaused  <- ['LiveTransactionStream.tsx']
+  kind  <- ['DemoExperience.tsx']
+  l  <- ['header.tsx']
+  lg  <- ['Features.tsx']
+  origin-left  <- ['Workflows.tsx']
+  risk  <- ['DemoExperience.tsx']
+  risk-badge  <- ['AddressCheck.tsx']
+  riskLevel  <- ['LiveTransactionStream.tsx']
+  safe  <- ['DemoExperience.tsx']
+  score  <- ['DemoExperience.tsx', 'page.tsx']
+  screen  <- ['DemoExperience.tsx']
+  selectedTx  <- ['page.tsx']
+  status  <- ['LiveTransactionStream.tsx', 'page.tsx']
+  t  <- ['DemoExperience.tsx']
+  textColor  <- ['page.tsx']
+  toast-  <- ['AddressCheck.tsx']
+  tx  <- ['LiveTransactionStream.tsx']
+  var  <- ['LiveTransactionStream.tsx', 'header.tsx', 'page.tsx']
+  wallet-notification  <- ['wallet-connect.js']
+
+== defined but never used (39) ==
+  address-cell  (index.html <style>)
+  alert-success  (index.html <style>)
+  animate-delay-1  (legacy.css)
+  animate-delay-2  (legacy.css)
+  animate-delay-3  (legacy.css)
+  animate-fadeInUp  (legacy.css)
+  btn-warning  (index.html <style>)
+  code-copy-btn  (legacy.css)
+  compliance-details  (legacy.css)
+  compliance-row  (legacy.css)
+  compliant  (legacy.css)
+  connected  (index.html <style>)
+  css  (style.css)
+  en  (use-cases-rwa-tokenization.cn.tsx PAGE_CSS)
+  fio-caption  (fio-design-system.css)
+  fio-ticker-track  (fio-design-system.css)
+  grid-3  (index.html <style>)
+  html  (index.html <style>)
+  mobile-open  (index.html <style>)
+  negative  (index.html <style>)
+  non-compliant  (legacy.css)
+  progress-bar  (index.html <style>)
+  progress-fill  (index.html <style>)
+  put  (legacy.css)
+  risk-score-high  (legacy.css)
+  risk-score-low  (legacy.css)
+  risk-score-medium  (legacy.css)
+  skeleton  (index.html <style>)
+  skip  (LegacyShell.tsx <style>)
+  status-badge  (legacy.css)
+  status-danger  (legacy.css)
+  status-safe  (legacy.css)
+  status-warning  (legacy.css)
+  tag-admin  (index.html <style>)
+  tk-string  (blog-why-on-chain-compliance.cn.tsx PAGE_CSS)
+  toast-info  (index.html <style>)
+  toast-success  (index.html <style>)
+  tsx  (use-cases-rwa-tokenization.cn.tsx PAGE_CSS)
+  wide  (legacy.css)

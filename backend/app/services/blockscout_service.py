@@ -274,18 +274,31 @@ class BlockscoutService:
                 logger.error("blockscout_unexpected_error", error=str(e), url=url)
                 raise BlockscoutAPIException(f"Unexpected error: {str(e)}")
 
-    # ==================== 重试装饰器辅助函数 ====================
+    # ==================== 重试策略 ====================
 
-    def _should_retry(self, exc: Exception) -> bool:
-        """排除断路器开路异常，其他 BlockscoutAPIException 允许重试"""
-        return isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)
+    @staticmethod
+    def _should_retry_blockscout(exc: Exception) -> bool:
+        """[AUDIT FIX 2026-09-24 B8] 排除断路器开路异常与确定性 4xx。
+
+        原谓词对一切 BlockscoutAPIException（含 404/400/422）都重试 3 次：
+        确定性客户端错误不可能重试成功，白白消耗 3 次调用 + 指数退避
+        （最坏 ~7s 额外延迟）。现仅对 5xx / 429 / 无状态码（网络错误包装）重试。
+        """
+        if isinstance(exc, CircuitBreakerOpenException):
+            return False
+        if not isinstance(exc, BlockscoutAPIException):
+            return False
+        status = getattr(exc, "status_code", None)
+        if status is None:
+            return True  # 无状态码（网络错误包装）→ 可重试
+        return status >= 500 or status == 429
 
     # ==================== API 方法 ====================
 
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_info(self, address: str) -> Dict[str, Any]:
@@ -295,7 +308,7 @@ class BlockscoutService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_transactions(
@@ -304,17 +317,20 @@ class BlockscoutService:
         limit: int = 50,
         page: int = 1
     ) -> Dict[str, Any]:
-        """获取地址交易历史"""
-        return await self._request(
-            "GET",
-            f"/addresses/{address}/transactions",
-            params={"limit": limit, "page": page}
-        )
+        """获取地址交易历史
+
+        [AUDIT FIX 2026-09-24 B7] 实测当前 Blockscout v2（eth / eth-sepolia
+        实例）对 ?limit= / ?page= 返回 422 "Unexpected field"——原参数组合
+        恒 422 且被 tenacity 重试 3 次。分页现由调用方用响应中的
+        next_page_params 游标实现；limit/page 保留在签名中仅为兼容旧调用方，
+        不再发送给上游。
+        """
+        return await self._request("GET", f"/addresses/{address}/transactions")
 
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_transaction(self, tx_hash: str) -> Dict[str, Any]:
@@ -324,7 +340,7 @@ class BlockscoutService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_token_transfers(
@@ -332,17 +348,13 @@ class BlockscoutService:
         address: str,
         limit: int = 50
     ) -> Dict[str, Any]:
-        """获取地址代币转账记录"""
-        return await self._request(
-            "GET",
-            f"/addresses/{address}/token-transfers",
-            params={"limit": limit}
-        )
+        """获取地址代币转账记录（[AUDIT FIX 2026-09-24 B7] 同上：不发 limit）"""
+        return await self._request("GET", f"/addresses/{address}/token-transfers")
 
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception(lambda exc: isinstance(exc, BlockscoutAPIException) and not isinstance(exc, CircuitBreakerOpenException)),
+        retry=retry_if_exception(_should_retry_blockscout),
         reraise=True
     )
     async def get_address_internal_transactions(
@@ -350,30 +362,74 @@ class BlockscoutService:
         address: str,
         limit: int = 50
     ) -> Dict[str, Any]:
-        """获取地址内部交易记录"""
-        return await self._request(
-            "GET",
-            f"/addresses/{address}/internal-transactions",
-            params={"limit": limit}
-        )
+        """获取地址内部交易记录（[AUDIT FIX 2026-09-24 B7] 同上：不发 limit）"""
+        return await self._request("GET", f"/addresses/{address}/internal-transactions")
 
     # ==================== 聚合查询 ====================
 
     async def get_address_stats(self, address: str) -> Dict[str, Any]:
-        """获取地址统计信息"""
+        """获取地址统计信息
+
+        [AUDIT FIX 2026-09-24 B7] 原 实现 按旧版 Blockscout schema 读键，实测
+        当前 v2（eth / eth-sepolia 实例）已全部漂移，导致本方法要么读到恒定默认值：
+          - balance        → 键现为 coin_balance（原键不存在，恒 "0"）
+          - transaction_count / token_transfer_count → 移至 /addresses/{hash}/counters
+          - first_transaction / last_transaction     → 地址响应已不含这两个键（恒 None）
+          - creator_address → 键现为 creator_address_hash
+        且原实现还附带一次 get_address_transactions(limit=1) 调用：结果从未被
+        使用，且当前 API 对 ?limit= 返回 422（被 tenacity 重试 3 次）——
+        每次 age 检查都白白烧掉 3 次请求并制造告警噪音。
+        修复：适配当前 schema（coin_balance + counters 端点），first_transaction
+        用可靠启发式推导——仅当全部交易都在第一页时取页内最旧时间戳，否则
+        置 None（诚实表达"未知"，由调用方按无数据处理）。
+        """
         try:
             info = await self.get_address_info(address)
-            transactions = await self.get_address_transactions(address, limit=1)
+
+            # 交易计数：当前 schema 在 /addresses/{hash}/counters（值为字符串）
+            transaction_count: Any = 0
+            token_transfer_count: Any = 0
+            try:
+                counters = await self._request("GET", f"/addresses/{address}/counters")
+                transaction_count = int(counters.get("transactions_count") or 0)
+                token_transfer_count = int(counters.get("token_transfers_count") or 0)
+            except BlockscoutAPIException as e:
+                # 旧版实例无 counters 端点 → 回退旧键（旧 schema 下存在于地址响应中）
+                logger.debug("blockscout_counters_unavailable", address=address, error=str(e))
+                transaction_count = info.get("transaction_count", 0)
+                token_transfer_count = info.get("token_transfer_count", 0)
+
+            # first_transaction：优先旧版键（存在即用）；当前 schema 缺失时
+            # 用 tx-list 启发式：全部交易在第一页（counters 数 <= 页内条数）
+            # 才能确认页内最旧时间戳为真实首笔，否则 None（未知）。
+            first_tx = info.get("first_transaction")
+            last_tx = info.get("last_transaction")
+            if first_tx is None:
+                try:
+                    tx_list = await self._request("GET", f"/addresses/{address}/transactions")
+                    items = tx_list.get("items") or []
+                    total = int(transaction_count) if isinstance(transaction_count, int) else 0
+                    if items and (total <= len(items)):
+                        # 页内最旧一条即真实首笔（items 按新到旧排序）
+                        oldest_ts = items[-1].get("timestamp")
+                        if oldest_ts:
+                            first_tx = oldest_ts
+                    if items and last_tx is None:
+                        newest_ts = items[0].get("timestamp")
+                        if newest_ts:
+                            last_tx = newest_ts
+                except BlockscoutAPIException as e:
+                    logger.debug("blockscout_tx_list_unavailable", address=address, error=str(e))
 
             return {
                 "address": address,
-                "balance": info.get("balance", "0"),
-                "transaction_count": info.get("transaction_count", 0),
-                "token_transfer_count": info.get("token_transfer_count", 0),
-                "first_transaction": info.get("first_transaction"),
-                "last_transaction": info.get("last_transaction"),
+                "balance": info.get("coin_balance", info.get("balance", "0")),
+                "transaction_count": transaction_count,
+                "token_transfer_count": token_transfer_count,
+                "first_transaction": first_tx,
+                "last_transaction": last_tx,
                 "is_contract": info.get("is_contract", False),
-                "contract_creator": info.get("creator_address"),
+                "contract_creator": info.get("creator_address_hash", info.get("creator_address")),
             }
         except BlockscoutAPIException:
             raise
@@ -388,7 +444,15 @@ class BlockscoutService:
         tx_hashes: List[str],
         max_concurrent: int = 5
     ) -> List[Optional[Dict[str, Any]]]:
-        """批量获取交易详情"""
+        """批量获取交易详情
+
+        [AUDIT FIX 2026-09-24 B10] 原实现 gather(return_exceptions=True) 后
+        `[r for r in results if isinstance(r, dict)]`：
+        1. 返回列表与入参 tx_hashes 不对齐——调用方无法得知哪些哈希失败；
+        2. fetch_with_limit 未覆盖的意外异常（非 BlockscoutAPIException）
+           被 return_exceptions 捕获后静默丢弃，无任何日志。
+        修复：按输入顺序对齐返回（失败位为 None），意外异常记日志。
+        """
         import asyncio
 
         semaphore = asyncio.Semaphore(max_concurrent)
@@ -404,11 +468,32 @@ class BlockscoutService:
                         error=str(e)
                     )
                     return None
+                except Exception as e:
+                    # 意外异常不可静默——记录后按失败处理
+                    logger.error(
+                        "blockscout_batch_tx_unexpected_error",
+                        tx_hash=tx_hash,
+                        error=str(e)
+                    )
+                    return None
 
         tasks = [fetch_with_limit(tx_hash) for tx_hash in tx_hashes]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        return [r for r in results if isinstance(r, dict)]
+        aligned: List[Optional[Dict[str, Any]]] = []
+        for tx_hash, r in zip(tx_hashes, results):
+            if isinstance(r, BaseException):
+                # gather 层面捕获到的异常（理论上 fetch_with_limit 已全覆盖，
+                # 防御性兜底）：记日志并对齐为 None
+                logger.error(
+                    "blockscout_batch_task_crashed",
+                    tx_hash=tx_hash,
+                    error=str(r)
+                )
+                aligned.append(None)
+            else:
+                aligned.append(r)
+        return aligned
 
 
 # ==================== 向后兼容:全局单例管理 ====================

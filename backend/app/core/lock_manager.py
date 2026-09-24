@@ -303,11 +303,13 @@ class DistributedLockManager:
         """关闭锁管理器，取消所有看门狗任务"""
         for resource in list(self._watchdog_tasks.keys()):
             self._stop_watchdog(resource)
-        
+
         if self._redis:
-            await self._redis.close()
+            # [AUDIT FIX 2026-09-24 B16] close() 是 redis-py asyncio 的弃用别名，
+            # 归一到 aclose()（与 cache_service 一致，避免未来版本移除时破功）。
+            await self._redis.aclose()
             self._redis = None
-        
+
         logger.info("lock_manager_closed")
     
     # ==================== 便捷方法 ====================

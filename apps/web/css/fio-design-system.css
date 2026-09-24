@@ -79,8 +79,32 @@
     --radius-md:      6px;
     --radius-lg:      10px;
 
-    /* Motion */
+    /* Motion — 时长阶梯 + 唯一缓动曲线
+       [AUDIT FIX 2026-09-25 R6-5] 此前时长散落为 0.2s/0.25s/0.5s/0.7s/
+       duration-200/300/500/1000 八种写法，无统一语义。收口为四档。 */
     --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-1:          150ms;  /* 微交互：hover 底色、图标旋转 */
+    --dur-2:          250ms;  /* 控件：按钮、输入框、菜单 */
+    --dur-3:          500ms;  /* 结构：下划线生长、节点点亮 */
+    --dur-4:          700ms;  /* 叙事：滚动揭示、首屏入场 */
+
+    /* Spacing — 章节垂直节奏（全站唯一）
+       [AUDIT FIX 2026-09-25 R6-6] 六个首页章节此前混用 py-24/28 +
+       md:py-32/36 两套节奏。统一为 7rem / 9rem 两档。 */
+    --section-py:     7rem;
+    --section-py-lg:  9rem;
+
+    /* Elevation — 阴影阶梯 */
+    --fio-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 24px rgba(0, 0, 0, 0.18);
+    --fio-shadow-pop:  0 12px 40px rgba(0, 0, 0, 0.35);
+
+    /* 交互面微令牌 —— 避免组件内硬编码 rgba（暗色值） */
+    --fio-scrollbar:       rgba(244, 241, 233, 0.07);
+    --fio-scrollbar-hover: rgba(244, 241, 233, 0.14);
+    --fio-selection:       rgba(227, 200, 146, 0.22);
+    --fio-hover-wash:      rgba(244, 241, 233, 0.03);
+    --fio-hover-border:    rgba(244, 241, 233, 0.12);
+    --fio-steel-glow:      rgba(122, 148, 171, 0.05);
 
     /* Z-index 层级总表 — 全站唯一，禁止再出现裸数字 */
     --z-decor:     10;
@@ -132,6 +156,124 @@
     scroll-padding-top: 3.5rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* [AUDIT FIX 2026-09-25 R6-7] 原生控件（滚动条、表单控件、日期选择器）
+       随主题切换配色，避免浅色主题下出现黑底原生滚动条。 */
+    color-scheme: dark;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     LIGHT THEME — "Ledger Daylight"
+     [AUDIT FIX 2026-09-25 R6-7] 深浅双主题。此前全站仅暗色一套，
+     打印/强光环境/系统浅色偏好下无适配。实现策略：令牌架构的红利——
+     全部颜色经 --fio-* 单一真源下发，主题只需在此覆盖令牌值，
+     组件层零改动（legacy.css 的 319 处 var() 引用同步换肤）。
+     启用方式（三选一，优先级从高到低）：
+       1. <html data-theme="light">（站点级显式开关，预留 JS 切换点）
+       2. 系统偏好 prefers-color-scheme: light 且未显式指定 dark
+     对比度（对 --fio-surface #ffffff）：
+       --fio-text   #101c2a ≈ 16.1:1 ✅
+       --fio-text-2 #46586b ≈  7.2:1 ✅
+       --fio-text-3 #5d6f80 ≈  5.0:1 ✅
+       --fio-gold   #7a6236 ≈  5.9:1 ✅（暗色金在浅底仅 2.6:1，须加深）
+     ════════════════════════════════════════════════════════════════ */
+  @media (prefers-color-scheme: light) {
+    html:not([data-theme="dark"]) {
+      color-scheme: light;
+      --fio-ink:        #f7f5f0;
+      --fio-ink-soft:   #efece4;
+      --fio-surface:    #ffffff;
+      --fio-surface-2:  #f4f1ea;
+      --fio-surface-3:  #e9e5db;
+      --fio-elevated:   #ded9cd;
+      --fio-ink-scrim:  rgba(255, 255, 255, 0.88);
+      --fio-panel-shadow: 0 24px 80px rgba(31, 41, 55, 0.14);
+
+      --fio-border:        #d8d2c4;
+      --fio-border-light:  #c9c2b2;
+      --fio-border-subtle: rgba(16, 28, 42, 0.10);
+      --fio-border-hairline: rgba(16, 28, 42, 0.08);
+
+      --fio-text:       #101c2a;
+      --fio-text-2:     #46586b;
+      --fio-text-3:     #54667a;
+
+      --fio-gold:       #7a6236;
+      --fio-gold-bright:#63502c;
+      --fio-gold-dim:   rgba(122, 98, 54, 0.12);
+      --fio-gold-glow:  rgba(122, 98, 54, 0.06);
+
+      --fio-accent:     #6b5426;
+      --fio-accent-dim: rgba(107, 84, 38, 0.10);
+      --fio-accent-glow:rgba(107, 84, 38, 0.05);
+      --fio-cream:      #4a3a1c;
+
+      --fio-steel:      #55708a;
+
+      --fio-success:      #1d7a46;
+      --fio-success-dim:  rgba(29, 122, 70, 0.10);
+      --fio-warn:         #8a6414;
+      --fio-warn-dim:     rgba(138, 100, 20, 0.10);
+      --fio-danger:       #b03a30;
+      --fio-danger-dim:   rgba(176, 58, 48, 0.10);
+      --fio-danger-light: #b03a30;
+      --fio-info:         #33648a;
+      --fio-info-dim:     rgba(51, 100, 138, 0.10);
+
+      --fio-shadow-card: 0 1px 2px rgba(31, 41, 55, 0.08), 0 8px 24px rgba(31, 41, 55, 0.08);
+      --fio-shadow-pop:  0 12px 40px rgba(31, 41, 55, 0.16);
+
+      --fio-scrollbar:       rgba(16, 28, 42, 0.14);
+      --fio-scrollbar-hover: rgba(16, 28, 42, 0.26);
+      --fio-selection:       rgba(122, 98, 54, 0.20);
+      --fio-hover-wash:      rgba(16, 28, 42, 0.04);
+      --fio-hover-border:    rgba(16, 28, 42, 0.16);
+      --fio-steel-glow:      rgba(85, 112, 138, 0.06);
+    }
+  }
+  /* 显式 data-theme 覆盖系统偏好（最高优先级） */
+  html[data-theme="light"] {
+    color-scheme: light;
+    --fio-ink:        #f7f5f0;
+    --fio-ink-soft:   #efece4;
+    --fio-surface:    #ffffff;
+    --fio-surface-2:  #f4f1ea;
+    --fio-surface-3:  #e9e5db;
+    --fio-elevated:   #ded9cd;
+    --fio-ink-scrim:  rgba(255, 255, 255, 0.88);
+    --fio-panel-shadow: 0 24px 80px rgba(31, 41, 55, 0.14);
+    --fio-border:        #d8d2c4;
+    --fio-border-light:  #c9c2b2;
+    --fio-border-subtle: rgba(16, 28, 42, 0.10);
+    --fio-border-hairline: rgba(16, 28, 42, 0.08);
+    --fio-text:       #101c2a;
+    --fio-text-2:     #46586b;
+    --fio-text-3:     #54667a;
+    --fio-gold:       #7a6236;
+    --fio-gold-bright:#63502c;
+    --fio-gold-dim:   rgba(122, 98, 54, 0.12);
+    --fio-gold-glow:  rgba(122, 98, 54, 0.06);
+    --fio-accent:     #6b5426;
+    --fio-accent-dim: rgba(107, 84, 38, 0.10);
+    --fio-accent-glow:rgba(107, 84, 38, 0.05);
+    --fio-cream:      #4a3a1c;
+    --fio-steel:      #55708a;
+    --fio-success:      #1d7a46;
+    --fio-success-dim:  rgba(29, 122, 70, 0.10);
+    --fio-warn:         #8a6414;
+    --fio-warn-dim:     rgba(138, 100, 20, 0.10);
+    --fio-danger:       #b03a30;
+    --fio-danger-dim:   rgba(176, 58, 48, 0.10);
+    --fio-danger-light: #b03a30;
+    --fio-info:         #33648a;
+    --fio-info-dim:     rgba(51, 100, 138, 0.10);
+    --fio-shadow-card: 0 1px 2px rgba(31, 41, 55, 0.08), 0 8px 24px rgba(31, 41, 55, 0.08);
+    --fio-shadow-pop:  0 12px 40px rgba(31, 41, 55, 0.16);
+    --fio-scrollbar:       rgba(16, 28, 42, 0.14);
+    --fio-scrollbar-hover: rgba(16, 28, 42, 0.26);
+    --fio-selection:       rgba(122, 98, 54, 0.20);
+    --fio-hover-wash:      rgba(16, 28, 42, 0.04);
+    --fio-hover-border:    rgba(16, 28, 42, 0.16);
+    --fio-steel-glow:      rgba(85, 112, 138, 0.06);
   }
 
   body {
@@ -146,8 +288,8 @@
   /* ---- Surfaces ---- */
   .fio-gradient-hero {
     background:
-      radial-gradient(ellipse 75% 55% at 50% -8%, rgba(227,200,146,0.06) 0%, transparent 62%),
-      radial-gradient(ellipse 45% 35% at 88% 45%, rgba(122,148,171,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse 75% 55% at 50% -8%, var(--fio-accent-glow) 0%, transparent 62%),
+      radial-gradient(ellipse 45% 35% at 88% 45%, var(--fio-steel-glow) 0%, transparent 55%),
       var(--fio-ink);
   }
 
@@ -249,7 +391,7 @@
     border-radius: var(--radius-md);
     font-size: 0.85rem;
     font-weight: 500;
-    transition: all 0.25s var(--ease-out);
+    transition: all var(--dur-2) var(--ease-out);
     cursor: pointer;
     border: none;
     white-space: nowrap;
@@ -278,8 +420,31 @@
   }
   .fio-btn-ghost:hover {
     color: var(--fio-text);
-    background: rgba(244,241,233,0.03);
-    border-color: rgba(244,241,233,0.12);
+    background: var(--fio-hover-wash);
+    border-color: var(--fio-hover-border);
+  }
+
+  /* ---- Form controls ----
+     [AUDIT FIX 2026-09-25 R6-2] @tailwindcss/forms 的 base 层给所有
+     :focus 注入浏览器默认蓝环（outline:1px auto -webkit-focus-ring-color），
+     与品牌金色聚焦环（.fio-btn:focus-visible）不一致。统一为品牌环：
+     内阴影描边 + 外发光，键盘用户在任何表单控件上得到同一视觉语言。 */
+  .fio-input {
+    background: var(--fio-surface);
+    border: 1px solid var(--fio-border);
+    color: var(--fio-text);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  }
+  .fio-input::placeholder {
+    color: var(--fio-text-3);
+    opacity: 0.7;
+  }
+  .fio-input:focus-visible,
+  .fio-input:focus {
+    outline: none;
+    border-color: var(--fio-gold);
+    box-shadow: 0 0 0 1px var(--fio-gold), 0 0 0 4px var(--fio-gold-dim);
   }
 
   /* ---- Rotating seal ---- */
@@ -296,14 +461,11 @@
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .fio-delay-1 { animation-delay: 0.1s; }
-  .fio-delay-2 { animation-delay: 0.2s; }
-  .fio-delay-3 { animation-delay: 0.3s; }
-  .fio-delay-4 { animation-delay: 0.4s; }
-  .fio-delay-5 { animation-delay: 0.5s; }
-
+  /* [AUDIT FIX 2026-09-25 R6-8] 删除独立的 .fio-delay-N 块：animation-delay
+     对无 animation 的元素无效，独立块是死样式；组件一律组合使用
+     .fio-animate-fade-up.fio-delay-N，仅保留组合选择器。 */
   .fio-animate-fade-up {
-    animation: fade-up 0.6s var(--ease-out) both;
+    animation: fade-up var(--dur-4) var(--ease-out) both;
   }
   .fio-animate-fade-up.fio-delay-1 { animation-delay: 0.1s; }
   .fio-animate-fade-up.fio-delay-2 { animation-delay: 0.2s; }
@@ -314,12 +476,12 @@
   /* ---- Scrollbar ---- */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(244,241,233,0.07); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(244,241,233,0.14); }
+  ::-webkit-scrollbar-thumb { background: var(--fio-scrollbar); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--fio-scrollbar-hover); }
 
   /* ---- Selection ---- */
   ::selection {
-    background: rgba(227,200,146,0.22);
+    background: var(--fio-selection);
     color: var(--fio-text);
   }
 }

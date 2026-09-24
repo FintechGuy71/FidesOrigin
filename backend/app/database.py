@@ -4,6 +4,7 @@ FidesOrigin 数据库配置（重构版）
 """
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError  # [AUDIT FIX 2026-09-24 B14] 并发 seed 竞态处理
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
 import logging
@@ -114,10 +115,14 @@ async def ensure_default_rules():
 
     背景：风险引擎按 DB 里的 risk_rules 行驱动（rule.name → STRATEGIES 映射）。
     `sanctioned_list` 规则此前靠手工建、不在任何迁移里；新增 `scam_list` 规则
-    （链上风险名单）同样需要一条规则行才能被引擎调用。故统一在此幂等确保，
-    ON CONFLICT (name) DO NOTHING，不覆盖已存在的规则。
+    （链上风险名单）同样需要一条规则行才能被引擎调用。故统一在此幂等确保。
+    [AUDIT FIX 2026-09-24 B14] 修正失实的 docstring：原注释声称
+    "ON CONFLICT (name) DO NOTHING"，实际实现是 check-then-insert 且导入了
+    pg_insert 却从未使用（死导入）。RiskRule.name 有 unique 约束，多实例并发
+    seed 的竞态表现为 commit 时 IntegrityError——现显式捕获并按
+    "已被并发实例 seed" 幂等处理（回滚后确认规则在库即可），不再冒泡到
+    init_db 的兜底 except 制造误导性的 seed 失败日志。
     """
-    from sqlalchemy.dialects.postgresql import insert as pg_insert
     # 延迟导入 RiskRule，避免 database ↔ models 循环 import
     from app.models import RiskRule
 
@@ -146,14 +151,26 @@ async def ensure_default_rules():
                 "is_active": True,
             },
         ]
-        for r in rules:
-            # 用 ORM 对象而非裸 dict，让 SQLAlchemy 正确处理 native ENUM(rule_type) 的转换
-            # （裸 dict + pg_insert 对 PG native enum 会因缺少显式 cast 而失败）
-            exists = await session.execute(
-                select(RiskRule).where(RiskRule.name == r["name"])
-            )
-            if exists.scalar_one_or_none() is not None:
-                continue  # 已存在，跳过（幂等）
-            session.add(RiskRule(**r))
-        await session.commit()
+        try:
+            for r in rules:
+                # 用 ORM 对象而非裸 dict，让 SQLAlchemy 正确处理 native ENUM(rule_type) 的转换
+                # （裸 dict + pg_insert 对 PG native enum 会因缺少显式 cast 而失败）
+                exists = await session.execute(
+                    select(RiskRule).where(RiskRule.name == r["name"])
+                )
+                if exists.scalar_one_or_none() is not None:
+                    continue  # 已存在，跳过（幂等）
+                session.add(RiskRule(**r))
+            await session.commit()
+        except IntegrityError:
+            # [AUDIT FIX 2026-09-24 B14] 并发实例已抢先插入（name 唯一约束）
+            await session.rollback()
+            for r in rules:
+                exists = await session.execute(
+                    select(RiskRule).where(RiskRule.name == r["name"])
+                )
+                if exists.scalar_one_or_none() is None:
+                    raise  # 非竞态原因的完整性错误，如实上抛
+            logger.info("default_rules_seed_race_resolved: %s", [r["name"] for r in rules])
+            return
         logger.info("default_rules_ensured: %s", [r["name"] for r in rules])

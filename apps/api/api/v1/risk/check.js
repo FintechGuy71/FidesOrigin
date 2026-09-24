@@ -32,7 +32,14 @@ async function handler(req, res) {
 
   // Proxy to backend
   try {
-    const response = await proxyToBackend(`/api/v1/address/${address}/risk?chainId=${encodeURIComponent(chainId || 11155111)}`);
+    /* [AUDIT FIX 2026-09-24 F1] 后端 /api/v1/address/{address}/risk 读取的查询
+       参数名是 `chain`（链名），不是 `chainId`（数字）——原 ?chainId= 被后端
+       静默忽略，链过滤永远落在后端默认值上。v3.1.0 数据阶段后端全部
+       AddressRisk 记录统一以 chain="ethereum" 为键（publisher 消息载荷不含
+       chain、backend risk_sync 固定写 "ethereum"），故显式传 chain=ethereum，
+       与 /api/v1/address/batch-check 的修复口径一致。
+       数据按链重键（per-chain keying）后，此处应改回语义映射。 */
+    const response = await proxyToBackend(`/api/v1/address/${address}/risk?chain=ethereum`);
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
