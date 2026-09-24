@@ -73,19 +73,36 @@ class DIContainer:
     async def shutdown(self) -> None:
         """关闭所有服务"""
         logger.info("di_container_shutting_down")
-        
+
         if self._cache:
             await self._cache.close()
             self._cache = None
-        
+
         if self._blockscout:
             await self._blockscout.close()
             self._blockscout = None
-        
+
+        # [AUDIT FIX 2026-09-24 B15] 懒创建的 lock_manager / message_queue 持有
+        # 各自的 Redis 连接，原 shutdown 从不关闭它们 → 优雅停机时连接泄漏。
+        # 两者是模块级单例，关闭一次即可。
+        if self._lock_manager:
+            try:
+                await self._lock_manager.close()
+            except Exception as e:
+                logger.warning("lock_manager_close_error", error=str(e))
+            self._lock_manager = None
+
+        if self._message_queue:
+            try:
+                await self._message_queue.close()
+            except Exception as e:
+                logger.warning("message_queue_close_error", error=str(e))
+            self._message_queue = None
+
         self._alert = None
         self._ws_manager = None
         self._initialized = False
-        
+
         logger.info("di_container_shutdown_complete")
     
     @property

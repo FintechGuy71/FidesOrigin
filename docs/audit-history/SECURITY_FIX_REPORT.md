@@ -397,8 +397,8 @@
 ## Remaining Action Items
 
 1. **轮换已泄露的 API Key**（P0）
-   - Chainalysis API Key: `f52c25172e4c1e5de8004bcce58a62287fe91ab97aee2c3f008a3d8b5ee3d3d0`
-   - Etherscan API Key: `IW7DG5MV445CEWHBP5FQCYZTXHQJN6RGV9`
+   - Chainalysis API Key: `<REDACTED>`（[AUDIT FIX 2026-09-24] 原文再次泄露完整密钥，已脱敏）
+   - Etherscan API Key: `<REDACTED>`（同上）
 
 2. **从 git history 中移除 `.env` 文件**（P0）
    ```bash

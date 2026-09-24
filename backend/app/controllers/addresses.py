@@ -63,8 +63,18 @@ async def batch_check_addresses(
     engine: RiskEngineService = Depends(get_risk_engine),
     current_user: str = Depends(get_current_user)
 ):
-    """批量风险查询（逐地址复用单地址评分管线，单地址失败不影响整体）"""
-    chain = _CHAIN_ID_TO_NAME.get(payload.chainId or 11155111, "sepolia")
+    """批量风险查询（逐地址复用单地址评分管线，单地址失败不影响整体）
+
+    [AUDIT FIX 2026-09-24 F2] chain 键口径修正：v3.1.0 数据阶段，后端全部
+    AddressRisk 记录统一以 chain="ethereum" 为键（data-publisher 消息载荷不含
+    chain 字段、risk_sync_service.handle_message_queue_update 固定写
+    "ethereum"），apps/api 网关的单查路径实际生效链也是 "ethereum"。
+    原实现用 _CHAIN_ID_TO_NAME 把 11155111 映射为 "sepolia"，导致批量查询按
+    "sepolia" 键去查 sanctioned_list / scam_list 策略数据 → 同一在册地址
+    单查 100 分、批查 0 分的自相矛盾。语义映射表保留（数据按链重键后恢复
+    使用），当前阶段统一解析为 "ethereum"。
+    """
+    chain = "ethereum"
 
     results: List[BatchRiskCheckResultItem] = []
     summary = {"total": 0, "highRisk": 0, "mediumRisk": 0, "lowRisk": 0}

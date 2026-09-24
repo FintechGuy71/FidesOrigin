@@ -2,10 +2,17 @@ const https = require('https');
 const http = require('http');
 const { execSync } = require('child_process');
 
-const API_KEYS = [
-  'ABQJNS57VYBYH7K3MSCQB4TWKVSB54QPXC',
-  'IW7DG5MV445CEWHBP5FQCYZTXHQJN6RGV9'
-];
+// [AUDIT FIX 2026-09-24] 原文件硬编码两个真实 Etherscan API Key（已泄露，应立即轮换）。
+// 改为从环境变量 ETHERSCAN_API_KEYS 读取（逗号分隔），不再把密钥写进代码。
+const API_KEYS = (process.env.ETHERSCAN_API_KEYS || process.env.ETHERSCAN_API_KEY || '')
+  .split(',')
+  .map((k) => k.trim())
+  .filter(Boolean);
+
+if (API_KEYS.length === 0) {
+  console.error('未配置 ETHERSCAN_API_KEYS / ETHERSCAN_API_KEY 环境变量，无法测试。');
+  process.exit(1);
+}
 
 const ETHERSCAN_HOST = 'api.etherscan.io';
 
@@ -40,7 +47,7 @@ console.log('\n【测试3】curl 直连测试（无SSL验证）');
 console.log('─────────────────────────────────');
 try {
   const curlResult = execSync(
-    'curl -v -k --max-time 30 "https://api.etherscan.io/api?module=account&action=balance&address=0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb&tag=latest&apikey=ABQJNS57VYBYH7K3MSCQB4TWKVSB54QPXC" 2>&1 || echo "curl失败"',
+    'curl -v -k --max-time 30 "https://api.etherscan.io/api?module=account&action=balance&address=0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb&tag=latest&apikey=${API_KEYS[0]}" 2>&1 || echo "curl失败"',
     { encoding: 'utf8', timeout: 35000 }
   );
   console.log(curlResult.substring(0, 3000));

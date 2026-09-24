@@ -46,9 +46,9 @@
   - 根目录 `.env` 包含：`PRIVATE_KEY=0x[REDACTED]`
   - 同 `.env` 还包含：`SYNC_PRIVATE_KEY=[REDACTED]`
   - `data-publisher/.env` 包含：`ORACLE_PRIVATE_KEY=0x[REDACTED]`
-  - `data-publisher/.env` 还包含：`PUBLISHER_PRIVATE_KEY=0x21e09e7def47220d0020bae2d20cb2b1185f4382b6b78f63ab949d8c7a2c1201`
+  - `data-publisher/.env` 还包含：`PUBLISHER_PRIVATE_KEY=<REDACTED>`（[AUDIT FIX 2026-09-24] 原文泄露完整私钥，已脱敏；该值应视为已泄露并立即轮换）
   - `data-publisher/.env` 还包含：`FATF_ORACLE_PRIVATE_KEY=0x[REDACTED]`
-- **影响:** 攻击者获得此私钥即可完全控制所有部署者身份相关的合约权限。若此私钥也用于主网或跨链部署，资金直接被盗。此外，`.env` 中 `ETHERSCAN_API_KEY=IW7DG5MV445CEWHBP5FQCYZTXHQJN6RGV9` 和 `VERCEL_TOKEN=[REDACTED]
+- **影响:** 攻击者获得此私钥即可完全控制所有部署者身份相关的合约权限。若此私钥也用于主网或跨链部署，资金直接被盗。此外，`.env` 中 `ETHERSCAN_API_KEY=<REDACTED>`（[AUDIT FIX 2026-09-24] 原文泄露真实密钥，已脱敏）和 `VERCEL_TOKEN=[REDACTED]
 - **修复:** 立即将 `.env` 加入 `.gitignore`，将真实私钥替换为 `0x0000...0000` 占位符，使用 AWS KMS / HashiCorp Vault / 硬件钱包，删除 `.env` 文件历史记录（`git filter-repo` 或 BFG）。
 
 ---

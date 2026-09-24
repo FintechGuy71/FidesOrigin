@@ -190,7 +190,11 @@ async def rotate_refresh_token(old_token: str) -> dict:
         except AuthenticationException:
             raise
         except Exception:
-            pass  # Redis 不可用时降级
+            # [AUDIT FIX 2026-09-22] 原静默 pass：Redis 故障期间 refresh 重放检测与
+            # family 撤销失效，属安全事件，却无任何日志（与 create_refresh_token
+            # 的 R3-L4 修复不一致）。升 error 级并说明影响面。
+            logger.error("refresh_token_rotation_store_unavailable",
+                         impact="replay detection and family revocation disabled while Redis is down")
     
     # 生成新的 refresh token（保持同一个 family）
     return await create_refresh_token(username, family)
@@ -509,7 +513,10 @@ SENSITIVE_FIELDS = frozenset({
 
 SENSITIVE_PATTERNS = [
     r"(password|secret|token|api_key)\s*[=:]\s*[^\s&]+",
-    r"(0x[a-fA-F0-9]{64})",  # 私钥格式
+    # [AUDIT FIX 2026-09-24 B12] 原模式 `(0x[a-fA-F0-9]{64})` 整体捕获后以 \1***
+    # 替换 —— 完整私钥被原样保留、仅追加 ***，等于没有脱敏。改为保留前 6 位
+    # 前缀，其余以 *** 掩蔽。
+    r"(0x[a-fA-F0-9]{4})[a-fA-F0-9]{60}",
     r"(Bearer\s+)[a-zA-Z0-9_\-\.]+",
 ]
 
@@ -601,14 +608,26 @@ class RateLimiter:
             from app.core.di import get_container
             cache = get_container().cache
 
+            # [AUDIT FIX 2026-09-24 B2] CacheService 未连接时对 incr/expire 返回
+            # 软默认值（1/False）而非抛异常——原实现因此恒走 Redis 分支且
+            # count 永远为 1 → Redis 启动期未连接时限流被静默禁用，
+            # 声称的"Redis 不可用时降级本地内存"成为死代码。
+            # 现显式检查连接状态，未连接直接走本地降级。
+            if not cache.is_connected:
+                raise ConnectionError("cache service not connected")
+
             # [HIGH-1 FIX] 添加服务前缀防止多服务共享 Redis 时的 key 碰撞
             cache_key = f"fidesorigin:rate_limit:{key}"
 
-            # [HIGH-1 FIX] 原子化 INCR：先递增，再根据返回值判断
-            count = await cache.incr(cache_key)
-            if count == 1:
-                # 首次请求，设置窗口过期时间
-                await cache.expire(cache_key, 60)
+            # [AUDIT FIX 2026-09-24 B4] 原实现 INCR 与 EXPIRE 为两步：
+            # 进程在两步之间崩溃/EXPIRE 失败 → 计数 key 无 TTL 永久累积，
+            # 该限流键一旦达到上限即被永久封锁。改用 Lua 脚本原子化执行。
+            _INCR_EXPIRE_LUA = (
+                "local c = redis.call('INCR', KEYS[1]) "
+                "if c == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end "
+                "return c"
+            )
+            count = await cache.redis.eval(_INCR_EXPIRE_LUA, 1, cache_key, 60)
 
             if count > (limit or self.requests_per_minute):
                 return False
@@ -644,23 +663,23 @@ class RateLimiter:
         # [MEDIUM-2 FIX] 周期性全局清理，防止攻击者用大量唯一 key 撑爆内存
         if now - self._last_local_cleanup > self._local_cleanup_interval:
             self._cleanup_local_cache(now, window_start)
-        
+
         if key not in self._local_cache:
             self._local_cache[key] = []
-        
+
         # 清理过期记录（防止内存泄漏）
         self._local_cache[key] = [
             ts for ts in self._local_cache[key] if ts > window_start
         ]
-        
-        # 清理空键
-        if not self._local_cache[key]:
-            del self._local_cache[key]
-            return True
-        
+
+        # [AUDIT FIX 2026-09-24 B1] 原实现在空键清理分支（del + return True）
+        # 中提前返回，本次请求的时间戳从未被 append → 滑动窗口计数永远为空，
+        # 每个请求都走"空→放行"路径，本地降级限流实际完全失效（无限放行）。
+        # 正确顺序：先判额、再记录、后放行。过期空键的清理交给
+        # _cleanup_local_cache 的周期性全局清理。
         if len(self._local_cache[key]) >= self.requests_per_minute:
             return False
-        
+
         self._local_cache[key].append(now)
         return True
     
@@ -685,7 +704,12 @@ class RateLimiter:
         try:
             from app.core.di import get_container
             cache = get_container().cache
-            
+
+            # [AUDIT FIX 2026-09-24 B2] 同 is_allowed：未连接时显式走本地降级，
+            # 避免 CacheService 软默认值（None）被误读为"未消费配额"。
+            if not cache.is_connected:
+                raise ConnectionError("cache service not connected")
+
             # [MEDIUM-3 FIX] 添加服务前缀防止多服务共享 Redis 时的 key 碰撞
             cache_key = f"fidesorigin:rate_limit:{key}"
             count = await cache.get(cache_key)
@@ -792,11 +816,13 @@ async def verify_api_key(
         logger.info("api_key_verified", api_key_id=str(key_record.id), request_count=key_record.request_count)
         return True
         
-    except Exception:
+    except Exception as e:
         # [M-EH-1 Fix] 不再捕获所有异常并返回 False（会掩盖系统错误如数据库连接失败）。
         # 所有"密钥无效"的业务场景（未找到、过期、超限）均已在上文显式处理。
         # 到达此处的异常均为系统级错误，应向上传播由全局异常处理器处理。
         # [R3-L1] error_type 取捕获实例的真实类型（原取类 Exception 恒失真）
+        # [AUDIT FIX 2026-09-22] 补回 as e 绑定：原 `except Exception:` 未绑定异常实例，
+        # 却引用 type(e).__name__ → 触发 NameError，掩盖了真正的系统级异常。
         logger.error("api_key_verification_system_error", error_type=type(e).__name__)
         raise
 
@@ -934,19 +960,17 @@ async def request_tracing_middleware(
     # 生成或复用追踪 ID
     trace_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
     request.state.trace_id = trace_id
-    
+
     # 记录请求开始 - 安全地记录信息，不泄露敏感数据
     start_time = time.time()
-    
+
     # 安全地获取 user agent，限制长度
     user_agent = request.headers.get("User-Agent", "")[:200]
-    
-    # 脱敏：不记录 API Key、Authorization 等敏感头
-    safe_headers = dict(request.headers)
-    for sensitive_header in ["authorization", "x-api-key", "cookie", "x-csrf-token", "x-request-signature"]:
-        if sensitive_header in safe_headers:
-            safe_headers[sensitive_header] = "***"
-    
+
+    # [AUDIT FIX 2026-09-24 B13] 删除 safe_headers 构造：下方日志从未引用它，
+    # 每请求白做一次全量 header 拷贝+脱敏（纯死代码开销）。脱敏的响应头
+    # 白名单由 security_headers_middleware 与日志字段选择共同保证。
+
     # 脱敏 URL 查询参数
     safe_url = str(request.url)
     from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode

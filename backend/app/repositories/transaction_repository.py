@@ -70,15 +70,29 @@ class TransactionRepository:
         gas_price: Optional[str] = None,
         gas_used: Optional[int] = None
     ) -> Transaction:
-        """创建交易记录"""
+        """创建交易记录
+
+        [AUDIT FIX 2026-09-24 B17] 在写库边界显式做类型矫正：value（str，
+        来自 Blockscout 的十进制 wei 字符串）→ Decimal 以适配 Numeric 列的
+        asyncpg 驱动绑定；block_number → int（部分实例返回字符串）。
+        此前的类型不匹配会触发驱动绑定错误，且被上游 try/except 静默吞掉，
+        表现为交易记录从未入库却无 500。
+        """
+        from decimal import Decimal as _Decimal
+
+        try:
+            value_decimal = _Decimal(str(value))
+        except Exception:
+            value_decimal = _Decimal(0)
+
         tx = Transaction(
             tx_hash=tx_hash,
             chain=chain,
             address=address,
             from_address=from_address,
             to_address=to_address,
-            value=value,
-            block_number=block_number,
+            value=value_decimal,
+            block_number=int(block_number or 0),
             block_timestamp=block_timestamp or datetime.now(timezone.utc),
             risk_score=risk_score,
             risk_level=risk_level,

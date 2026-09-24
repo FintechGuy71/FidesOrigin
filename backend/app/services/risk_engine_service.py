@@ -541,10 +541,14 @@ class RiskEngineService:
             
             # 从 Blockscout 获取交易详情
             tx_data = await self.blockscout.get_transaction(tx_hash)
-            
-            from_addr = tx_data.get("from", {}).get("hash", "")
+
+            # [AUDIT FIX 2026-09-24 B9] from 键存在但值为 null 时
+            # tx_data.get("from", {}) 返回 None（默认值仅对键缺失生效），
+            # None.get(...) 抛 AttributeError——与 to:null 同类的空值防护。
+            from_obj = tx_data.get("from") or {}
+            from_addr = from_obj.get("hash", "")
             to_addr = (tx_data.get("to") or {}).get("hash", "")  # [R3-M10] to 可为 null
-            value_wei = int(tx_data.get("value", "0"))
+            value_wei = int(tx_data.get("value") or 0)  # value 为 null 时兜底 0
             value_eth = value_wei / 10**18
             
             # 检查关联地址风险（用 set 去重，避免自转账重复计算）
@@ -617,14 +621,16 @@ class RiskEngineService:
                     from_address=from_addr,
                     to_address=to_addr,
                     value=str(value_wei),
-                    block_number=tx_data.get("block_number", 0),
+                    block_number=int(tx_data.get("block_number") or 0),  # [AUDIT FIX 2026-09-24] 部分 Blockscout 实例返回字符串
                     risk_score=total_score,
                     risk_level=risk_level,
                     risk_indicators=indicators,
                     status=tx_data.get("status", "pending")
                 )
             except Exception as e:
-                logger.warning("transaction_cache_failed", tx_hash=tx_hash, error=str(e))
+                # [AUDIT FIX 2026-09-24 B19] 日志事件名原为 transaction_cache_failed，
+                # 实为数据库持久化失败（与缓存无关），按实名记录便于排查。
+                logger.warning("transaction_persist_failed", tx_hash=tx_hash, error=str(e))
             
             return result
             

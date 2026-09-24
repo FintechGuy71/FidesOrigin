@@ -4,7 +4,7 @@ FidesOrigin R3 — 新增合约 Etherscan V2 直接验证（复用 verify_ethers
 目标：2026-09-18 R3 部署的 8 个新合约
   UUPS 实现 ×3 + Diamond facet ×3 + QuarantineVault + FidesOriginTimelock
 
-用法：python scripts/verify_r3_etherscan.py
+用法：python scripts/verify_r3_etherscan.py（需设置 ETHERSCAN_API_KEY 环境变量）
 """
 
 import json
@@ -14,7 +14,12 @@ import time
 import urllib.parse
 import urllib.request
 
-API_KEY = os.environ.get("ETHERSCAN_API_KEY", "ABQJNS57VYBYH7K3MSCQB4TWKVSB54QPXC")
+# [AUDIT FIX 2026-09-24] 原代码把真实 Etherscan API Key 硬编码为默认值（已泄露，应立即轮换）。
+# 改为必须从环境变量读取，缺失时直接报错退出。
+API_KEY = os.environ.get("ETHERSCAN_API_KEY")
+if not API_KEY:
+    print("错误：请先设置 ETHERSCAN_API_KEY 环境变量。", file=sys.stderr)
+    sys.exit(1)
 V2 = "https://api.etherscan.io/v2/api"
 CHAIN_ID = "11155111"
 

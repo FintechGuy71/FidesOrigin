@@ -271,7 +271,12 @@ class RiskEngine:
                 # 解析时间
                 try:
                     first_tx_time = datetime.fromisoformat(first_tx.replace('Z', '+00:00'))
-                    age_days = (datetime.now(timezone.utc) - first_tx_time.replace(tzinfo=None)).days
+                    # [AUDIT FIX 2026-09-22] 原实现 `.replace(tzinfo=None)` 把带时区的
+                    # 时间戳强转 naive，再与 aware 的 now 相减 → 恒 TypeError（被静默吞掉），
+                    # "new_address" 年龄规则实际从未生效。统一为 aware 后相减。
+                    if first_tx_time.tzinfo is None:
+                        first_tx_time = first_tx_time.replace(tzinfo=timezone.utc)
+                    age_days = (datetime.now(timezone.utc) - first_tx_time).days
                     
                     min_days = rule_config.get("min_days", 7)
                     weight = rule_config.get("weight", 0.1)
@@ -452,9 +457,15 @@ class RiskEngine:
             tx_data = await client.get_transaction(tx_hash)
             
             # 分析发送方和接收方
-            from_addr = tx_data.get("from", {}).get("hash", "")
-            to_addr = tx_data.get("to", {}).get("hash", "")
-            value_wei = int(tx_data.get("value", "0"))
+            from_addr = tx_data.get("from", {}) or {}
+            from_addr = from_addr.get("hash", "")
+            # [AUDIT FIX 2026-09-22] 合约创建交易的 "to" 为 JSON null → Python None，
+            # 原 `tx_data.get("to", {}).get(...)` 在 None 上调 .get 抛 AttributeError。
+            to_obj = tx_data.get("to") or {}
+            to_addr = to_obj.get("hash", "")
+            # [AUDIT FIX 2026-09-24 B9] value 键存在但为 null 时（上游缺口期），
+            # .get("value", "0") 的默认值不生效 → int(None) TypeError。
+            value_wei = int(tx_data.get("value") or 0)
             value_eth = value_wei / 10**18
             
             # 检查发送方风险
@@ -494,7 +505,8 @@ class RiskEngine:
                 total_score += min(value_eth / 1000 * 20, 30)
             
             # 检查合约调用
-            if tx_data.get("to", {}).get("is_contract"):
+            # [AUDIT FIX 2026-09-22] 同上：to 为 null（合约创建）时安全取 {}。
+            if (tx_data.get("to") or {}).get("is_contract"):
                 indicators.append({
                     "type": "contract_call",
                     "contract": to_addr,

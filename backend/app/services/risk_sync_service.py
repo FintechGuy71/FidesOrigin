@@ -347,11 +347,16 @@ class RiskSyncService:
         )
         
         # 更新本地数据库状态
+        # [AUDIT FIX 2026-09-22] 原调用漏传必需的 risk_factors，且把 str 直接当
+        # RiskLevel 传入（create_or_update 期望枚举）→ 若被调用必 TypeError。
+        # 归一化 tier 为枚举并补齐 risk_factors。
+        level = tier if isinstance(tier, RiskLevel) else RiskLevel(str(tier).upper())
         await self.address_repo.create_or_update(
             address=address,
             chain="ethereum",
             risk_score=score,
-            risk_level=tier,
+            risk_level=level,
+            risk_factors=[],
         )
         
         # 清除缓存
