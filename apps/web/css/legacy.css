@@ -147,6 +147,7 @@ img { max-width: 100%; display: block; }
   top: 0; left: 0; right: 0;
   z-index: var(--z-nav);
   background: var(--fio-ink-scrim);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2); /* [AUDIT FIX 2026-09-25 R7-5] Safari ≤15 需前缀 */
   backdrop-filter: blur(20px) saturate(1.2);
   border-bottom: 1px solid var(--border);
 }
@@ -817,10 +818,14 @@ img { max-width: 100%; display: block; }
 }
 
 /* ─── Scroll Reveal Animation ───────────────────────────────────── */
-.reveal {
+/* [AUDIT FIX 2026-09-25 R7-6] html.js 门控：.reveal 初始隐身此前无条件生效，
+   JS 被禁用/加载失败时经典站全部 .reveal 内容（各页主要区块）永久不可见。
+   js 类由 legacy layout head 的内联脚本在 CSS 生效前同步添加，开启 JS 的
+   正常路径无任何视觉差异（无闪烁窗口）。 */
+html.js .reveal {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--dur-4) var(--ease-out), transform var(--dur-4) var(--ease-out);
 }
 .reveal.visible {
   opacity: 1;
@@ -944,7 +949,7 @@ img { max-width: 100%; display: block; }
 .compliance-details {
   margin-top: 12px;
 }@media (prefers-reduced-motion: reduce) {
-  .reveal {
+  html.js .reveal {
     opacity: 1;
     transform: none;
     animation: none;

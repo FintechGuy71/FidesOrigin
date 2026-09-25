@@ -184,7 +184,7 @@ export default function HeroHome({
       />
 
       <div className="relative z-[var(--z-content)] mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex min-h-[92svh] flex-col justify-center py-28 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
+        <div className="fio-hero-min flex flex-col justify-center py-28 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
           {/* LEFT — Positioning */}
           <div className="text-center lg:col-span-7 lg:text-left">
             <div className="fio-animate-fade-up fio-delay-1 mb-9">
@@ -240,7 +240,7 @@ export default function HeroHome({
                 background: "var(--fio-ink-scrim)",
                 boxShadow: "var(--fio-panel-shadow)",
                 backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)", /* [AUDIT FIX 2026-09-25 R7-5] Safari ≤15 需前缀 */
               }}
             >
               {/* Window chrome */}
@@ -253,7 +253,11 @@ export default function HeroHome({
                   <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
                   <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
                 </div>
-                <span className="font-mono text-[0.6875rem] tracking-wider" style={{ color: "var(--fio-text-3)" }}>
+                {/* [AUDIT FIX 2026-09-25 R7-2b] 标签避让旋转封印：seal 印在面板
+                    右上角，右对齐标签被圆环压住。用 margin（flex 布局中 margin
+                    参与分配，文字实际左移；inline 的 padding 推不动文字）。
+                    sm-xl 贴边态避让 96px，xl 悬挑态避让 112px。 */}
+                <span className="font-mono text-[0.6875rem] tracking-wider sm:mr-24 xl:mr-28" style={{ color: "var(--fio-text-3)" }}>
                   fidesorigin.com/admin
                 </span>
               </div>
@@ -338,9 +342,14 @@ export default function HeroHome({
             </div>
 
             {/* Rotating regulatory seal */}
+            {/* [AUDIT FIX 2026-09-25 R7-2] 旋转文字环的 bbox 随角度超出 svg 盒
+                （环直径≈盒宽，旋转 45° 时 bbox 外扩约 21px）。容器富余：
+                <1200px 时 max-w-6xl==viewport-48，任何负 right 都会越界；
+                ≥1280(xl) 起侧向富余 ≥64px，悬挑 20px 安全。故 sm-xl 贴边、
+                xl 起恢复悬挑设计。 */}
             <div
               aria-hidden="true"
-              className="absolute -right-5 -top-8 hidden h-28 w-28 sm:block"
+              className="absolute right-0 -top-8 hidden h-28 w-28 sm:block xl:-right-5"
             >
               <svg viewBox="0 0 120 120" className="h-full w-full">
                 <defs>

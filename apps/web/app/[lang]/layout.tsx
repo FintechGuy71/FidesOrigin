@@ -50,6 +50,13 @@ export default async function LocaleRootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* [AUDIT FIX 2026-09-25 R7-6] 同 (legacy) layout：JS 探针类，
+            门控 legacy.css 的 .reveal 初始隐身（阻塞内联，首帧前执行）。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: 'document.documentElement.classList.add("js");',
+          }}
+        />
       </head>
       <body className={`${fontVariableClassNames} font-sans antialiased`}>
         {children}
