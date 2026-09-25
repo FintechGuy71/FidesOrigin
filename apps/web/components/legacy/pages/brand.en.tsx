@@ -35,6 +35,9 @@ const PAGE_CSS = `
     .motif-demo {
       height: 140px; position: relative; overflow: hidden;
       border: 1px solid var(--border); border-radius: var(--radius-sm);
+      /* [AUDIT FIX 2026-09-25 R9-A5] 中心盾形徽标线条（与 Hero seal 同语言）：
+         此前仅四角刻线，预览框读作"空白"（OG 卡为下载资产不在框内展示）。 */
+      display: flex; align-items: center; justify-content: center;
       background:
         linear-gradient(var(--accent), var(--accent)) left 8px top 8px / 10px 1px,
         linear-gradient(var(--accent), var(--accent)) left 8px top 8px / 1px 10px,
@@ -47,11 +50,29 @@ const PAGE_CSS = `
         radial-gradient(ellipse 70% 60% at 50% 0%, var(--accent-glow) 0%, transparent 65%);
       background-repeat: no-repeat;
     }
+    .motif-demo::before {
+      content: "";
+      width: 44px; height: 52px;
+      border: 1px solid var(--accent);
+      border-radius: 2px 2px 10px 10px / 2px 2px 16px 16px;
+      opacity: 0.75;
+    }
+    .motif-demo::after {
+      content: "";
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 16px; height: 9px;
+      margin: -4.5px 0 0 -8px;   /* 勾形上沿对齐盾牌中心略上 */
+      border-left: 1.5px solid var(--gold-bright);
+      border-bottom: 1.5px solid var(--gold-bright);
+      transform: rotate(-45deg);
+      opacity: 0.9;
+    }
 `;
 
 const SWATCHES = [
   { name: "Ink", hex: "#0a141f", token: "--fio-ink" },
-  { name: "Surface", hex: "#162638", token: "--fio-surface-2" },
+  { name: "Surface Elevated", hex: "#162638", token: "--fio-surface-2" },
   { name: "Bronze", hex: "#af915f", token: "--fio-gold" },
   { name: "Cream", hex: "#fce1b6", token: "--fio-cream" },
   { name: "Light Bronze", hex: "#e3c892", token: "--fio-accent" },
@@ -135,7 +156,7 @@ export default function ContentBrandEN() {
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--text)" }}>
-                  JetBrains Mono — Data 20,645+ &lt;50ms
+                  JetBrains Mono — Sample: 20,645 addresses · &lt;50ms latency
                 </div>
                 <div className="spec">Metrics · labels · tabular numerals · uppercase tracking</div>
               </div>
