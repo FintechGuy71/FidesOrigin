@@ -30,9 +30,10 @@ export default function HomeChrome({
       >
         {dict.nav.skip}
       </a>
-      {/* 只裁剪横向：overflow-hidden 会让内部任何 position:sticky 失效，
-          overflow-x-clip 不创建滚动容器，因此不影响 sticky 与 fixed。 */}
-      <div className="flex min-h-screen flex-col overflow-x-clip">
+      {/* [AUDIT FIX 2026-09-25 R7-4] overflow guard：hidden 兜底旧 Safari（<16
+          不识别 clip），支持 clip 的浏览器用 clip —— 不创建滚动容器，
+          不影响 sticky 与 fixed。 */}
+      <div className="fio-overflow-guard flex min-h-screen flex-col">
         <Header lang={lang} d={dict.home.chrome} />
         <main id="main-content" className="relative flex grow flex-col">
           {children}

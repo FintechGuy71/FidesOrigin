@@ -30,6 +30,15 @@ export default function LegacyRootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* [AUDIT FIX 2026-09-25 R7-6] JS 探针类：legacy.css 的 .reveal 初始
+            隐身以此为门控（html.js .reveal），JS 被禁用/加载失败时经典站内容
+            保持可见。必须用阻塞内联脚本在首帧前同步执行，不能用 next/script
+            （defer 会在 CSS 生效后运行，产生闪烁窗口）。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: 'document.documentElement.classList.add("js");',
+          }}
+        />
       </head>
       <body className={`${fontVariableClassNames} font-sans antialiased`}>
         {children}

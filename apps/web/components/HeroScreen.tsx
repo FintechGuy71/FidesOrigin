@@ -82,7 +82,7 @@ export default function HeroScreen({
         border: "1px solid var(--fio-border-light)",
         background: "var(--fio-ink-scrim)",
         backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)", /* [AUDIT FIX 2026-09-25 R7-5] Safari ≤15 需前缀 */
       }}
     >
       {/* header row */}

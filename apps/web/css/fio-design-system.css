@@ -294,8 +294,23 @@
   }
 
   /* 技术图纸角标 —— 四角 L 形刻线，"合规蓝图"签名式细节。
-     用 8 条 background 渐变实现，不增加 DOM、不占 pseudo。 */
+     用 8 条 background 渐变实现，不增加 DOM、不占 pseudo。
+
+     [AUDIT FIX 2026-09-25 R7-1] 刻线图案移至 ::before 伪元素：
+     原实现画在元素自身 background-image 上，而 4 个消费者（HeroHome 面板 /
+     Features 视觉框 / Workflows 蓝图框 / HomeContact CTA 框）都在内联 style
+     设置 background 简写 —— 简写把 background-image 重置为 none，且内联
+     优先级高于任何类，四角的刻线实际上从未渲染过。::before（z-index:-1，
+     画在父背景之上、内容之下）与元素自身背景彻底解耦，内联简写不再冲突。 */
   .fio-ticks {
+    position: relative;
+  }
+  .fio-ticks::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
     background-image:
       linear-gradient(var(--fio-gold), var(--fio-gold)),
       linear-gradient(var(--fio-gold), var(--fio-gold)),
@@ -316,6 +331,29 @@
       left 6px bottom 6px, left 6px bottom 6px,
       right 6px bottom 6px, right 6px bottom 6px;
     background-repeat: no-repeat;
+  }
+
+  /* [AUDIT FIX 2026-09-25 R7-3] hero 最小高度渐进回退：
+     92svh 仅 Chromium 108+/Safari 15.4+/Firefox 101+ 支持，旧浏览器整条
+     声明被丢弃 → hero 失去最小高度而塌陷。先给 100vh 兜底，支持的浏览器
+     再用 svh（移动端地址栏收展时不跳动）。 */
+  .fio-hero-min {
+    min-height: 100vh;
+  }
+  @supports (min-height: 92svh) {
+    .fio-hero-min {
+      min-height: 92svh;
+    }
+  }
+
+  /* [AUDIT FIX 2026-09-25 R7-4] 横向溢出防线渐进回退：
+     overflow-x: clip 是防横向滚动且不破坏 sticky/fixed 的正解，但
+     Safari <16 完全不识别 → 防线整体失效。hidden 先行兜底（旧浏览器
+     用 hidden；当前 chrome 内无 sticky 元素，无副作用），支持 clip 的
+     浏览器后者胜出。 */
+  .fio-overflow-guard {
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   /* ---- Typography ---- */
