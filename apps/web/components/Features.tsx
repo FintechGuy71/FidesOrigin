@@ -123,31 +123,45 @@ function FeatureCard({
         )}
         {feature.visual === "shield" && (
           <div className="relative flex flex-col items-center justify-center">
-            <svg width="120" height="140" viewBox="0 0 120 140">
-              <path
-                d="M60 5 L110 30 L110 80 Q110 120 60 135 Q10 120 10 80 L10 30 Z"
-                fill="none"
-                stroke="var(--fio-gold)"
-                strokeWidth="1"
-                opacity="0.4"
-              />
-              <path
-                d="M60 25 L90 40 L90 75 Q90 105 60 115 Q30 105 30 75 L30 40 Z"
-                fill="var(--fio-gold-glow)"
-                stroke="var(--fio-gold)"
-                strokeWidth="0.75"
-              />
-              <text x="60" y="75" textAnchor="middle" fill="var(--fio-cream)" fontSize="13" fontFamily="monospace" letterSpacing="2">
-                AUDIT
-              </text>
-              {[35, 55, 75].map((y, i) => (
+            {/* [AUDIT FIX 2026-09-25 R7-8] 原构图双重冲突（实测 viewBox 坐标）：
+                ① 三行 Block 文本 x=35..107 横穿内盾轮廓（x=30/90）与外盾轮廓
+                   （x=10/110），文字压线穿盾；
+                ② 第三行基线 y=78 与 AUDIT（y=75）同线且 x 范围重叠 → 文字
+                   直接叠印不可读。
+                重构：盾牌整体右移（translate 120），Block 轨迹改左列时间线
+                （带连接竖线），两组元素零交叉；svg 加 max-w-full 适配 320。 */}
+            <svg width="260" height="140" viewBox="0 0 260 140" role="img" className="max-w-full h-auto">
+              {/* 左列：审计轨迹时间线 */}
+              {[42, 70, 98].map((y, i) => (
                 <g key={i}>
-                  <circle cx="25" cy={y} r="3" fill="var(--fio-gold)" opacity="0.7" />
-                  <text x="35" y={y + 3} fill="var(--fio-text-3)" fontSize="10" fontFamily="monospace">
+                  {i < 2 && (
+                    <line x1="20" y1={y + 7} x2="20" y2={y + 21} stroke="var(--fio-border-light)" strokeWidth="1" />
+                  )}
+                  <circle cx="20" cy={y} r="3" fill="var(--fio-gold)" opacity="0.7" />
+                  <text x="32" y={y + 3.5} fill="var(--fio-text-3)" fontSize="10" fontFamily="var(--font-mono)">
                     Block #{120000 + i * 1500}
                   </text>
                 </g>
               ))}
+              {/* 右侧：审计盾（原构图整体右移 120） */}
+              <g transform="translate(120,0)">
+                <path
+                  d="M60 5 L110 30 L110 80 Q110 120 60 135 Q10 120 10 80 L10 30 Z"
+                  fill="none"
+                  stroke="var(--fio-gold)"
+                  strokeWidth="1"
+                  opacity="0.4"
+                />
+                <path
+                  d="M60 25 L90 40 L90 75 Q90 105 60 115 Q30 105 30 75 L30 40 Z"
+                  fill="var(--fio-gold-glow)"
+                  stroke="var(--fio-gold)"
+                  strokeWidth="0.75"
+                />
+                <text x="60" y="75" textAnchor="middle" fill="var(--fio-cream)" fontSize="13" fontFamily="var(--font-mono)" letterSpacing="2">
+                  AUDIT
+                </text>
+              </g>
             </svg>
             <div
               className="mt-4 px-2 py-1 font-mono text-[0.6875rem]"

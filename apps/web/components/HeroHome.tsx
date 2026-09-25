@@ -358,7 +358,12 @@ export default function HeroHome({
                 <circle cx="60" cy="60" r="59" fill="var(--fio-ink-scrim)" stroke="var(--fio-gold-dim)" strokeWidth="1" />
                 <circle cx="60" cy="60" r="33" fill="none" stroke="var(--fio-gold-dim)" strokeWidth="0.5" />
                 <g className="fio-seal-ring">
-                  <text fontSize="9.5" letterSpacing="2.2" fill="var(--fio-gold)" fontFamily="var(--font-mono)">
+                  {/* [AUDIT FIX 2026-09-25 R7-9] 原 9.5px/2.2 字距 × 45 字符
+                      ≈ 355 单位，超出圆路径周长 276.5 —— 超出末端的字形沿
+                      切线甩出 svg viewBox 被裁（探针实测 bbox x1=-21），
+                      且首尾字符在起点重叠。收紧为 8.5px/0.8（45×5.9=266）
+                      使全部字形落在路径内。 */}
+                  <text fontSize="8.5" letterSpacing="0.8" fill="var(--fio-gold)" fontFamily="var(--font-mono)">
                     <textPath href="#fio-seal-circle">{d.sealText}</textPath>
                   </text>
                 </g>

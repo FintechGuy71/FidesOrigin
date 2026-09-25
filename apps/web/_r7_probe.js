@@ -111,6 +111,39 @@ async function probePage(page, url, vw, label) {
   });
   if (svgVar && !svgVar.resolved) F('P2', 'SVG var 未解析', label, `attr=${svgVar.raw} → computed=${svgVar.computed}`);
 
+  // 5) SVG 内文本 bbox 越出 viewBox（文字压线/被裁类冲突，R7-8 同类全站排查）
+  const svgTextOverflow = await page.evaluate(() => {
+    const out = [];
+    for (const svg of document.querySelectorAll('svg')) {
+      const vb = svg.viewBox && svg.viewBox.baseVal;
+      if (!vb || !vb.width) continue;
+      const sr = svg.getBoundingClientRect();
+      if (!sr.width) continue;
+      const scale = sr.width / vb.width;
+      svg.querySelectorAll('text').forEach(t => {
+        // textPath 文字：几何由路径决定，旋转容器下 getBoundingClientRect 是
+        // Chromium 测量假象（逐字符实测半径恒定）——改用渲染长度 vs 路径长度
+        const tp = t.querySelector('textPath');
+        if (tp) {
+          try {
+            const href = tp.getAttribute('href') || '';
+            const p = svg.querySelector(href);
+            if (p) {
+              const len = t.getComputedTextLength(), plen = p.getTotalLength();
+              if (len > plen + 1) out.push({ txt: (t.textContent || '').slice(0, 14), len: +len.toFixed(0), pathLen: +plen.toFixed(0), kind: 'textPath-overflow' });
+            }
+            return;
+          } catch { /* fallthrough */ }
+        }
+        const r = t.getBoundingClientRect();
+        const x1 = (r.left - sr.left) / scale, x2 = (r.right - sr.left) / scale;
+        if (x1 < -1 || x2 > vb.width + 1) out.push({ txt: (t.textContent || '').slice(0, 14), x1: +x1.toFixed(0), x2: +x2.toFixed(0), vbW: vb.width });
+      });
+    }
+    return out.slice(0, 4);
+  });
+  if (svgTextOverflow.length) F('P1', 'SVG 文本越 viewBox', label, JSON.stringify(svgTextOverflow));
+
   return { overflow, overlaps, ticks };
 }
 
