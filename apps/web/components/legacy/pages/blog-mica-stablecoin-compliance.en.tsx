@@ -1,5 +1,6 @@
 /* Auto-generated from public/blog/mica-stablecoin-compliance.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -27,7 +28,7 @@ export default function ContentBlogMicaStablecoinComplianceEN() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">Blog</p>
+          <p className="micro">Blog · Regulation · 3 min read</p>
           <h1>MiCA Compliance for Stablecoins: A Technical Guide</h1>
           <div className="blog-meta">
             <span>July 2026</span>
@@ -106,6 +107,7 @@ function _update(address from, address to, uint256 amount) internal override &#1
       </div>
     </article>
   
+      <BlogNav back="Back to Blog" prevLabel="Previous" nextLabel="Next" prev={ { href: "/blog/hong-kong-stablecoin-license", title: "" } } next={ { href: "/blog/why-on-chain-compliance", title: "Why On-Chain:The End of API-Based Compliance" } } />
     </>
   );
 }

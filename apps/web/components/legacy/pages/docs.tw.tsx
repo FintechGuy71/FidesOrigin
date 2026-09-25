@@ -138,32 +138,32 @@ contract MyToken is CompliantStableCoin &#123;
           <tbody>
             <tr>
               <td>RiskRegistry (Proxy)</td>
-              <td><code>0x953f985f38f94d6159c0600d1f15D543895cE896</code></td>
+              <td><code className="copyable" data-copy="0x953f985f38f94d6159c0600d1f15D543895cE896" title="Click to copy">0x953f985f38f94d6159c0600d1f15D543895cE896</code></td>
               <td>UUPS Proxy</td>
             </tr>
             <tr>
               <td>PolicyEngine (Proxy)</td>
-              <td><code>0xCA12BB2daD2a6D429277823366D8C88a490EDDeA</code></td>
+              <td><code className="copyable" data-copy="0xCA12BB2daD2a6D429277823366D8C88a490EDDeA" title="Click to copy">0xCA12BB2daD2a6D429277823366D8C88a490EDDeA</code></td>
               <td>UUPS Proxy</td>
             </tr>
             <tr>
               <td>ComplianceEngine (Proxy)</td>
-              <td><code>0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E</code></td>
+              <td><code className="copyable" data-copy="0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E" title="Click to copy">0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E</code></td>
               <td>UUPS Proxy</td>
             </tr>
             <tr>
               <td>QuarantineVault</td>
-              <td><code>0xF7c5c4DdcB0F868a6c271334131728CecA313DFb</code></td>
+              <td><code className="copyable" data-copy="0xF7c5c4DdcB0F868a6c271334131728CecA313DFb" title="Click to copy">0xF7c5c4DdcB0F868a6c271334131728CecA313DFb</code></td>
               <td>Direct Deploy</td>
             </tr>
             <tr>
               <td>FidesCompliance</td>
-              <td><code>0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707</code></td>
+              <td><code className="copyable" data-copy="0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707" title="Click to copy">0x1176db6ECa38AA9C4d153Ae4d21C3972c6335707</code></td>
               <td>Direct Deploy</td>
             </tr>
             <tr>
               <td>CompliantStableCoin (fUSD)</td>
-              <td><code>0x2245A8FCf6aca017327eA8950Ba510e9596595E9</code></td>
+              <td><code className="copyable" data-copy="0x2245A8FCf6aca017327eA8950Ba510e9596595E9" title="Click to copy">0x2245A8FCf6aca017327eA8950Ba510e9596595E9</code></td>
               <td>Direct Deploy</td>
             </tr>
           </tbody>

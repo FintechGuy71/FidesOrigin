@@ -89,7 +89,7 @@ export default function ContentUseCasesRwaTokenizationCN() {
             </ul>
           </div>
           <div className="reveal">
-            <div className="uc-code">
+            <div className="uc-code fio-ticks">
               <div className="uc-code-header">
                 <span>RWAToken.sol</span>
                 <span>Solidity 0.8.26</span>

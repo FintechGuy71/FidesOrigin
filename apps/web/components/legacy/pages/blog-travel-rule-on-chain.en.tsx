@@ -1,5 +1,6 @@
 /* Hand-written new article — registry-driven, same shape as codemod output. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -27,7 +28,7 @@ export default function ContentBlogTravelRuleOnChainEN() {
       <article className="blog-article">
         <div className="container">
           <div className="reveal">
-            <p className="micro">Blog</p>
+            <p className="micro">Blog · Regulation · 3 min read</p>
             <h1>The Travel Rule On-Chain: What FATF Requires from Stablecoin Transfers</h1>
             <div className="blog-meta">
               <span>August 2026</span>
@@ -84,6 +85,7 @@ export default function ContentBlogTravelRuleOnChainEN() {
           </div>
         </div>
       </article>
+      <BlogNav back="Back to Blog" prevLabel="Previous" nextLabel="Next"  next={ { href: "/blog/ofac-sanctions-screening-blockchain", title: "" } } />
     </>
   );
 }

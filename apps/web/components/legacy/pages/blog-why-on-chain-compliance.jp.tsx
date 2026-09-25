@@ -1,5 +1,6 @@
 /* Auto-generated from public/jp/blog/why-on-chain-compliance.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-hero {
@@ -147,7 +148,7 @@ export default function ContentBlogWhyOnChainComplianceJP() {
       <div className="glow glow-1"></div>
       <div className="container blog-hero-content">
         <div className="reveal">
-          <p className="micro">Blog — 2026年6月</p>
+          <p className="micro">Blog — 2026年6月 ·  · 約 3 分で読了</p>
           <h1 className="display">なぜオンチェーンか：<br /><span>API ベースコンプライアンスの終焉</span></h1>
           <p className="lead" style={{ "maxWidth": "600px", "marginTop": "20px" }}>今、暗号通貨のコンプライアンスに取り組む全員が、同じアーキテクチャ的誤りを犯している。彼らは間違ったことをやっている。そして、彼ら自身もそれを知っている。</p>
         </div>
@@ -286,6 +287,7 @@ export default function ContentBlogWhyOnChainComplianceJP() {
       </div>
     </section>
   
+      <BlogNav back="ブログに戻る" prevLabel="前の記事" nextLabel="次の記事" prev={ { href: "/blog/mica-stablecoin-compliance", title: "" } }  />
     </>
   );
 }

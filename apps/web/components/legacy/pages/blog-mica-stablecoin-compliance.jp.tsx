@@ -1,5 +1,6 @@
 /* Auto-generated from public/jp/blog/mica-stablecoin-compliance.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -27,7 +28,7 @@ export default function ContentBlogMicaStablecoinComplianceJP() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">ブログ</p>
+          <p className="micro">ブログ ·  · 約 3 分で読了</p>
           <h1>ステーブルコインの MiCA コンプライアンス：技術ガイド</h1>
           <div className="blog-meta">
             <span>2026年7月</span>
@@ -106,6 +107,7 @@ function _update(address from, address to, uint256 amount) internal override &#1
       </div>
     </article>
   
+      <BlogNav back="ブログに戻る" prevLabel="前の記事" nextLabel="次の記事" prev={ { href: "/blog/hong-kong-stablecoin-license", title: "" } } next={ { href: "/blog/why-on-chain-compliance", title: "なぜオンチェーンか：API ベースコンプライアンスの終焉" } } />
     </>
   );
 }

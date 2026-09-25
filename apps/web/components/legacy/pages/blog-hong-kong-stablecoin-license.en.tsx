@@ -1,5 +1,6 @@
 /* Auto-generated from public/blog/hong-kong-stablecoin-license.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -26,7 +27,7 @@ export default function ContentBlogHongKongStablecoinLicenseEN() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">Blog</p>
+          <p className="micro">Blog · Regulation · 3 min read</p>
           <h1>Hong Kong Stablecoin License: Compliance Requirements</h1>
           <div className="blog-meta">
             <span>July 2026</span>
@@ -88,6 +89,7 @@ export default function ContentBlogHongKongStablecoinLicenseEN() {
       </div>
     </article>
   
+      <BlogNav back="Back to Blog" prevLabel="Previous" nextLabel="Next" prev={ { href: "/blog/ofac-sanctions-screening-blockchain", title: "" } } next={ { href: "/blog/mica-stablecoin-compliance", title: "" } } />
     </>
   );
 }
