@@ -138,3 +138,12 @@ __pycache__/
 
 # H-1 一次性运维脚本（按设计本地持有，不入库）
 apps/contracts/scripts/h1-phase4-disable-emergency.js
+
+# R6-R11 巡检运行产物（本地验证工具的输出，不入库）
+*_shots/
+_r7_findings*.txt
+_r8_auto_*.json
+_r8_links_*.json
+_r8_extlinks.txt
+_r10_cjk*.png
+_tmp_*
