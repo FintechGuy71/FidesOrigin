@@ -44,7 +44,8 @@ function FeatureCard({
       >
         {feature.visual === "radar" && (
           <div className="relative h-52 w-52">
-            <svg viewBox={`0 0 ${SVG_VIEWBOX} ${SVG_VIEWBOX}`} className="h-full w-full">
+            <svg viewBox="0 0 220 220" className="h-full w-full" role="img" aria-label={d.radarCaption}>
+              <g transform="translate(10,10)">
               {RADAR_CIRCLES.map((r) => (
                 <circle
                   key={r}
@@ -76,7 +77,17 @@ function FeatureCard({
                 stroke="var(--fio-gold)"
                 strokeWidth="1"
               />
+              {/* [R11-M1] 扫描线 + 轴端标签：装饰插图 → 信息可视化 */}
+              <line
+                x1="100" y1="100" x2="200" y2="100"
+                stroke="var(--fio-gold)" strokeWidth="1" opacity="0.45"
+                className="fio-radar-sweep"
+              />
               <circle cx={`${RADAR_CENTER}`} cy={`${RADAR_CENTER}`} r="3" fill="var(--fio-cream)" />
+              <text x="206" y="103" textAnchor="end" fontSize="7" letterSpacing="1.5" fill="var(--fio-text-3)" fontFamily="var(--font-mono)">SANCTIONS</text>
+              <text x="58" y="207" textAnchor="middle" fontSize="7" letterSpacing="1.5" fill="var(--fio-text-3)" fontFamily="var(--font-mono)">FLAGS</text>
+              <text x="58" y="17" textAnchor="middle" fontSize="7" letterSpacing="1.5" fill="var(--fio-text-3)" fontFamily="var(--font-mono)">MIXER</text>
+              </g>
             </svg>
             <div
               className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 font-mono text-[0.6875rem]"

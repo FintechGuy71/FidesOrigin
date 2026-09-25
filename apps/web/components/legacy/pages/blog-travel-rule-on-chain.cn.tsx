@@ -1,5 +1,6 @@
 /* Auto-generated from public/cn/blog/travel-rule-on-chain.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -27,7 +28,7 @@ export default function ContentBlogTravelRuleOnChainCN() {
       <article className="blog-article">
         <div className="container">
           <div className="reveal">
-            <p className="micro">博客</p>
+            <p className="micro">博客 ·  · 约 3 分钟阅读</p>
             <h1>链上的旅行规则：FATF 对稳定币转账有何要求</h1>
             <div className="blog-meta">
               <span>2026 年 8 月</span>
@@ -84,6 +85,7 @@ export default function ContentBlogTravelRuleOnChainCN() {
           </div>
         </div>
       </article>
+      <BlogNav back="返回博客" prevLabel="上一篇" nextLabel="下一篇"  next={ { href: "/blog/ofac-sanctions-screening-blockchain", title: "" } } />
     </>
   );
 }

@@ -66,7 +66,10 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
                 background: "var(--fio-border-light)",
                 transform: lit ? "scaleX(1)" : "scaleX(0)",
               }}
-            />
+            >
+              {/* [R11-M2] 数据沿管道流动的光点（reduced-motion 停） */}
+              {lit && <span className="fio-flow-dot" aria-hidden="true" />}
+            </div>
             <div className="grid gap-12 md:grid-cols-3 md:gap-8">
               {flowSteps.map((step, i) => (
                 <div key={step.id} className="relative">

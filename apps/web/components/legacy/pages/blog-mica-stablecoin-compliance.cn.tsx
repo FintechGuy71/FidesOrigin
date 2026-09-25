@@ -1,5 +1,6 @@
 /* Auto-generated from public/cn/blog/mica-stablecoin-compliance.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -27,7 +28,7 @@ export default function ContentBlogMicaStablecoinComplianceCN() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">博客</p>
+          <p className="micro">博客 ·  · 约 3 分钟阅读</p>
           <h1>稳定币的 MiCA 合规：技术指南</h1>
           <div className="blog-meta">
             <span>2026 年 7 月</span>
@@ -106,6 +107,7 @@ function _update(address from, address to, uint256 amount) internal override &#1
       </div>
     </article>
   
+      <BlogNav back="返回博客" prevLabel="上一篇" nextLabel="下一篇" prev={ { href: "/blog/hong-kong-stablecoin-license", title: "" } } next={ { href: "/blog/why-on-chain-compliance", title: "为何链上：API 合规模式的终结" } } />
     </>
   );
 }

@@ -1,5 +1,6 @@
 /* Auto-generated from public/blog/ofac-sanctions-screening-blockchain.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -26,7 +27,7 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainEN() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">Blog</p>
+          <p className="micro">Blog · Sanctions · 3 min read</p>
           <h1>OFAC Sanctions Screening on Blockchain: Best Practices</h1>
           <div className="blog-meta">
             <span>July 2026</span>
@@ -94,6 +95,7 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainEN() {
       </div>
     </article>
   
+      <BlogNav back="Back to Blog" prevLabel="Previous" nextLabel="Next" prev={ { href: "/blog/travel-rule-on-chain", title: "" } } next={ { href: "/blog/hong-kong-stablecoin-license", title: "" } } />
     </>
   );
 }

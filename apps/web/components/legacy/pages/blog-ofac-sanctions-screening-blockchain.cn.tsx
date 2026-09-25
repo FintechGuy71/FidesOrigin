@@ -1,5 +1,6 @@
 /* Auto-generated from public/cn/blog/ofac-sanctions-screening-blockchain.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -26,7 +27,7 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainCN() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">博客</p>
+          <p className="micro">博客 ·  · 约 3 分钟阅读</p>
           <h1>区块链上的 OFAC 制裁筛查：最佳实践</h1>
           <div className="blog-meta">
             <span>2026 年 7 月</span>
@@ -94,6 +95,7 @@ export default function ContentBlogOfacSanctionsScreeningBlockchainCN() {
       </div>
     </article>
   
+      <BlogNav back="返回博客" prevLabel="上一篇" nextLabel="下一篇" prev={ { href: "/blog/travel-rule-on-chain", title: "" } } next={ { href: "/blog/hong-kong-stablecoin-license", title: "" } } />
     </>
   );
 }

@@ -1,5 +1,6 @@
 /* Auto-generated from public/blog/why-on-chain-compliance.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-hero {
@@ -147,7 +148,7 @@ export default function ContentBlogWhyOnChainComplianceEN() {
       <div className="glow glow-1"></div>
       <div className="container blog-hero-content">
         <div className="reveal">
-          <p className="micro">Blog — June 2026</p>
+          <p className="micro">Blog — June 2026 · Category Definition · 3 min read</p>
           <h1 className="display">Why On-Chain:<br /><span>The End of API-Based Compliance</span></h1>
           <p className="lead" style={{ "maxWidth": "600px", "marginTop": "20px" }}>Everyone building in crypto compliance right now is making the same architectural mistake. They're doing the wrong thing, and they know it.</p>
         </div>
@@ -286,6 +287,7 @@ export default function ContentBlogWhyOnChainComplianceEN() {
       </div>
     </section>
   
+      <BlogNav back="Back to Blog" prevLabel="Previous" nextLabel="Next" prev={ { href: "/blog/mica-stablecoin-compliance", title: "" } }  />
     </>
   );
 }

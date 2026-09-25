@@ -69,8 +69,10 @@
                  "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
                  "Noto Sans SC", sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
-                  Georgia, "Songti SC", serif;
+                  /* [R11-G1] CJK 衬线（宋/明朝体）前置：CJK 标题与英文 Fraunces
+                     衬线气质对齐；此前黑体排前导致中日韩标题渲染为无衬线 */
+                  "Songti SC", "STSong", "SimSun", "Noto Serif SC", "Noto Serif CJK SC",
+                  Georgia, serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
 
@@ -125,7 +127,7 @@
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+                  "Songti SC", "STSong", "SimSun", "Noto Serif SC", "Noto Serif CJK SC", serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang SC", "Microsoft YaHei", monospace;
   }
@@ -134,7 +136,7 @@
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+                  "Songti TC", "MingLiU", "Noto Serif TC", "Noto Serif CJK TC", serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang TC", "Microsoft JhengHei", monospace;
   }
@@ -142,7 +144,7 @@
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+                  "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
   }
@@ -358,6 +360,7 @@
 
   /* ---- Typography ---- */
   .fio-heading-xl {
+    text-wrap: balance;
     font-size: clamp(2.4rem, 5.4vw, 4.6rem);
     font-weight: 500;
     line-height: 1.06;
@@ -366,6 +369,7 @@
   }
 
   .fio-heading-lg {
+    text-wrap: balance;
     font-size: clamp(1.7rem, 3.5vw, 2.7rem);
     font-weight: 500;
     line-height: 1.12;
@@ -483,6 +487,32 @@
     outline: none;
     border-color: var(--fio-gold);
     box-shadow: 0 0 0 1px var(--fio-gold), 0 0 0 4px var(--fio-gold-dim);
+  }
+
+  /* [R11-M1] 雷达扫描线（Features 01）：信息可视化动效，reduced-motion 停 */
+  .fio-radar-sweep {
+    transform-origin: 110px 110px;
+    animation: fio-radar-sweep 5s linear infinite;
+  }
+  @keyframes fio-radar-sweep { to { transform: rotate(360deg); } }
+
+  /* [R11-M2] Workflow 连接线流动光点：数据沿管道流动的动态隐喻 */
+  .fio-flow-dot {
+    position: absolute; top: 50%; left: 0;
+    width: 6px; height: 6px; margin-top: -3px;
+    border-radius: 50%; background: var(--fio-gold);
+    box-shadow: 0 0 8px var(--fio-gold);
+    animation: fio-flow-dot 3.2s linear infinite;
+  }
+  @keyframes fio-flow-dot {
+    from { left: 0; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    to { left: calc(100% - 6px); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fio-radar-sweep, .fio-flow-dot { animation: none; }
+    .fio-flow-dot { opacity: 0; }
   }
 
   /* ---- Rotating seal ---- */

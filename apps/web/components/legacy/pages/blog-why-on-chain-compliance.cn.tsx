@@ -1,5 +1,6 @@
 /* Auto-generated from public/cn/blog/why-on-chain-compliance.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-hero {
@@ -147,7 +148,7 @@ export default function ContentBlogWhyOnChainComplianceCN() {
       <div className="glow glow-1"></div>
       <div className="container blog-hero-content">
         <div className="reveal">
-          <p className="micro">博客 — 2026 年 6 月</p>
+          <p className="micro">博客 — 2026 年 6 月 ·  · 约 3 分钟阅读</p>
           <h1 className="display">为何链上：<br /><span>API 合规模式的终结</span></h1>
           <p className="lead" style={{ "maxWidth": "600px", "marginTop": "20px" }}>现在所有做加密合规的人，都在犯同一个架构错误。他们在做错的事，而且他们自己也知道。</p>
         </div>
@@ -286,6 +287,7 @@ export default function ContentBlogWhyOnChainComplianceCN() {
       </div>
     </section>
   
+      <BlogNav back="返回博客" prevLabel="上一篇" nextLabel="下一篇" prev={ { href: "/blog/mica-stablecoin-compliance", title: "" } }  />
     </>
   );
 }

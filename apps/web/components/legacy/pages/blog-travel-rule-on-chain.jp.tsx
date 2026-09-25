@@ -1,5 +1,6 @@
 /* Auto-generated from public/jp/blog/travel-rule-on-chain.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -27,7 +28,7 @@ export default function ContentBlogTravelRuleOnChainJP() {
       <article className="blog-article">
         <div className="container">
           <div className="reveal">
-            <p className="micro">ブログ</p>
+            <p className="micro">ブログ ·  · 約 3 分で読了</p>
             <h1>オンチェーンのトラベルルール：FATF がステーブルコイン送金に求めるもの</h1>
             <div className="blog-meta">
               <span>2026年8月</span>
@@ -84,6 +85,7 @@ export default function ContentBlogTravelRuleOnChainJP() {
           </div>
         </div>
       </article>
+      <BlogNav back="ブログに戻る" prevLabel="前の記事" nextLabel="次の記事"  next={ { href: "/blog/ofac-sanctions-screening-blockchain", title: "" } } />
     </>
   );
 }

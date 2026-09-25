@@ -16,6 +16,7 @@ const AC_CSS = `
 .ac-hero h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: 12px; }
 .ac-hero p.lead { color: var(--text-secondary); max-width: 500px; margin: 0 auto; }
 .ac-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+.ac-sources { margin-top: 16px; text-align: center; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.2em; color: var(--text-muted); }
 @media (max-width: 600px) { .ac-stats { grid-template-columns: 1fr; } }
 .ac-stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; }
 .ac-stat-box .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
@@ -348,6 +349,9 @@ export default function AddressCheck({ dict }: { dict: D }) {
               <div className="label">{dict.greyLabel}</div>
             </div>
           </div>
+
+          {/* [R11-M9] 数据源背书带：工具页信任前置 */}
+          <div className="ac-sources">DATA SOURCES · OFAC · CHAINALYSIS · ELLIPTIC · FATF</div>
 
           <div className="ac-search">
             <input

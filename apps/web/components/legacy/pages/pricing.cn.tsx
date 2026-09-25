@@ -54,7 +54,7 @@ const PAGE_CSS = `
     }
     .pricing-features li:last-child { border-bottom: none; }
     .pricing-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
-    .pricing-features .missing { color: var(--text-muted); }
+    .pricing-features .missing { color: var(--text-muted); opacity: 0.8; }
     .pricing-features .missing svg { color: var(--text-muted); }
     .pricing-cta { width: 100%; text-align: center; justify-content: center; }
     .pricing-note {
@@ -68,6 +68,10 @@ const PAGE_CSS = `
     .pricing-note p { color: var(--text-secondary); font-size: 0.875rem; margin: 0; }
     .pricing-note a { color: var(--accent); }
     .compare-table-wrap { overflow-x: auto; margin-top: 48px; }
+    /* [R11-M4] 行 hover + 奇偶行底色：长表扫读纪律 */
+    .compare-table tbody tr { transition: background 0.2s ease; }
+    .compare-table tbody tr:nth-child(even) td { background: var(--fio-hover-wash); }
+    .compare-table tbody tr:hover td { background: var(--accent-glow); }
     .compare-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
     .compare-table th {
       text-align: left;

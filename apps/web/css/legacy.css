@@ -24,6 +24,9 @@
 
 @layer legacy {
 
+/* [R11-G4] 中西文混排自动间距（渐进增强：不支持则忽略） */
+body { text-autospace: normal; }
+
 /* ─── Design Tokens ─────────────────────────────────────────────── */
 :root {
   /* ── 经典站（legacy）令牌层 ──────────────────────────────────────
@@ -962,6 +965,35 @@ html.js .reveal:not(.visible) {
     transition: none;
   }
 }
+
+/* [R11-G2] 打印/导出 PDF：未触发 IO 的 reveal 内容强制可见。
+   金融合规站的 pricing/docs 打印存档是真实场景——此前打印件会
+   丢失所有未滚动到的区块。 */
+@media print {
+  html.js .reveal:not(.visible) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ─── Blog Article Navigation（R11-M7）───────────────────────────── */
+.blog-nav { max-width: 800px; margin: 0 auto; padding: 0 40px 80px; }
+.blog-nav-back {
+  display: inline-block; font-family: var(--font-mono); font-size: 0.8rem;
+  color: var(--accent); margin-bottom: 24px;
+}
+.blog-nav-back:hover { color: var(--gold-bright); }
+.blog-nav-row {
+  display: flex; justify-content: space-between; gap: 16px;
+  border-top: 1px solid var(--border); padding-top: 24px;
+}
+.blog-nav-card {
+  display: flex; flex-direction: column; gap: 6px; max-width: 46%;
+  color: var(--text-secondary); font-size: 0.875rem; transition: color 0.2s ease;
+}
+.blog-nav-card:hover { color: var(--accent); }
+.blog-nav-card:last-child { text-align: right; margin-left: auto; }
 
 /* ─── String literal color in code blocks ──────────────────────── */
 /* [AUDIT FIX R2-041] 此处 .code-body .str/.num 硬编码 OneDark 色已删：

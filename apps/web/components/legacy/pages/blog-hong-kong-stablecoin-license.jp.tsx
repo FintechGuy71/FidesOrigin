@@ -1,5 +1,6 @@
 /* Auto-generated from public/jp/blog/hong-kong-stablecoin-license.html — do not edit by hand. */
 import Link from "next/link";
+import BlogNav from "../BlogNav";
 
 const PAGE_CSS = `
 .blog-article { padding: 140px 0 60px; }
@@ -26,7 +27,7 @@ export default function ContentBlogHongKongStablecoinLicenseJP() {
     <article className="blog-article">
       <div className="container">
         <div className="reveal">
-          <p className="micro">ブログ</p>
+          <p className="micro">ブログ ·  · 約 3 分で読了</p>
           <h1>中国香港ステーブルコインライセンス：コンプライアンス要件</h1>
           <div className="blog-meta">
             <span>2026年7月</span>
@@ -88,6 +89,7 @@ export default function ContentBlogHongKongStablecoinLicenseJP() {
       </div>
     </article>
   
+      <BlogNav back="ブログに戻る" prevLabel="前の記事" nextLabel="次の記事" prev={ { href: "/blog/ofac-sanctions-screening-blockchain", title: "" } } next={ { href: "/blog/mica-stablecoin-compliance", title: "" } } />
     </>
   );
 }
