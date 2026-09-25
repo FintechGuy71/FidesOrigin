@@ -818,14 +818,20 @@ img { max-width: 100%; display: block; }
 }
 
 /* ─── Scroll Reveal Animation ───────────────────────────────────── */
-/* [AUDIT FIX 2026-09-25 R7-6] html.js 门控：.reveal 初始隐身此前无条件生效，
-   JS 被禁用/加载失败时经典站全部 .reveal 内容（各页主要区块）永久不可见。
-   js 类由 legacy layout head 的内联脚本在 CSS 生效前同步添加，开启 JS 的
-   正常路径无任何视觉差异（无闪烁窗口）。 */
-html.js .reveal {
+/* [AUDIT FIX 2026-09-25 R7-6/R8-1] html.js 门控 + :not(.visible) 状态限定。
+   R7-6 初版用 `html.js .reveal`（0,2,1）做隐身规则，压过了 `.reveal.visible`
+   （0,2,0）——IO 添加 visible 后 opacity:0 仍胜出，legacy 全站内容在正常
+   浏览器中永久隐身（visual CI 因 reduced-motion 分支未抓到，R8 巡检抓到）。
+   现改为 `html.js .reveal:not(.visible)`：元素获得 visible 后隐身规则不再
+   匹配，从规则结构上消除 specificity 战争；JS 失败时无 js 类仍全部可见。
+   transition 独立放在 .reveal 基础规则上——若放在隐身规则内，元素获得
+   visible 后规则失配会丢掉过渡（淡入变瞬现）。 */
+.reveal {
+  transition: opacity var(--dur-4) var(--ease-out), transform var(--dur-4) var(--ease-out);
+}
+html.js .reveal:not(.visible) {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity var(--dur-4) var(--ease-out), transform var(--dur-4) var(--ease-out);
 }
 .reveal.visible {
   opacity: 1;
@@ -949,7 +955,7 @@ html.js .reveal {
 .compliance-details {
   margin-top: 12px;
 }@media (prefers-reduced-motion: reduce) {
-  html.js .reveal {
+  html.js .reveal:not(.visible) {
     opacity: 1;
     transform: none;
     animation: none;
