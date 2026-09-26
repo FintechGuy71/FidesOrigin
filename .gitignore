@@ -147,3 +147,6 @@ _r8_links_*.json
 _r8_extlinks.txt
 _r10_cjk*.png
 _tmp_*
+_audit_*.py
+_css_out.txt
+_dom_audit.py

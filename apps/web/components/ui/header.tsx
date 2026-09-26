@@ -227,7 +227,7 @@ export default function Header({
                     ?.focus();
                 }
               }}
-              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+              className="flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
             >
               {lang.toUpperCase()}
               <svg
@@ -285,7 +285,7 @@ export default function Header({
             focus-visible 环，普通 :focus（如触屏点击后）会残留浏览器默认
             蓝 outline，与全站金色环语言冲突。 */}
         <button
-          className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)]"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-md text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)]"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={d.toggleMenu}
           aria-expanded={mobileOpen}
