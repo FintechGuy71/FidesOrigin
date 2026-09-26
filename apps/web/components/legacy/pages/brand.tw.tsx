@@ -107,11 +107,11 @@ export default function ContentBrandTW() {
               <h3>標識</h3>
               <div className="brand-logo-row">
                 <div className="brand-logo-cell">
-                  <img src="/brand/logo-dark-icon.png" alt="FidesOrigin icon" width={56} height={56} />
+                  <img src="/brand/logo-dark-icon.png" loading="lazy" alt="FidesOrigin icon" width={56} height={56} />
                   <div className="lbl">ICON</div>
                 </div>
                 <div className="brand-logo-cell">
-                  <img src="/brand/logo-dark-full.png" alt="FidesOrigin full logo" height={40} width={160} style={{ objectFit: "contain" }} />
+                  <img src="/brand/logo-dark-full.png" loading="lazy" alt="FidesOrigin full logo" height={40} width={160} style={{ objectFit: "contain" }} />
                   <div className="lbl">FULL · DARK BG</div>
                 </div>
               </div>

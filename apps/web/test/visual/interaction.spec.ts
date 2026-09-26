@@ -47,3 +47,27 @@ test("contact honeypot is hidden from users", async ({ page }) => {
   await page.locator("#name").fill("Audit Bot");
   await expect(page.locator("#name")).toHaveValue("Audit Bot");
 });
+
+/* [R13-I1] reveal 回归哨兵（关闭 CI 检测盲区）：
+   visual.spec 全程 reducedMotion:reduce，会命中 legacy.css 尾部
+   "强制可见"分支——R8-A1 型回归（隐身规则压过 .visible）在该模式下
+   不可见。本用例在【正常动效】视口下滚动 legacy 页，断言所有 .reveal
+   元素完成淡入（visible 类 + computed opacity）。功能断言、无像素
+   基线依赖，不触碰 visual-regression 的基线机制。 */
+test("reveal elements become visible on scroll (normal motion)", async ({ page }) => {
+  await page.goto("/pricing", { waitUntil: "networkidle" });
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 600) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+  });
+  /* 等待 0.7s 淡入过渡落定 */
+  await page.waitForTimeout(1000);
+  const invis = await page.evaluate(() =>
+    Array.from(document.querySelectorAll(".reveal")).filter(
+      (el) => parseFloat(getComputedStyle(el).opacity) < 0.9,
+    ).map((el) => (el.textContent || "").trim().slice(0, 30)),
+  );
+  expect(invis, `未淡入的 reveal 元素: ${JSON.stringify(invis)}`).toHaveLength(0);
+});
