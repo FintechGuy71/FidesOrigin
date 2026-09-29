@@ -42,6 +42,72 @@ class ContactRequest(BaseModel):
         return result
 
 
+def _escape(text: str) -> str:
+    """HTML 转义（邮件模板注入防护）"""
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def _render_notify_html(inquiry: ContactInquiry) -> str:
+    """
+    [R17-N2] 品牌化通知邮件模板。
+
+    email-safe 设计约束：
+    - 表格布局 + 内联样式（邮件客户端对 CSS 支持碎片化）
+    - 系统字体栈（Georgia 衬线呼应官网 Fraunces，Consolas 等宽呼应 JetBrains Mono）
+    - 品牌色与官网令牌一致：ink #0a141f / gold #af915f / cream #fce1b6 / steel #7a94ab
+    - 角标刻线母题以 2px 金色边条呈现
+    """
+    name = _escape(inquiry.name)
+    email = _escape(inquiry.email)
+    company = _escape(inquiry.company or "-")
+    use_case = _escape(inquiry.use_case or "-")
+    ip = _escape(inquiry.ip or "-")
+    message = _escape(inquiry.message).replace("\n", "<br/>")
+
+    row = (
+        '<tr><td style="padding:10px 0;border-bottom:1px solid #1c2f42;'
+        'font-family:Consolas,monospace;font-size:12px;letter-spacing:1px;'
+        'color:#98917f;width:110px;vertical-align:top;">{k}</td>'
+        '<td style="padding:10px 0;border-bottom:1px solid #1c2f42;'
+        'font-family:Georgia,serif;font-size:15px;color:#f4f1e9;">{v}</td></tr>'
+    )
+    rows = "".join(
+        row.format(k=k, v=v)
+        for k, v in [("NAME", name), ("EMAIL", email), ("COMPANY", company), ("USE CASE", use_case), ("IP", ip)]
+    )
+
+    return f"""<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#0a141f;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a141f;padding:32px 16px;">
+<tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#0d1826;border:1px solid #1c2f42;max-width:560px;width:100%;">
+  <!-- 角标边条（fio-ticks 母题的邮件安全表达） -->
+  <tr><td style="height:2px;background:#af915f;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td style="padding:28px 32px 8px;">
+    <div style="font-family:Consolas,monospace;font-size:11px;letter-spacing:3px;color:#98917f;">FIDESORIGIN · CONTACT</div>
+    <div style="font-family:Georgia,serif;font-size:24px;color:#fce1b6;padding-top:10px;">New contact inquiry</div>
+  </td></tr>
+  <tr><td style="padding:16px 32px 8px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{rows}</table>
+  </td></tr>
+  <tr><td style="padding:20px 32px 8px;">
+    <div style="font-family:Consolas,monospace;font-size:12px;letter-spacing:1px;color:#98917f;padding-bottom:8px;">MESSAGE</div>
+    <div style="font-family:Georgia,serif;font-size:15px;line-height:1.7;color:#c9d2dc;border-left:2px solid #af915f;padding-left:14px;">{message}</div>
+  </td></tr>
+  <tr><td style="padding:24px 32px 28px;">
+    <div style="font-family:Consolas,monospace;font-size:11px;letter-spacing:1px;color:#7a94ab;">FidesOrigin — On-chain compliance infrastructure</div>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>"""
+
+
 async def _send_notify_email(inquiry: ContactInquiry) -> None:
     """
     [Contact Fix] 可选邮件通知（Resend）。
@@ -65,6 +131,9 @@ async def _send_notify_email(inquiry: ContactInquiry) -> None:
                     "from": f"FidesOrigin Contact <{settings.CONTACT_NOTIFY_EMAIL}>",
                     "to": [settings.CONTACT_NOTIFY_EMAIL],
                     "subject": f"New contact inquiry from {inquiry.name}",
+                    # [R17-N2] 品牌化 HTML 模板（Resend 同时接受 text 与 html，
+                    # 不支持 html 的客户端回退到纯文本版本）
+                    "html": _render_notify_html(inquiry),
                     "text": (
                         f"Name: {inquiry.name}\n"
                         f"Email: {inquiry.email}\n"

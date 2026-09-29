@@ -7,7 +7,7 @@ const PAGE_CSS = `
     .brand-panel {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       padding: 28px;
     }
     .brand-panel h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; color: var(--text); }

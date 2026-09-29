@@ -50,7 +50,7 @@ const PAGE_CSS = `
       padding: 24px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       transition: all 0.3s ease;
     }
     .blog-card:hover {

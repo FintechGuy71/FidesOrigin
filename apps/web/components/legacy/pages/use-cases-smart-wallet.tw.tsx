@@ -26,7 +26,7 @@ const PAGE_CSS = `
       padding: 24px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
     }
     .uc-feature h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
     .uc-feature p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }

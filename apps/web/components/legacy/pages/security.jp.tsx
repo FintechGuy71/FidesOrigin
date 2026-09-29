@@ -12,7 +12,7 @@ const PAGE_CSS = `
       padding: 32px 24px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       text-align: center;
     }
     .audit-stat .num {
@@ -27,7 +27,7 @@ const PAGE_CSS = `
       padding: 32px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       margin-bottom: 24px;
     }
     .audit-card-header {
@@ -81,7 +81,7 @@ const PAGE_CSS = `
       padding: 28px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
     }
     .security-item h3 { font-size: 1rem; font-weight: 600; margin: 12px 0 8px; }
     .security-item p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
