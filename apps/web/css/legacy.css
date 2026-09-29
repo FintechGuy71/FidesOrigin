@@ -24,6 +24,13 @@
 
 @layer legacy {
 
+/* [R15-F3] 标题与导语断行平衡（渐进增强）：消除 hero lead / section
+   intro 的孤字行（实测 contact "…24 hours." 孤行、address-check 副标题
+   断行不佳）。Chrome 114+/Safari 17.5+ 生效，不支持则回退默认断行。 */
+.about-hero p, .blog-hero p, .section-intro p, .lead, .section-title {
+  text-wrap: balance;
+}
+
 /* [R11-G4] 中西文混排自动间距（渐进增强：不支持则忽略） */
 body { text-autospace: normal; }
 

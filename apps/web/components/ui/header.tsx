@@ -247,7 +247,7 @@ export default function Header({
               <div
                 id={langMenuId}
                 role="menu"
-                className="absolute right-0 top-full z-[var(--z-dropdown)] mt-1 min-w-[120px] rounded-md border border-[var(--fio-border-light)] py-1 backdrop-blur-xl"
+                className="fio-menu-pop absolute right-0 top-full z-[var(--z-dropdown)] mt-1 min-w-[120px] rounded-md border border-[var(--fio-border-light)] py-1 backdrop-blur-xl"
                 style={{ background: "var(--fio-ink-scrim)" }}
               >
                 {langLinks.map((l) => (
@@ -307,7 +307,7 @@ export default function Header({
           id={mobileMenuId}
           aria-label={d.toggleMenu}
           ref={mobileRef}
-          className="border-t border-[var(--fio-border-subtle)] px-4 py-4 md:hidden"
+          className="fio-menu-pop border-t border-[var(--fio-border-subtle)] px-4 py-4 md:hidden"
           style={{ background: "var(--fio-ink-scrim)" }}
         >
           {navLinks.map((link) =>

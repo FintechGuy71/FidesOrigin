@@ -88,24 +88,24 @@ export default function ContentUseCasesStablecoinComplianceTW() {
                 <span>Solidity 0.8.26</span>
               </div>
               <pre><span className="comment">// Inherit CompliantStableCoin for automatic screening</span>
-<span className="kw">contract</span> <span className="type">MyStableCoin</span> <span className="kw">is</span> <span className="type">CompliantStableCoin</span> &#123;
-
-    <span className="kw">constructor</span>()
-        <span className="type">CompliantStableCoin</span>(
-            <span className="str">"MyStable"</span>,      <span className="comment">// name</span>
-            <span className="str">"MST"</span>,           <span className="comment">// symbol</span>
-            <span className="num">6</span>,               <span className="comment">// decimals</span>
-            <span className="num">100_000_000</span> * <span className="num">1e6</span> <span className="comment">// max supply</span>
-        )
-    &#123;
-        <span className="comment">// Configure policies</span>
-        _setMaxTransferAmount(<span className="num">100_000</span> * <span className="num">1e6</span>);
-        _requireKYC(<span className="kw">true</span>);
-    &#125;
-
-    <span className="comment">// Every transfer is automatically screened</span>
-    <span className="comment">// against on-chain risk profiles</span>
-&#125;</pre>
+{"\n"}<span className="kw">contract</span> <span className="type">MyStableCoin</span> <span className="kw">is</span> <span className="type">CompliantStableCoin</span> &#123;
+{"\n"}
+{"\n    "}<span className="kw">constructor</span>()
+{"\n        "}<span className="type">CompliantStableCoin</span>(
+{"\n            "}<span className="str">"MyStable"</span>,      <span className="comment">// name</span>
+{"\n            "}<span className="str">"MST"</span>,           <span className="comment">// symbol</span>
+{"\n            "}<span className="num">6</span>,               <span className="comment">// decimals</span>
+{"\n            "}<span className="num">100_000_000</span> * <span className="num">1e6</span> <span className="comment">// max supply</span>
+{"\n        "})
+{"\n    "}&#123;
+{"\n        "}<span className="comment">// Configure policies</span>
+{"\n        "}_setMaxTransferAmount(<span className="num">100_000</span> * <span className="num">1e6</span>);
+{"\n        "}_requireKYC(<span className="kw">true</span>);
+{"\n    "}&#125;
+{"\n"}
+{"\n    "}<span className="comment">// Every transfer is automatically screened</span>
+{"\n    "}<span className="comment">// against on-chain risk profiles</span>
+{"\n"}&#125;</pre>
             </div>
           </div>
         </div>

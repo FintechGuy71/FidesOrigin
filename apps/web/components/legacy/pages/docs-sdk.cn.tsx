@@ -79,12 +79,12 @@ export default function ContentDocsSdkCN() {
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>import &#123; FidesOriginClient &#125; from '@fintechguy71/fidesorigin-sdk';
-
-const fides = new FidesOriginClient(&#123;
-  baseUrl: 'https://api.fidesorigin.com',
-  apiKey: 'YOUR_API_KEY',
-  timeout: 30000
-&#125;);</code></pre>
+{"\n"}
+{"\n"}const fides = new FidesOriginClient(&#123;
+{"\n  "}baseUrl: 'https://api.fidesorigin.com',
+{"\n  "}apiKey: 'YOUR_API_KEY',
+{"\n  "}timeout: 30000
+{"\n"}&#125;);</code></pre>
       </div>
       <p className="docs-note"><strong>注意：</strong>在浏览器环境中只允许使用公开 API Key（前缀 <code>pk_</code>）。出于安全考虑，密钥（secret key）会被严格禁止。</p>
 
@@ -95,13 +95,13 @@ const fides = new FidesOriginClient(&#123;
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>const result = await fides.checkRisk(&#123;
-  address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
-  chainId: 1  // 或 'ethereum'、'sepolia'、11155111
-&#125;);
-
-console.log(result.risk_level);   // 'low' | 'medium' | 'high' | 'critical'
-console.log(result.risk_score);   // 0-100
-console.log(result.risk_factors); // 风险标记数组</code></pre>
+{"\n  "}address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+{"\n  "}chainId: 1  // 或 'ethereum'、'sepolia'、11155111
+{"\n"}&#125;);
+{"\n"}
+{"\n"}console.log(result.risk_level);   // 'low' | 'medium' | 'high' | 'critical'
+{"\n"}console.log(result.risk_score);   // 0-100
+{"\n"}console.log(result.risk_factors); // 风险标记数组</code></pre>
       </div>
 
       <h3>批量风险检查</h3>
@@ -111,14 +111,14 @@ console.log(result.risk_factors); // 风险标记数组</code></pre>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>const batch = await fides.batchCheckRisk(&#123;
-  addresses: [
-    '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
-    '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-  ],
-  chainId: 1
-&#125;);
-
-console.log(batch.summary); // &#123; total, highRisk, mediumRisk, lowRisk &#125;</code></pre>
+{"\n  "}addresses: [
+{"\n    "}'0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
+{"\n    "}'0xdAC17F958D2ee523a2206206994597C13D831ec7'
+{"\n  "}],
+{"\n  "}chainId: 1
+{"\n"}&#125;);
+{"\n"}
+{"\n"}console.log(batch.summary); // &#123; total, highRisk, mediumRisk, lowRisk &#125;</code></pre>
       </div>
 
       <h3>WebSocket 流式传输</h3>
@@ -128,20 +128,20 @@ console.log(batch.summary); // &#123; total, highRisk, mediumRisk, lowRisk &#125
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>const ws = fides.createWebSocket(&#123;
-  autoReconnect: true,
-  reconnectInterval: 3000
-&#125;);
-
-await ws.connect();
-ws.subscribe(['risk.update', 'alert.new', 'rule.match']);
-
-ws.on('risk.update', (msg) =&gt; &#123;
-  console.log('风险已更新:', msg.data.address, msg.data.risk);
-&#125;);
-
-ws.on('alert.new', (msg) =&gt; &#123;
-  console.log('新告警:', msg.data);
-&#125;);</code></pre>
+{"\n  "}autoReconnect: true,
+{"\n  "}reconnectInterval: 3000
+{"\n"}&#125;);
+{"\n"}
+{"\n"}await ws.connect();
+{"\n"}ws.subscribe(['risk.update', 'alert.new', 'rule.match']);
+{"\n"}
+{"\n"}ws.on('risk.update', (msg) =&gt; &#123;
+{"\n  "}console.log('风险已更新:', msg.data.address, msg.data.risk);
+{"\n"}&#125;);
+{"\n"}
+{"\n"}ws.on('alert.new', (msg) =&gt; &#123;
+{"\n  "}console.log('新告警:', msg.data);
+{"\n"}&#125;);</code></pre>
       </div>
 
       <h2>核心 API</h2>
@@ -184,19 +184,19 @@ ws.on('alert.new', (msg) =&gt; &#123;
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>import &#123; FidesOriginSDK &#125; from '@fintechguy71/on-chain-sdk';
-
-import &#123; JsonRpcProvider &#125; from 'ethers';
-
-const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
-
-const addresses = &#123;
-  complianceEngine: '0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E',
-  riskRegistry: '0x953f985f38f94d6159c0600d1f15D543895cE896',
-  policyEngine: '0xCA12BB2daD2a6D429277823366D8C88a490EDDeA',
-  riskOracle: '0x...' // 可选
-&#125;;
-
-const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
+{"\n"}
+{"\n"}import &#123; JsonRpcProvider &#125; from 'ethers';
+{"\n"}
+{"\n"}const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+{"\n"}
+{"\n"}const addresses = &#123;
+{"\n  "}complianceEngine: '0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E',
+{"\n  "}riskRegistry: '0x953f985f38f94d6159c0600d1f15D543895cE896',
+{"\n  "}policyEngine: '0xCA12BB2daD2a6D429277823366D8C88a490EDDeA',
+{"\n  "}riskOracle: '0x...' // 可选
+{"\n"}&#125;;
+{"\n"}
+{"\n"}const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
       </div>
 
       <h3 id="guard">Guard 集成（V2.1）</h3>
@@ -208,26 +208,26 @@ const sdk = new FidesOriginSDK(addresses, provider);</code></pre>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>import &#123; FidesOriginSDK, Decision &#125; from '@fintechguy71/on-chain-sdk';
-
-// 通过合规引擎验证转账
-const validation = await sdk.validateTransfer(
-  '0xSender...',
-  '0xRecipient...',
-  1000000000000000000n, // 1 ETH in wei
-  '0xTokenAddress...'
-);
-
-if (validation.decision === Decision.BLOCK) &#123;
-  console.warn('转账已被阻止:', validation.reason);
-&#125; else if (validation.decision === Decision.FLAG) &#123;
-  console.warn('转账已标记待审核:', validation.reason);
-&#125;
-
-// 快速检查
-const canSend = await sdk.wouldTransferSucceed(
-  '0xSender...', '0xRecipient...', 1000000000000000000n, '0xTokenAddress...'
-);
-console.log('是否可成功:', canSend);</code></pre>
+{"\n"}
+{"\n"}// 通过合规引擎验证转账
+{"\n"}const validation = await sdk.validateTransfer(
+{"\n  "}'0xSender...',
+{"\n  "}'0xRecipient...',
+{"\n  "}1000000000000000000n, // 1 ETH in wei
+{"\n  "}'0xTokenAddress...'
+{"\n"});
+{"\n"}
+{"\n"}if (validation.decision === Decision.BLOCK) &#123;
+{"\n  "}console.warn('转账已被阻止:', validation.reason);
+{"\n"}&#125; else if (validation.decision === Decision.FLAG) &#123;
+{"\n  "}console.warn('转账已标记待审核:', validation.reason);
+{"\n"}&#125;
+{"\n"}
+{"\n"}// 快速检查
+{"\n"}const canSend = await sdk.wouldTransferSucceed(
+{"\n  "}'0xSender...', '0xRecipient...', 1000000000000000000n, '0xTokenAddress...'
+{"\n"});
+{"\n"}console.log('是否可成功:', canSend);</code></pre>
       </div>
 
       <h3>风险档案查询（免 Gas）</h3>
@@ -237,11 +237,11 @@ console.log('是否可成功:', canSend);</code></pre>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>const profile = await sdk.getRiskProfile('0x...');
-console.log(profile.riskScore, profile.tier, profile.isSanctioned);
-
-const sanctioned = await sdk.isSanctioned('0x...');
-const tier = await sdk.getRiskTier('0x...');
-const tags = await sdk.getTags('0x...');</code></pre>
+{"\n"}console.log(profile.riskScore, profile.tier, profile.isSanctioned);
+{"\n"}
+{"\n"}const sanctioned = await sdk.isSanctioned('0x...');
+{"\n"}const tier = await sdk.getRiskTier('0x...');
+{"\n"}const tags = await sdk.getTags('0x...');</code></pre>
       </div>
 
       <h3>事件监听</h3>
@@ -251,17 +251,17 @@ const tags = await sdk.getTags('0x...');</code></pre>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>// 监听转账验证事件
-const unsubscribe = sdk.onTransferValidated((asset, from, to, amount, decision, reason) =&gt; &#123;
-  console.log(`Transfer $&#123;decision === Decision.ALLOW ? 'allowed' : 'blocked'&#125;: $&#123;reason&#125;`);
-&#125;);
-
-// 监听制裁新增事件
-const unsubSanction = sdk.onSanctionAdded((account, reason) =&gt; &#123;
-  console.log('新增制裁:', account, reason);
-&#125;);
-
-// 清理
-sdk.removeAllListeners();</code></pre>
+{"\n"}const unsubscribe = sdk.onTransferValidated((asset, from, to, amount, decision, reason) =&gt; &#123;
+{"\n  "}console.log(`Transfer $&#123;decision === Decision.ALLOW ? 'allowed' : 'blocked'&#125;: $&#123;reason&#125;`);
+{"\n"}&#125;);
+{"\n"}
+{"\n"}// 监听制裁新增事件
+{"\n"}const unsubSanction = sdk.onSanctionAdded((account, reason) =&gt; &#123;
+{"\n  "}console.log('新增制裁:', account, reason);
+{"\n"}&#125;);
+{"\n"}
+{"\n"}// 清理
+{"\n"}sdk.removeAllListeners();</code></pre>
       </div>
 
       <h2>Solidity 集成</h2>
@@ -272,25 +272,25 @@ sdk.removeAllListeners();</code></pre>
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-
-import "@fidesorigin/contracts/CompliantStableCoin.sol";
-
-contract MyStableCoin is CompliantStableCoin &#123;
-    constructor()
-        CompliantStableCoin("MyStableCoin", "MSC")
-    &#123;
-        policy = IssuerPolicy(&#123;
-            maxTxAmount: 1_000_000 * 10**6,
-            dailyLimit: 10_000_000 * 10**6,
-            allowMediumRisk: true,
-            allowHighRisk: false,
-            blockMixer: true,
-            requireDestinationKYC: true,
-            cooldownPeriod: 24 hours
-        &#125;);
-    &#125;
-&#125;</code></pre>
+{"\n"}pragma solidity ^0.8.20;
+{"\n"}
+{"\n"}import "@fidesorigin/contracts/CompliantStableCoin.sol";
+{"\n"}
+{"\n"}contract MyStableCoin is CompliantStableCoin &#123;
+{"\n    "}constructor()
+{"\n        "}CompliantStableCoin("MyStableCoin", "MSC")
+{"\n    "}&#123;
+{"\n        "}policy = IssuerPolicy(&#123;
+{"\n            "}maxTxAmount: 1_000_000 * 10**6,
+{"\n            "}dailyLimit: 10_000_000 * 10**6,
+{"\n            "}allowMediumRisk: true,
+{"\n            "}allowHighRisk: false,
+{"\n            "}blockMixer: true,
+{"\n            "}requireDestinationKYC: true,
+{"\n            "}cooldownPeriod: 24 hours
+{"\n        "}&#125;);
+{"\n    "}&#125;
+{"\n"}&#125;</code></pre>
       </div>
 
       <h2>类型</h2>
@@ -300,63 +300,63 @@ contract MyStableCoin is CompliantStableCoin &#123;
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>interface RiskCheckResult &#123;
-  address: string;
-  chain: string;
-  risk_score: number;
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
-  risk_factors: RiskFactor[];
-  scores?: RiskScore[];
-  addressType?: 'wallet' | 'contract' | 'exchange' | 'mixer' | 'unknown';
-  timestamp?: string;
-  relatedEntities?: Entity[];
-  transactionStats?: TransactionStats;
-&#125;
-
-interface RiskFactor &#123;
-  name: string;
-  category: string;
-  severity: string;
-  description?: string;
-&#125;
-
-interface RiskScore &#123;
-  score: number;
-  level: string;
-  confidence: number;
-&#125;
-
-interface Rule &#123;
-  id: string;
-  name: string;
-  description?: string;
-  status: 'active' | 'inactive' | 'draft';
-  priority: number;
-  conditions: RuleCondition[];
-  actions: RuleAction[];
-  createdAt: string;
-  updatedAt: string;
-&#125;
-
-interface RuleCondition &#123;
-  field: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in';
-  value: unknown;
-&#125;
-
-interface RuleAction &#123;
-  type: 'flag' | 'block' | 'review' | 'allow';
-  params?: Record&lt;string, unknown&gt;;
-&#125;
-
-// On-Chain SDK types
-enum Decision &#123; ALLOW = 0, FLAG = 1, BLOCK = 2 &#125;
-enum RiskTier &#123; UNKNOWN = 0, LOW = 1, MEDIUM = 2, HIGH = 3, CRITICAL = 4 &#125;
-
-interface TransferValidationResult &#123;
-  wouldSucceed: boolean;
-  decision: Decision;
-  reason: string;
-&#125;</code></pre>
+{"\n  "}address: string;
+{"\n  "}chain: string;
+{"\n  "}risk_score: number;
+{"\n  "}risk_level: 'low' | 'medium' | 'high' | 'critical';
+{"\n  "}risk_factors: RiskFactor[];
+{"\n  "}scores?: RiskScore[];
+{"\n  "}addressType?: 'wallet' | 'contract' | 'exchange' | 'mixer' | 'unknown';
+{"\n  "}timestamp?: string;
+{"\n  "}relatedEntities?: Entity[];
+{"\n  "}transactionStats?: TransactionStats;
+{"\n"}&#125;
+{"\n"}
+{"\n"}interface RiskFactor &#123;
+{"\n  "}name: string;
+{"\n  "}category: string;
+{"\n  "}severity: string;
+{"\n  "}description?: string;
+{"\n"}&#125;
+{"\n"}
+{"\n"}interface RiskScore &#123;
+{"\n  "}score: number;
+{"\n  "}level: string;
+{"\n  "}confidence: number;
+{"\n"}&#125;
+{"\n"}
+{"\n"}interface Rule &#123;
+{"\n  "}id: string;
+{"\n  "}name: string;
+{"\n  "}description?: string;
+{"\n  "}status: 'active' | 'inactive' | 'draft';
+{"\n  "}priority: number;
+{"\n  "}conditions: RuleCondition[];
+{"\n  "}actions: RuleAction[];
+{"\n  "}createdAt: string;
+{"\n  "}updatedAt: string;
+{"\n"}&#125;
+{"\n"}
+{"\n"}interface RuleCondition &#123;
+{"\n  "}field: string;
+{"\n  "}operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in';
+{"\n  "}value: unknown;
+{"\n"}&#125;
+{"\n"}
+{"\n"}interface RuleAction &#123;
+{"\n  "}type: 'flag' | 'block' | 'review' | 'allow';
+{"\n  "}params?: Record&lt;string, unknown&gt;;
+{"\n"}&#125;
+{"\n"}
+{"\n"}// On-Chain SDK types
+{"\n"}enum Decision &#123; ALLOW = 0, FLAG = 1, BLOCK = 2 &#125;
+{"\n"}enum RiskTier &#123; UNKNOWN = 0, LOW = 1, MEDIUM = 2, HIGH = 3, CRITICAL = 4 &#125;
+{"\n"}
+{"\n"}interface TransferValidationResult &#123;
+{"\n  "}wouldSucceed: boolean;
+{"\n  "}decision: Decision;
+{"\n  "}reason: string;
+{"\n"}&#125;</code></pre>
       </div>
 
       <h2>React Hook</h2>
@@ -366,24 +366,24 @@ interface TransferValidationResult &#123;
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>import &#123; useRiskCheck &#125; from '@fintechguy71/fidesorigin-sdk/react';
-
-function RiskBadge(&#123; address &#125;: &#123; address: string &#125;) &#123;
-  const &#123; data, loading, error, refetch &#125; = useRiskCheck(&#123;
-    options: &#123; baseUrl: 'https://api.fidesorigin.com', apiKey: 'pk_...' &#125;,
-    pollInterval: 30000,
-    enabled: true
-  &#125;);
-
-  if (loading) return &lt;span&gt;检查中...&lt;/span&gt;;
-  if (error) return &lt;span&gt;错误: &#123;error.message&#125;&lt;/span&gt;;
-  if (!data) return null;
-
-  return (
-    &lt;span className=&#123;`risk-$&#123;data.risk.level&#125;`&#125;&gt;
-      &#123;data.risk.level.toUpperCase()&#125; (&#123;data.risk.score&#125;)
-    &lt;/span&gt;
-  );
-&#125;</code></pre>
+{"\n"}
+{"\n"}function RiskBadge(&#123; address &#125;: &#123; address: string &#125;) &#123;
+{"\n  "}const &#123; data, loading, error, refetch &#125; = useRiskCheck(&#123;
+{"\n    "}options: &#123; baseUrl: 'https://api.fidesorigin.com', apiKey: 'pk_...' &#125;,
+{"\n    "}pollInterval: 30000,
+{"\n    "}enabled: true
+{"\n  "}&#125;);
+{"\n"}
+{"\n  "}if (loading) return &lt;span&gt;检查中...&lt;/span&gt;;
+{"\n  "}if (error) return &lt;span&gt;错误: &#123;error.message&#125;&lt;/span&gt;;
+{"\n  "}if (!data) return null;
+{"\n"}
+{"\n  "}return (
+{"\n    "}&lt;span className=&#123;`risk-$&#123;data.risk.level&#125;`&#125;&gt;
+{"\n      "}&#123;data.risk.level.toUpperCase()&#125; (&#123;data.risk.score&#125;)
+{"\n    "}&lt;/span&gt;
+{"\n  "});
+{"\n"}&#125;</code></pre>
       </div>
     </div>
   </div>

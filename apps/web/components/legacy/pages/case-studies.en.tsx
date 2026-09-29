@@ -53,12 +53,12 @@ export default function ContentCaseStudiesEN() {
           <div className="uc-code">
             <div className="uc-code-header"><span>PolicyConfig.sol</span><span>Solidity</span></div>
             <pre><span className="comment">// MiCA-specific policy configuration</span>
-<span className="kw">function</span> <span className="func">configureMicaPolicies</span>() <span className="kw">external</span> &#123;
-    policy.<span className="func">setReserveRatio</span>(<span className="num">10000</span>); <span className="comment">// 100%</span>
-    policy.<span className="func">setDailyLimit</span>(<span className="num">1_000_000</span> * <span className="num">1e6</span>);
-    policy.<span className="func">requireAccredited</span>(<span className="kw">true</span>);
-    policy.<span className="func">enableOfacScreening</span>(<span className="kw">true</span>);
-&#125;</pre>
+{"\n"}<span className="kw">function</span> <span className="func">configureMicaPolicies</span>() <span className="kw">external</span> &#123;
+{"\n    "}policy.<span className="func">setReserveRatio</span>(<span className="num">10000</span>); <span className="comment">// 100%</span>
+{"\n    "}policy.<span className="func">setDailyLimit</span>(<span className="num">1_000_000</span> * <span className="num">1e6</span>);
+{"\n    "}policy.<span className="func">requireAccredited</span>(<span className="kw">true</span>);
+{"\n    "}policy.<span className="func">enableOfacScreening</span>(<span className="kw">true</span>);
+{"\n"}&#125;</pre>
           </div>
         </div>
 
@@ -104,13 +104,13 @@ export default function ContentCaseStudiesEN() {
           <div className="uc-code">
             <div className="uc-code-header"><span>MultiPolicy.sol</span><span>Solidity</span></div>
             <pre><span className="comment">// Per-token policy assignment</span>
-<span className="kw">function</span> <span className="func">assignPolicy</span>(
-    <span className="kw">address</span> token,
-    <span className="type">Policy</span> <span className="kw">calldata</span> policy
-) <span className="kw">external</span> &#123;
-    policies[token] = policy;
-    <span className="kw">emit</span> <span className="func">PolicyAssigned</span>(token, policy.id);
-&#125;</pre>
+{"\n"}<span className="kw">function</span> <span className="func">assignPolicy</span>(
+{"\n    "}<span className="kw">address</span> token,
+{"\n    "}<span className="type">Policy</span> <span className="kw">calldata</span> policy
+{"\n"}) <span className="kw">external</span> &#123;
+{"\n    "}policies[token] = policy;
+{"\n    "}<span className="kw">emit</span> <span className="func">PolicyAssigned</span>(token, policy.id);
+{"\n"}&#125;</pre>
           </div>
         </div>
 
@@ -145,15 +145,15 @@ export default function ContentCaseStudiesEN() {
           <div className="uc-code">
             <div className="uc-code-header"><span>WalletValidation.sol</span><span>Solidity</span></div>
             <pre><span className="comment">// Validate before bundler acceptance</span>
-<span className="kw">function</span> <span className="func">validateUserOp</span>(
-    <span className="type">UserOperation</span> <span className="kw">calldata</span> userOp
-) <span className="kw">external</span> <span className="kw">override</span> <span className="kw">returns</span> (<span className="kw">uint256</span>) &#123;
-    <span className="kw">require</span>(
-        fides.<span className="func">isCompliant</span>(userOp),
-        <span className="str">"Non-compliant userOp"</span>
-    );
-    <span className="kw">return</span> <span className="func">_validateSignature</span>(userOp);
-&#125;</pre>
+{"\n"}<span className="kw">function</span> <span className="func">validateUserOp</span>(
+{"\n    "}<span className="type">UserOperation</span> <span className="kw">calldata</span> userOp
+{"\n"}) <span className="kw">external</span> <span className="kw">override</span> <span className="kw">returns</span> (<span className="kw">uint256</span>) &#123;
+{"\n    "}<span className="kw">require</span>(
+{"\n        "}fides.<span className="func">isCompliant</span>(userOp),
+{"\n        "}<span className="str">"Non-compliant userOp"</span>
+{"\n    "});
+{"\n    "}<span className="kw">return</span> <span className="func">_validateSignature</span>(userOp);
+{"\n"}&#125;</pre>
           </div>
         </div>
       </div>

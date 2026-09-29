@@ -86,26 +86,26 @@ export default function ContentUseCasesSmartWalletEN() {
                 <span>Solidity 0.8.26</span>
               </div>
               <pre><span className="comment">// Smart wallet with embedded risk screening</span>
-<span className="kw">contract</span> <span className="type">CompliantSmartWallet</span> <span className="kw">is</span> <span className="type">BaseAccount</span> &#123;
-
-    <span className="kw">function</span> <span className="func">_validateUserOp</span>(
-        <span className="type">UserOperation</span> <span className="kw">calldata</span> userOp,
-        <span className="kw">bytes32</span> userOpHash
-    ) <span className="kw">internal override</span> <span className="kw">returns</span> (<span className="kw">uint256</span>) &#123;
-        <span className="comment">// Screen destination address</span>
-        (<span className="kw">bool</span> allowed, <span className="kw">uint256</span> risk) =
-            fides.<span className="func">evaluateTransaction</span>(
-                <span className="kw">address</span>(<span className="kw">this</span>),
-                userOp.dest,
-                userOp.value
-            );
-
-        <span className="kw">if</span> (!allowed)
-            <span className="kw">revert</span> <span className="func">ComplianceViolation</span>(risk);
-
-        <span className="kw">return</span> <span className="kw">super</span>.<span className="func">_validateUserOp</span>(userOp, userOpHash);
-    &#125;
-&#125;</pre>
+{"\n"}<span className="kw">contract</span> <span className="type">CompliantSmartWallet</span> <span className="kw">is</span> <span className="type">BaseAccount</span> &#123;
+{"\n"}
+{"\n    "}<span className="kw">function</span> <span className="func">_validateUserOp</span>(
+{"\n        "}<span className="type">UserOperation</span> <span className="kw">calldata</span> userOp,
+{"\n        "}<span className="kw">bytes32</span> userOpHash
+{"\n    "}) <span className="kw">internal override</span> <span className="kw">returns</span> (<span className="kw">uint256</span>) &#123;
+{"\n        "}<span className="comment">// Screen destination address</span>
+{"\n        "}(<span className="kw">bool</span> allowed, <span className="kw">uint256</span> risk) =
+{"\n            "}fides.<span className="func">evaluateTransaction</span>(
+{"\n                "}<span className="kw">address</span>(<span className="kw">this</span>),
+{"\n                "}userOp.dest,
+{"\n                "}userOp.value
+{"\n            "});
+{"\n"}
+{"\n        "}<span className="kw">if</span> (!allowed)
+{"\n            "}<span className="kw">revert</span> <span className="func">ComplianceViolation</span>(risk);
+{"\n"}
+{"\n        "}<span className="kw">return</span> <span className="kw">super</span>.<span className="func">_validateUserOp</span>(userOp, userOpHash);
+{"\n    "}&#125;
+{"\n"}&#125;</pre>
             </div>
           </div>
         </div>

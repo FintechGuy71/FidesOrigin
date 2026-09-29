@@ -99,7 +99,7 @@ const en = {
     totalLabel: "Total Screenings",
     blackLabel: "Blocked / Sanctioned",
     greyLabel: "Flagged / Held",
-    placeholder: "Enter Ethereum address (0x...)",
+    placeholder: "Ethereum address (0x…)",
     checkBtn: "Check Risk Level",
     checkingBadge: "Checking...",
     addressLabel: "Address",

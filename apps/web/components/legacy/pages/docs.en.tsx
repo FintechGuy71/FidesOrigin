@@ -74,7 +74,7 @@ export default function ContentDocsEN() {
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
         <pre><code>curl https://api.fidesorigin.com/api/v1/address/0x.../risk \
-  -H "X-API-Key: YOUR_API_KEY"</code></pre>
+{"\n  "}-H "X-API-Key: YOUR_API_KEY"</code></pre>
       </div>
 
       <h3>2. Install SDK</h3>
@@ -93,10 +93,10 @@ export default function ContentDocsEN() {
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
         <pre><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
-
-contract MyToken is CompliantStableCoin &#123;
-    constructor() CompliantStableCoin("MyToken", "MTK") &#123;&#125;
-&#125;</code></pre>
+{"\n"}
+{"\n"}contract MyToken is CompliantStableCoin &#123;
+{"\n    "}constructor() CompliantStableCoin("MyToken", "MTK") &#123;&#125;
+{"\n"}&#125;</code></pre>
       </div>
 
       <h2>Core Concepts</h2>
