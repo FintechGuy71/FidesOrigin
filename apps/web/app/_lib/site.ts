@@ -20,6 +20,15 @@ export const siteMetadata: Metadata = {
   title: "FidesOrigin — Programmable On-Chain Compliance",
   description:
     "Execution-grade programmable compliance protocol for tokenized assets, stablecoins, and DeFi. Real-time risk control, autonomous policy enforcement, immutable audit trails.",
+  /* [R17] 图标套件：apple-touch-icon（180 不透明 ink 底）+ PWA 192/512 */
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     title: "FidesOrigin — Programmable On-Chain Compliance",
     description:

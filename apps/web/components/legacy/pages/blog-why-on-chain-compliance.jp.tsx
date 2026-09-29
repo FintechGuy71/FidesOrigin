@@ -80,7 +80,7 @@ const PAGE_CSS = `
     .article .callout {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       padding: 1.25rem 1.5rem;
       margin: 1.5rem 0;
     }
@@ -88,7 +88,7 @@ const PAGE_CSS = `
     .blog-code-block {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       overflow: hidden;
       margin: 1.5rem 0;
     }
