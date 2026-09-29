@@ -13,6 +13,9 @@ export const spaceGrotesk = Fraunces({
   subsets: ["latin"],
   variable: "--font-display-nf",
   display: "swap",
+  /* [R16-T2] 追加 opsz 光学尺寸轴：浏览器 font-optical-sizing:auto（默认）
+     按字号自动切换视觉对比度——大标题锐利庄重、引文级更耐读。 */
+  axes: ["opsz"],
 });
 
 export const plusJakarta = Plus_Jakarta_Sans({

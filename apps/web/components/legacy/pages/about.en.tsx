@@ -21,7 +21,7 @@ const PAGE_CSS = `
     .stat-item .num {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--fio-gold-2) 55%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }

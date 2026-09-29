@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 567" width="1080" height="567">
+  <rect width="1080" height="567" fill="#0a141f"/>
+  <rect x="0.5" y="0.5" width="1079" height="566" fill="none" stroke="#1c2f42" stroke-width="1"/>
+  <!-- 角标刻线（fio-ticks 母题） -->
+  <g stroke="#af915f" stroke-width="1.5">
+    <path d="M4 24 V4 H24"/><path d="M1056 4 H1076 V24"/>
+    <path d="M4 543 V563 H24"/><path d="M1056 563 H1076 V543"/>
+  </g>
+  <text x="76" y="72" font-family="'JetBrains Mono',monospace" font-size="17" letter-spacing="4" fill="#98917f">— FIDESORIGIN · INSIGHTS</text>
+  <g fill="none" stroke-linecap="round">
+    <polyline points="165,423 380,270 590,378 805,235 965,325" stroke="#e3c892" stroke-width="1.5" stroke-dasharray="10 8"/>
+    <circle cx="165" cy="423" r="7" stroke="#af915f" stroke-width="1.5"/>
+    <circle cx="165" cy="423" r="2.5" fill="#af915f" stroke="none"/>
+    <circle cx="380" cy="270" r="5.5" stroke="#7a94ab" stroke-width="1.5"/>
+    <circle cx="590" cy="378" r="5.5" stroke="#7a94ab" stroke-width="1.5"/>
+    <circle cx="805" cy="235" r="5.5" stroke="#7a94ab" stroke-width="1.5"/>
+    <circle cx="965" cy="325" r="8" stroke="#e3c892" stroke-width="1.5"/>
+    <circle cx="965" cy="325" r="3" fill="#e3c892" stroke="none"/>
+    <path d="M955 303 l18 8 M973 308 l2 14" stroke="#e3c892" stroke-width="2"/>
+  </g>
+</svg>

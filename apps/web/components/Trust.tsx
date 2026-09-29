@@ -16,7 +16,7 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
   const coverage = [d.coverage1, d.coverage2, d.coverage3, d.coverage4];
   return (
     <section id="security" style={{ background: "var(--fio-ink-soft)" }}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="py-[var(--section-py)] md:py-[var(--section-py-lg)]">
           {/* Coverage band */}
           <div className="mb-20 text-center">

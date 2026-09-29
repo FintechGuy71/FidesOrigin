@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 567" width="1080" height="567">
+  <rect width="1080" height="567" fill="#0a141f"/>
+  <rect x="0.5" y="0.5" width="1079" height="566" fill="none" stroke="#1c2f42" stroke-width="1"/>
+  <!-- 角标刻线（fio-ticks 母题） -->
+  <g stroke="#af915f" stroke-width="1.5">
+    <path d="M4 24 V4 H24"/><path d="M1056 4 H1076 V24"/>
+    <path d="M4 543 V563 H24"/><path d="M1056 563 H1076 V543"/>
+  </g>
+  <text x="76" y="72" font-family="'JetBrains Mono',monospace" font-size="17" letter-spacing="4" fill="#98917f">— FIDESORIGIN · INSIGHTS</text>
+  <g fill="none">
+    <line x1="540" y1="150" x2="540" y2="430" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="130" cy="270" r="7" stroke="#7a94ab" stroke-width="1.5"/>
+    <circle cx="460" cy="270" r="7" stroke="#7a94ab" stroke-width="1.5"/>
+    <line x1="137" y1="270" x2="278" y2="270" stroke="#7a94ab" stroke-width="1.5"/>
+    <line x1="322" y1="270" x2="453" y2="270" stroke="#7a94ab" stroke-width="1.5"/>
+    <path d="M286 254 L314 286 M314 254 L286 286" stroke="#d96a5f" stroke-width="3" stroke-linecap="round"/>
+    <rect x="600" y="242" width="92" height="56" stroke="#af915f" stroke-width="1.5"/>
+    <text x="646.0" y="276" font-family="'JetBrains Mono',monospace" font-size="22" fill="#e3c892" text-anchor="middle">1</text>
+    <line x1="692" y1="270" x2="702" y2="270" stroke="#af915f" stroke-width="1.5"/>
+    <rect x="702" y="242" width="92" height="56" stroke="#af915f" stroke-width="1.5"/>
+    <text x="748.0" y="276" font-family="'JetBrains Mono',monospace" font-size="22" fill="#e3c892" text-anchor="middle">2</text>
+    <line x1="794" y1="270" x2="804" y2="270" stroke="#af915f" stroke-width="1.5"/>
+    <rect x="804" y="242" width="92" height="56" stroke="#af915f" stroke-width="1.5"/>
+    <text x="850.0" y="276" font-family="'JetBrains Mono',monospace" font-size="22" fill="#e3c892" text-anchor="middle">3</text>
+    <line x1="896" y1="270" x2="906" y2="270" stroke="#af915f" stroke-width="1.5"/>
+    <rect x="906" y="242" width="92" height="56" stroke="#af915f" stroke-width="1.5"/>
+    <text x="952.0" y="276" font-family="'JetBrains Mono',monospace" font-size="22" fill="#e3c892" text-anchor="middle">4</text>
+  </g>
+</svg>

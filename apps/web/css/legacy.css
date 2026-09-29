@@ -985,6 +985,12 @@ html.js .reveal:not(.visible) {
   }
 }
 
+/* [R16-B1] 按压态：legacy 按钮物理确认感 */
+.btn:active { transform: translateY(1px) scale(0.99); }
+
+/* [R16-B2] 主按钮 hover/active 过渡提速（重量级元素更敏捷） */
+.btn-primary { transition: background var(--dur-1, 150ms) ease, transform 0.15s ease; }
+
 /* ─── Blog Article Navigation（R11-M7）───────────────────────────── */
 .blog-nav { max-width: 800px; margin: 0 auto; padding: 0 40px 80px; }
 .blog-nav-back {
