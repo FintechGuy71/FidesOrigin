@@ -78,6 +78,7 @@ body { text-autospace: normal; }
   --accent-line:       rgba(175, 145, 95, 0.32);
   --accent-fill:       rgba(175, 145, 95, 0.18);
   --accent-shadow:     rgba(175, 145, 95, 0.26);
+  --shadow-scroll-hint: rgba(10, 20, 31, 0.28);  /* [R15-R3] pricing 对比表滚动阴影 */
   --accent-shadow-lg:  rgba(175, 145, 95, 0.38);
 
   /* 金色亮端 —— 奶油金，避免渐变退化成纯色 */

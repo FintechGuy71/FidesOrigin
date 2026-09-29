@@ -74,8 +74,8 @@ const PAGE_CSS = `
       background:
         linear-gradient(to right, var(--bg) 30%, transparent),
         linear-gradient(to left, var(--bg) 30%, transparent) 100% 0,
-        radial-gradient(farthest-side at 0 50%, rgba(10,20,31,0.28), transparent),
-        radial-gradient(farthest-side at 100% 50%, rgba(10,20,31,0.28), transparent) 100% 0;
+        radial-gradient(farthest-side at 0 50%, var(--shadow-scroll-hint), transparent),
+        radial-gradient(farthest-side at 100% 50%, var(--shadow-scroll-hint), transparent) 100% 0;
       background-repeat: no-repeat;
       background-attachment: local, local, scroll, scroll;
       background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
