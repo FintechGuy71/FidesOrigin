@@ -107,11 +107,11 @@ export default function ContentBrandCN() {
               <h3>标识</h3>
               <div className="brand-logo-row">
                 <div className="brand-logo-cell">
-                  <img src="/brand/logo-dark-icon.png" loading="lazy" alt="FidesOrigin icon" width={56} height={56} />
+                  <picture><source srcSet="/brand/logo-dark-icon.webp" type="image/webp" /><img src="/brand/logo-dark-icon.png" loading="lazy" alt="FidesOrigin icon" width={56} height={56}  /></picture>
                   <div className="lbl">ICON</div>
                 </div>
                 <div className="brand-logo-cell">
-                  <img src="/brand/logo-dark-full.png" loading="lazy" alt="FidesOrigin full logo" height={40} width={160} style={{ objectFit: "contain" }} />
+                  <picture><source srcSet="/brand/logo-dark-full.webp" type="image/webp" /><img src="/brand/logo-dark-full.png" loading="lazy" alt="FidesOrigin full logo" height={40} width={160} style={{ objectFit: "contain" }}  /></picture>
                   <div className="lbl">FULL · DARK BG</div>
                 </div>
               </div>

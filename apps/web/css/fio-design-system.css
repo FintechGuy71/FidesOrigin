@@ -9,6 +9,34 @@
    ============================================ */
 
 @layer base {
+  /* [R16-T1] 自托管 Noto Serif CJK 子集（可变字重 100-900，按站点实字
+     子集化 ~1731 字形）——CJK 标题三平台质感一致，摆脱 Windows SimSun
+     点阵回退。unicode-range 限定 CJK：英文页零下载。 */
+  @font-face {
+    font-family: "Noto Serif SC";
+    src: url("/fonts/noto-serif-sc.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+2E80-9FFF, U+3000-303F, U+FF01-FFEF;
+  }
+  @font-face {
+    font-family: "Noto Serif TC";
+    src: url("/fonts/noto-serif-tc.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+2E80-9FFF, U+3000-303F, U+FF01-FFEF;
+  }
+  @font-face {
+    font-family: "Noto Serif JP";
+    src: url("/fonts/noto-serif-jp.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+2E80-9FFF, U+3000-303F, U+FF01-FFEF;
+  }
+
   :root {
     /* Core Palette — deep navy depths, derived from #162638 */
     --fio-ink:        #0a141f;
@@ -37,6 +65,8 @@
 
     /* Primary metal — Burnished bronze. CTAs, seals, focus rings. */
     --fio-gold:       #af915f;
+    /* [R16-C2] 金色中间阶：gold→cream 渐变三段化的过渡位 */
+    --fio-gold-2:       #c9ab76;
     --fio-gold-bright:#c0a271;
     --fio-gold-dim:   rgba(175, 145, 95, 0.14);
     --fio-gold-glow:  rgba(175, 145, 95, 0.08);
@@ -71,7 +101,7 @@
     --font-serif: var(--font-display-nf, "Fraunces"),
                   /* [R11-G1] CJK 衬线（宋/明朝体）前置：CJK 标题与英文 Fraunces
                      衬线气质对齐；此前黑体排前导致中日韩标题渲染为无衬线 */
-                  "Songti SC", "STSong", "SimSun", "Noto Serif SC", "Noto Serif CJK SC",
+                  "Noto Serif SC", "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC",
                   Georgia, serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
@@ -127,7 +157,7 @@
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "Songti SC", "STSong", "SimSun", "Noto Serif SC", "Noto Serif CJK SC", serif;
+                  "Noto Serif SC", "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang SC", "Microsoft YaHei", monospace;
   }
@@ -136,7 +166,7 @@
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "Songti TC", "MingLiU", "Noto Serif TC", "Noto Serif CJK TC", serif;
+                  "Noto Serif TC", "Songti TC", "MingLiU", "Noto Serif CJK TC", serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "PingFang TC", "Microsoft JhengHei", monospace;
   }
@@ -144,7 +174,7 @@
     --font-sans: var(--font-sans-nf, "Plus Jakarta Sans"), -apple-system, BlinkMacSystemFont,
                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
     --font-serif: var(--font-display-nf, "Fraunces"),
-                  "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+                  "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif;
     --font-mono: var(--font-mono-nf, "JetBrains Mono"), "SF Mono", Menlo,
                  "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
   }
@@ -227,7 +257,7 @@
       --fio-scrollbar:       rgba(16, 28, 42, 0.14);
       --fio-scrollbar-hover: rgba(16, 28, 42, 0.26);
       --fio-selection:       rgba(122, 98, 54, 0.20);
-      --fio-hover-wash:      rgba(16, 28, 42, 0.04);
+      --fio-hover-wash:      rgba(122, 98, 54, 0.07);  /* [R16-C1] 浅色 hover 金雾 */
       --fio-hover-border:    rgba(16, 28, 42, 0.16);
       --fio-steel-glow:      rgba(85, 112, 138, 0.06);
     }
@@ -273,7 +303,7 @@
     --fio-scrollbar:       rgba(16, 28, 42, 0.14);
     --fio-scrollbar-hover: rgba(16, 28, 42, 0.26);
     --fio-selection:       rgba(122, 98, 54, 0.20);
-    --fio-hover-wash:      rgba(16, 28, 42, 0.04);
+    --fio-hover-wash:      rgba(122, 98, 54, 0.07);  /* [R16-C1] 浅色 hover 金雾 */
     --fio-hover-border:    rgba(16, 28, 42, 0.16);
     --fio-steel-glow:      rgba(85, 112, 138, 0.06);
   }
@@ -340,12 +370,17 @@
      声明被丢弃 → hero 失去最小高度而塌陷。先给 100vh 兜底，支持的浏览器
      再用 svh（移动端地址栏收展时不跳动）。 */
   .fio-hero-min {
-    min-height: 100vh;
+    min-height: min(100vh, 800px);  /* [R16-L2] 小高度屏首屏密度：cap 800px */
   }
   @supports (min-height: 92svh) {
     .fio-hero-min {
-      min-height: 92svh;
+      min-height: min(92svh, 800px);
     }
+  }
+  /* [R16-R2] 横屏手机（高度 ≤480px）hero 内边距收敛 */
+  @media (max-height: 480px) {
+    .fio-hero-min { min-height: auto; }
+    .fio-hero-min.py-28 { padding-top: 4rem; padding-bottom: 4rem; }
   }
 
   /* [AUDIT FIX 2026-09-25 R7-4] 横向溢出防线渐进回退：
@@ -440,6 +475,11 @@
     letter-spacing: 0.01em;
   }
 
+  /* [R16-B1] 按压态：hover/focus 之外的第三态——物理确认感 */
+  .fio-btn:active {
+    transform: translateY(1px) scale(0.99);
+  }
+
   .fio-btn:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--fio-ink), 0 0 0 4px var(--fio-gold);
@@ -464,6 +504,11 @@
     color: var(--fio-text);
     background: var(--fio-hover-wash);
     border-color: var(--fio-hover-border);
+  }
+
+  /* [R16-T3] 数字对齐：指标带与数据表启用等宽数字 */
+  .fio-metrics, .fio-metric, [class*="metric"] {
+    font-variant-numeric: tabular-nums;
   }
 
   /* ---- Form controls ----

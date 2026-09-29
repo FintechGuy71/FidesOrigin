@@ -31,7 +31,7 @@ const PAGE_CSS = `
       letter-spacing: -0.03em;
     }
     .blog-hero .display span {
-      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--fio-gold-2) 55%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;

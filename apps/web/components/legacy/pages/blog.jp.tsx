@@ -31,7 +31,7 @@ const PAGE_CSS = `
       letter-spacing: -0.03em;
     }
     .blog-hero .display span {
-      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--fio-gold-2) 55%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -138,7 +138,7 @@ export default function ContentBlogJP() {
       <div className="container">
         <div className="reveal">
           <Link href="/jp/blog/travel-rule-on-chain" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/travel-rule-on-chain.png" alt="" loading="lazy" />
+            <img className="blog-thumb" src="/brand/covers/travel-rule-on-chain.svg" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">規制</span>
@@ -153,7 +153,7 @@ export default function ContentBlogJP() {
 
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/jp/blog/why-on-chain-compliance" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.png" alt="" loading="lazy" />
+            <img className="blog-thumb" src="/brand/covers/why-on-chain-compliance.svg" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">カテゴリー定義</span>
@@ -167,7 +167,7 @@ export default function ContentBlogJP() {
         </div>
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/jp/blog/ofac-sanctions-screening-blockchain" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/ofac-sanctions-screening-blockchain.png" alt="" loading="lazy" />
+            <img className="blog-thumb" src="/brand/covers/ofac-sanctions-screening-blockchain.svg" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">コンプライアンス</span>
@@ -181,7 +181,7 @@ export default function ContentBlogJP() {
         </div>
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/jp/blog/hong-kong-stablecoin-license" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/hong-kong-stablecoin-license.png" alt="" loading="lazy" />
+            <img className="blog-thumb" src="/brand/covers/hong-kong-stablecoin-license.svg" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">規制</span>
@@ -195,7 +195,7 @@ export default function ContentBlogJP() {
         </div>
         <div className="reveal" style={{ "marginTop": "16px" }}>
           <Link href="/jp/blog/mica-stablecoin-compliance" className="blog-card" prefetch={false}>
-            <img className="blog-thumb" src="/brand/covers/mica-stablecoin-compliance.png" alt="" loading="lazy" />
+            <img className="blog-thumb" src="/brand/covers/mica-stablecoin-compliance.svg" alt="" loading="lazy" />
             <div>
               <div style={{ "marginBottom": "8px" }}>
                 <span className="tag">規制</span>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 567" width="1080" height="567">
+  <rect width="1080" height="567" fill="#0a141f"/>
+  <rect x="0.5" y="0.5" width="1079" height="566" fill="none" stroke="#1c2f42" stroke-width="1"/>
+  <!-- 角标刻线（fio-ticks 母题） -->
+  <g stroke="#af915f" stroke-width="1.5">
+    <path d="M4 24 V4 H24"/><path d="M1056 4 H1076 V24"/>
+    <path d="M4 543 V563 H24"/><path d="M1056 563 H1076 V543"/>
+  </g>
+  <text x="76" y="72" font-family="'JetBrains Mono',monospace" font-size="17" letter-spacing="4" fill="#98917f">— FIDESORIGIN · INSIGHTS</text>
+  <g fill="none">
+    <circle cx="540" cy="300" r="78" stroke="#af915f" stroke-width="1.5"/>
+    <circle cx="540" cy="300" r="60" stroke="#1c2f42" stroke-width="1"/>
+    <text x="540" y="318" font-family="Georgia,serif" font-size="52" fill="#e3c892" text-anchor="middle">€</text>
+    <line x1="540.0" y1="182.0" x2="540.0" y2="135.0" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="540.0" cy="135.0" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="609.4" y1="204.5" x2="637.0" y2="166.5" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="637.0" cy="166.5" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="652.2" y1="263.5" x2="696.9" y2="249.0" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="696.9" cy="249.0" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="652.2" y1="336.5" x2="696.9" y2="351.0" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="696.9" cy="351.0" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="609.4" y1="395.5" x2="637.0" y2="433.5" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="637.0" cy="433.5" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="540.0" y1="418.0" x2="540.0" y2="465.0" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="540.0" cy="465.0" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="470.6" y1="395.5" x2="443.0" y2="433.5" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="443.0" cy="433.5" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="427.8" y1="336.5" x2="383.1" y2="351.0" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="383.1" cy="351.0" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="427.8" y1="263.5" x2="383.1" y2="249.0" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="383.1" cy="249.0" r="9" stroke="#e3c892" stroke-width="1.5"/>
+    <line x1="470.6" y1="204.5" x2="443.0" y2="166.5" stroke="#1c2f42" stroke-width="1"/>
+    <circle cx="443.0" cy="166.5" r="9" stroke="#e3c892" stroke-width="1.5"/>
+  </g>
+</svg>

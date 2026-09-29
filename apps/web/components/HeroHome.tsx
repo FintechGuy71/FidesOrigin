@@ -183,7 +183,7 @@ export default function HeroHome({
         role="img"
       />
 
-      <div className="relative z-[var(--z-content)] mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="relative z-[var(--z-content)] mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="fio-hero-min flex flex-col justify-center py-28 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
           {/* LEFT — Positioning */}
           <div className="text-center lg:col-span-7 lg:text-left">

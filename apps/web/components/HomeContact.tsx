@@ -17,7 +17,7 @@ export default function HomeContact({
 }) {
   return (
     <section id="contact" style={{ background: "var(--fio-ink-soft)" }}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           <div
             className="fio-ticks relative mx-auto max-w-4xl border px-6 py-16 text-center md:px-16 md:py-24"
