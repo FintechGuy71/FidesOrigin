@@ -101,7 +101,7 @@ const tw: Dict = {
     totalLabel: "累計篩查",
     blackLabel: "攔截 / 制裁",
     greyLabel: "標記 / 暫掛",
-    placeholder: "輸入以太坊地址 (0x...)",
+    placeholder: "以太坊地址 (0x…)",
     checkBtn: "查詢風險等級",
     checkingBadge: "查詢中...",
     addressLabel: "地址",

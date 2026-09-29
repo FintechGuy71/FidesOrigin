@@ -71,7 +71,7 @@ export default function ContentDocsTW() {
           <button className="docs-code-copy" aria-label="複製代碼">複製</button>
         </div>
         <pre><code>curl https://api.fidesorigin.com/api/v1/addresses/0x... \
-  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+{"\n  "}-H "Authorization: Bearer YOUR_API_KEY"</code></pre>
       </div>
 
       <h3>2. 安裝 SDK</h3>
@@ -90,10 +90,10 @@ export default function ContentDocsTW() {
           <button className="docs-code-copy" aria-label="複製代碼">複製</button>
         </div>
         <pre><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
-
-contract MyToken is CompliantStableCoin &#123;
-    constructor() CompliantStableCoin("MyToken", "MTK") &#123;&#125;
-&#125;</code></pre>
+{"\n"}
+{"\n"}contract MyToken is CompliantStableCoin &#123;
+{"\n    "}constructor() CompliantStableCoin("MyToken", "MTK") &#123;&#125;
+{"\n"}&#125;</code></pre>
       </div>
 
       <h2>核心概念</h2>

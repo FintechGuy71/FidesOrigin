@@ -101,7 +101,7 @@ const cn: Dict = {
     totalLabel: "累计筛查",
     blackLabel: "拦截 / 制裁",
     greyLabel: "标记 / 暂挂",
-    placeholder: "输入以太坊地址 (0x...)",
+    placeholder: "以太坊地址 (0x…)",
     checkBtn: "查询风险等级",
     checkingBadge: "查询中...",
     addressLabel: "地址",

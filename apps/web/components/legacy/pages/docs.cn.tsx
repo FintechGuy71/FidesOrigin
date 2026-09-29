@@ -74,7 +74,7 @@ export default function ContentDocsCN() {
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>curl https://api.fidesorigin.com/api/v1/addresses/0x... \
-  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+{"\n  "}-H "Authorization: Bearer YOUR_API_KEY"</code></pre>
       </div>
 
       <h3>2. 安装 SDK</h3>
@@ -93,10 +93,10 @@ export default function ContentDocsCN() {
           <button className="docs-code-copy" aria-label="复制代码">复制</button>
         </div>
         <pre><code>import "@fidesorigin/contracts/CompliantStableCoin.sol";
-
-contract MyToken is CompliantStableCoin &#123;
-    constructor() CompliantStableCoin("MyToken", "MTK") &#123;&#125;
-&#125;</code></pre>
+{"\n"}
+{"\n"}contract MyToken is CompliantStableCoin &#123;
+{"\n    "}constructor() CompliantStableCoin("MyToken", "MTK") &#123;&#125;
+{"\n"}&#125;</code></pre>
       </div>
 
       <h2>核心概念</h2>

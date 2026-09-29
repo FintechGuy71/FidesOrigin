@@ -101,7 +101,7 @@ const jp: Dict = {
     totalLabel: "累計スクリーニング",
     blackLabel: "ブロック / 制裁",
     greyLabel: "フラグ / 保留",
-    placeholder: "イーサリアムアドレスを入力 (0x...)",
+    placeholder: "イーサリアムアドレス (0x…)",
     checkBtn: "リスクレベルを確認",
     checkingBadge: "確認中...",
     addressLabel: "アドレス",

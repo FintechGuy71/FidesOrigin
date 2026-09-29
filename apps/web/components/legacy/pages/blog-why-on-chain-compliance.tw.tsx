@@ -222,24 +222,24 @@ export default function ContentBlogWhyOnChainComplianceTW() {
         </div>
         <div className="blog-code-body">
 <pre><span className="tk-comment">// 你的穩定幣繼承鏈上風險篩查</span>
-<span className="tk-keyword">contract</span> <span className="tk-type">CompliantStableCoin</span> <span className="tk-keyword">is</span> <span className="tk-type">ERC20</span>, <span className="tk-type">IFidesCompliance</span> &#123;
-
-    <span className="tk-keyword">function</span> <span className="tk-func">_update</span>(
-        <span className="tk-keyword">address</span> from, <span className="tk-keyword">address</span> to,
-        <span className="tk-keyword">uint256</span> amount
-    ) <span className="tk-keyword">internal override</span> &#123;
-        <span className="tk-comment">// 在轉帳執行前評估</span>
-        (<span className="tk-keyword">bool</span> allowed, <span className="tk-keyword">uint256</span> risk) =
-            fides.<span className="tk-func">evaluateTransaction</span>(
-                from, to, amount, <span className="tk-keyword">address</span>(<span className="tk-keyword">this</span>)
-            );
-
-        <span className="tk-keyword">if</span> (!allowed)
-            <span className="tk-keyword">revert</span> <span className="tk-func">ComplianceViolation</span>(from, to, risk);
-
-        <span className="tk-keyword">super</span>.<span className="tk-func">_update</span>(from, to, amount);
-    &#125;
-&#125;</pre>
+{"\n"}<span className="tk-keyword">contract</span> <span className="tk-type">CompliantStableCoin</span> <span className="tk-keyword">is</span> <span className="tk-type">ERC20</span>, <span className="tk-type">IFidesCompliance</span> &#123;
+{"\n"}
+{"\n    "}<span className="tk-keyword">function</span> <span className="tk-func">_update</span>(
+{"\n        "}<span className="tk-keyword">address</span> from, <span className="tk-keyword">address</span> to,
+{"\n        "}<span className="tk-keyword">uint256</span> amount
+{"\n    "}) <span className="tk-keyword">internal override</span> &#123;
+{"\n        "}<span className="tk-comment">// 在轉帳執行前評估</span>
+{"\n        "}(<span className="tk-keyword">bool</span> allowed, <span className="tk-keyword">uint256</span> risk) =
+{"\n            "}fides.<span className="tk-func">evaluateTransaction</span>(
+{"\n                "}from, to, amount, <span className="tk-keyword">address</span>(<span className="tk-keyword">this</span>)
+{"\n            "});
+{"\n"}
+{"\n        "}<span className="tk-keyword">if</span> (!allowed)
+{"\n            "}<span className="tk-keyword">revert</span> <span className="tk-func">ComplianceViolation</span>(from, to, risk);
+{"\n"}
+{"\n        "}<span className="tk-keyword">super</span>.<span className="tk-func">_update</span>(from, to, amount);
+{"\n    "}&#125;
+{"\n"}&#125;</pre>
         </div>
       </div>
 

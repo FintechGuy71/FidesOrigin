@@ -76,24 +76,24 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "address": "0x742d35cc6634c0532925a3b844bc9e7595f8deee",
-  "chain": "ethereum",
-  "risk_score": 12,
-  "risk_level": "low",
-  "scores": [
-    &#123; "score": 12, "level": "low", "confidence": 0.85, "category": "overall" &#125;
-  ],
-  "risk_factors": [
-    &#123; "name": "Behavioral Risk Pattern", "category": "Behavior", "severity": "low" &#125;
-  ],
-  "addressType": "wallet",
-  "timestamp": "2026-08-07T15:23:00Z",
-  "relatedEntities": [],
-  "transactionStats": &#123;
-    "totalTransactions": 3421,
-    "totalVolume": 892000
-  &#125;
-&#125;</code></pre>
+{"\n  "}"address": "0x742d35cc6634c0532925a3b844bc9e7595f8deee",
+{"\n  "}"chain": "ethereum",
+{"\n  "}"risk_score": 12,
+{"\n  "}"risk_level": "low",
+{"\n  "}"scores": [
+{"\n    "}&#123; "score": 12, "level": "low", "confidence": 0.85, "category": "overall" &#125;
+{"\n  "}],
+{"\n  "}"risk_factors": [
+{"\n    "}&#123; "name": "Behavioral Risk Pattern", "category": "Behavior", "severity": "low" &#125;
+{"\n  "}],
+{"\n  "}"addressType": "wallet",
+{"\n  "}"timestamp": "2026-08-07T15:23:00Z",
+{"\n  "}"relatedEntities": [],
+{"\n  "}"transactionStats": &#123;
+{"\n    "}"totalTransactions": 3421,
+{"\n    "}"totalVolume": 892000
+{"\n  "}&#125;
+{"\n"}&#125;</code></pre>
         </div>
       </div>
 
@@ -115,15 +115,15 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "address": "0x742d35cc6634c0532925a3b844bc9e7595f8deee",
-  "chain": "ethereum",
-  "overallScore": 12,
-  "overallLevel": "low",
-  "scores": [&#123; "score": 12, "level": "low", "confidence": 0.85 &#125;],
-  "flags": [],
-  "addressType": "wallet",
-  "timestamp": "2026-08-07T15:23:00Z"
-&#125;</code></pre>
+{"\n  "}"address": "0x742d35cc6634c0532925a3b844bc9e7595f8deee",
+{"\n  "}"chain": "ethereum",
+{"\n  "}"overallScore": 12,
+{"\n  "}"overallLevel": "low",
+{"\n  "}"scores": [&#123; "score": 12, "level": "low", "confidence": 0.85 &#125;],
+{"\n  "}"flags": [],
+{"\n  "}"addressType": "wallet",
+{"\n  "}"timestamp": "2026-08-07T15:23:00Z"
+{"\n"}&#125;</code></pre>
         </div>
       </div>
 
@@ -140,13 +140,13 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "chainId": 1,
-  "addresses": [
-    "0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee",
-    "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-  ],
-  "amount": "1000000000000000000"
-&#125;</code></pre>
+{"\n  "}"chainId": 1,
+{"\n  "}"addresses": [
+{"\n    "}"0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee",
+{"\n    "}"0xdAC17F958D2ee523a2206206994597C13D831ec7"
+{"\n  "}],
+{"\n  "}"amount": "1000000000000000000"
+{"\n"}&#125;</code></pre>
         </div>
         <h4>Response</h4>
         <div className="docs-code-block">
@@ -155,23 +155,23 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "results": [
-    &#123;
-      "address": "0x742d35cc6634c0532925a3b844bc9e7595f8deee",
-      "chain": "ethereum",
-      "type": "wallet",
-      "risk": &#123; "score": 12, "level": "low", "confidence": 0.85 &#125;,
-      "flags": [],
-      "assessedAt": "2026-08-07T15:23:00Z"
-    &#125;
-  ],
-  "summary": &#123;
-    "total": 2,
-    "highRisk": 0,
-    "mediumRisk": 0,
-    "lowRisk": 2
-  &#125;
-&#125;</code></pre>
+{"\n  "}"results": [
+{"\n    "}&#123;
+{"\n      "}"address": "0x742d35cc6634c0532925a3b844bc9e7595f8deee",
+{"\n      "}"chain": "ethereum",
+{"\n      "}"type": "wallet",
+{"\n      "}"risk": &#123; "score": 12, "level": "low", "confidence": 0.85 &#125;,
+{"\n      "}"flags": [],
+{"\n      "}"assessedAt": "2026-08-07T15:23:00Z"
+{"\n    "}&#125;
+{"\n  "}],
+{"\n  "}"summary": &#123;
+{"\n    "}"total": 2,
+{"\n    "}"highRisk": 0,
+{"\n    "}"mediumRisk": 0,
+{"\n    "}"lowRisk": 2
+{"\n  "}&#125;
+{"\n"}&#125;</code></pre>
         </div>
       </div>
 
@@ -194,23 +194,23 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "rules": [
-    &#123;
-      "id": "rule_1",
-      "name": "Block Critical Risk Addresses",
-      "description": "Automatically block transactions to addresses with critical risk score",
-      "status": "active",
-      "priority": 100,
-      "conditions": [&#123; "field": "risk.score", "operator": "greater_than", "value": 90 &#125;],
-      "actions": [&#123; "type": "block", "params": &#123; "reason": "Critical risk score exceeded" &#125; &#125;],
-      "createdAt": "2026-08-01T10:00:00Z",
-      "updatedAt": "2026-08-01T10:00:00Z"
-    &#125;
-  ],
-  "total": 3,
-  "page": 1,
-  "limit": 50
-&#125;</code></pre>
+{"\n  "}"rules": [
+{"\n    "}&#123;
+{"\n      "}"id": "rule_1",
+{"\n      "}"name": "Block Critical Risk Addresses",
+{"\n      "}"description": "Automatically block transactions to addresses with critical risk score",
+{"\n      "}"status": "active",
+{"\n      "}"priority": 100,
+{"\n      "}"conditions": [&#123; "field": "risk.score", "operator": "greater_than", "value": 90 &#125;],
+{"\n      "}"actions": [&#123; "type": "block", "params": &#123; "reason": "Critical risk score exceeded" &#125; &#125;],
+{"\n      "}"createdAt": "2026-08-01T10:00:00Z",
+{"\n      "}"updatedAt": "2026-08-01T10:00:00Z"
+{"\n    "}&#125;
+{"\n  "}],
+{"\n  "}"total": 3,
+{"\n  "}"page": 1,
+{"\n  "}"limit": 50
+{"\n"}&#125;</code></pre>
         </div>
       </div>
 
@@ -227,16 +227,16 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "name": "Flag High Risk Mixer",
-  "description": "Flag transactions involving known mixer addresses",
-  "conditions": [
-    &#123; "field": "address.tags", "operator": "contains", "value": "mixer" &#125;
-  ],
-  "actions": [
-    &#123; "type": "flag", "params": &#123; "reason": "Mixer interaction detected" &#125; &#125;
-  ],
-  "priority": 75
-&#125;</code></pre>
+{"\n  "}"name": "Flag High Risk Mixer",
+{"\n  "}"description": "Flag transactions involving known mixer addresses",
+{"\n  "}"conditions": [
+{"\n    "}&#123; "field": "address.tags", "operator": "contains", "value": "mixer" &#125;
+{"\n  "}],
+{"\n  "}"actions": [
+{"\n    "}&#123; "type": "flag", "params": &#123; "reason": "Mixer interaction detected" &#125; &#125;
+{"\n  "}],
+{"\n  "}"priority": 75
+{"\n"}&#125;</code></pre>
         </div>
         <h4>Response</h4>
         <div className="docs-code-block">
@@ -245,16 +245,16 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "id": "rule_4",
-  "name": "Flag High Risk Mixer",
-  "description": "Flag transactions involving known mixer addresses",
-  "status": "active",
-  "priority": 75,
-  "conditions": [...],
-  "actions": [...],
-  "createdAt": "2026-08-07T15:23:00Z",
-  "updatedAt": "2026-08-07T15:23:00Z"
-&#125;</code></pre>
+{"\n  "}"id": "rule_4",
+{"\n  "}"name": "Flag High Risk Mixer",
+{"\n  "}"description": "Flag transactions involving known mixer addresses",
+{"\n  "}"status": "active",
+{"\n  "}"priority": 75,
+{"\n  "}"conditions": [...],
+{"\n  "}"actions": [...],
+{"\n  "}"createdAt": "2026-08-07T15:23:00Z",
+{"\n  "}"updatedAt": "2026-08-07T15:23:00Z"
+{"\n"}&#125;</code></pre>
         </div>
       </div>
 
@@ -287,12 +287,12 @@ export default function ContentDocsApiEN() {
             <button className="docs-code-copy" aria-label="Copy code">Copy</button>
           </div>
           <pre><code>&#123;
-  "totalAddresses": 20483,
-  "highRiskCount": 142,
-  "mediumRiskCount": 891,
-  "lowRiskCount": 19450,
-  "lastUpdated": "2026-08-07T15:23:00Z"
-&#125;</code></pre>
+{"\n  "}"totalAddresses": 20483,
+{"\n  "}"highRiskCount": 142,
+{"\n  "}"mediumRiskCount": 891,
+{"\n  "}"lowRiskCount": 19450,
+{"\n  "}"lastUpdated": "2026-08-07T15:23:00Z"
+{"\n"}&#125;</code></pre>
         </div>
       </div>
 
@@ -320,28 +320,28 @@ export default function ContentDocsApiEN() {
           <button className="docs-code-copy" aria-label="Copy code">Copy</button>
         </div>
         <pre><code>interface IPreTransactionGuard &#123;
-    struct TransactionIntent &#123;
-        address from;
-        address to;
-        uint256 value;
-        address token;
-        bytes data;
-        uint256 chainId;
-    &#125;
-
-    enum Action &#123; ALLOW, WARN, BLOCK &#125;
-
-    struct RiskAssessment &#123;
-        Action action;
-        uint256 riskScore;
-        uint256 confidence;
-        string reason;
-        uint256 assessmentTime;
-    &#125;
-
-    function assessAddress(address addr) external view returns (RiskAssessment memory);
-    function assessTransaction(TransactionIntent calldata intent) external view returns (RiskAssessment memory);
-&#125;</code></pre>
+{"\n    "}struct TransactionIntent &#123;
+{"\n        "}address from;
+{"\n        "}address to;
+{"\n        "}uint256 value;
+{"\n        "}address token;
+{"\n        "}bytes data;
+{"\n        "}uint256 chainId;
+{"\n    "}&#125;
+{"\n"}
+{"\n    "}enum Action &#123; ALLOW, WARN, BLOCK &#125;
+{"\n"}
+{"\n    "}struct RiskAssessment &#123;
+{"\n        "}Action action;
+{"\n        "}uint256 riskScore;
+{"\n        "}uint256 confidence;
+{"\n        "}string reason;
+{"\n        "}uint256 assessmentTime;
+{"\n    "}&#125;
+{"\n"}
+{"\n    "}function assessAddress(address addr) external view returns (RiskAssessment memory);
+{"\n    "}function assessTransaction(TransactionIntent calldata intent) external view returns (RiskAssessment memory);
+{"\n"}&#125;</code></pre>
       </div>
 
       <h2>Error Codes</h2>

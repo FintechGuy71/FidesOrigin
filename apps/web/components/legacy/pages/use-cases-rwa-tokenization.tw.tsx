@@ -95,37 +95,37 @@ export default function ContentUseCasesRwaTokenizationTW() {
                 <span>Solidity 0.8.26</span>
               </div>
               <pre><span className="comment">// Compliant RWA token with investor verification</span>
-<span className="kw">contract</span> <span className="type">RWAToken</span> <span className="kw">is</span> <span className="type">CompliantERC20</span> &#123;
-
-    <span className="kw">constructor</span>()
-        <span className="type">CompliantERC20</span>(
-            <span className="str">"Real Estate Token"</span>,
-            <span className="str">"RET"</span>,
-            <span className="num">18</span>,
-            <span className="num">1_000_000</span> * <span className="num">1e18</span>
-        )
-    &#123;&#125;
-
-    <span className="kw">function</span> <span className="func">_beforeTokenTransfer</span>(
-        <span className="kw">address</span> from,
-        <span className="kw">address</span> to,
-        <span className="kw">uint256</span> amount
-    ) <span className="kw">internal override</span> &#123;
-        <span className="comment">// Verify accredited investor status</span>
-        <span className="kw">require</span>(
-            fides.<span className="func">isAccredited</span>(to),
-            <span className="str">"Recipient not accredited"</span>
-        );
-
-        <span className="comment">// Enforce jurisdiction restrictions</span>
-        <span className="kw">require</span>(
-            fides.<span className="func">isJurisdictionAllowed</span>(to),
-            <span className="str">"Jurisdiction restricted"</span>
-        );
-
-        <span className="kw">super</span>.<span className="func">_beforeTokenTransfer</span>(from, to, amount);
-    &#125;
-&#125;</pre>
+{"\n"}<span className="kw">contract</span> <span className="type">RWAToken</span> <span className="kw">is</span> <span className="type">CompliantERC20</span> &#123;
+{"\n"}
+{"\n    "}<span className="kw">constructor</span>()
+{"\n        "}<span className="type">CompliantERC20</span>(
+{"\n            "}<span className="str">"Real Estate Token"</span>,
+{"\n            "}<span className="str">"RET"</span>,
+{"\n            "}<span className="num">18</span>,
+{"\n            "}<span className="num">1_000_000</span> * <span className="num">1e18</span>
+{"\n        "})
+{"\n    "}&#123;&#125;
+{"\n"}
+{"\n    "}<span className="kw">function</span> <span className="func">_beforeTokenTransfer</span>(
+{"\n        "}<span className="kw">address</span> from,
+{"\n        "}<span className="kw">address</span> to,
+{"\n        "}<span className="kw">uint256</span> amount
+{"\n    "}) <span className="kw">internal override</span> &#123;
+{"\n        "}<span className="comment">// Verify accredited investor status</span>
+{"\n        "}<span className="kw">require</span>(
+{"\n            "}fides.<span className="func">isAccredited</span>(to),
+{"\n            "}<span className="str">"Recipient not accredited"</span>
+{"\n        "});
+{"\n"}
+{"\n        "}<span className="comment">// Enforce jurisdiction restrictions</span>
+{"\n        "}<span className="kw">require</span>(
+{"\n            "}fides.<span className="func">isJurisdictionAllowed</span>(to),
+{"\n            "}<span className="str">"Jurisdiction restricted"</span>
+{"\n        "});
+{"\n"}
+{"\n        "}<span className="kw">super</span>.<span className="func">_beforeTokenTransfer</span>(from, to, amount);
+{"\n    "}&#125;
+{"\n"}&#125;</pre>
             </div>
           </div>
         </div>

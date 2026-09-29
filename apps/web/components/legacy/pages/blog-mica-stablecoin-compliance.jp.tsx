@@ -70,18 +70,18 @@ export default function ContentBlogMicaStablecoinComplianceJP() {
           <p>FidesOrigin のアプローチは、コンプライアンスをトークンコントラクトに直接組み込みます。</p>
 
           <pre><code>// Every transfer is screened on-chain
-function _update(address from, address to, uint256 amount) internal override &#123;
-    // Evaluate against risk registry
-    (bool allowed, uint256 risk) = compliance.evaluate(from, to, amount);
-    
-    if (!allowed) &#123;
-        // Quarantine instead of revert for review
-        quarantine.hold(from, to, amount, risk);
-        return;
-    &#125;
-    
-    super._update(from, to, amount);
-&#125;</code></pre>
+{"\n"}function _update(address from, address to, uint256 amount) internal override &#123;
+{"\n    "}// Evaluate against risk registry
+{"\n    "}(bool allowed, uint256 risk) = compliance.evaluate(from, to, amount);
+{"\n"}
+{"\n    "}if (!allowed) &#123;
+{"\n        "}// Quarantine instead of revert for review
+{"\n        "}quarantine.hold(from, to, amount, risk);
+{"\n        "}return;
+{"\n    "}&#125;
+{"\n"}
+{"\n    "}super._update(from, to, amount);
+{"\n"}&#125;</code></pre>
 
           <h2>準備資産証明（Reserve Attestations）</h2>
 

@@ -67,7 +67,19 @@ const PAGE_CSS = `
     }
     .pricing-note p { color: var(--text-secondary); font-size: 0.875rem; margin: 0; }
     .pricing-note a { color: var(--accent); }
-    .compare-table-wrap { overflow-x: auto; margin-top: 48px; }
+    .compare-table-wrap {
+      overflow-x: auto; margin-top: 48px;
+      /* [R15-R3] 滚动阴影提示：移动端表格可横向滚动时，两侧渐隐阴影
+         提示"还有更多列"（仅在可滚动方向显现，桌面无滚动不显示） */
+      background:
+        linear-gradient(to right, var(--bg) 30%, transparent),
+        linear-gradient(to left, var(--bg) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, var(--shadow-scroll-hint), transparent),
+        radial-gradient(farthest-side at 100% 50%, var(--shadow-scroll-hint), transparent) 100% 0;
+      background-repeat: no-repeat;
+      background-attachment: local, local, scroll, scroll;
+      background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
+    }
     /* [R11-M4] 行 hover + 奇偶行底色：长表扫读纪律 */
     .compare-table tbody tr { transition: background 0.2s ease; }
     .compare-table tbody tr:nth-child(even) td { background: var(--fio-hover-wash); }
