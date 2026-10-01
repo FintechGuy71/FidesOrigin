@@ -84,7 +84,9 @@ async function main() {
       console.warn(`[fetch-metrics] fetch failed (${err.message}) — wrote fallback values`);
     }
   }
-  process.exit(0);
+  /* ⚠ 不用 process.exit(0)：Windows + 代理环境变量（NODE_USE_ENV_PROXY）
+     下强退会触发 libuv UV_HANDLE_CLOSING 断言崩溃。自然返回即可——
+     fetch 的 keep-alive agent 由 undici 自动回收，进程数秒内退出。 */
 }
 
-main();
+await main();

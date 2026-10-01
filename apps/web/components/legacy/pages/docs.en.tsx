@@ -1,5 +1,6 @@
 /* Auto-generated from public/docs/index.html — do not edit by hand. */
 import Link from "next/link";
+import { siteMetrics } from "@/i18n/metrics.generated";
 
 export default function ContentDocsEN() {
   return (
@@ -179,7 +180,7 @@ export default function ContentDocsEN() {
           <div className="docs-arch-icon">&#128279;</div>
           <div>
             <h3>RiskRegistryV2</h3>
-            <p>On-chain storage for 20,000+ risk profiles, sanctions lists, and entity tags. UUPS upgradeable proxy at <code>0x953f...E896</code>.</p>
+            <p>On-chain storage for {siteMetrics.riskAddresses} risk profiles, sanctions lists, and entity tags. UUPS upgradeable proxy at <code>0x953f...E896</code>.</p>
           </div>
         </div>
         <div className="docs-arch-item">
