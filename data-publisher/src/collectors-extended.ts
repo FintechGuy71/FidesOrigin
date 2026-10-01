@@ -3,6 +3,8 @@ import fs from 'fs/promises';
 import { createReadStream } from 'fs';
 import csv from 'csv-parser';
 import { DataSourceConfig, RawRiskData, RiskTier } from './types';
+// [FIX 2026-10-02] 分级阈值单一事实源（别名导入，避免与本文件同名函数混淆）
+import { scoreToTier as sharedScoreToTier } from './riskTier';
 import logger from './logger';
 
 /**
@@ -176,10 +178,8 @@ export function getFlashbotsProvider(rpcUrl: string): string {
 // ============================================
 // Helper
 // ============================================
+// [FIX 2026-10-02] 改为复用 src/riskTier.ts 的单一实现（原本地拷贝用错阈值 20/40/60/80，
+// 合约权威阈值是 30/50/80/95）。保留同名本地函数以最小化调用点改动。
 function scoreToTier(score: number): RiskTier {
-  if (score >= 80) return RiskTier.CRITICAL;
-  if (score >= 60) return RiskTier.HIGH;
-  if (score >= 40) return RiskTier.MEDIUM;
-  if (score >= 20) return RiskTier.LOW;
-  return RiskTier.UNKNOWN;
+  return sharedScoreToTier(score);
 }

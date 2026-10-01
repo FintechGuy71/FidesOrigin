@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { parseStringPromise } from 'xml2js';
 import { DataSourceConfig, RawRiskData, RiskTier } from './types';
+// [FIX 2026-10-02] 分级阈值单一事实源（别名导入，避免与本类同名方法混淆）
+import { scoreToTier as chainScoreToTier } from './riskTier';
 import logger from './logger';
 import { fetchElliptic, fetchTRMLabs, fetchCSV, fetchJSON } from './collectors-extended';
 
@@ -314,13 +316,12 @@ export class DataCollector {
 
   /**
    * Convert score (0-100) to tier
+   * [FIX 2026-10-02] 改为委托 src/riskTier.ts 的单一实现。
+   * 原本地拷贝用阈值 20/40/60/80，与合约 RiskRegistry.RiskTier 的 30/50/80/95 不符
+   * （三份拷贝各写一套，导致漂移）。本包写链，tier 被 PolicyEngine 阻断逻辑消费。
    */
   private scoreToTier(score: number): RiskTier {
-    if (score >= 80) return RiskTier.CRITICAL;
-    if (score >= 60) return RiskTier.HIGH;
-    if (score >= 40) return RiskTier.MEDIUM;
-    if (score >= 20) return RiskTier.LOW;
-    return RiskTier.UNKNOWN;
+    return chainScoreToTier(score);
   }
 
   /**
