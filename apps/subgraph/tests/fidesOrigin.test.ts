@@ -1,14 +1,54 @@
 import { assert, describe, test, clearStore, beforeAll, afterEach } from "matchstick-as/assembly/index";
-import { newMockEvent } from "matchstick-as";
+import { newMockEvent, createMockedFunction } from "matchstick-as";
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { handleRiskProfileUpdated, handleAddressTagged } from "../src/mappings/riskRegistry";
 import { handleComplianceCheckPerformed, handleTransactionBlocked, handleTransactionQuarantined, handleQuarantineReleased } from "../src/mappings/complianceEngine";
 import { RiskProfileUpdated, AddressTagged } from "../generated/RiskRegistry/RiskRegistry";
 import { ComplianceCheckPerformed, TransactionBlocked, TransactionQuarantined, QuarantineReleased } from "../generated/ComplianceEngine/ComplianceEngine";
 
+// handler 回读链上档案所用的合约地址（与 createMockEvent 里的 event.address 一致）
+const REGISTRY = Address.fromString("0x953f985f38f94d6159c0600d1f15D543895cE896");
+// 本文件共用的被测账户
+const ACCOUNT = Address.fromString("0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee");
+
+/**
+ * mock 合约 getRiskProfile。
+ * handleRiskProfileUpdated 会回读链上 tags 做全量替换；matchstick 对未 mock 的合约
+ * 调用【直接中止测试】（不会返回 reverted），故凡调用该 handler 的用例都必须有 mock。
+ * mock 全局且不被 clearStore 清除，本文件各用例共用同一账户，故在 beforeAll 建一次。
+ */
+function mockGetRiskProfile(tags: Array<Bytes>, isSanctioned: boolean): void {
+  createMockedFunction(
+    REGISTRY,
+    "getRiskProfile",
+    "getRiskProfile(address):((uint8,uint8,bytes32[],uint256,bool))"
+  )
+    .withArgs([ethereum.Value.fromAddress(ACCOUNT)])
+    .returns([
+      ethereum.Value.fromTuple(
+        changetype<ethereum.Tuple>([
+          ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(0)),
+          ethereum.Value.fromI32(0),
+          ethereum.Value.fromBytesArray(tags),
+          ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(1000)),
+          ethereum.Value.fromBoolean(isSanctioned),
+        ])
+      ),
+    ]);
+}
+
+/** 短字符串 → bytes32（等价 ethers.encodeBytes32String，尾部补 0） */
+function encodeTag(s: string): Bytes {
+  let bytes = new Uint8Array(32);
+  for (let i = 0; i < s.length && i < 32; i++) {
+    bytes[i] = s.charCodeAt(i) as u8;
+  }
+  return Bytes.fromUint8Array(bytes);
+}
+
 function createMockEvent<T>(): T {
   let event = changetype<T>(newMockEvent());
-  event.address = Address.fromString("0x953f985f38f94d6159c0600d1f15D543895cE896");
+  event.address = REGISTRY;
   event.transaction.hash = Bytes.fromHexString("0x1234") as Bytes;
   event.logIndex = BigInt.fromI32(0);
   return event;
@@ -17,6 +57,12 @@ function createMockEvent<T>(): T {
 describe("RiskRegistry handlers", () => {
   afterEach(() => {
     clearStore();
+  });
+
+  beforeAll(() => {
+    // 默认空 tags：本文件用例只断言 riskScore/tier/SanctionedAddress，
+    // 唯一断言 tags 的用例在其前先由 handleAddressTagged 追加，故空 tags 不影响结果。
+    mockGetRiskProfile([], false);
   });
 
   test("handleRiskProfileUpdated creates RiskProfile", () => {

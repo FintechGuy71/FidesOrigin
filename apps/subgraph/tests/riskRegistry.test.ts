@@ -18,6 +18,10 @@ import { newMockEvent, createMockedFunction } from "matchstick-as";
 // handler 回读链上档案所用的合约地址（必须与 mockEvent.address 一致）
 const REGISTRY = Address.fromString("0x953f985f38f94d6159c0600d1f15D543895cE896");
 
+// 本文件多数旧用例共用的账户（只断言 score/tier/isSanctioned，不断言 tags）。
+// tags 专项用例另用独立地址，避免与全局 mock 冲突。
+const SHARED_ACCOUNT = Address.fromString("0x742d35cc6634c0532925a3b844bc9e7595f0bebc");
+
 /**
  * mock 合约 getRiskProfile —— handleRiskProfileUpdated 会回读链上 tags 全量替换。
  * 不 mock 则 try_ 调用 revert，handler 走"保留原 tags"兜底分支，新增逻辑得不到覆盖。
@@ -102,6 +106,14 @@ describe("RiskRegistry Handlers", () => {
   });
   beforeAll(() => {
     clearStore();
+    // matchstick 对【未 mock】的合约调用会直接中止测试（报 "Could not find a mocked
+    // function"），并不会返回 reverted —— 所以凡是调用 handleRiskProfileUpdated 的
+    // 用例，其 account 都必须有 getRiskProfile 的 mock。
+    // mock 是全局的且【不随 clearStore 清除】，故在此为本文件共用的账户一次性建立
+    // 默认 mock（空 tags）：这些用例只断言 riskScore/tier/isSanctioned/统计计数，
+    // 不断言 tags，空 tags 不影响它们。
+    // 注：下面新增的 tags 专项用例各自使用【唯一】account 并自带 mock，不受此默认值影响。
+    mockGetRiskProfile(SHARED_ACCOUNT, 0, 0, [], false);
   });
 
   test("handleRiskProfileUpdated creates RiskProfile entity", () => {
