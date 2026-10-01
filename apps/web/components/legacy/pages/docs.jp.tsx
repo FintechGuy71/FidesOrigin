@@ -1,5 +1,6 @@
 /* Auto-generated from public/jp/docs/index.html — do not edit by hand. */
 import Link from "next/link";
+import { siteMetrics } from "@/i18n/metrics.generated";
 
 export default function ContentDocsJP() {
   return (
@@ -176,7 +177,7 @@ export default function ContentDocsJP() {
           <div className="docs-arch-icon">&#128279;</div>
           <div>
             <h3>RiskRegistryV2</h3>
-            <p>20,000+ リスクプロファイル、制裁リスト、エンティティタグのオンチェーン・ストレージ。UUPS アップグレード可能プロキシ（<code>0x953f...E896</code>）。</p>
+            <p>{siteMetrics.riskAddresses} リスクプロファイル、制裁リスト、エンティティタグのオンチェーン・ストレージ。UUPS アップグレード可能プロキシ（<code>0x953f...E896</code>）。</p>
           </div>
         </div>
         <div className="docs-arch-item">

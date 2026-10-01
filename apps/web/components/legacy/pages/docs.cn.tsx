@@ -1,5 +1,6 @@
 /* Auto-generated from public/cn/docs/index.html — do not edit by hand. */
 import Link from "next/link";
+import { siteMetrics } from "@/i18n/metrics.generated";
 
 export default function ContentDocsCN() {
   return (
@@ -179,7 +180,7 @@ export default function ContentDocsCN() {
           <div className="docs-arch-icon">&#128279;</div>
           <div>
             <h3>RiskRegistryV2</h3>
-            <p>链上存储 20,000+ 风险档案、制裁名单和实体标签。UUPS 可升级代理位于 <code>0x953f...E896</code>。</p>
+            <p>链上存储 {siteMetrics.riskAddresses} 风险档案、制裁名单和实体标签。UUPS 可升级代理位于 <code>0x953f...E896</code>。</p>
           </div>
         </div>
         <div className="docs-arch-item">

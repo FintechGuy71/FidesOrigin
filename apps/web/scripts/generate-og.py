@@ -32,12 +32,26 @@ S = 2  # 2x supersampling
 W, H = 1200 * S, 630 * S
 
 # 四语言文案（标题与 i18n/dictionaries 的 home.hero 保持一致）
+def _current_risk_addresses():
+    """从 i18n/metrics.generated.ts 读最新真实值（fetch-metrics.mjs 产物）。"""
+    import re as _re
+    mg = ROOT / "i18n" / "metrics.generated.ts"
+    try:
+        m = _re.search(r'riskAddresses: "([^"]+)"', mg.read_text(encoding="utf-8"))
+        if m:
+            return m.group(1)
+    except FileNotFoundError:
+        pass
+    return "20,645+"  # 兜底（首次克隆未构建时）
+
+_RA = _current_risk_addresses()
+
 VARIANTS = {
     "en": {
         "eyebrow": "PROGRAMMABLE ON-CHAIN COMPLIANCE",
         "sub1": "Compliance, executed at",
         "sub2": "block speed.",
-        "metrics": "20,645+ RISK ADDRESSES   ·   <50MS SCREENING   ·   6 NETWORKS   ·   24/7 ENFORCEMENT",
+        "metrics": f"{_RA} RISK ADDRESSES   ·   <50MS SCREENING   ·   6 NETWORKS   ·   24/7 ENFORCEMENT",
         "tracking": 3.2,
         "out": ["brand/og-image.png", "public/brand/og-image.png"],
     },
@@ -45,7 +59,7 @@ VARIANTS = {
         "eyebrow": "可编程链上合规",
         "sub1": "合规，以区块速度",
         "sub2": "实时执行。",
-        "metrics": "20,645+ 风险地址   ·   <50MS 筛查   ·   6 条网络   ·   24/7 自动执行",
+        "metrics": f"{_RA} 风险地址   ·   <50MS 筛查   ·   6 条网络   ·   24/7 自动执行",
         "tracking": 4.0,
         "out": ["public/brand/og-image-cn.png"],
     },
@@ -53,7 +67,7 @@ VARIANTS = {
         "eyebrow": "可程式化鏈上合規",
         "sub1": "合規，以區塊速度",
         "sub2": "即時執行。",
-        "metrics": "20,645+ 風險地址   ·   <50MS 篩查   ·   6 條網絡   ·   24/7 自動執行",
+        "metrics": f"{_RA} 風險地址   ·   <50MS 篩查   ·   6 條網絡   ·   24/7 自動執行",
         "tracking": 4.0,
         "out": ["public/brand/og-image-tw.png"],
     },
@@ -61,7 +75,7 @@ VARIANTS = {
         "eyebrow": "プログラマブル・オンチェーン・コンプライアンス",
         "sub1": "コンプライアンスを、",
         "sub2": "ブロックスピードで実行",
-        "metrics": "20,645+ リスクアドレス   ·   <50MS スクリーニング   ·   6 ネットワーク   ·   24/7 実行",
+        "metrics": f"{_RA} リスクアドレス   ·   <50MS スクリーニング   ·   6 ネットワーク   ·   24/7 実行",
         "tracking": 1.2,
         "out": ["public/brand/og-image-jp.png"],
     },

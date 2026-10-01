@@ -1,5 +1,6 @@
 /* Auto-generated from public/tw/docs/index.html — do not edit by hand. */
 import Link from "next/link";
+import { siteMetrics } from "@/i18n/metrics.generated";
 
 export default function ContentDocsTW() {
   return (
@@ -176,7 +177,7 @@ export default function ContentDocsTW() {
           <div className="docs-arch-icon">&#128279;</div>
           <div>
             <h3>RiskRegistryV2</h3>
-            <p>鏈上存儲 20,000+ 風險檔案、制裁名單和實體標籤。UUPS 可升級代理位於 <code>0x953f...E896</code>。</p>
+            <p>鏈上存儲 {siteMetrics.riskAddresses} 風險檔案、制裁名單和實體標籤。UUPS 可升級代理位於 <code>0x953f...E896</code>。</p>
           </div>
         </div>
         <div className="docs-arch-item">
