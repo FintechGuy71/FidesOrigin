@@ -5,6 +5,15 @@ const path = require('path');
 const axios = require('axios');
 const xml2js = require('xml2js');
 const { scoreToTier } = require('../src/merkleBuilder');
+const { syncProfilesToChain } = require('../src/chainProfileSync');
+const { tagsForEntry } = require('../src/riskGrading');
+const {
+  SOURCE_REGISTRY,
+  getSource,
+  validateBatch,
+  compareWithPrevious,
+  writeProvenance,
+} = require('../src/provenance');
 
 /**
  * [P1-7 FIX] 从 SDN_ADVANCED.XML 结构化提取 EVM 制裁地址。
@@ -67,6 +76,12 @@ const CONFIG = {
   batchSize: parseInt(process.env.BATCH_SIZE) || 50,
   cacheDir: path.join(__dirname, '../cache'),
   logDir: path.join(__dirname, '../logs'),
+  // 链上写入重试策略（瞬时故障：RPC 抖动 / nonce 竞争 / 限流）
+  retryAttempts: parseInt(process.env.CHAIN_RETRY_ATTEMPTS) || 3,
+  retryBaseDelayMs: parseInt(process.env.CHAIN_RETRY_BASE_DELAY_MS) || 2000,
+  retryMaxDelayMs: parseInt(process.env.CHAIN_RETRY_MAX_DELAY_MS) || 20000,
+  // 溯源快照目录（跨轮次一致性比对）
+  provenanceDir: path.join(__dirname, '../cache/provenance'),
 };
 
 // RiskRegistry ABI（与链上 v3.1.0 合约签名对齐）
@@ -82,6 +97,10 @@ const RISK_REGISTRY_ABI = [
   'function getSanctionedAddresses() external view returns (address[] memory)',
   'event RiskProfileUpdated(address indexed addr, uint256 riskScore, uint8 tier, bool isSanctioned)',
   'event BatchUpdateCompleted(uint256 successCount, uint256 gasUsed)',
+  // [增量写入] 合约对「1 小时内已更新 / 零地址 / 分数越界 / tags 超限」的地址
+  // 走 skip-and-continue（不 revert）。解析此事件可区分"交易成功但部分地址未生效"，
+  // 否则会出现「写链成功但链上状态未变」的静默缺口。签名与 RiskRegistry.sol:111 对齐。
+  'event BatchUpdateSkipped(uint256 indexed index, address addr, string reason)',
 ];
 
 // MerkleRiskRegistry ABI（v3.1.0 现役）
@@ -545,6 +564,91 @@ class DailySyncService {
     return null;
   }
 
+  // ========== 2b. 来源可信度校验（逐条）==========
+  /**
+   * 对某一源的抓取产出做逐条校验 + 跨轮次一致性比对。
+   *
+   * 校验维度（validateRecord）：来源标识（受控词表）、时间戳（fetchedAt 逐条落库）、
+   * 字段完整性（address 格式 / score 值域 / 归因文本）、分级一致性（tier 必须由 score 推导）、
+   * 标签规范（bytes32 可编码 + 数量上限）。
+   *
+   * 拒绝语义：issues 非空的条目【不入库】，并计入 provenance.rejected 供审计——
+   * 不静默丢弃，保证「不遗漏」可被追溯。
+   *
+   * @param {string} sourceId SOURCE_REGISTRY 中的 id
+   * @param {Array} items 抓取产出
+   * @returns {Array} 通过校验的记录（保留原字段 + 补充 tier/tags/provenance）
+   */
+  validateSource(sourceId, items) {
+    const def = getSource(sourceId) || {};
+    const fetchedAt = new Date().toISOString();
+    const { accepted, rejected, warnings, stats } = validateBatch(items, { sourceId, fetchedAt });
+
+    // 跨轮次一致性比对：产出骤降可能意味着源故障或解析器退化
+    const cmp = compareWithPrevious(sourceId, accepted.length, {
+      snapshotDir: CONFIG.provenanceDir,
+      expectMin: def.expectMin || 0,
+    });
+    for (const w of cmp.warnings) console.log(`   ⚠️ ${w}`);
+
+    if (rejected.length) {
+      console.log(`   ⚠️ ${rejected.length} record(s) rejected by provenance validation:`);
+      // 只打印前 3 条原因，避免日志爆炸；完整明细落 provenance 文件
+      for (const r of rejected.slice(0, 3)) {
+        console.log(`      - ${r.raw && r.raw.address}: ${r.issues.join('; ')}`);
+      }
+      if (rejected.length > 3) console.log(`      ... and ${rejected.length - 3} more`);
+    }
+    if (warnings.length) {
+      console.log(`   ℹ️ ${warnings.length} validation warning(s) (non-blocking)`);
+      for (const w of warnings.slice(0, 3)) console.log(`      - ${w.msg}`);
+    }
+
+    // 落盘溯源记录（供下一轮比对 + 审计）
+    writeProvenance(sourceId, {
+      ...stats,
+      consistency: { previous: cmp.previous, warnings: cmp.warnings },
+      rejectedSamples: rejected.slice(0, 10).map((r) => ({
+        address: r.raw && r.raw.address,
+        issues: r.issues,
+      })),
+    }, CONFIG.provenanceDir);
+
+    // 累积到本轮汇总（summary.provenance 消费，审计"不遗漏/不重复"）
+    this.lastProvenanceSummary = this.lastProvenanceSummary || {};
+    this.lastProvenanceSummary[sourceId] = {
+      input: stats.input,
+      accepted: stats.accepted,
+      rejected: stats.rejected,
+      duplicates: stats.duplicates,
+      warnings: stats.warnings,
+      previousCount: cmp.previous,
+      consistencyOk: cmp.ok,
+    };
+
+    console.log(`   🔏 ${sourceId}: ${accepted.length} validated / ${stats.input} fetched` +
+      ` (rejected ${rejected.length}, dup ${stats.duplicates}, warn ${warnings.length})`);
+
+    // 保留原字段结构（mergeData 消费 address/riskScore/source/reason），
+    // 同时附上校验产出的 tier/tags/provenance 供写链与落库使用。
+    const byAddr = new Map(accepted.map((a) => [a.address, a]));
+    return items
+      .map((it) => {
+        const v = it && it.address ? byAddr.get(String(it.address).toLowerCase()) : null;
+        if (!v) return null; // 校验未通过 → 剔除
+        return {
+          ...it,
+          address: v.address,
+          riskScore: v.riskScore,
+          tier: v.tier,
+          tags: v.tags,
+          category: v.category,
+          provenance: v.provenance,
+        };
+      })
+      .filter(Boolean);
+  }
+
   // ========== 2. 加载本地缓存 ==========
   loadLocalCache() {
     const cacheFile = path.join(CONFIG.cacheDir, 'risk-database.json');
@@ -591,6 +695,13 @@ class DailySyncService {
       for (const item of source) {
         const addr = item.address.toLowerCase();
         const existing = merged.get(addr);
+        // 兼容单数 source（fetcher 产出）与复数 sources（已校验/已归因记录）
+        const itemSources = Array.isArray(item.sources) && item.sources.length
+          ? item.sources
+          : (item.source ? [item.source] : []);
+        const itemReasons = Array.isArray(item.reasons) && item.reasons.length
+          ? item.reasons
+          : (item.reason ? [item.reason] : []);
 
         // [Q12 FIX] 多源归因：来源始终累积（同地址被多源命中时全部保留），
         // 分数与 tier 取各源最高（语义仍是"最严源说了算"）。
@@ -604,12 +715,26 @@ class DailySyncService {
             // [P1-2 FIX] tier 统一由 score 推导（scoreToTier：100→4 CRITICAL），
             // 消灭源端硬编码 tier:3 导致的链上档案/Merkle leaf/引擎语义三方漂移
             tier: scoreToTier(item.riskScore),
-            sources: [item.source],
-            reasons: [item.reason],
+            sources: [...itemSources],
+            reasons: [...itemReasons],
+            // 溯源：各源抓取时间戳（可信度审计的最小要素）
+            provenance: {
+              fetchedAt: item.provenance && item.provenance.fetchedAt,
+              sources: itemSources.map((s) => ({
+                source: s,
+                fetchedAt: item.provenance && item.provenance.fetchedAt,
+                authority: item.provenance && item.provenance.authority,
+              })),
+            },
           });
         } else {
-          existing.sources.push(item.source);
-          existing.reasons.push(item.reason);
+          for (const s of itemSources) if (!existing.sources.includes(s)) existing.sources.push(s);
+          for (const r of itemReasons) if (!existing.reasons.includes(r)) existing.reasons.push(r);
+          existing.provenance.sources.push({
+            source: itemSources.join(','),
+            fetchedAt: item.provenance && item.provenance.fetchedAt,
+            authority: item.provenance && item.provenance.authority,
+          });
           if (item.riskScore > existing.riskScore) {
             existing.riskScore = item.riskScore;
             existing.tier = scoreToTier(item.riskScore);
@@ -618,7 +743,12 @@ class DailySyncService {
       }
     }
     
-    const result = Array.from(merged.values());
+    // 归因合并后统一重算规范标签集（有序/去重/限量），
+    // 保证【本地存储 tags == 链上 tags == 后端库 tags】三端同源。
+    const result = Array.from(merged.values()).map((e) => ({
+      ...e,
+      tags: tagsForEntry(e),
+    }));
     console.log(`   📊 Total unique: ${result.length}`);
     return result;
   }
@@ -648,77 +778,35 @@ class DailySyncService {
     return tree;
   }
 
-  // ========== 6. 同步到链上 ==========
+  // ========== 6. 同步到链上（增量 + 幂等 + 重试 + tags 一致）==========
+  /**
+   * @dev 原实现每轮无条件重写全部地址，且 tags 恒传空数组，存在两个问题：
+   *   1. 重复写入 —— 数据零变化时仍发 3 批交易（~3.5M gas），与 Merkle 根的
+   *      幂等跳过（Root unchanged, skip）行为不一致；
+   *   2. 字段不一致 —— 本地/后端库存有 sources 多源归因，链上 tags 却是空数组，
+   *      「上链字段与本地存储一致」不成立。
+   * 现委托 chainProfileSync：先读链上现状做 diff，只写状态不一致的地址；
+   * tags 由 riskGrading.tagsForEntry 统一推导并编码为 bytes32[]；批次失败指数退避重试。
+   */
   async syncToChain(addresses, dryRun = false) {
     if (!this.contract || !this.wallet) {
       console.log('\n⏭️ Skipping chain sync (no wallet/contract configured)');
-      return { skipped: true };
+      return { skipped: true, ok: true };
     }
-    
-    console.log('\n⛓️ Syncing to chain...');
-    
-    if (dryRun) {
-      // [AUDIT-FIX] 原为单引号字符串内的 ${} 字面量（永不插值）
-      console.log(`   [DRY RUN] Would sync ${addresses.length} addresses`);
-      return { dryRun: true, count: addresses.length };
-    }
-    
-    // 分批处理（每批最多 50 个，避免 gas limit）
-    const batches = [];
-    for (let i = 0; i < addresses.length; i += CONFIG.batchSize) {
-      batches.push(addresses.slice(i, i + CONFIG.batchSize));
-    }
-    
-    const results = [];
-    
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      console.log(`   📤 Batch ${i + 1}/${batches.length} (${batch.length} addresses)`);
-      
-      const accounts = batch.map(a => a.address);
-      const riskScores = batch.map(a => a.riskScore);
-      const tiers = batch.map(a => a.tier);
-      const sanctioned = batch.map(() => true);
-      // 合约签名第 5 参：每地址的 tags 数组（当前为空集合，后续可挂来源标签）
-      const tags = batch.map(() => []);
-      
-      try {
-        // 检查 gas
-        const gasEstimate = await this.contract.batchUpdateRiskProfiles.estimateGas(
-          accounts, riskScores, tiers, sanctioned, tags
-        );
-        console.log(`      ⛽ Gas estimate: ${gasEstimate}`);
-        
-        const tx = await this.contract.batchUpdateRiskProfiles(
-          accounts, riskScores, tiers, sanctioned, tags,
-          { gasLimit: gasEstimate * 12n / 10n } // +20% buffer
-        );
-        
-        console.log(`      📝 TX: ${tx.hash}`);
-        
-        const receipt = await tx.wait();
-        console.log(`      ✅ Confirmed (block ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
-        
-        results.push({
-          batch: i + 1,
-          hash: receipt.hash,
-          block: receipt.blockNumber,
-          gasUsed: receipt.gasUsed.toString(),
-          status: receipt.status,
-        });
-        
-        // 批次间延迟，避免节点限流
-        if (i < batches.length - 1) {
-          await this.sleep(3000);
-        }
-        
-      } catch (e) {
-        console.error(`      ❌ Batch failed: ${e.message}`);
-        results.push({ batch: i + 1, error: e.message });
-      }
-    }
-    
-    return { batches: results.length, results };
+
+    console.log('\n⛓️ Syncing to chain (incremental)...');
+
+    return syncProfilesToChain(this.contract, addresses, {
+      dryRun,
+      batchSize: CONFIG.batchSize,
+      wallet: this.wallet,
+      retry: {
+        attempts: CONFIG.retryAttempts,
+        baseDelayMs: CONFIG.retryBaseDelayMs,
+        maxDelayMs: CONFIG.retryMaxDelayMs,
+      },
+      onLog: (msg) => console.log(msg),
+    });
   }
 
   // ========== 6b. 推 Merkle 根上链（D-1） ==========
@@ -887,26 +975,50 @@ class DailySyncService {
     console.log(new Date().toISOString());
     console.log('='.repeat(60));
     
+    // 重置本轮溯源汇总累加器（多次 run() 复用同一实例时不串轮）
+    this.lastProvenanceSummary = {};
+    
     await this.init();
     
-    // 1. 收集数据
-    const ofacData = await this.fetchOFAC();
+    // 1. 收集数据 —— 由 SOURCE_REGISTRY 驱动（全量自动发现）
+    //    新增数据源只需在 src/provenance.js 的 SOURCE_REGISTRY 注册一项
+    //    （id/method/category/expectMin/sourceTags…），无需改动本主流程。
+    const fetched = {};   // sourceId → 校验通过的记录
+    for (const src of SOURCE_REGISTRY) {
+      const fn = this[src.method];
+      if (typeof fn !== 'function') {
+        // 注册表声明了不存在的方法：明确报错而非静默跳过（否则"漏采"不可见）
+        console.error(`   ❌ SOURCE_REGISTRY 声明的方法不存在: ${src.id}.${src.method}`);
+        fetched[src.id] = [];
+        continue;
+      }
+      let raw = [];
+      try {
+        raw = (await fn.call(this)) || [];
+      } catch (e) {
+        // 单源抓取异常不阻断其余源（各 fetcher 内部已多有兜底，此处为最外层防线）
+        console.error(`   ❌ ${src.id} fetch threw: ${e.message}`);
+      }
+      // 1b. 逐源可信度校验（来源标识/时间戳/字段完整性/分级一致/标签规范 + 跨轮次比对）
+      //     校验不通过的条目在此被剔除并计入 provenance.rejected，不进入后续写链/入库。
+      fetched[src.id] = this.validateSource(src.id, raw);
+    }
+
     // [P1-1] 主源健康时昨日快照不参与合并——它就是昨天的合并结果，
     // 并入会让已下架地址自我复活；主源故障时它才作为后备参与。
     const localData = this.primarySourceOk ? [] : this.loadLocalCache();
+    // Chainalysis 付费源：无 API key 时为空数组（凭证就位后自动生效）
     const chainalysisData = this.loadChainalysisCache();
-    // 英国 OFSI（HMT）—— 官方制裁源，与 OFAC 同权（riskScore 100）。
-    // 失败时返回空数组并告警，不阻断主源；但会把 hmtSourceOk 置 false 触发下架保护。
-    const hmtData = await this.fetchHMT();
-    // OpenSanctions 聚合源——补 OFAC/HMT 之外的官方制裁钱包地址（主要增量：以色列 NBCTF）。
-    // 失败不阻断主源（纯增量）。
-    const openSanctionsData = await this.fetchOpenSanctions();
-    // Scam Sniffer 风险地址——【不写链、不 merge】，单独走库。风险≠制裁（D-2），
-    // 由引擎独立 RiskListStrategy 给 75 分，与制裁管道隔离。
-    const scamSnifferData = await this.fetchScamSniffer();
+
+    // 风险源（scam/phishing）不写链、不进 merged，单独走后端库
+    const scamSnifferData = fetched.scamSniffer || [];
 
     // 2. 合并（只合并制裁源；scam 数据不进 merged，避免被写链/下架 diff 误处理）
-    const merged = this.mergeData([ofacData, localData, chainalysisData, hmtData, openSanctionsData]);
+    //    按注册表 category 动态选取，新增制裁源自动纳入。
+    const sanctionSources = SOURCE_REGISTRY
+      .filter((s) => s.category === 'sanction' && s.mergeIntoChain)
+      .map((s) => fetched[s.id] || []);
+    const merged = this.mergeData([...sanctionSources, localData, chainalysisData]);
     
     if (merged.length === 0) {
       // [AUDIT-FIX] 0 条数据不再静默成功：主源 SDN_ADVANCED.XML 常态应有百余个
@@ -948,19 +1060,22 @@ class DailySyncService {
     this.saveDatabase(merged);
     
     // 6. 汇总
+    //    stats.sources 由注册表驱动 —— 新增源自动出现在汇总里，不会漏统计。
+    const perSourceStats = {};
+    for (const src of SOURCE_REGISTRY) {
+      perSourceStats[src.id] = (fetched[src.id] || []).length;
+    }
     const summary = {
       timestamp: new Date().toISOString(),
       dryRun,
       stats: {
-        ofac: ofacData.length,
-        hmt: hmtData.length,
-        openSanctions: openSanctionsData.length,
-        scamSniffer: scamSnifferData.length,
+        ...perSourceStats,
         local: localData.length,
         chainalysis: chainalysisData.length,
         merged: merged.length,
         unique: merged.length,
       },
+      sources: perSourceStats,
       merkle: {
         root: tree.root,
         leaves: tree.count,
@@ -968,6 +1083,15 @@ class DailySyncService {
       chain: chainResult,
       merkleOnChain: merkleResult,
       delist: delistResult,
+      // 增量写入效果：toWrite=本轮实际写链数，unchanged=已一致跳过数（幂等证据）
+      chainDiff: {
+        toWrite: chainResult.toWrite ?? null,
+        unchanged: chainResult.unchanged ?? null,
+        readErrors: (chainResult.readErrors || []).length,
+        failedBatches: chainResult.failedBatches ?? 0,
+      },
+      // 可信度校验汇总（逐源 accepted/rejected/warnings，审计"不遗漏"）
+      provenance: this.lastProvenanceSummary || null,
       duration: Date.now() - startTime,
     };
     
@@ -977,6 +1101,7 @@ class DailySyncService {
     console.log('Sync Complete');
     console.log(`⏱️ Duration: ${summary.duration}ms`);
     console.log(`📊 Addresses: ${summary.stats.merged}`);
+    console.log(`⛓️ Chain write: ${summary.chainDiff.toWrite ?? 'n/a'} written, ${summary.chainDiff.unchanged ?? 'n/a'} already in sync`);
     console.log(`🌲 Merkle Root: ${summary.merkle.root}`);
     console.log('='.repeat(60));
     
@@ -1005,12 +1130,19 @@ async function main() {
     const failedBatches = (result?.chain?.results || []).filter((r) => r.error);
     const merkleError = result?.merkleOnChain?.error;
     const delistFailures = (result?.delist?.results || []).filter((r) => r.error);
-    if (!dryRun && (failedBatches.length > 0 || merkleError || delistFailures.length > 0)) {
+    // [增量写入] 新结构下 chainResult.ok===false 表示有批次重试耗尽；
+    // readErrors 表示读链失败（保守降级为重写，但需告警以便排查 RPC）。
+    const chainNotOk = result?.chain?.ok === false;
+    const readErrors = (result?.chain?.readErrors || []).length;
+    if (!dryRun && (failedBatches.length > 0 || chainNotOk || merkleError || delistFailures.length > 0)) {
       if (failedBatches.length > 0) {
-        console.error(`\n❌ ${failedBatches.length}/${result.chain.results.length} batches failed:`);
+        console.error(`\n❌ ${failedBatches.length} batches failed after retries:`);
         for (const f of failedBatches) {
-          console.error(`   Batch ${f.batch}: ${f.error}`);
+          console.error(`   Batch ${f.batch} (${f.count ?? '?'} addrs, ${f.attempts ?? '?'} attempts): ${f.error}`);
         }
+      }
+      if (chainNotOk && failedBatches.length === 0) {
+        console.error('\n❌ Chain sync reported failure (see batch logs above)');
       }
       if (merkleError) {
         console.error(`\n❌ Merkle root push failed: ${merkleError}`);
@@ -1022,6 +1154,21 @@ async function main() {
         }
       }
       process.exit(1);
+    }
+
+    // 非致命告警：读链失败与校验拒绝仍需醒目输出，但不阻断（已保守处理）
+    if (readErrors > 0) {
+      console.warn(`\n⚠️ ${readErrors} on-chain profile reads failed — those addresses were conservatively rewritten`);
+    }
+    const prov = result?.provenance || {};
+    const totalRejected = Object.values(prov).reduce((n, s) => n + (s.rejected || 0), 0);
+    if (totalRejected > 0) {
+      console.warn(`\n⚠️ ${totalRejected} record(s) rejected by provenance validation (see cache/provenance/*.json)`);
+    }
+    for (const [src, s] of Object.entries(prov)) {
+      if (!s.consistencyOk) {
+        console.warn(`⚠️ ${src} consistency check flagged: ${s.input} fetched / ${s.accepted} accepted / prev ${s.previousCount}`);
+      }
     }
 
     process.exit(0);

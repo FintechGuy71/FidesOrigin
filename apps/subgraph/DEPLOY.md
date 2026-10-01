@@ -4,18 +4,26 @@
 
 | 网络 | 状态 | 版本 | 查询端点 | 说明 |
 |------|------|------|----------|------|
-| Sepolia | ✅ 已部署 | v0.2.0 | `https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/v0.2.0` | 2026-08-09 部署，同步中 |
+| Sepolia | ✅ 已部署并同步 | latest | `https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/version/latest` | 2026-10-01 核验：block 11821625，`hasIndexingErrors:false`，riskProfiles 已索引 142 条 |
 | Mainnet | ⏳ 占位符 | — | — | 等待合约主网部署后更新 |
+
+> ⚠️ **端点必须用 `version/latest`**：固定版本号（`v0.0.5`、`v0.2.0`）在 Studio 每次
+> 重新部署后都会失效并返回 `{"message":"Not found"}`（2026-10-01 实测两者均已 404）。
+> `version/latest` 始终指向当前活跃 deployment，与 `apps/web` 前端默认值一致。
 
 ## Sepolia 合约地址
 
+> 权威来源：`apps/subgraph/subgraph.yaml` + `networks.json`（本表 2026-10-01 依其校正，
+> 原表 startBlock 7,650,000 / FidesCompliance 地址均已过期，且缺 QuarantineVault）。
+
 | 合约 | 地址 | Start Block |
 |------|------|-------------|
-| RiskRegistry | `0x953f985f38f94d6159c0600d1f15D543895cE896` | 7,650,000 |
-| ComplianceEngine | `0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E` | 7,650,000 |
-| PolicyEngine | `0xCA12BB2daD2a6D429277823366D8C88a490EDDeA` | 7,650,000 |
-| FidesCompliance | `0x945392d7Aabbf8dc4116711bD6c8dD6EF2098594` | 7,800,000 |
-| CompliantStableCoin | `0x2245A8FCf6aca017327eA8950Ba510e9596595E9` | 7,800,000 |
+| RiskRegistry | `0x953f985f38f94d6159c0600d1f15D543895cE896` | 11,550,000 |
+| ComplianceEngine | `0xdF36A8b16F064308eeDE21A740FAc4e87b724F0E` | 11,550,000 |
+| PolicyEngine | `0xCA12BB2daD2a6D429277823366D8C88a490EDDeA` | 11,550,000 |
+| FidesCompliance | `0x2625eA99A0E7D419b8051C4f2B3cC0b5d78d79D5` | 11,550,000 |
+| CompliantStableCoin | `0x2245A8FCf6aca017327eA8950Ba510e9596595E9` | 11,550,000 |
+| QuarantineVault | `0xa5Db586Fd93F49582405803eaB99C147267EfCbE` | 11,730,000 |
 
 ## 实体映射状态
 
