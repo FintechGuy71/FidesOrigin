@@ -18,6 +18,10 @@ on:
 
 permissions:
   contents: read
+  # actions/cache 保存缓存需要 actions:write。缺它时 save 步骤【不会失败】，
+  # 只打印一次 warning 就"成功"退出（官方行为：read-only token 下拒绝写入），
+  # 于是快照/溯源缓存静默不落盘 —— 跨轮次比对与静态后备会永久失效却无人察觉。
+  actions: write
 
 jobs:
   sync:
@@ -36,6 +40,31 @@ jobs:
       - name: Install dependencies
         working-directory: data-sync
         run: npm ci --ignore-scripts
+
+      # [FIX] 持久化 data-sync/cache —— 此前该目录被 .gitignore 排除，CI 每次全新
+      # checkout 都是空目录，导致三个机制在生产实际失效：
+      #   1. 静态快照后备（hmt/open-sanctions/scam-sniffer/ofac-eth-source.txt）：
+      #      源端点故障时无兜底数据可用；
+      #   2. 跨轮次一致性比对（cache/provenance/*.json）：previous 恒为 null，
+      #      产出骤降告警形同虚设；
+      #   3. 主源故障后备（loadLocalCache 读 risk-database.json）：拿不到数据即抛错终止。
+      # key 用 run_id 保证每轮写入新缓存（actions/cache 的 key 不可覆盖），
+      # restore-keys 前缀匹配取最近一次，实现"滚动基线"。
+      - name: Restore/Save data-sync cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 [pin]
+        with:
+          path: |
+            data-sync/cache/provenance
+            data-sync/cache/hmt-eth-source.txt
+            data-sync/cache/open-sanctions-source.txt
+            data-sync/cache/scam-sniffer-source.txt
+            data-sync/cache/ofac-eth-source.txt
+            data-sync/cache/ofac-crypto-sanctions.json
+            data-sync/cache/risk-database.json
+            data-sync/cache/chainalysis-sanctions.json
+          key: sanctions-cache-${{ github.run_id }}
+          restore-keys: |
+            sanctions-cache-
 
       # [P3] 测试门禁：解析/抓取逻辑回归测试不过就不写链
       # （防 CSV 表头偏移、空行语义错位这类"静默丢数据"回归直接污染生产）
@@ -69,4 +98,6 @@ jobs:
             data-sync/logs/
             data-sync/cache/merkle-root-latest.txt
             data-sync/cache/merkle-tree.json
+            data-sync/cache/provenance/
           retention-days: 30
+          if-no-files-found: warn

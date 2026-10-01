@@ -6,9 +6,12 @@
 'use strict';
 
 const { Client } = require('pg');
+const { sharedRiskLevel, tagsForEntry } = require('../src/riskGrading');
 
-// 链上 RiskTier 枚举（合约）：0 UNKNOWN / 1 LOW / 2 MEDIUM / 3 HIGH / 4 CRITICAL
-const TIER_TO_LEVEL = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+// [FIX] 原实现用链上 tier 映射展示 level：TIER_TO_LEVEL = ['UNKNOWN','LOW','MEDIUM','HIGH','CRITICAL']
+// 但链上 tier 阈值（30/50/80/95）与全站展示阈值（30/70/90，packages/shared + 后端引擎）不同。
+// 实证：scam 地址 score=75 → 链上 tier=2 → 存库 'MEDIUM'，而引擎重算返回 'HIGH'，
+// 同一地址两套档位（直读库与走端点结果不一致）。现统一走 sharedRiskLevel()。
 
 /**
  * @param {Array<{address:string, riskScore:number, tier:number, reason?:string, sources?:string[]}>} entries
@@ -41,25 +44,31 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
       const params = [];
       chunk.forEach((e, idx) => {
         const base = idx * 8;
-        const level = TIER_TO_LEVEL[Math.min(Math.max(e.tier || 3, 0), 4)];
-        // [风险源分流] tags 兜底标记按 source 区分：
-        //   - 制裁源（OFAC/HMT/OPEN_SANCTIONS…）→ 兜底 'sanctioned'（SanctionedListStrategy 命中满分）
-        //   - 风险源（SCAM_SNIFFER…）→ 兜底 'scam'（RiskListStrategy 命中 75 分，不误判为制裁）
-        // 关键：scam 地址绝不能带 'sanctioned'，否则会被 SanctionedListStrategy 误判满分封号。
-        // 防御：兼容复数 sources（mergeData 输出）与单数 source（直接 fetch 未 merge），
+        // 兼容复数 sources（mergeData 输出）与单数 source（直接 fetch 未 merge），
         // 两者都缺时才兜底 ['OFAC']。
         const srcs = (e.sources && e.sources.length)
           ? e.sources
           : (e.source ? [e.source] : ['OFAC']);
-        const isRiskSource = srcs.some(s => String(s).toUpperCase().startsWith('SCAM'));
-        const fallbackTag = isRiskSource ? 'scam' : 'sanctioned';
+        // 风险源（SCAM_*）默认 75 分，制裁源默认 100 分
+        const isRiskSource = srcs.some((s) => String(s).toUpperCase().startsWith('SCAM'));
+        const score = e.riskScore ?? (isRiskSource ? 75 : 100);
+        // 展示档位走全站阈值（30/70/90），与后端引擎重算结果一致
+        const level = sharedRiskLevel(score);
+        // tags 与链上/本地同源：优先用记录自带的规范 tags（mergeData 已算好），
+        // 否则由 tagsForEntry 统一推导（含 sanctioned/scam marker 兜底 + 排序 + 限量）。
+        // ⚠️ marker 决定后端引擎命中哪个策略：scam 地址绝不能带 'sanctioned'，
+        //    否则被 SanctionedListStrategy 误判满分封号（历史 bug，已由 tagsForEntry 按
+        //    category 分流保证）。
+        const tags = (Array.isArray(e.tags) && e.tags.length)
+          ? e.tags
+          : tagsForEntry({ ...e, sources: srcs });
         values.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`);
         params.push(
           e.address.toLowerCase(),
           'ethereum',
-          e.riskScore ?? (isRiskSource ? 75 : 100),
+          score,
           level,
-          JSON.stringify([...new Set([...srcs, fallbackTag])]),
+          JSON.stringify(tags),
           'CONFIRMED',
           new Date().toISOString(),
           0 // report_count：DB 列无默认值，缺省会留 NULL 并使响应模型 int 校验 500
