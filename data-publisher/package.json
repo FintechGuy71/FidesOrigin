@@ -9,9 +9,14 @@
     "start": "node dist/src/index.js",
     "dev": "ts-node src/index.ts",
     "lint": "eslint src/**/*.ts",
-    "test": "jest",
+    "test": "tsc && jest",
+    "test:only": "jest",
     "docker:build": "docker build -t fidesorigin/data-publisher .",
     "docker:run": "docker run --env-file .env fidesorigin/data-publisher"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["<rootDir>/tests/**/*.test.js"]
   },
   "dependencies": {
     "ethers": "^6.13.0",
