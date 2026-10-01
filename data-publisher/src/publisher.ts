@@ -1,6 +1,6 @@
 import { ethers, Contract, Signer, JsonRpcProvider, TransactionResponse, NonceManager } from 'ethers';
 import { createClient, RedisClientType } from 'redis';
-import { RiskProfile, PublisherConfig, TxResult } from './types';
+import { RiskProfile, PublisherConfig, TxResult, RiskTier } from './types';
 import { config } from './config';
 import logger from './logger';
 import { createKeyManager } from './kms-key-manager';
@@ -381,13 +381,27 @@ export class BlockchainPublisher {
    * 将 tier 字符串转换为数字
    */
   private tierStringToNumber(tier: string): number {
+    // [FIX 2026-10-02] 原映射为 {LOW:0, MEDIUM:1, HIGH:2, CRITICAL:3}，
+    // 与合约权威枚举 RiskRegistry.RiskTier {UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL}
+    // = {0,1,2,3,4} 相比整体【错位一档】，且完全缺失 UNKNOWN：
+    //   - 每个 tier 都被降一级写链（HIGH 3 → 2 实际是 MEDIUM）
+    //   - 未识别字符串 ?? 0 会静默变成 UNKNOWN（最低档）而非报错
+    // 该值直接进 updateRiskProfile 写链（本文件 ~345 行），而链上 tier 被
+    // PolicyEngine.sol:588 的阻断逻辑消费 → 高危地址会被按低档放行。
     const tierMap: Record<string, number> = {
-      'LOW': 0,
-      'MEDIUM': 1,
-      'HIGH': 2,
-      'CRITICAL': 3,
+      'UNKNOWN': RiskTier.UNKNOWN,
+      'LOW': RiskTier.LOW,
+      'MEDIUM': RiskTier.MEDIUM,
+      'HIGH': RiskTier.HIGH,
+      'CRITICAL': RiskTier.CRITICAL,
     };
-    return tierMap[tier.toUpperCase()] ?? 0;
+    const mapped = tierMap[String(tier).toUpperCase()];
+    if (mapped === undefined) {
+      // 不再静默降级为 UNKNOWN：未知 tier 名必须显式失败，
+      // 否则拼写错误会把高危地址当无风险写链。
+      throw new Error(`Unknown risk tier string: "${tier}"`);
+    }
+    return mapped;
   }
 
   async getAddress(): Promise<string | undefined> {
@@ -725,13 +739,19 @@ export class BlockchainPublisher {
    * 将 tier 数字转换为字符串
    */
   private tierNumberToString(tier: number): string {
+    // [FIX 2026-10-02] 原映射为 {0:'LOW',1:'MEDIUM',2:'HIGH',3:'CRITICAL'}，
+    // 与合约权威枚举 {UNKNOWN:0,LOW:1,MEDIUM:2,HIGH:3,CRITICAL:4} 整体错位一档，
+    // 导致从链上读回的 tier 显示/日志全部降一级（且越界时 ?? 'LOW' 会把
+    // UNKNOWN 与 CRITICAL 都显示成 LOW）。此方法用于展示与审计日志，
+    // 故不抛错，但必须与 tierStringToNumber 严格互逆。
     const tierMap: Record<number, string> = {
-      0: 'LOW',
-      1: 'MEDIUM',
-      2: 'HIGH',
-      3: 'CRITICAL',
+      [RiskTier.UNKNOWN]: 'UNKNOWN',
+      [RiskTier.LOW]: 'LOW',
+      [RiskTier.MEDIUM]: 'MEDIUM',
+      [RiskTier.HIGH]: 'HIGH',
+      [RiskTier.CRITICAL]: 'CRITICAL',
     };
-    return tierMap[tier] ?? 'LOW';
+    return tierMap[tier] ?? 'UNKNOWN';
   }
 
   /**

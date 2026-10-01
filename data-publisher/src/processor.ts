@@ -1,4 +1,6 @@
 import { RawRiskData, RiskProfile, RiskTier, TxResult, SyncJob } from './types';
+// [FIX 2026-10-02] 分级阈值单一事实源（别名导入，避免与本类同名方法混淆）
+import { scoreToTier as chainScoreToTier } from './riskTier';
 import logger from './logger';
 
 /**
@@ -167,11 +169,11 @@ export class DataProcessor {
    * Calculate tier from score
    */
   private scoreToTier(score: number): RiskTier {
-    if (score >= 80) return RiskTier.CRITICAL;
-    if (score >= 60) return RiskTier.HIGH;
-    if (score >= 40) return RiskTier.MEDIUM;
-    if (score >= 20) return RiskTier.LOW;
-    return RiskTier.UNKNOWN;
+    // [FIX 2026-10-02] 委托 src/riskTier.ts 的单一实现。原本地拷贝用阈值
+    // 20/40/60/80，与合约 RiskRegistry.RiskTier 的 30/50/80/95 不符
+    // （collector.ts / collectors-extended.ts / processor.ts 三份拷贝各写一套导致漂移）。
+    // 本包写链，tier 被 PolicyEngine.sol:588 的阻断逻辑消费。
+    return chainScoreToTier(score);
   }
 
   /**
