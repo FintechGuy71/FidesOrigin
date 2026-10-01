@@ -15,20 +15,11 @@ import {
   RulePaused,
   RuleUnpaused,
 } from '../../generated/ComplianceEngine/ComplianceEngine';
-import { BigInt, log, Bytes } from '@graphprotocol/graph-ts';
+import { BigInt, log } from '@graphprotocol/graph-ts';
+import { bytes32ToString } from './shared/bytes32';
 
 function getDecision(isCompliant: boolean): string {
   return isCompliant ? 'ALLOW' : 'BLOCK';
-}
-
-function bytes32ToString(bytes: Bytes): string {
-  let result = '';
-  for (let i = 0; i < bytes.length; i++) {
-    let byte = bytes[i];
-    if (byte == 0) break;
-    result += String.fromCharCode(byte);
-  }
-  return result;
 }
 
 function toUtcDateString(timestamp: BigInt): string {

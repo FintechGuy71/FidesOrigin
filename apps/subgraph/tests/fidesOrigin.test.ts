@@ -69,7 +69,8 @@ describe("RiskRegistry handlers", () => {
     ];
     handleAddressTagged(tagEvent);
 
-    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[0x65786368616e6765000000000000000000000000000000000000000000000000]");
+    // [FIX] tags 存解码后的可读字符串（"exchange"），不再是原始 bytes32 十六进制串。
+    assert.fieldEquals("RiskProfile", "0x742d35cc6634c0532925a3b844bc9e7595f8deee", "tags", "[exchange]");
   });
 
 });
