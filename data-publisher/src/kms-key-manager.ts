@@ -98,7 +98,9 @@ interface KMSClientType {
   send: (command: any) => Promise<any>;
 }
 
-class AWSKMSKeyManager implements IKeyManager {
+// [FIX 2026-10-02] 导出以便单元测试其 DER/SPKI 解析（此前未导出 → 无法测试，
+// 该文件三处解析 bug 因此长期潜伏，见 tests/kms-key-manager.test.js 头部说明）。
+export class AWSKMSKeyManager implements IKeyManager {
   private keyId: string;
   private provider: JsonRpcProvider;
   private chainId: number;
@@ -210,13 +212,22 @@ class AWSKMSKeyManager implements IKeyManager {
     if (buf[offset++] !== 0x30) {
       throw new Error('Invalid SPKI: expected SEQUENCE');
     }
-    offset += this.readLength(buf, offset); // skip SEQUENCE length
+    // [FIX 2026-10-02] 原为 `offset += this.readLength(...)`：readLength 返回【长度值】
+    // （secp256k1 SPKI 外层为 86），而这里需要【长度字段占几字节】（1）。
+    // 用错会让 offset 从 1 跳到 87 → 下一步 buf[87] 不是 0x30 →
+    // 对任何合法 SPKI 都抛 'expected AlgorithmIdentifier SEQUENCE'，AWS KMS 完全不可用。
+    offset += this.lengthSize(buf, offset); // skip SEQUENCE length field
 
     // Parse AlgorithmIdentifier SEQUENCE
     if (buf[offset++] !== 0x30) {
       throw new Error('Invalid SPKI: expected AlgorithmIdentifier SEQUENCE');
     }
-    offset += this.readLength(buf, offset); // skip AlgorithmIdentifier length
+    // [FIX 2026-10-02] 同型错误：这里必须同时跳过【长度字段】(1 字节) 与
+    // 【长度所指的内容】(algoLen 字节)。原实现只加了长度值、漏掉长度字段本身，
+    // 使 offset 少 1 → 落在 AlgorithmIdentifier 内容末字节 0x0a 而非 BIT STRING 的 0x03。
+    const algoLen = this.readLength(buf, offset);
+    offset += this.lengthSize(buf, offset);
+    offset += algoLen;
 
     // Parse subjectPublicKey BIT STRING
     if (buf[offset++] !== 0x03) {
@@ -259,7 +270,11 @@ class AWSKMSKeyManager implements IKeyManager {
     if (derSig[offset++] !== 0x30) {
       throw new Error('Invalid DER signature: expected SEQUENCE');
     }
-    offset += this.readLength(derSig, offset); // skip SEQUENCE length
+    // [FIX 2026-10-02] 与 deriveAddress 同型错误：readLength 返回【长度值】（DER 签名
+    // 外层约 68~72），而这里需要跳过的是【长度字段本身】(1 字节)。原实现会让 offset
+    // 直接跳到 69+，下一步既不是 0x02 也可能越界 → 任何合法 DER 签名都解析失败，
+    // 即 AWS KMS 的签名路径同样完全不可用。
+    offset += this.lengthSize(derSig, offset); // skip SEQUENCE length field
 
     // Parse r INTEGER
     if (derSig[offset++] !== 0x02) {
@@ -267,6 +282,15 @@ class AWSKMSKeyManager implements IKeyManager {
     }
     const rLen = this.readLength(derSig, offset);
     offset += this.lengthSize(derSig, offset);
+    // [FIX 2026-10-02] 补畸形 DER 防护（与 packages/shared KmsSigner 的 R3-L15 对齐）：
+    // 长度越界直接拒绝，不再让 subarray 静默截断（截断会导致 r/s 错位且 offset 失步，
+    // 产出格式合法但值错误的签名）。
+    // 注意校验必须用【内容起始 offset】而非跳过前导零后的 rStart —— rLen 是 DER 声明的
+    // 内容长度，已包含那个可选的 0x00 前导字节；先 rStart++ 再判会把前导零计两次，
+    // 对 s 位于末尾且需要前导零（s 高位为 1，概率约 50%）的合法签名误报越界。
+    if (offset + rLen > derSig.length) {
+      throw new Error('Invalid DER signature: r exceeds buffer');
+    }
     // Skip leading zero byte in INTEGER if present (for positive numbers)
     let rStart = offset;
     if (derSig[rStart] === 0x00 && rLen > 32) {
@@ -281,6 +305,10 @@ class AWSKMSKeyManager implements IKeyManager {
     }
     const sLen = this.readLength(derSig, offset);
     offset += this.lengthSize(derSig, offset);
+    // [FIX 2026-10-02] 同 r：先按声明长度校验，再跳过可选前导零。
+    if (offset + sLen > derSig.length) {
+      throw new Error('Invalid DER signature: s exceeds buffer');
+    }
     let sStart = offset;
     if (derSig[sStart] === 0x00 && sLen > 32) {
       sStart++;

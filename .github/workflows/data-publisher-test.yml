@@ -1,0 +1,69 @@
+name: Data Publisher Tests
+
+# data-publisher 是【独立 npm 包】（不在 pnpm-workspace.yaml 内），
+# 此前 CI 完全不覆盖 → 零测试、零类型检查，导致 kms-key-manager.ts 的
+# 三处 DER/SPKI 解析 bug 长期潜伏（2026-10-02 修复：AWS KMS 取地址与签名
+# 两条路径均因 offset 用错长度值/长度字段字节数而 100% 失败）。
+# 该包同时被根 Dockerfile 打进生产镜像，必须有独立门禁。
+#
+# ⚠️ 本 workflow【刻意不加入】ruleset `main-ci-gate` 的必需检查：
+#    ruleset 要求所有必需 context 在每个 PR 都产出结果，而本 workflow 在 push
+#    事件带 paths 过滤（PR 事件不带，以规避 pending 死锁）。若把它列为必需检查，
+#    一旦某类事件未触发本 workflow，PR 会因缺少该 context 而永远无法合并。
+#    作为非必需检查它仍会在 PR 上显示红叉、阻止静默退化，这是当前想要的强度。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data-publisher/**'
+      - '.github/workflows/data-publisher-test.yml'
+  # pull_request 不做 paths 过滤：ruleset 若要求本检查必过，
+  # PR 不涉及 data-publisher 时检查不触发会导致 PR 永远 pending 无法合并
+  # （与 backend-test.yml 同样的考量）。
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ⚠️ job id【必须】唯一：仓库 ruleset `main-ci-gate` 把 `test` 列为必需状态检查
+  # （由 ci.yml 的 test job 提供）。若本 job 也叫 `test`，两者会产生同名 check context，
+  # data-publisher 的失败会被 GitHub 当作必需检查失败 → 阻塞【所有】PR 合并。
+  # 故用 publisher-test 这一唯一名，且刻意不加入 ruleset（见下方说明）。
+  publisher-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20 = 根 Dockerfile 的 BASE_IMAGE（生产镜像实际用的版本）
+        # 22 = data-publisher/Dockerfile 的 BASE_IMAGE（两个 Dockerfile 版本不一致，
+        #      双跑可同时守住两条构建路径，也能暴露版本相关回归）
+        node-version: ['20', '22']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 [INFO-4 FIX: pin]
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 [INFO-4 FIX: pin]
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: data-publisher/package-lock.json
+
+      - name: Install dependencies
+        working-directory: data-publisher
+        # --ignore-scripts：与本仓库其他 workflow 一致，跳过 postinstall 原生构建
+        run: npm ci --ignore-scripts
+
+      # 类型检查独立成一步，便于失败时区分「类型错」与「测试断言失败」
+      - name: Typecheck
+        working-directory: data-publisher
+        run: npx tsc --noEmit -p tsconfig.json
+
+      # npm test = `tsc && jest`：测试跑的是编译产物 dist/，
+      # 因为本包未装 ts-jest / @babel/preset-typescript，jest 无法直接转译 .ts。
+      - name: Run tests
+        working-directory: data-publisher
+        run: npm test

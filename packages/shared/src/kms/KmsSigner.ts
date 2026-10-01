@@ -140,7 +140,11 @@ export class KmsSigner extends AbstractSigner {
     if (derSig[offset++] !== 0x30) {
       throw new Error('Invalid DER signature: expected SEQUENCE');
     }
-    offset += this._readDerLength(derSig, offset);
+    // [FIX 2026-10-02] 与 _deriveAddressFromPublicKey 同型错误：_readDerLength 返回
+    // 【长度值】（DER 签名外层约 68~72），而这里要跳过的是【长度字段本身】(1 字节)。
+    // 原实现使 offset 从 1 跳到 69+ → 下一步不是 0x02 → 任何合法 DER 签名都解析失败，
+    // 即 AWS KMS 签名路径完全不可用。下方 r/s 两处用的就是正确的 _derLengthSize。
+    offset += this._derLengthSize(derSig, offset);
 
     // INTEGER r
     if (derSig[offset++] !== 0x02) {
@@ -148,11 +152,18 @@ export class KmsSigner extends AbstractSigner {
     }
     const rLen = this._readDerLength(derSig, offset);
     offset += this._derLengthSize(derSig, offset);
+    // [AUDIT FIX 2026-09-18 R3-L15] 畸形 DER 防护：长度越界/超长直接拒绝，
+    // 不再静默截断（截断会导致 r/s 错位且 offset 失步）。
+    // [FIX 2026-10-02] 越界检查必须用【内容起始 offset】而非【跳过前导零后的 rStart】：
+    // rLen 是 DER 声明的内容长度，本身已包含那个可选的 0x00 前导字节。
+    // 原实现先 `rStart++` 再判 `rStart + rLen`，等于把前导零计了两次 → 对合法签名
+    // 误报 "exceeds buffer"。r 因为后面还有 s 占位通常不会触发，但 s 位于末尾时
+    // 只要 s 需要前导零（s 高位为 1，实测概率约 50%）就必然差 1 字节而误拒。
+    if (offset + rLen > derSig.length) {
+      throw new Error('Invalid DER signature: r exceeds buffer');
+    }
     let rStart = offset;
     if (derSig[rStart] === 0x00 && rLen > 32) rStart++;
-    // [AUDIT FIX 2026-09-18 R3-L15] 畸形 DER 防护：长度越界/超长直接拒绝，
-    // 不再静默截断（截断会导致 r/s 错位且 offset 失步）
-    if (rStart + rLen > derSig.length) throw new Error('Invalid DER signature: r exceeds buffer');
     const r = derSig.subarray(rStart, rStart + Math.min(rLen, 32));
     offset += rLen;
 
@@ -162,9 +173,12 @@ export class KmsSigner extends AbstractSigner {
     }
     const sLen = this._readDerLength(derSig, offset);
     offset += this._derLengthSize(derSig, offset);
+    // [FIX 2026-10-02] 同 r：先按声明长度校验，再跳过可选前导零。
+    if (offset + sLen > derSig.length) {
+      throw new Error('Invalid DER signature: s exceeds buffer');
+    }
     let sStart = offset;
     if (derSig[sStart] === 0x00 && sLen > 32) sStart++;
-    if (sStart + sLen > derSig.length) throw new Error('Invalid DER signature: s exceeds buffer');
     const s = derSig.subarray(sStart, sStart + Math.min(sLen, 32));
 
     const rHex = '0x' + r.toString('hex').padStart(64, '0');
@@ -256,7 +270,15 @@ export class KmsSigner extends AbstractSigner {
     if (buf[offset++] !== 0x30) {
       throw new Error('Invalid SPKI: expected SEQUENCE');
     }
-    offset += this._readAsn1Length(buf, offset);
+    // [FIX 2026-10-02] 此处原为 `offset += this._readAsn1Length(buf, offset)`，
+    // 但 _readAsn1Length 返回的是【长度值】（secp256k1 SPKI 外层为 86），
+    // 而这里需要的是【长度字段本身占几字节】（1 字节，即 0x56 这个 tag）。
+    // 用错导致 offset 从 1 跳到 87，下一步 buf[87] 不是 0x30 →
+    // 对任何合法 SPKI 都抛 'Invalid SPKI: expected AlgorithmIdentifier SEQUENCE'，
+    // 即 AWS KMS 模式（createSigner provider:'aws'）在生产完全不可用。
+    // 该 bug 此前被 it.skip 的测试掩盖（KmsSigner.test.ts 第 4/5 节）。
+    // 正确写法与下方 AlgorithmIdentifier / BIT STRING 两处保持一致，用 _asn1LengthSize。
+    offset += this._asn1LengthSize(buf, offset);
 
     // Parse AlgorithmIdentifier SEQUENCE
     if (buf[offset++] !== 0x30) {
@@ -285,7 +307,13 @@ export class KmsSigner extends AbstractSigner {
     }
 
     const pubKeyNoPrefix = ecPoint.subarray(1);
-    const hash = ethers.keccak256(pubKeyNoPrefix);
+    // [FIX 2026-10-02] realm-safe 归一化：ethers 的 _getBytes 用 realm-local
+    // `value instanceof Uint8Array` 判定，跨 realm 的 Buffer 会得到 false 并抛
+    // INVALID_ARGUMENT（实测：vitest 的 vm 隔离环境里 `buf.subarray() instanceof Uint8Array`
+    // 为 false，尽管其原型链确实是 Uint8Array）。worker_threads / 部分打包器同样会踩到。
+    // `new Uint8Array(view)` 按 length+索引复制元素，不依赖 instanceof，故跨 realm 安全；
+    // 纯 Node 生产路径行为不变（此前恰好能通过是因为同 realm）。
+    const hash = ethers.keccak256(new Uint8Array(pubKeyNoPrefix));
     return '0x' + hash.substring(26);
   }
 
