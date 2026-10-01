@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import LegacyShell from "@/components/legacy/LegacyShell";
+import { ogImageFor } from "@/app/_lib/site";
 import { pageDefs, pageContent } from "./registry";
 import { canonicalUrl, hreflangAlternates, type Locale } from "./locales";
 
@@ -29,7 +30,7 @@ export function legacyMetadata(locale: Locale, slugParts: string[]): Metadata {
   const url = canonicalUrl(`/${slug}`, locale);
   const ogImage = OG_COVER[slug]
     ? `https://fidesorigin.com/brand/covers/${OG_COVER[slug]}.png`
-    : "https://fidesorigin.com/brand/og-image.png";
+    : ogImageFor(locale);
   return {
     title: m.title,
     description: m.description,

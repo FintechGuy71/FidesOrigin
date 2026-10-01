@@ -1,5 +1,6 @@
 "use client";
 
+import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 const RADAR_CIRCLES = [40, 70, 100];
@@ -141,7 +142,7 @@ function FeatureCard({
                    直接叠印不可读。
                 重构：盾牌整体右移（translate 120），Block 轨迹改左列时间线
                 （带连接竖线），两组元素零交叉；svg 加 max-w-full 适配 320。 */}
-            <svg width="260" height="140" viewBox="0 0 260 140" role="img" className="max-w-full h-auto">
+            <svg width="260" height="140" viewBox="0 0 260 140" role="img" aria-label={d.shieldCaption} className="max-w-full h-auto">
               {/* 左列：审计轨迹时间线 */}
               {[42, 70, 98].map((y, i) => (
                 <g key={i}>
@@ -254,6 +255,7 @@ export default function Features({ d }: { d: Dict["home"]["features"] }) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           {/* Header — left editorial */}
+          <Reveal>
           <div className="grid gap-10 md:grid-cols-12">
             <div className="md:col-span-6">
               <div className="fio-eyebrow mb-5">{d.caption}</div>
@@ -265,10 +267,13 @@ export default function Features({ d }: { d: Dict["home"]["features"] }) {
               <p className="fio-body-lg">{d.body}</p>
             </div>
           </div>
+          </Reveal>
 
           <div>
             {features.map((f, i) => (
-              <FeatureCard key={f.num} feature={f} index={i} d={d} />
+              <Reveal key={f.num} delay={0.08}>
+                <FeatureCard feature={f} index={i} d={d} />
+              </Reveal>
             ))}
           </div>
         </div>

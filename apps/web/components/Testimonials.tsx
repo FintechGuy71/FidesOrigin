@@ -1,5 +1,6 @@
 "use client";
 
+import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
@@ -18,6 +19,7 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           {/* Section header — left editorial */}
+          <Reveal>
           <div className="grid gap-10 pb-16 md:grid-cols-12 md:pb-24">
             <div className="md:col-span-6">
               <div className="fio-eyebrow mb-5">{d.caption}</div>
@@ -29,18 +31,22 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
               <p className="fio-body-lg">{d.body}</p>
             </div>
           </div>
+          </Reveal>
 
-          {/* Journey — audit trail timeline */}
-          <div className="relative mx-auto max-w-3xl">
+          {/* Journey — audit trail timeline
+              [v5] max-w-4xl：1440px 视口下消除右半空白；
+              连接线全断点渲染（left-6），不再 md 专属。 */}
+          <div className="relative mx-auto max-w-4xl">
             <div
               aria-hidden="true"
-              className="absolute left-6 top-0 hidden h-full w-px md:block md:left-8"
+              className="absolute left-6 top-0 h-full w-px md:left-8"
               style={{ background: "linear-gradient(to bottom, var(--fio-gold), var(--fio-border-light), transparent)", opacity: 0.35 }}
             />
 
             <div className="space-y-12">
-              {journeySteps.map((item) => (
-                <div key={item.step} className="relative flex gap-6 lg:gap-10">
+              {journeySteps.map((item, i) => (
+                <Reveal key={item.step} delay={i * 0.08}>
+                <div className="relative flex gap-6 lg:gap-10">
                   <div className="flex-shrink-0">
                     <div
                       className="fio-num flex h-12 w-12 items-center justify-center border text-sm font-medium md:h-16 md:w-16 md:text-base"
@@ -74,16 +80,18 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
                     </div>
                   </div>
                 </div>
+                </Reveal>
               ))}
             </div>
           </div>
 
           {/* Bottom quote */}
+          <Reveal delay={0.1}>
           <div className="mx-auto mt-24 max-w-2xl text-center">
             <div
               aria-hidden="true"
-              className="mb-6 font-serif text-5xl leading-none"
-              style={{ color: "var(--fio-gold)", opacity: 0.3 }}
+              className="mb-5 font-serif text-6xl leading-none"
+              style={{ color: "var(--fio-gold)", opacity: 0.45 }}
             >
               &ldquo;
             </div>
@@ -99,6 +107,7 @@ export default function Testimonials({ d }: { d: Dict["home"]["journey"] }) {
               </div>
             </div>
           </div>
+          </Reveal>
         </div>
       </div>
     </section>

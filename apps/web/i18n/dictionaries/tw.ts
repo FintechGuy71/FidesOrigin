@@ -1,4 +1,5 @@
 import type { Dict } from "./en";
+import { siteMetrics } from "../metrics.generated";
 
 /* 繁體中文 — 站點框架文案 */
 const tw: Dict = {
@@ -97,7 +98,7 @@ const tw: Dict = {
   addressCheck: {
     micro: "合規工具",
     title: "地址風險查詢",
-    lead: "即時查詢 20,645+ 個風險地址，覆蓋 OFAC、Chainalysis 等多個來源。",
+    lead: `即時查詢 ${siteMetrics.riskAddresses} 個風險地址，覆蓋 OFAC、Chainalysis 等多個來源。`,
     totalLabel: "累計篩查",
     blackLabel: "攔截 / 制裁",
     greyLabel: "標記 / 暫掛",
@@ -144,6 +145,11 @@ const tw: Dict = {
       language: "語言",
       toggleMenu: "打開菜單",
       rights: "© 2026 FidesOrigin. 保留所有權利。",
+      tagline: "面向受監管數字資產的可程式化鏈上合規協議。",
+      colProduct: "產品",
+      colResources: "資源",
+      colCompany: "公司",
+      license: "開源許可 · BUSL-1.1",
     },
     hero: {
       badge: "v1.0 — 已就緒香港《穩定幣條例》",
@@ -155,9 +161,9 @@ const tw: Dict = {
       statRisk: "風險評分",
       statRiskValue: "低",
       statTx: "已監控交易",
-      statTxValue: "12,847",
+      statTxValue: siteMetrics.txMonitored,
       statAlerts: "告警",
-      statAlertsValue: "3",
+      statAlertsValue: siteMetrics.alertsToday,
       scanLabel: "即時風險掃描",
       scanActive: "運行中",
       statusCleared: "已放行",
@@ -176,7 +182,7 @@ const tw: Dict = {
         fullDemo: "完整演示",
       },
       metrics: [
-        { value: "20,645+", label: "鏈上風險地址" },
+        { value: siteMetrics.riskAddresses, label: "鏈上風險地址" },
         { value: "<50ms", label: "篩查延遲" },
         { value: "6", label: "支持網絡" },
         { value: "24/7", label: "自治執行" },
@@ -247,6 +253,10 @@ const tw: Dict = {
       quote: "合規與 DeFi 的交匯處，將是下一個萬億美元級機構資本入場的入口。",
       quoteName: "首席合規官",
       quoteRole: "香港持牌穩定幣發行商",
+      verifyCaption: "鏈上自行驗證",
+      verifyContract: "RiskRegistry · Sepolia",
+      verifySource: "開源代碼 · GitHub",
+      verifyDocs: "技術文檔",
     },
     journey: {
       caption: "應用場景",

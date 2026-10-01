@@ -1,4 +1,6 @@
 /* English (default locale) — site chrome dictionary */
+import { siteMetrics } from "../metrics.generated";
+
 const en = {
   nav: {
     features: "Features",
@@ -95,7 +97,7 @@ const en = {
   addressCheck: {
     micro: "Compliance Tool",
     title: "Address Risk Check",
-    lead: "Query 20,645+ risk addresses in real time across OFAC, Chainalysis, and more.",
+    lead: `Query ${siteMetrics.riskAddresses} risk addresses in real time across OFAC, Chainalysis, and more.`,
     totalLabel: "Total Screenings",
     blackLabel: "Blocked / Sanctioned",
     greyLabel: "Flagged / Held",
@@ -142,6 +144,11 @@ const en = {
       language: "Language",
       toggleMenu: "Toggle menu",
       rights: "© 2026 FidesOrigin. All rights reserved.",
+      tagline: "Programmable on-chain compliance for regulated digital assets.",
+      colProduct: "Product",
+      colResources: "Resources",
+      colCompany: "Company",
+      license: "Open source · BUSL-1.1",
     },
     hero: {
       badge: "v1.0 — HK Stablecoin Ordinance Ready",
@@ -153,9 +160,9 @@ const en = {
       statRisk: "Risk Score",
       statRiskValue: "Low",
       statTx: "Tx Monitored",
-      statTxValue: "12,847",
+      statTxValue: siteMetrics.txMonitored,
       statAlerts: "Alerts",
-      statAlertsValue: "3",
+      statAlertsValue: siteMetrics.alertsToday,
       scanLabel: "Live Risk Scan",
       scanActive: "ACTIVE",
       statusCleared: "Cleared",
@@ -174,7 +181,7 @@ const en = {
         fullDemo: "Full demo",
       },
       metrics: [
-        { value: "20,645+", label: "Risk addresses on-chain" },
+        { value: siteMetrics.riskAddresses, label: "Risk addresses on-chain" },
         { value: "<50ms", label: "Screening latency" },
         { value: "6", label: "Networks supported" },
         { value: "24/7", label: "Autonomous enforcement" },
@@ -245,6 +252,10 @@ const en = {
       quote: "The intersection of compliance and DeFi is where the next trillion dollars of institutional capital will enter.",
       quoteName: "Chief Compliance Officer",
       quoteRole: "Licensed Stablecoin Issuer (Hong Kong)",
+      verifyCaption: "Verify it yourself",
+      verifyContract: "RiskRegistry · Sepolia",
+      verifySource: "Open Source · GitHub",
+      verifyDocs: "Technical Docs",
     },
     journey: {
       caption: "Use Case",

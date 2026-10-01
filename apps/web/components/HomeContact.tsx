@@ -1,5 +1,6 @@
 "use client";
 
+import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
 
@@ -19,6 +20,7 @@ export default function HomeContact({
     <section id="contact" style={{ background: "var(--fio-ink-soft)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
+          <Reveal>
           <div
             className="fio-ticks relative mx-auto max-w-4xl border px-6 py-16 text-center md:px-16 md:py-24"
             style={{
@@ -59,6 +61,7 @@ export default function HomeContact({
               contact@fidesorigin.com
             </div>
           </div>
+          </Reveal>
         </div>
       </div>
     </section>

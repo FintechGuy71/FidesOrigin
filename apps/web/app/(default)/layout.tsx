@@ -41,6 +41,14 @@ export default function DefaultRootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* [v5] 补齐 R7-6 探针缺口：(default) 英文首页此前无 html.js 探针，
+            legacy.css 的 .reveal 门控与 v5 的 .fio-reveal 都以此为开关。
+            阻塞内联脚本，首帧前同步执行（与 (legacy)/[lang] 布局同一约定）。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: 'document.documentElement.classList.add("js");',
+          }}
+        />
       </head>
       <body className={`${fontVariableClassNames} font-sans antialiased`}>
         <HomeChrome lang="en">{children}</HomeChrome>

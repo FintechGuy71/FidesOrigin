@@ -67,6 +67,11 @@ const localeCopy: Record<Locale, { title: string; description: string }> = {
   },
 };
 
+/** [v5] 按语言返回本地化 OG 分享卡（scripts/generate-og.py 生成的变体） */
+export function ogImageFor(lang: Locale): string {
+  return `https://fidesorigin.com/brand/og-image${lang === "en" ? "" : `-${lang}`}.png`;
+}
+
 /**
  * 多语言 root layout 的 metadata。
  * 带 alternates（canonical + hreflang），替代原先直接复用英文 siteMetadata 的做法。
@@ -82,6 +87,11 @@ export function localeMetadata(lang: Locale): Metadata {
       title: copy.title,
       description: copy.description,
       locale: hreflangCode[lang],
+      images: [ogImageFor(lang)],
+    },
+    twitter: {
+      ...siteMetadata.twitter,
+      images: [ogImageFor(lang)],
     },
     alternates: {
       canonical: canonicalUrl("/", lang),

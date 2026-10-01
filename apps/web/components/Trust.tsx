@@ -1,12 +1,20 @@
 "use client";
 
+import Link from "next/link";
+import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
+import { localize, type Locale } from "@/i18n/locales";
 
 /* ================================================================
    TRUST v4 — Regulatory coverage band + institutional quote.
+   [v5] 增补「链上自行验证」行：机构级信任背书不依赖口号，
+   而是给出可独立核实的入口（Sepolia 合约 / 开源代码 / 文档）。
    ================================================================ */
 
-export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
+/* RiskRegistry 主合约（Sepolia 测试网，见 repo CONTRACT_DEPLOYMENT_STATUS.md） */
+const RISK_REGISTRY_ADDRESS = "0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3";
+
+export default function Trust({ d, lang }: { d: Dict["home"]["trust"]; lang: Locale }) {
   const badges = [
     { label: d.badge1Label, status: d.badge1Status },
     { label: d.badge2Label, status: d.badge2Status },
@@ -19,6 +27,7 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="py-[var(--section-py)] md:py-[var(--section-py-lg)]">
           {/* Coverage band */}
+          <Reveal>
           <div className="mb-20 text-center">
             {/* [AUDIT FIX 2026-09-25 R6-10] 原写法 className="justify-center"
                 + 内联 justifyContent 均无效：.fio-eyebrow 是 inline-flex，
@@ -41,8 +50,10 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
               ))}
             </div>
           </div>
+          </Reveal>
 
           {/* Capability badges */}
+          <Reveal delay={0.1}>
           <div className="mb-20 flex flex-wrap items-center justify-center gap-3">
             {badges.map((badge) => (
               <div
@@ -69,13 +80,79 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
               </div>
             ))}
           </div>
+          </Reveal>
+
+          {/* [v5] Verify row — 可独立核实的信任入口（合约浏览器 / 源码 / 文档） */}
+          <Reveal delay={0.12}>
+            <div className="mb-20">
+              <div className="fio-eyebrow mb-6">
+                {d.verifyCaption}
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                {[
+                  {
+                    key: "contract",
+                    label: d.verifyContract,
+                    href: `https://sepolia.etherscan.io/address/${RISK_REGISTRY_ADDRESS}`,
+                    external: true,
+                  },
+                  {
+                    key: "source",
+                    label: d.verifySource,
+                    href: "https://github.com/FintechGuy71/FidesOrigin",
+                    external: true,
+                  },
+                  {
+                    key: "docs",
+                    label: d.verifyDocs,
+                    href: localize("/docs", lang),
+                    external: false,
+                  },
+                ].map((v) =>
+                  v.external ? (
+                    <a
+                      key={v.key}
+                      href={v.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-2.5 border px-4 py-2.5 transition-colors"
+                      style={{ borderColor: "var(--fio-border-light)", background: "var(--fio-surface)" }}
+                    >
+                      <span className="font-mono text-xs" style={{ color: "var(--fio-text-2)" }}>
+                        {v.label}
+                      </span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" style={{ color: "var(--fio-gold)" }} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+                      </svg>
+                    </a>
+                  ) : (
+                    <Link
+                      key={v.key}
+                      href={v.href}
+                      prefetch={false}
+                      className="group flex items-center gap-2.5 border px-4 py-2.5 transition-colors"
+                      style={{ borderColor: "var(--fio-border-light)", background: "var(--fio-surface)" }}
+                    >
+                      <span className="font-mono text-xs" style={{ color: "var(--fio-text-2)" }}>
+                        {v.label}
+                      </span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform group-hover:translate-x-0.5" style={{ color: "var(--fio-gold)" }} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+                      </svg>
+                    </Link>
+                  )
+                )}
+              </div>
+            </div>
+          </Reveal>
 
           {/* Big quote */}
+          <Reveal delay={0.15}>
           <div className="mx-auto max-w-3xl text-center">
             <div
               aria-hidden="true"
-              className="mb-8 font-serif text-6xl leading-none"
-              style={{ color: "var(--fio-gold)", opacity: 0.25 }}
+              className="mb-6 font-serif text-7xl leading-none"
+              style={{ color: "var(--fio-gold)", opacity: 0.45 }}
             >
               &ldquo;
             </div>
@@ -97,6 +174,7 @@ export default function Trust({ d }: { d: Dict["home"]["trust"] }) {
               </div>
             </div>
           </div>
+          </Reveal>
         </div>
       </div>
     </section>

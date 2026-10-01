@@ -10,6 +10,14 @@ on:
   push:
     branches: [main]
     paths: ["apps/web/**", ".github/workflows/visual-regression.yml"]
+  # [v5] 有意视觉变更后手动刷新基线（避免有意变更被旧基线误判为回归）
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: "重生成基线并回提 main（[skip ci]）"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -38,6 +46,21 @@ jobs:
       - name: Build web (static export)
         run: pnpm --filter @fidesorigin/web run build
 
+      - name: Manual baseline refresh (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.update_snapshots == 'true'
+        run: |
+          cd apps/web && pnpm exec playwright test --update-snapshots
+          cd ../..
+          git config user.name "visual-regression-bot"
+          git config user.email "bot@fidesorigin.com"
+          git add apps/web/test/visual/visual.spec.ts-snapshots/
+          if git diff --cached --quiet; then
+            echo "基线无变化，跳过提交"
+            exit 0
+          fi
+          git commit -m "test(web): 视觉回归基线手动刷新 [skip ci]"
+          git push origin HEAD:main
+
       - name: Bootstrap baselines (first run)
         id: bootstrap
         run: |
@@ -65,7 +88,7 @@ jobs:
           fi
 
       - name: Run visual comparison
-        if: steps.bootstrap.outputs.bootstrap != 'true'
+        if: steps.bootstrap.outputs.bootstrap != 'true' && github.event.inputs.update_snapshots != 'true'
         run: |
           if [ ! -d apps/web/test/visual/visual.spec.ts-snapshots ]; then
             echo "::notice::快照基线尚未建立（首个 PR 正在自举）——本次跳过对比"

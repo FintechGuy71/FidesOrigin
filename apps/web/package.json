@@ -6,11 +6,13 @@
   "description": "FidesOrigin Next.js Web Application",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/fetch-metrics.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "verify:style": "python _verify.py && python _crosscheck.py",
+    "perf:budget": "node scripts/perf-budget.mjs",
     "clean": "rm -rf .next dist",
     "test:visual": "playwright test"
   },
