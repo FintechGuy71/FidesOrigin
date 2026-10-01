@@ -5,7 +5,8 @@
 深海军蓝底 + 青铜金刻线 + 合规网络网格 + 封印徽章。
 
 用法：python scripts/generate-og.py
-产物：brand/og-image.png 与 public/brand/og-image.png（og-image.svg 为手写同源文件）
+产物：brand/og-image.png 与 public/brand/og-image.png（og-image.svg 为手写同源文件），
+     以及三个本地化变体 og-image-{cn,tw,jp}.png（写入 public/brand/）。
 """
 import math
 import random
@@ -30,6 +31,42 @@ STEEL = (122, 148, 171)    # --fio-steel
 S = 2  # 2x supersampling
 W, H = 1200 * S, 630 * S
 
+# 四语言文案（标题与 i18n/dictionaries 的 home.hero 保持一致）
+VARIANTS = {
+    "en": {
+        "eyebrow": "PROGRAMMABLE ON-CHAIN COMPLIANCE",
+        "sub1": "Compliance, executed at",
+        "sub2": "block speed.",
+        "metrics": "20,645+ RISK ADDRESSES   ·   <50MS SCREENING   ·   6 NETWORKS   ·   24/7 ENFORCEMENT",
+        "tracking": 3.2,
+        "out": ["brand/og-image.png", "public/brand/og-image.png"],
+    },
+    "cn": {
+        "eyebrow": "可编程链上合规",
+        "sub1": "合规，以区块速度",
+        "sub2": "实时执行。",
+        "metrics": "20,645+ 风险地址   ·   <50MS 筛查   ·   6 条网络   ·   24/7 自动执行",
+        "tracking": 4.0,
+        "out": ["public/brand/og-image-cn.png"],
+    },
+    "tw": {
+        "eyebrow": "可程式化鏈上合規",
+        "sub1": "合規，以區塊速度",
+        "sub2": "即時執行。",
+        "metrics": "20,645+ 風險地址   ·   <50MS 篩查   ·   6 條網絡   ·   24/7 自動執行",
+        "tracking": 4.0,
+        "out": ["public/brand/og-image-tw.png"],
+    },
+    "jp": {
+        "eyebrow": "プログラマブル・オンチェーン・コンプライアンス",
+        "sub1": "コンプライアンスを、",
+        "sub2": "ブロックスピードで実行",
+        "metrics": "20,645+ リスクアドレス   ·   <50MS スクリーニング   ·   6 ネットワーク   ·   24/7 実行",
+        "tracking": 1.2,
+        "out": ["public/brand/og-image-jp.png"],
+    },
+}
+
 def font(size, bold=False):
     name = "NotoSansSC-Bold.ttf" if bold else "NotoSansSC-Regular.ttf"
     return ImageFont.truetype(str(FONT_DIR / name), size * S)
@@ -45,7 +82,7 @@ def draw_tracked(draw, xy, text, f, fill, tracking):
         x += draw.textlength(ch, font=f) + tracking * S
     return x
 
-def main():
+def render(v):
     img = Image.new("RGB", (W, H), INK)
     d = ImageDraw.Draw(img)
 
@@ -80,7 +117,6 @@ def main():
         r = (3.4 if hot else 2.2) * S
         if hot:
             d.ellipse([x - r * 3, y - r * 3, x + r * 3, y + r * 3], fill=(GOLD[0], GOLD[1], GOLD[2]))
-            # 覆盖为半透明光晕感：外圈重画暗化
         d.ellipse([x - r, y - r, x + r, y + r], fill=GOLD if hot else STEEL)
 
     # ── 外框 hairline + 四角刻线 ──
@@ -96,7 +132,6 @@ def main():
     bx, by, br = W * 0.862, H * 0.24, 56 * S
     d.ellipse([bx - br, by - br, bx + br, by + br], outline=GOLD, width=int(1.4 * S))
     d.ellipse([bx - br * 0.68, by - br * 0.68, bx + br * 0.68, by + br * 0.68], outline=BORDER_L, width=S)
-    # 盾 + 对勾
     sw, sh = 24 * S, 28 * S
     pts = [
         (bx, by - sh), (bx + sw, by - sh * 0.55), (bx + sw, by + sh * 0.25),
@@ -108,20 +143,19 @@ def main():
 
     # ── 文案（左对齐）──
     x0 = 84 * S
-    # eyebrow
-    draw_tracked(d, (x0 + 30 * S, 118 * S), "PROGRAMMABLE ON-CHAIN COMPLIANCE",
-                 font(17, bold=True), GOLD, tracking=3.2)
+    # eyebrow（拉丁语系宽字距；CJK 用语言自带 tracking）
+    draw_tracked(d, (x0 + 30 * S, 118 * S), v["eyebrow"],
+                 font(17, bold=True), GOLD, tracking=v["tracking"])
     d.line([(x0, 118 * S + 12 * S), (x0 + 22 * S, 118 * S + 12 * S)], fill=GOLD, width=S)
 
     # 主标题
     d.text((x0, 168 * S), "FidesOrigin", font=font(96, bold=True), fill=TEXT)
     # 副标题两行
-    d.text((x0, 300 * S), "Compliance, executed at", font=font(44), fill=lerp(TEXT, TEXT3, 0.25))
-    d.text((x0, 362 * S), "block speed.", font=font(44, bold=True), fill=CREAM)
+    d.text((x0, 300 * S), v["sub1"], font=font(44), fill=lerp(TEXT, TEXT3, 0.25))
+    d.text((x0, 362 * S), v["sub2"], font=font(44, bold=True), fill=CREAM)
 
     # 底部指标行（mono 风，字符级字距）
-    metrics = "20,645+ RISK ADDRESSES   ·   <50MS SCREENING   ·   6 NETWORKS   ·   24/7 ENFORCEMENT"
-    draw_tracked(d, (x0, 500 * S), metrics, font(15, bold=True), TEXT3, tracking=1.6)
+    draw_tracked(d, (x0, 500 * S), v["metrics"], font(15, bold=True), TEXT3, tracking=1.6)
 
     # 右下角域名
     dom = "fidesorigin.com"
@@ -130,10 +164,15 @@ def main():
     d.text((W - 84 * S - dw, 560 * S), dom, font=fdom, fill=GOLD)
 
     # ── 降采样输出 ──
-    img = img.resize((1200, 630), Image.LANCZOS)
-    for out in (ROOT / "brand" / "og-image.png", ROOT / "public" / "brand" / "og-image.png"):
-        img.save(out, optimize=True)
-        print("written:", out)
+    return img.resize((1200, 630), Image.LANCZOS)
+
+def main():
+    for lang, v in VARIANTS.items():
+        img = render(v)
+        for rel in v["out"]:
+            out = ROOT / rel
+            img.save(out, optimize=True)
+            print(f"written [{lang}]:", out)
 
 if __name__ == "__main__":
     main()

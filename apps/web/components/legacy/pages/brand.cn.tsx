@@ -104,7 +104,7 @@ export default function ContentBrandCN() {
           <div className="brand-grid">
             {/* Logo */}
             <div className="brand-panel">
-              <h3>标识</h3>
+              <h2>标识</h2>
               <div className="brand-logo-row">
                 <div className="brand-logo-cell">
                   <picture><source srcSet="/brand/logo-dark-icon.webp" type="image/webp" /><img src="/brand/logo-dark-icon.png" loading="lazy" alt="FidesOrigin icon" width={56} height={56}  /></picture>
@@ -125,7 +125,7 @@ export default function ContentBrandCN() {
 
             {/* Palette */}
             <div className="brand-panel">
-              <h3>色板</h3>
+              <h2>色板</h2>
               <div className="swatch-grid">
                 {SWATCHES.map((s) => (
                   <div className="swatch" key={s.token}>
@@ -141,7 +141,7 @@ export default function ContentBrandCN() {
 
             {/* Typography */}
             <div className="brand-panel">
-              <h3>字体</h3>
+              <h2>字体</h2>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
                   Fraunces — 展示标题
@@ -164,7 +164,7 @@ export default function ContentBrandCN() {
 
             {/* Motif */}
             <div className="brand-panel">
-              <h3>母题 — 账本精密</h3>
+              <h2>母题 — 账本精密</h2>
               <div className="motif-demo" />
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.7 }}>
                 四角刻线、细线规则与合规网格——每个图形元素都承载信息，无意义不装饰。

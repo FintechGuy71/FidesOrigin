@@ -47,17 +47,38 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
   const langHref = (l: Locale) =>
     available.includes(l) ? localize(pagePath, l) : homeHref(l);
 
+  const chrome = dict.home.chrome;
+  /* [统一 v5] 经典站导航与新版首页同一套信息架构：
+     Capabilities(首页锚点) / Pricing / Docs / Blog / Demo / GitHub，
+     标签统一取自 home.chrome，不再维护第二套 nav.* 文案。 */
   const links = [
-    { href: `${homeHref(lang)}#features`, label: dict.nav.features },
-    { href: localize("/use-cases/stablecoin-compliance", lang), label: dict.nav.useCases },
-    { href: localize("/pricing", lang), label: dict.nav.pricing },
-    { href: localize("/docs", lang), label: dict.nav.docs },
-    { href: localize("/blog", lang), label: dict.nav.blog },
+    { href: `${homeHref(lang)}#capabilities`, label: chrome.capabilities },
+    { href: localize("/pricing", lang), label: chrome.pricing },
+    { href: localize("/docs", lang), label: chrome.docs },
+    { href: localize("/blog", lang), label: chrome.blog },
+    { href: localize("/demo", lang), label: chrome.demo },
+    { href: "https://github.com/FintechGuy71/FidesOrigin", label: chrome.github, external: true },
   ];
 
-  // EN has a dedicated /contact page; other locales jump to the
-  // localized homepage contact section.
-  const ctaHref = lang === "en" ? "/contact" : `${homeHref(lang)}#contact`;
+  /* [统一 v5] CTA 与首页一致：gold outline 的 Dashboard 入口 */
+  const ctaHref = "/admin/dashboard";
+  const ctaLabel = chrome.dashboard;
+
+  /* [v5] 滚动态：与新版页头同一行为（>24px 加 .scrolled → hairline 增强 + 投影） */
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        document.querySelector(".nav")?.classList.toggle("scrolled", window.scrollY > 24);
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   /* 移动菜单：Esc 关闭 + 打开时锁滚动 + 焦点管理。
      该菜单是常驻 DOM 的 role="dialog" aria-modal="true"（靠 .active 显隐），
@@ -171,7 +192,7 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
           <a href={homeHref(lang)} className="nav-logo">
             <img
               src="/brand/logo-icon-56.png"
-              alt="FidesOrigin"
+              alt=""
               className="nav-logo-icon"
               width={28}
               height={28}
@@ -179,15 +200,22 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
             FidesOrigin
           </a>
           <div className="nav-left">
-            {links.map((l) => (
+            {links.map((l) =>
+              l.external ? (
+                /* GitHub 外链：原生 <a> 新窗口打开 */
+                <a key={l.href + l.label} href={l.href} target="_blank" rel="noopener noreferrer">
+                  {l.label}
+                </a>
+              ) : (
               /* [AUDIT FIX R2-049] 站内导航改 next/link（同 root layout 组内
-                 客户端路由，无整页刷新；跨 root layout 如 #features 指向首页时
+                 客户端路由，无整页刷新；跨 root layout 如 #capabilities 指向首页时
                  Link 自动回退硬导航，行为与 <a> 一致）。
                  prefetch=false：91 页站点避免默认预取扫全站。 */
               <Link key={l.href + l.label} href={l.href} prefetch={false}>
                 {l.label}
               </Link>
-            ))}
+              )
+            )}
           </div>
           <div className="nav-actions">
             <div className="lang-dropdown" ref={langWrapRef}>
@@ -249,7 +277,7 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
               </div>
             )}
             <Link href={ctaHref} className="nav-cta" prefetch={false}>
-              {dict.nav.getStarted}
+              {ctaLabel}
             </Link>
           </div>
           <button
@@ -292,11 +320,23 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
             <path d="M6 6l12 12M6 18L18 6" />
           </svg>
         </button>
-        {links.map((l) => (
-          <Link key={l.href + l.label} href={l.href} prefetch={false} onClick={() => setMobileOpen(false)}>
-            {l.label}
-          </Link>
-        ))}
+        {links.map((l) =>
+          l.external ? (
+            <a
+              key={l.href + l.label}
+              href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileOpen(false)}
+            >
+              {l.label}
+            </a>
+          ) : (
+            <Link key={l.href + l.label} href={l.href} prefetch={false} onClick={() => setMobileOpen(false)}>
+              {l.label}
+            </Link>
+          )
+        )}
         <div className="lang-row">
           {locales.map((l) => (
             <Link key={l} href={langHref(l)} prefetch={false}>

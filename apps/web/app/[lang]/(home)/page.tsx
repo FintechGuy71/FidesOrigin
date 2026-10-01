@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ogImageFor } from "@/app/_lib/site";
 import Features from "@/components/Features";
 import Hero from "@/components/HeroHome";
 import HomeContact from "@/components/HomeContact";
@@ -41,12 +42,12 @@ export async function generateMetadata({
       description: m.description,
       type: "website",
       url: canonicalUrl("/", lang),
-      images: ["https://fidesorigin.com/brand/og-image.png"],
+      images: [ogImageFor(lang)],
     },
     twitter: {
       card: "summary_large_image",
       site: "@fidesorigin",
-      images: ["https://fidesorigin.com/brand/og-image.png"],
+      images: [ogImageFor(lang)],
     },
   };
 }
@@ -65,7 +66,7 @@ export default async function LocalizedHome({
       <Workflows d={dict.home.workflows} />
       <Features d={dict.home.features} />
       <Segments d={dict.home.segments} />
-      <Trust d={dict.home.trust} />
+      <Trust d={dict.home.trust} lang={lang} />
       <Testimonials d={dict.home.journey} />
       <HomeContact d={dict.home.contact} lang={lang} />
     </>

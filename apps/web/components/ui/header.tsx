@@ -51,10 +51,29 @@ export default function Header({
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const mobileMenuId = "mobile-menu";
   const langMenuId = "lang-menu";
   const langRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
+
+  /* [v5] 滚动态：离开顶栏后强化 hairline 与投影 —— 顶级机构站（GS/JPM）
+     的标准做法，让固定页头在内容之上始终有清晰的层级分离。
+     passive 监听 + rAF 阈值判断，滚动零卡顿。 */
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 24);
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   /* 语言菜单 + 移动菜单：点击外部 / Esc 关闭。
      原先只有语言菜单有此逻辑，移动菜单既不能 Esc 关闭、点击外部也不收起，
@@ -129,7 +148,12 @@ export default function Header({
         background: "var(--fio-ink-scrim)",
         backdropFilter: "blur(24px) saturate(1.2)",
         WebkitBackdropFilter: "blur(24px) saturate(1.2)",
-        borderBottom: "1px solid var(--fio-border-subtle)",
+        /* [v5] 滚动态：hairline 增强 + 阴影阶梯的 pop 档 */
+        borderBottom: scrolled
+          ? "1px solid var(--fio-border-light)"
+          : "1px solid var(--fio-border-subtle)",
+        boxShadow: scrolled ? "var(--fio-shadow-pop)" : "none",
+        transition: "border-color var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out)",
       }}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -165,7 +189,7 @@ export default function Header({
                 /* hover 态改用 CSS 类：原先由 onMouseEnter 直接改写 DOM 的
                    style.color，内联优先级高于任何 CSS，触屏点击后 hover 态
                    会粘滞，且无法被 prefers-reduced-motion 等媒体查询控制。 */
-                className="rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+                className="fio-nav-link rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
               >
                 {link.label}
               </a>
@@ -174,7 +198,7 @@ export default function Header({
               <a
                 key={link.label}
                 href={link.href}
-                className="rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+                className="fio-nav-link rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
               >
                 {link.label}
               </a>
@@ -187,7 +211,7 @@ export default function Header({
                 key={link.label}
                 href={link.href}
                 prefetch={false}
-                className="rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
+                className="fio-nav-link rounded-md px-3 py-1.5 text-sm text-[var(--fio-text-2)] transition-colors hover:text-[var(--fio-text)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none"
               >
                 {link.label}
               </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import CountUp from "@/components/CountUp";
 import HeroScreen from "@/components/HeroScreen";
 import type { Dict } from "@/i18n/dictionaries/en";
@@ -10,6 +10,8 @@ import type { Locale } from "@/i18n/locales";
    HERO v4 — "Compliance Mesh"
    Canvas 粒子网络（风险情报网格）：节点漂移、近距连线、
    高亮节点脉冲。下方是等宽数字指标带 + 旋转监管封印。
+   [v5] 右侧筛查面板交易流滚动注入（新行顶部进入），
+   "实时"从文案变成体感；reduced-motion 下静态。
    ================================================================ */
 
 type Particle = {
@@ -22,6 +24,17 @@ type Particle = {
   phase: number;
 };
 
+/* [v5] 交易流行 */
+type TxRow = { id: number; addr: string; flagged: boolean };
+
+function randomAddr(): string {
+  const hex = () =>
+    Array.from({ length: 4 }, () =>
+      Math.floor(Math.random() * 16).toString(16)
+    ).join("");
+  return `0x${hex()}...${hex()}`;
+}
+
 export default function HeroHome({
   d,
   lang,
@@ -30,6 +43,27 @@ export default function HeroHome({
   lang: Locale;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  /* [v5] 交易流：每 ~4.5s 注入一条新筛查记录（新行进入动效）。
+     首 3 条种子用确定性地址（SSR 输出稳定，hydration 零漂移）；
+     reduced-motion 下不启动定时器，面板保持静态。 */
+  const txIdRef = useRef(3);
+  const [txRows, setTxRows] = useState<TxRow[]>([]);
+  useEffect(() => {
+    setTxRows([
+      { id: 0, addr: "0x7a2f...9e3d", flagged: false },
+      { id: 1, addr: "0x3b1c...7a2e", flagged: true },
+      { id: 2, addr: "0x9f4d...2c1b", flagged: false },
+    ]);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = setInterval(() => {
+      setTxRows((prev) => [
+        { id: txIdRef.current++, addr: randomAddr(), flagged: Math.random() < 0.22 },
+        ...prev,
+      ].slice(0, 3));
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
 
   /* ---- Compliance mesh: particle network with proximity links ---- */
   useEffect(() => {
@@ -51,8 +85,16 @@ export default function HeroHome({
     let w = 0, h = 0;
     let particles: Particle[] = [];
 
+    /* [v5 性能] 低端机降级：核数/内存低则粒子密度减半。
+       （隐藏/离屏暂停已由 R6-11 提供，此处不重复。） */
+    const lowPower =
+      (navigator.hardwareConcurrency ?? 8) <= 4 ||
+      // @ts-expect-error deviceMemory 是 Chromium 专有实验字段
+      (navigator.deviceMemory ?? 8) <= 4;
+    const densityDivisor = lowPower ? 52000 : 26000;
+
     const seed = () => {
-      const count = Math.max(36, Math.min(90, Math.floor((w * h) / 26000)));
+      const count = Math.max(36, Math.min(90, Math.floor((w * h) / densityDivisor)));
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -188,7 +230,8 @@ export default function HeroHome({
           {/* LEFT — Positioning */}
           <div className="text-center lg:col-span-7 lg:text-left">
             <div className="fio-animate-fade-up fio-delay-1 mb-9">
-              <span className="fio-eyebrow">{d.badge}</span>
+              {/* [v5] 公告胶囊：粒子背景上的可读性 + 机构站 announcement pill 惯例 */}
+              <span className="fio-badge">{d.badge}</span>
             </div>
 
             <h1
@@ -302,24 +345,20 @@ export default function HeroHome({
                   </div>
                 </div>
 
-                {/* Transaction stream */}
-                <div className="space-y-2">
-                  {[
-                    { addr: "0x7a2f...9e3d", status: d.statusCleared, risk: "Low" },
-                    { addr: "0x3b1c...7a2e", status: d.statusFlagged, risk: "High" },
-                    { addr: "0x9f4d...2c1b", status: d.statusCleared, risk: "Low" },
-                  ].map((tx, i) => (
+                {/* Transaction stream — [v5] 滚动注入，新行自顶部进入 */}
+                <div className="space-y-2" aria-live="off">
+                  {txRows.map((tx, i) => (
                     <div
-                      key={i}
-                      className="flex items-center justify-between px-3 py-2"
+                      key={tx.id}
+                      className={`flex items-center justify-between px-3 py-2 ${i === 0 && tx.id >= 3 ? "fio-tx-enter" : ""}`}
                       style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
                     >
                       <div className="flex items-center gap-3">
                         <span
                           className="h-1.5 w-1.5 rounded-full"
                           style={{
-                            background: tx.risk === "Low" ? "var(--fio-gold)" : "var(--fio-danger)",
-                            boxShadow: `0 0 4px ${tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)"}`,
+                            background: tx.flagged ? "var(--fio-danger)" : "var(--fio-gold)",
+                            boxShadow: `0 0 4px ${tx.flagged ? "var(--fio-danger-dim)" : "var(--fio-gold-dim)"}`,
                           }}
                         />
                         <span className="font-mono text-xs" style={{ color: "var(--fio-text-2)" }}>
@@ -329,11 +368,11 @@ export default function HeroHome({
                       <span
                         className="px-2 py-0.5 font-mono text-[0.6875rem]"
                         style={{
-                          color: tx.risk === "Low" ? "var(--fio-accent)" : "var(--fio-danger-light)",
-                          background: tx.risk === "Low" ? "var(--fio-gold-dim)" : "var(--fio-danger-dim)",
+                          color: tx.flagged ? "var(--fio-danger-light)" : "var(--fio-accent)",
+                          background: tx.flagged ? "var(--fio-danger-dim)" : "var(--fio-gold-dim)",
                         }}
                       >
-                        {tx.status}
+                        {tx.flagged ? d.statusFlagged : d.statusCleared}
                       </span>
                     </div>
                   ))}

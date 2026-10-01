@@ -27,6 +27,14 @@ export default function DocsFx({ copyLabel, copiedLabel }: Props) {
       btn.textContent = copyLabel;
     });
 
+    /* [a11y v5] 可横向滚动的代码块必须键盘可达（axe scrollable-region-focusable）。
+       只对实际溢出的 <pre> 加 tabindex，避免无谓的 Tab 停靠点。 */
+    document.querySelectorAll<HTMLElement>(".docs-code-block > pre").forEach((pre) => {
+      if (pre.scrollWidth > pre.clientWidth && !pre.hasAttribute("tabindex")) {
+        pre.setAttribute("tabindex", "0");
+      }
+    });
+
     const onCopy = (e: Event) => {
       const btn = (e.target as Element).closest(".docs-code-copy");
       if (!btn) return;

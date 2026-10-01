@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
@@ -44,6 +45,7 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="py-[var(--section-py)] md:py-[var(--section-py-lg)]">
           {/* Section header — left-aligned editorial grid */}
+          <Reveal>
           <div className="grid gap-10 pb-16 md:grid-cols-12 md:pb-24">
             <div className="md:col-span-6">
               <div className="fio-eyebrow mb-5">{d.caption}</div>
@@ -55,6 +57,7 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
               <p className="fio-body-lg">{d.body}</p>
             </div>
           </div>
+          </Reveal>
 
           {/* Pipeline — numbered technical columns */}
           <div className="relative">
@@ -120,6 +123,7 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
           </div>
 
           {/* Data flow strip — blueprint panel */}
+          <Reveal delay={0.15}>
           <div
             className="fio-ticks mx-auto mt-20 max-w-3xl border p-7"
             style={{
@@ -154,6 +158,7 @@ export default function Workflows({ d }: { d: Dict["home"]["workflows"] }) {
               </span>
             </div>
           </div>
+          </Reveal>
         </div>
       </div>
     </section>

@@ -1,4 +1,5 @@
 import type { Dict } from "./en";
+import { siteMetrics } from "../metrics.generated";
 
 /* 日本語 — サイト共通文言 */
 const jp: Dict = {
@@ -97,7 +98,7 @@ const jp: Dict = {
   addressCheck: {
     micro: "コンプライアンスツール",
     title: "アドレスリスクチェック",
-    lead: "20,645件以上のリスクアドレスをリアルタイムで検索。OFAC、Chainalysis など複数のソースをカバー。",
+    lead: `${siteMetrics.riskAddresses}のリスクアドレスをリアルタイムで検索。OFAC、Chainalysis など複数のソースをカバー。`,
     totalLabel: "累計スクリーニング",
     blackLabel: "ブロック / 制裁",
     greyLabel: "フラグ / 保留",
@@ -144,6 +145,11 @@ const jp: Dict = {
       language: "言語",
       toggleMenu: "メニューを開く",
       rights: "© 2026 FidesOrigin. 全著作権所有。",
+      tagline: "規制対象デジタル資産のためのプログラマブル・オンチェーン・コンプライアンス。",
+      colProduct: "製品",
+      colResources: "リソース",
+      colCompany: "会社",
+      license: "オープンソース · BUSL-1.1",
     },
     hero: {
       badge: "v1.0 — 香港ステーブルコイン条例対応",
@@ -155,9 +161,9 @@ const jp: Dict = {
       statRisk: "リスクスコア",
       statRiskValue: "低",
       statTx: "監視中トランザクション",
-      statTxValue: "12,847",
+      statTxValue: siteMetrics.txMonitored,
       statAlerts: "アラート",
-      statAlertsValue: "3",
+      statAlertsValue: siteMetrics.alertsToday,
       scanLabel: "ライブリスクスキャン",
       scanActive: "稼働中",
       statusCleared: "クリア",
@@ -176,7 +182,7 @@ const jp: Dict = {
         fullDemo: "フルデモ",
       },
       metrics: [
-        { value: "20,645+", label: "オンチェーンリスクアドレス" },
+        { value: siteMetrics.riskAddresses, label: "オンチェーンリスクアドレス" },
         { value: "<50ms", label: "スクリーニング遅延" },
         { value: "6", label: "対応ネットワーク" },
         { value: "24/7", label: "自律執行" },
@@ -247,6 +253,10 @@ const jp: Dict = {
       quote: "コンプライアンスと DeFi の交差点こそ、次の1兆ドルの機関資本が流入する場所です。",
       quoteName: "チーフ・コンプライアンス・オフィサー",
       quoteRole: "香港ライセンス取得ステーブルコイン発行者",
+      verifyCaption: "オンチェーンで検証",
+      verifyContract: "RiskRegistry · Sepolia",
+      verifySource: "オープンソース · GitHub",
+      verifyDocs: "技術ドキュメント",
     },
     journey: {
       caption: "ユースケース",

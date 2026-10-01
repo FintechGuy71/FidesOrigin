@@ -54,7 +54,7 @@ const PAGE_CSS = `
     }
     .pricing-features li:last-child { border-bottom: none; }
     .pricing-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
-    .pricing-features .missing { color: var(--text-muted); opacity: 0.8; }
+    .pricing-features .missing { color: var(--text-muted); }
     .pricing-features .missing svg { color: var(--text-muted); }
     .pricing-cta { width: 100%; text-align: center; justify-content: center; }
     .pricing-note {
@@ -66,7 +66,7 @@ const PAGE_CSS = `
       border-radius: var(--radius-sm);
     }
     .pricing-note p { color: var(--text-secondary); font-size: 0.875rem; margin: 0; }
-    .pricing-note a { color: var(--accent); }
+    .pricing-note a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
     .compare-table-wrap {
       overflow-x: auto; margin-top: 48px;
       /* [R15-R3] 滚动阴影提示：移动端表格可横向滚动时，两侧渐隐阴影

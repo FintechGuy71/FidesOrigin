@@ -161,6 +161,12 @@ img { max-width: 100%; display: block; }
   -webkit-backdrop-filter: blur(20px) saturate(1.2); /* [AUDIT FIX 2026-09-25 R7-5] Safari ≤15 需前缀 */
   backdrop-filter: blur(20px) saturate(1.2);
   border-bottom: 1px solid var(--border);
+  /* [统一 v5] 与新版页头同一滚动态（Header.tsx >24px 加 .scrolled） */
+  transition: border-color var(--dur-3, 0.3s) var(--ease-out), box-shadow var(--dur-3, 0.3s) var(--ease-out);
+}
+.nav.scrolled {
+  border-bottom-color: var(--fio-border-light);
+  box-shadow: var(--fio-shadow-pop, 0 12px 40px rgba(0,0,0,0.35));
 }
 .nav-inner {
   display: grid;
@@ -796,11 +802,19 @@ img { max-width: 100%; display: block; }
   max-width: 280px;
   line-height: 1.6;
 }
+/* [统一 v5] 列标题改用等宽大写小字 + 宽字距，与新版页脚同一语言 */
 .footer-col h2 {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   margin-bottom: 16px;
-  color: var(--text);
+  color: var(--text-muted);
+}
+:is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .footer-col h2 {
+  font-family: var(--font-sans);
+  letter-spacing: 0.08em;
 }
 .footer-col a {
   display: block;
@@ -816,8 +830,10 @@ img { max-width: 100%; display: block; }
   align-items: center;
   margin-top: 40px;
   padding-top: 24px;
-  border-top: 1px solid var(--border);
-  font-size: 0.8rem;
+  /* [统一 v5] hairline 与等宽小字，对齐新版法律行 */
+  border-top: 1px solid var(--fio-border-hairline);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 @media (max-width: 768px) {
@@ -1144,8 +1160,10 @@ html.js .reveal:not(.visible) {
   min-width: 0;
 }
 .docs-content h1 {
+  /* [统一 v5] 文档页大标题与全站标题系统同源：Fraunces 衬线 */
+  font-family: var(--font-serif);
   font-size: clamp(2rem, 4vw, 2.5rem);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.2;
   letter-spacing: -0.02em;
   margin-bottom: 12px;

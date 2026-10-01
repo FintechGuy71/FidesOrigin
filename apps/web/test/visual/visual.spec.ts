@@ -35,3 +35,26 @@ for (const { path, name } of PAGES) {
     await shoot(page, path, name);
   });
 }
+
+/* [v5] 移动端视觉基线：首页 390px 首屏（移动排版回归的最低保障） */
+const MOBILE_PAGES: { path: string; name: string }[] = [
+  { path: "/", name: "mobile-home-en" },
+  { path: "/cn", name: "mobile-home-cn" },
+];
+
+for (const { path, name } of MOBILE_PAGES) {
+  test(`visual: ${name}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await shoot(page, path, name);
+  });
+}
+
+/* [v5] 页脚法律行回归：滚到页底截屏（多栏页脚 + 许可行是机构级基线要素） */
+test("visual: footer-en", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(600);
+  await expect(page).toHaveScreenshot("footer-en.png");
+});

@@ -30,7 +30,7 @@ export default function Home() {
       <Workflows d={dict.home.workflows} />
       <Features d={dict.home.features} />
       <Segments d={dict.home.segments} />
-      <Trust d={dict.home.trust} />
+      <Trust d={dict.home.trust} lang="en" />
       <Testimonials d={dict.home.journey} />
       <HomeContact d={dict.home.contact} lang="en" />
     </>

@@ -104,7 +104,7 @@ export default function ContentBrandJP() {
           <div className="brand-grid">
             {/* Logo */}
             <div className="brand-panel">
-              <h3>ロゴ</h3>
+              <h2>ロゴ</h2>
               <div className="brand-logo-row">
                 <div className="brand-logo-cell">
                   <picture><source srcSet="/brand/logo-dark-icon.webp" type="image/webp" /><img src="/brand/logo-dark-icon.png" loading="lazy" alt="FidesOrigin icon" width={56} height={56}  /></picture>
@@ -125,7 +125,7 @@ export default function ContentBrandJP() {
 
             {/* Palette */}
             <div className="brand-panel">
-              <h3>パレット</h3>
+              <h2>パレット</h2>
               <div className="swatch-grid">
                 {SWATCHES.map((s) => (
                   <div className="swatch" key={s.token}>
@@ -141,7 +141,7 @@ export default function ContentBrandJP() {
 
             {/* Typography */}
             <div className="brand-panel">
-              <h3>タイポグラフィ</h3>
+              <h2>タイポグラフィ</h2>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
                   Fraunces — ディスプレイ
@@ -164,7 +164,7 @@ export default function ContentBrandJP() {
 
             {/* Motif */}
             <div className="brand-panel">
-              <h3>モチーフ — Ledger Precision</h3>
+              <h2>モチーフ — Ledger Precision</h2>
               <div className="motif-demo" />
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.7 }}>
                 コーナーの刻線、ヘアラインルール、コンプライアンスメッシュ——すべてのグラフィック要素が情報を担います。意味のない装飾はしません。

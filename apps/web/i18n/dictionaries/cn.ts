@@ -1,4 +1,5 @@
 import type { Dict } from "./en";
+import { siteMetrics } from "../metrics.generated";
 
 /* 简体中文 — 站点框架文案 */
 const cn: Dict = {
@@ -97,7 +98,7 @@ const cn: Dict = {
   addressCheck: {
     micro: "合规工具",
     title: "地址风险查询",
-    lead: "实时查询 20,645+ 个风险地址，覆盖 OFAC、Chainalysis 等多个来源。",
+    lead: `实时查询 ${siteMetrics.riskAddresses} 个风险地址，覆盖 OFAC、Chainalysis 等多个来源。`,
     totalLabel: "累计筛查",
     blackLabel: "拦截 / 制裁",
     greyLabel: "标记 / 暂挂",
@@ -144,6 +145,11 @@ const cn: Dict = {
       language: "语言",
       toggleMenu: "打开菜单",
       rights: "© 2026 FidesOrigin. 保留所有权利。",
+      tagline: "面向受监管数字资产的可编程链上合规协议。",
+      colProduct: "产品",
+      colResources: "资源",
+      colCompany: "公司",
+      license: "开源许可 · BUSL-1.1",
     },
     hero: {
       badge: "v1.0 — 已就绪香港《稳定币条例》",
@@ -155,9 +161,9 @@ const cn: Dict = {
       statRisk: "风险评分",
       statRiskValue: "低",
       statTx: "已监控交易",
-      statTxValue: "12,847",
+      statTxValue: siteMetrics.txMonitored,
       statAlerts: "告警",
-      statAlertsValue: "3",
+      statAlertsValue: siteMetrics.alertsToday,
       scanLabel: "实时风险扫描",
       scanActive: "运行中",
       statusCleared: "已放行",
@@ -176,7 +182,7 @@ const cn: Dict = {
         fullDemo: "完整演示",
       },
       metrics: [
-        { value: "20,645+", label: "链上风险地址" },
+        { value: siteMetrics.riskAddresses, label: "链上风险地址" },
         { value: "<50ms", label: "筛查延迟" },
         { value: "6", label: "支持网络" },
         { value: "24/7", label: "自治执行" },
@@ -247,6 +253,10 @@ const cn: Dict = {
       quote: "合规与 DeFi 的交汇处，将是下一个万亿美元级机构资本入场的入口。",
       quoteName: "首席合规官",
       quoteRole: "香港持牌稳定币发行商",
+      verifyCaption: "链上自行验证",
+      verifyContract: "RiskRegistry · Sepolia",
+      verifySource: "开源代码 · GitHub",
+      verifyDocs: "技术文档",
     },
     journey: {
       caption: "应用场景",

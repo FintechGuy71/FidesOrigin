@@ -1,5 +1,6 @@
 "use client";
 
+import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 
 /* ================================================================
@@ -18,6 +19,7 @@ export default function Segments({ d }: { d: Dict["home"]["segments"] }) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
         <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
           {/* Section header — left-aligned, editorial */}
+          <Reveal>
           <div className="grid gap-10 pb-16 md:grid-cols-12 md:pb-20">
             <div className="md:col-span-5">
               <div className="fio-eyebrow mb-5">{d.caption}</div>
@@ -29,14 +31,16 @@ export default function Segments({ d }: { d: Dict["home"]["segments"] }) {
               <p className="fio-body-lg">{d.body}</p>
             </div>
           </div>
+          </Reveal>
 
           {/* Three verticals — hairline columns */}
+          <Reveal delay={0.12}>
           <div className="grid gap-px md:grid-cols-3" style={{ background: "var(--fio-border-hairline)", border: "1px solid var(--fio-border-hairline)" }}>
             {segments.map((s) => (
               <div
                 key={s.num}
-                className="group relative p-8 transition-colors duration-300 md:p-10"
-                style={{ background: "var(--fio-ink)" }}
+                /* [v5] hover 底色过渡叠加底线生长（原仅底线一条反馈） */
+                className="group relative bg-[var(--fio-ink)] p-8 transition-colors duration-300 hover:bg-[var(--fio-ink-soft)] md:p-10"
               >
                 <div className="fio-num mb-8 text-sm font-medium" style={{ color: "var(--fio-gold)" }}>
                   {s.num}
@@ -80,6 +84,7 @@ export default function Segments({ d }: { d: Dict["home"]["segments"] }) {
               </div>
             ))}
           </div>
+          </Reveal>
         </div>
       </div>
     </section>

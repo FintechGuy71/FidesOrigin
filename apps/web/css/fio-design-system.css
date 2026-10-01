@@ -448,6 +448,87 @@
     font-style: normal;
   }
 
+  /* [v5] Announcement badge — hero 顶部公告胶囊。
+     在粒子网格背景上保证可读性：半透明底 + hairline 描边。 */
+  .fio-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 16px;
+    border: 1px solid var(--fio-gold-dim);
+    border-radius: 999px;
+    background: var(--fio-gold-glow);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fio-gold);
+  }
+  .fio-badge::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--fio-gold);
+    box-shadow: 0 0 8px var(--fio-gold-dim);
+  }
+  :is([lang="zh-CN"], [lang="zh-TW"], [lang="zh-HK"], [lang="ja"]) .fio-badge {
+    font-family: var(--font-sans);
+    letter-spacing: 0.08em;
+    text-transform: none;
+  }
+
+  /* [v5] Nav link — hover 下划线自左向右生长（机构站标准微交互） */
+  .fio-nav-link {
+    position: relative;
+  }
+  .fio-nav-link::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 2px;
+    height: 1px;
+    background: var(--fio-gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-3) var(--ease-out);
+  }
+  .fio-nav-link:hover::after,
+  .fio-nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* [v5] Scroll reveal — 克制的企业级滚动进入动效。
+     与 Reveal.tsx 配套：is-in 由 IntersectionObserver 添加。
+     用 transition 不用 animation：视口外截图/打印不卡透明态。
+     ⚠ 隐藏态挂在 html.js 下：JS 失效/禁用时不加 .js，内容直接可见
+     —— 永不出现"无 JS 全页空白"。.js 由根布局 <head> 内联脚本首字节设置。 */
+  .fio-reveal {
+    transition:
+      opacity var(--dur-4) var(--ease-out),
+      transform var(--dur-4) var(--ease-out);
+    transition-delay: var(--fio-reveal-delay, 0s);
+  }
+  html.js .fio-reveal:not(.is-in) {
+    opacity: 0;
+    transform: translateY(24px);
+    will-change: opacity, transform;
+  }
+
+  /* [v5] Hero 交易流：新行进入动效（HeroHome.tsx 滚动注入配套） */
+  @keyframes fio-tx-enter {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fio-tx-enter {
+    animation: fio-tx-enter var(--dur-3) var(--ease-out) both;
+  }
+
   /* 等宽表格数字 —— 指标带专用 */
   .fio-num {
     font-family: var(--font-mono);
@@ -612,10 +693,76 @@
   }
 }
 
+/* ---- [v5] 打印样式 —— 机构访客常打印官网做尽调存档。
+   深底白字打印是一片黑，这里整体反转为纸面样式。
+   注：R6-7 已有 prefers-color-scheme 浅色主题；本块独立于它——
+   打印在系统深色偏好下也必须反白。选择器特异性与浅色块同级，
+   本块在文件中位置靠后，打印场景下胜出。 ---- */
+@media print {
+  html {
+    --fio-ink: #ffffff;
+    --fio-ink-soft: #ffffff;
+    --fio-surface: #f7f6f2;
+    --fio-surface-2: #f0eee8;
+    --fio-ink-scrim: rgba(255, 255, 255, 0.92);
+    --fio-text: #1a2330;
+    --fio-text-2: #3d4756;
+    --fio-text-3: #5d6673;
+    --fio-gold: #7a5f2f;
+    --fio-accent: #7a5f2f;
+    --fio-cream: #1a2330;
+    --fio-border-light: #c9c4b8;
+    --fio-border-subtle: #ddd8cc;
+    --fio-border-hairline: #e5e1d6;
+    color-scheme: light;
+    scroll-behavior: auto;
+  }
+  /* 装饰层与固定 chrome 不打印 */
+  canvas,
+  header,
+  .nav,
+  .mobile-menu {
+    display: none !important;
+  }
+  /* 滚动 reveal / 入场动画在纸上必须终态可见 */
+  .fio-reveal,
+  .fio-animate-fade-up,
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  body {
+    background: #ffffff;
+    color: #1a2330;
+  }
+  /* 面板与卡片保留描边但去阴影（阴影打印无意义） */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  /* 分页控制：标题不孤行、卡片不腰斩 */
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+  section {
+    break-inside: avoid-page;
+  }
+  a {
+    color: #1a2330;
+    text-decoration: underline;
+  }
+}
+
 /* ---- 无障碍：尊重系统"减少动态效果"偏好 ---- */
 @media (prefers-reduced-motion: reduce) {
-  .fio-animate-fade-up {
+  .fio-animate-fade-up,
+  .fio-reveal,
+  .fio-tx-enter {
     animation: none !important;
+    transition: none !important;
     opacity: 1 !important;
     transform: none !important;
   }

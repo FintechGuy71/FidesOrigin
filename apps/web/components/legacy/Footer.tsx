@@ -25,7 +25,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
             <a href={homeHref(lang)} className="nav-logo">
               <img
                 src="/brand/logo-icon-56.png"
-                alt="FidesOrigin"
+                alt=""
                 className="nav-logo-icon"
                 width={28}
                 height={28}
@@ -33,7 +33,8 @@ export default function LegacyFooter({ lang, dict }: Props) {
               />
               FidesOrigin
             </a>
-            <p>{dict.footer.tagline}</p>
+            {/* [统一 v5] 定位语与新版首页页脚同一文案（home.chrome.tagline） */}
+            <p>{dict.home.chrome.tagline}</p>
           </div>
           <div className="footer-col">
             <h2>{dict.footer.product}</h2>
@@ -72,7 +73,8 @@ export default function LegacyFooter({ lang, dict }: Props) {
         </div>
         <div className="footer-bottom">
           <p>{dict.footer.rights}</p>
-          <p>{dict.footer.builtFor}</p>
+          {/* [统一 v5] 与新版页脚法律行一致：开源许可取代口号 */}
+          <p>{dict.home.chrome.license}</p>
         </div>
       </div>
     </footer>

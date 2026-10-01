@@ -104,7 +104,7 @@ export default function ContentBrandEN() {
           <div className="brand-grid">
             {/* Logo */}
             <div className="brand-panel">
-              <h3>Logo</h3>
+              <h2>Logo</h2>
               <div className="brand-logo-row">
                 <div className="brand-logo-cell">
                   <picture><source srcSet="/brand/logo-dark-icon.webp" type="image/webp" /><img src="/brand/logo-dark-icon.png" loading="lazy" alt="FidesOrigin icon" width={56} height={56}  /></picture>
@@ -125,7 +125,7 @@ export default function ContentBrandEN() {
 
             {/* Palette */}
             <div className="brand-panel">
-              <h3>Palette</h3>
+              <h2>Palette</h2>
               <div className="swatch-grid">
                 {SWATCHES.map((s) => (
                   <div className="swatch" key={s.token}>
@@ -141,7 +141,7 @@ export default function ContentBrandEN() {
 
             {/* Typography */}
             <div className="brand-panel">
-              <h3>Typography</h3>
+              <h2>Typography</h2>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
                   Fraunces — Display
@@ -164,7 +164,7 @@ export default function ContentBrandEN() {
 
             {/* Motif */}
             <div className="brand-panel">
-              <h3>Motif — Ledger Precision</h3>
+              <h2>Motif — Ledger Precision</h2>
               <div className="motif-demo" />
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.7 }}>
                 Corner tick marks, hairline rules, and the compliance mesh — every graphic element carries information.
