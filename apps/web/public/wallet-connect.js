@@ -445,11 +445,11 @@
         resultClass = 'non-compliant';
         badgeText = t('sanctioned');
         badgeClass = 'status-danger';
-      } else if (!isCompliant || score >= 70) { // [AUDIT FIX 2026-09-18 R3-L14] 阈值统一为 shared RISK_THRESHOLDS（high≥70）
+      } else if (!isCompliant || score >= 80) { // [FIX 2026-10-02] 阈值对齐链上 RiskRegistry.RiskTier（high≥80）
         resultClass = 'non-compliant';
         badgeText = t('highRisk');
         badgeClass = 'status-danger';
-      } else if (score >= 30) { // [R3-L14] medium≥30
+      } else if (score >= 50) { // [FIX 2026-10-02] medium≥50（对齐链上 tier）
         resultClass = 'warning';
         badgeText = t('medRisk');
         badgeClass = 'status-warning';
@@ -466,7 +466,7 @@
         ? new Date(Number(lastUpdated) * 1000).toLocaleDateString()
         : t('na');
 
-      const riskClass = score >= 70 ? 'risk-score-high' : score >= 30 ? 'risk-score-medium' : 'risk-score-low'; // [R3-L14]
+      const riskClass = score >= 80 ? 'risk-score-high' : score >= 50 ? 'risk-score-medium' : 'risk-score-low'; // [FIX 2026-10-02] 对齐链上 tier 80/50
 
       if (detailsEl) {
         detailsEl.appendChild(createComplianceRow(t('riskScore'), String(score), riskClass));

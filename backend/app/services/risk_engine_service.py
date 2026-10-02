@@ -131,7 +131,8 @@ class RiskListStrategy(RiskRuleStrategy):
 
     与 SanctionedListStrategy 的本质区别：
     - 数据来源是安全团队/社区维护的风险黑名单（如 Scam Sniffer），非官方制裁。
-    - 命中给【中高档分数】（rule.risk_score_impact，seed 为 75 = HIGH），
+    - 命中给【中档分数】（rule.risk_score_impact，seed 为 75 = MEDIUM，
+      2026-10-02 展示阈值对齐链上前曾为 HIGH），
       **不是**满分/CRITICAL——避免"举报当制裁误封"（D-2 决策）。
     - 数据由 data-sync 日更管道写入 address_risks.tags（含 scam 标记），
       【不写链上 RiskRegistry】，只进后端库。
@@ -165,7 +166,7 @@ class RiskListStrategy(RiskRuleStrategy):
                     break
 
         if hit:
-            # 风险名单默认 75 分（HIGH），低于制裁的 100/CRITICAL
+            # 风险名单默认 75 分（对齐链上后为 MEDIUM，低于制裁的 100/CRITICAL）
             impact = float(rule.risk_score_impact if rule.risk_score_impact is not None else 75)
             weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
             # [R3-M1] 钳制上界防 RiskFactor 校验 500
@@ -302,12 +303,18 @@ class RiskEngineService:
     
     # 风险等级阈值
     # [AUDIT FIX 2026-09-18 R3-M11] 与 packages/shared RISK_THRESHOLDS 对齐
-    # （原 30/60/85 边界与全站其它表面 30/70/90 矛盾，边界分数归类错误）
+    # [FIX 2026-10-02] 进一步对齐链上 RiskRegistry.RiskTier 分级（30/50/80/95）：
+    #   链上 5 档 UNKNOWN(0-29)/LOW(30-49)/MEDIUM(50-79)/HIGH(80-94)/CRITICAL(95-100)，
+    #   展示层无 UNKNOWN，故 UNKNOWN+LOW 合并为 LOW(0-49)。
+    #   原 30/70/90 与链上 tier 不一致（实证 scam score=75：链上 MEDIUM 不阻断、
+    #   而后端重算 HIGH），现统一。判定用【左闭】语义（只比较各档下界 min，从高到低
+    #   匹配，见 _calculate_risk_level）；元组的 max 仅作档位上界文档，不参与判定。
+    #   这样 49.5 这类档间小数会正确归入下一档而非落空静默降为兜底 LOW。
     RISK_THRESHOLDS = {
-        RiskLevel.LOW: (0, 30),
-        RiskLevel.MEDIUM: (30, 70),
-        RiskLevel.HIGH: (70, 90),
-        RiskLevel.CRITICAL: (90, 100),
+        RiskLevel.LOW: (0, 49),
+        RiskLevel.MEDIUM: (50, 79),
+        RiskLevel.HIGH: (80, 94),
+        RiskLevel.CRITICAL: (95, 100),
     }
     
     # 策略映射表
@@ -339,9 +346,15 @@ class RiskEngineService:
         self.rule_repo = rule_repo
     
     def _calculate_risk_level(self, score: float) -> RiskLevel:
-        """根据评分计算风险等级"""
-        for level, (min_score, max_score) in self.RISK_THRESHOLDS.items():
-            if min_score <= score <= max_score:
+        """根据评分计算风险等级。
+
+        [FIX 2026-10-02] 改为【左闭】判定（只比较 min，从高到低匹配），不再用
+        `min <= score <= max` 的闭区间：score 为 float（total_score 累加各规则
+        得到，未取整），闭区间在档间小数（如 49.5、79.5）会全部落空 → 静默返回
+        兜底 LOW，把中高危误判为低危。按 min 降序匹配可无缝覆盖 [0,100]。
+        """
+        for level in (RiskLevel.CRITICAL, RiskLevel.HIGH, RiskLevel.MEDIUM, RiskLevel.LOW):
+            if score >= self.RISK_THRESHOLDS[level][0]:
                 return level
         return RiskLevel.LOW
     

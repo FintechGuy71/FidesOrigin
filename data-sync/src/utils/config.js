@@ -3,6 +3,19 @@ const joi = require('joi');
 /**
  * 运行时配置验证 Schema
  * 使用 Joi 进行严格的配置校验
+ *
+ * ⚠️ [2026-10-02 标注] 本文件当前【无任何调用方】（全仓 grep 无 require 本模块；
+ *   现役管道 daily-sync.js 只 require('dotenv').config() 读 .env，不走此 schema）。
+ *   故此处所有默认值（含下方 aggregation.highRiskThreshold=70 / grayRiskThreshold=40）
+ *   都是【死配置】，不影响任何实际行为。
+ *
+ *   风险分级的【权威源】是：
+ *     - 链上 tier 阈值 30/50/80/95：src/merkleBuilder.js scoreToTier（= src/riskGrading.js）
+ *     - 全站展示 level 阈值（已对齐链上）：src/riskGrading.js SHARED_RISK_THRESHOLDS
+ *       + packages/shared RISK_THRESHOLDS + backend risk_engine*.py + apps/web 硬编码
+ *   本文件的 highRisk/grayRisk 是「高/灰」二元分类（另一套语义），与上述 4 档
+ *   LOW/MEDIUM/HIGH/CRITICAL 不是同一维度，不可混用；若将来启用本 schema，
+ *   务必先与权威源对齐再消费。
  */
 
 /**

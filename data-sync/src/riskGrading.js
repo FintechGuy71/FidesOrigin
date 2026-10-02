@@ -33,22 +33,25 @@ const { scoreToTier } = require('./merkleBuilder');
 /**
  * 链上 tier 分级表（合约 enum RiskTier，与 merkleBuilder.scoreToTier 同源）
  *
- * ⚠️ 存在【两套阈值】，不可混用 —— 这是本项目一个真实的既存漂移：
+ * [2026-10-02 更新] 展示分级已对齐链上 tier（原为分离的两套阈值 30/70/90，
+ * 决策「展示对齐链上、不升合约」后统一）。现两套阈值【档位边界一致】，仅一处差异：
  *
- *   A. 链上 tier（本表）：30 / 50 / 80 / 95
+ *   A. 链上 tier（本表）：30 / 50 / 80 / 95，含 UNKNOWN(0-29) 共 5 档。
  *      由 merkleBuilder.scoreToTier 定义，编码进 Merkle leaf 与 RiskRegistry 档案，
- *      并被 PolicyEngine 的阻断逻辑消费（PolicyEngine.sol:588 `tier == HIGH &&
- *      !allowHighRisk`）。改它会同时改变链上合规阻断行为，属于合约语义变更。
+ *      被 PolicyEngine 阻断逻辑消费（PolicyEngine.sol:588 `tier == HIGH &&
+ *      !allowHighRisk`）。改它属合约语义变更，需 UUPS 升级 + 时间锁。
  *
- *   B. 全站展示分级（SHARED_RISK_THRESHOLDS）：30 / 70 / 90
+ *   B. 全站展示分级（SHARED_RISK_THRESHOLDS）：50 / 80 / 95，无 UNKNOWN 共 4 档，
+ *      故链上 UNKNOWN(0-29) + LOW(30-49) 合并为展示 LOW(0-49)。
  *      由 packages/shared/src/constants RISK_THRESHOLDS 定义（单一事实源），
- *      后端引擎 RISK_THRESHOLDS 已在 R3 审计（R3-M11）中对齐它。
+ *      后端两个引擎与前端均已对齐。
  *
- * 二者对同一 score 可能给出不同档位，例如 score=75：
- *   链上 tier=2（MEDIUM，因 50≤75<80）  vs  展示 risk_level=HIGH（因 70≤75<90）。
- * 因此后端库的 risk_level 必须走 B（与引擎/前端一致），链上 tier 必须走 A。
- * push-to-backend-db 原先用 TIER_TO_LEVEL[tier] 把 A 的档位当 B 写库，
- * 导致「DB risk_level 与引擎重算结果不符」，已改为调用 sharedRiskLevel()。
+ * 对齐后同一 score 两端档位一致（scam 75：链上 tier=2 MEDIUM，展示 risk_level=MEDIUM）。
+ * 唯一区别是展示层无 UNKNOWN 档。历史上曾分离（75 链上 MEDIUM / 展示 HIGH），
+ * push-to-backend-db 曾用 TIER_TO_LEVEL[tier] 把 A 当 B 写库导致不符，已改走 sharedRiskLevel()。
+ *
+ * ⚠️ 维护提醒：改 A（链上）是合约语义变更；改 B（展示）需同步
+ *    packages/shared + backend risk_engine*.py + apps/web 硬编码 + 本文件，四处一致。
  */
 const RISK_TIERS = Object.freeze({
   0: Object.freeze({ tier: 0, name: 'UNKNOWN',  min: 0,   max: 29 }),
@@ -61,12 +64,19 @@ const RISK_TIERS = Object.freeze({
 /**
  * 全站展示分级阈值 —— 与 packages/shared/src/constants RISK_THRESHOLDS 逐值一致。
  * 后端引擎、前端、SDK 均以此为准。
+ *
+ * [FIX 2026-10-02] 原为 30/70/90，与链上 tier 阈值（30/50/80/95）不一致，
+ * 导致同一 score 两端给不同档位（scam 75 → 链上 MEDIUM 不阻断 / 展示 HIGH）。
+ * 按决策「展示对齐链上、不升合约」改为与 RISK_TIERS 相同的档位边界；
+ * 展示层无 UNKNOWN，故链上 UNKNOWN(0-29)+LOW(30-49) 合并为展示 LOW(0-49)。
+ * ⚠️ 本表必须与 packages/shared RISK_THRESHOLDS 逐值一致
+ *    （test/provenance.test.js 有断言锁定）。
  */
 const SHARED_RISK_THRESHOLDS = Object.freeze({
-  LOW:      Object.freeze({ min: 0,  max: 29 }),
-  MEDIUM:   Object.freeze({ min: 30, max: 69 }),
-  HIGH:     Object.freeze({ min: 70, max: 89 }),
-  CRITICAL: Object.freeze({ min: 90, max: 100 }),
+  LOW:      Object.freeze({ min: 0,  max: 49 }),
+  MEDIUM:   Object.freeze({ min: 50, max: 79 }),
+  HIGH:     Object.freeze({ min: 80, max: 94 }),
+  CRITICAL: Object.freeze({ min: 95, max: 100 }),
 });
 
 /**
@@ -204,13 +214,15 @@ function checkBytes32Safe(tag) {
 /**
  * 分级：score → { tier, tierName, riskLevel }
  *
- * 返回两个【不同阈值体系】的档位，调用方按用途各取所需，不得混用：
- *   - tier / tierName：链上体系（阈值 A：30/50/80/95），编码进 Merkle leaf、
- *     RiskRegistry 档案，被 PolicyEngine 阻断逻辑消费。
- *   - riskLevel：全站展示体系（阈值 B：30/70/90，= packages/shared），
+ * [2026-10-02 更新] 展示分级已对齐链上 tier，两套阈值档位边界一致：
+ *   - tier / tierName：链上体系（30/50/80/95，含 UNKNOWN 共 5 档），编码进 Merkle
+ *     leaf、RiskRegistry 档案，被 PolicyEngine 阻断逻辑消费。
+ *   - riskLevel：全站展示体系（50/80/95，无 UNKNOWN 共 4 档，= packages/shared），
  *     用于后端库 address_risks.risk_level，与引擎/前端一致。
  *
- * 例：score=75 → tier=2/MEDIUM（链上），riskLevel=HIGH（展示）。二者本就不同，非 bug。
+ * 例：score=75 → tier=2/MEDIUM（链上），riskLevel=MEDIUM（展示），二者一致。
+ * 唯一差异：链上 UNKNOWN(0-29) 档在展示层并入 LOW，故 score=10 → tier=0/UNKNOWN、
+ * riskLevel=LOW。
  */
 function grade(riskScore) {
   const score = Number(riskScore) || 0;

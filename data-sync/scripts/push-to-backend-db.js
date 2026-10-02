@@ -9,9 +9,14 @@ const { Client } = require('pg');
 const { sharedRiskLevel, tagsForEntry } = require('../src/riskGrading');
 
 // [FIX] 原实现用链上 tier 映射展示 level：TIER_TO_LEVEL = ['UNKNOWN','LOW','MEDIUM','HIGH','CRITICAL']
-// 但链上 tier 阈值（30/50/80/95）与全站展示阈值（30/70/90，packages/shared + 后端引擎）不同。
+// 当时链上 tier 阈值（30/50/80/95）与全站展示阈值（30/70/90）不同，
 // 实证：scam 地址 score=75 → 链上 tier=2 → 存库 'MEDIUM'，而引擎重算返回 'HIGH'，
 // 同一地址两套档位（直读库与走端点结果不一致）。现统一走 sharedRiskLevel()。
+//
+// [2026-10-02 更新] 展示阈值已对齐链上（decision：展示对齐链上、不升合约），
+// 两套档位边界现一致（50/80/95）。仍必须走 sharedRiskLevel() 而非 TIER_TO_LEVEL：
+// 链上有 UNKNOWN(0-29) 档、展示层无（并入 LOW），且展示层直接由 score 判定，
+// 用 tier 反查 level 会在 UNKNOWN 档产生偏差。
 
 /**
  * @param {Array<{address:string, riskScore:number, tier:number, reason?:string, sources?:string[]}>} entries
@@ -52,7 +57,8 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
         // 风险源（SCAM_*）默认 75 分，制裁源默认 100 分
         const isRiskSource = srcs.some((s) => String(s).toUpperCase().startsWith('SCAM'));
         const score = e.riskScore ?? (isRiskSource ? 75 : 100);
-        // 展示档位走全站阈值（30/70/90），与后端引擎重算结果一致
+        // 展示档位走全站阈值（2026-10-02 已对齐链上 tier：50/80/95，无 UNKNOWN 共 4 档），
+        // 与后端引擎重算结果一致
         const level = sharedRiskLevel(score);
         // tags 与链上/本地同源：优先用记录自带的规范 tags（mergeData 已算好），
         // 否则由 tagsForEntry 统一推导（含 sanctioned/scam marker 兜底 + 排序 + 限量）。

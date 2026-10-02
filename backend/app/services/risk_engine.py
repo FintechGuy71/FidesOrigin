@@ -114,11 +114,15 @@ class RiskEngine:
     """风险评分引擎"""
     
     # 风险等级阈值
+    # [FIX 2026-10-02] 对齐链上 RiskRegistry.RiskTier（30/50/80/95）与
+    # risk_engine_service.py / packages/shared RISK_THRESHOLDS。
+    # 原 30/60/85 是全站第 4 套漂移阈值。链上 5 档 UNKNOWN(0-29)/LOW(30-49)/
+    # MEDIUM(50-79)/HIGH(80-94)/CRITICAL(95-100)，展示层无 UNKNOWN 故合并为 LOW(0-49)。
     RISK_THRESHOLDS = {
-        RiskLevel.LOW: (0, 30),
-        RiskLevel.MEDIUM: (30, 60),
-        RiskLevel.HIGH: (60, 85),
-        RiskLevel.CRITICAL: (85, 100),
+        RiskLevel.LOW: (0, 49),
+        RiskLevel.MEDIUM: (50, 79),
+        RiskLevel.HIGH: (80, 94),
+        RiskLevel.CRITICAL: (95, 100),
     }
     
     # 预定义风险规则
@@ -198,9 +202,14 @@ class RiskEngine:
         return self._rules_cache
     
     def _calculate_risk_level(self, score: float) -> RiskLevel:
-        """根据评分计算风险等级"""
-        for level, (min_score, max_score) in self.RISK_THRESHOLDS.items():
-            if min_score <= score <= max_score:
+        """根据评分计算风险等级。
+
+        [FIX 2026-10-02] 改为【左闭】判定（只比较 min，从高到低匹配），
+        与 risk_engine_service.py 一致。原 `min <= score <= max` 闭区间会让档间
+        小数（如 49.5）落空并静默返回兜底 LOW。
+        """
+        for level in (RiskLevel.CRITICAL, RiskLevel.HIGH, RiskLevel.MEDIUM, RiskLevel.LOW):
+            if score >= self.RISK_THRESHOLDS[level][0]:
                 return level
         return RiskLevel.LOW
     
