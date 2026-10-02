@@ -56,28 +56,48 @@ class TestRiskEngineRules:
         assert "contract_interaction" in rule_names
 
     def test_calculate_risk_level_low(self, risk_engine):
+        # [FIX 2026-10-02] 展示阈值对齐链上：LOW 覆盖 UNKNOWN+LOW = [0,49]
         assert risk_engine._calculate_risk_level(10) == RiskLevel.LOW
         assert risk_engine._calculate_risk_level(0) == RiskLevel.LOW
         assert risk_engine._calculate_risk_level(30) == RiskLevel.LOW
+        assert risk_engine._calculate_risk_level(49) == RiskLevel.LOW
 
     def test_calculate_risk_level_medium(self, risk_engine):
-        assert risk_engine._calculate_risk_level(31) == RiskLevel.MEDIUM
-        assert risk_engine._calculate_risk_level(45) == RiskLevel.MEDIUM
+        # MEDIUM = [50,79]（链上 tier 边界）
+        assert risk_engine._calculate_risk_level(50) == RiskLevel.MEDIUM
         assert risk_engine._calculate_risk_level(60) == RiskLevel.MEDIUM
+        assert risk_engine._calculate_risk_level(75) == RiskLevel.MEDIUM
+        assert risk_engine._calculate_risk_level(79) == RiskLevel.MEDIUM
 
     def test_calculate_risk_level_high(self, risk_engine):
-        assert risk_engine._calculate_risk_level(61) == RiskLevel.HIGH
-        assert risk_engine._calculate_risk_level(75) == RiskLevel.HIGH
+        # HIGH = [80,94]
+        assert risk_engine._calculate_risk_level(80) == RiskLevel.HIGH
         assert risk_engine._calculate_risk_level(85) == RiskLevel.HIGH
+        assert risk_engine._calculate_risk_level(94) == RiskLevel.HIGH
 
     def test_calculate_risk_level_critical(self, risk_engine):
-        assert risk_engine._calculate_risk_level(86) == RiskLevel.CRITICAL
+        # CRITICAL = [95,100]
+        assert risk_engine._calculate_risk_level(95) == RiskLevel.CRITICAL
         assert risk_engine._calculate_risk_level(100) == RiskLevel.CRITICAL
 
     def test_calculate_risk_level_boundaries(self, risk_engine):
         """边界条件: score=0 和 score=100"""
         assert risk_engine._calculate_risk_level(0) == RiskLevel.LOW
         assert risk_engine._calculate_risk_level(100) == RiskLevel.CRITICAL
+
+    def test_calculate_risk_level_float_between_bands(self, risk_engine):
+        """[FIX 2026-10-02] 档间小数不得静默降为 LOW。
+
+        score 为 float（total_score 累加各规则得到，未取整）。旧的闭区间
+        `min <= score <= max` 会让 49.5/79.5/94.5 落空并返回兜底 LOW，
+        把中高危误判为低危。左闭判定必须正确归档。
+        """
+        assert risk_engine._calculate_risk_level(49.5) == RiskLevel.LOW      # <50
+        assert risk_engine._calculate_risk_level(50.5) == RiskLevel.MEDIUM   # [50,80)
+        assert risk_engine._calculate_risk_level(79.5) == RiskLevel.MEDIUM   # <80
+        assert risk_engine._calculate_risk_level(80.5) == RiskLevel.HIGH     # [80,95)
+        assert risk_engine._calculate_risk_level(94.5) == RiskLevel.HIGH     # <95
+        assert risk_engine._calculate_risk_level(95.5) == RiskLevel.CRITICAL # >=95
 
     @pytest.mark.asyncio
     async def test_check_reported_address_with_reports(self, risk_engine, mock_db):

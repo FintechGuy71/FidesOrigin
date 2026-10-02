@@ -114,7 +114,7 @@ sourceTags/mergeIntoChain），无需改主流程。
 | 采集 | 每源独立抓取；单源异常不阻断其余源 |
 | 校验 | 逐条校验：地址格式、score 值域、来源标识（受控词表）、`fetchedAt` 时间戳、tier 与 score 一致性、标签可编码性与数量上限。**不合格条目不入库**，计入 `cache/provenance/provenance-<源>.json` 的 `rejected` |
 | 一致性比对 | 与上一轮 `accepted` 基线比对：产出低于 `expectMin`、或骤降 ≥50% 时告警（防源故障被误判为大面积下架） |
-| 分级 | 两套阈值**显式分离**：链上 tier `30/50/80/95`（`src/riskGrading.js` RISK_TIERS，进 Merkle leaf、被 PolicyEngine 阻断逻辑消费）；展示 level `30/70/90`（SHARED_RISK_THRESHOLDS，与 `packages/shared` + 后端引擎一致）。同一 score 两者可不同档（如 75 → 链上 MEDIUM / 展示 HIGH），**不可混用** |
+| 分级 | 链上 tier `30/50/80/95`（`src/riskGrading.js` RISK_TIERS，进 Merkle leaf、被 PolicyEngine 阻断逻辑消费）。展示 level 已于 2026-10-02 **对齐链上**（50/80/95，无 UNKNOWN 共 4 档，链上 UNKNOWN+LOW 并入展示 LOW），单一事实源在 `packages/shared` RISK_THRESHOLDS，后端两引擎与前端均已对齐。对齐后同一 score 两端同档（scam 75 → 链上 MEDIUM / 展示 MEDIUM）。⚠️ 改展示阈值需同步 `packages/shared` + `backend/app/services/risk_engine*.py` + `apps/web` 硬编码 + 本文件 `SHARED_RISK_THRESHOLDS` 四处 |
 | 写链 | **增量**：先读链上现状做 diff，只写状态不一致的地址；无变化则零交易（幂等）。批次失败指数退避重试（`CHAIN_RETRY_ATTEMPTS` 默认 3） |
 | 写库 | 制裁名单 + 下架清零一批；风险源（scam）**单独一批、不写链** |
 
@@ -143,9 +143,13 @@ sourceTags/mergeIntoChain），无需改主流程。
 - 首次回填 tags 后，`Diff` 应长期为 `0 to write`；若每日都非 0，说明有字段抖动
 - 退出码：写链批次重试耗尽 / Merkle 推送失败 / 下架失败 → `exit 1`，workflow 显示 failure
 
-**四端一致性抽查**（制裁地址应为 100/CRITICAL、tags 三源；scam 地址应为 75/HIGH、tags 含 `scam` 不含 `sanctioned`、链上 `sanctioned=false`）。
+**四端一致性抽查**（制裁地址应为 100/CRITICAL、tags 三源；scam 地址应为 75/**MEDIUM**、tags 含 `scam` 不含 `sanctioned`、链上 `sanctioned=false`）。
 
-下面用的是真实在役地址，可直接复制执行（2026-10-01 实测通过）：
+> ⚠️ **scam 展示档位已从 HIGH 降为 MEDIUM**（2026-10-02 展示阈值对齐链上：75 落在链上 MEDIUM 档 50-79，故展示同为 MEDIUM）。
+> 这是「展示对齐链上、不升合约」决策的直接后果：链上阻断行为**未变**（scam 本就不写链、PolicyEngine 阻断线在 80），仅 UI/后端的展示档位随之调整。
+> 后端 API 端点需**重新部署**后返回值才从 `HIGH` 变为 `MEDIUM`（部署前仍是旧值 HIGH）。
+
+下面用的是真实在役地址，可直接复制执行：
 
 ```bash
 # ① 链上（getRiskProfile；0xbaf1e57f = keccak("getRiskProfile(address)")[:4]）
@@ -158,7 +162,8 @@ curl -s 'https://fidesorigin-api.vercel.app/v1/public/risk-check?address=0x252a8
 
 # ② 后端端点（scam 地址 —— 独立通道，不应被当制裁）
 curl -s 'https://fidesorigin-api.vercel.app/v1/public/risk-check?address=0x101ce0cedd142f199c9ef61739ae59b6611a0fc0&chainId=11155111'
-# 期望 risk_score:75, risk_level:"HIGH", tags:["SCAM_SNIFFER","scam"]（不含 sanctioned）
+# 期望 risk_score:75, risk_level:"MEDIUM", tags:["SCAM_SNIFFER","scam"]（不含 sanctioned）
+#   （后端重新部署前旧值为 "HIGH"，部署后为 "MEDIUM"）
 
 # ③ subgraph（必须用 version/latest：固定版本号会随重新部署失效并返回 Not found）
 curl -s -X POST -H 'Content-Type: application/json' --data '{"query":"{ riskProfile(id:\"0x252a8bd2319d8a555b872990601221b3a2053bce\"){riskScore tier isSanctioned tags} _meta{block{number} hasIndexingErrors} }"}' https://api.studio.thegraph.com/query/1749664/fidesorigin-sepolia/version/latest

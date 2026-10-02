@@ -479,7 +479,8 @@ class DailySyncService {
    *
    *      与制裁源的本质区别：这是【风险情报】不是【官方制裁】。按 D-2 决策，
    *      ——不写链上 RiskRegistry（避免"举报当制裁"误封）
-   *      ——只进后端库，source=SCAM_SNIFFER、riskScore=75（HIGH，低于制裁的 100/CRITICAL）
+   *      ——只进后端库，source=SCAM_SNIFFER、riskScore=75（对齐链上后为 MEDIUM，
+   *        低于制裁的 100/CRITICAL。注：2026-10-02 展示阈值对齐链上前，75 曾展示为 HIGH）
    *      由后端引擎的独立 RiskListStrategy 识别并给 75 分，与 SanctionedListStrategy 隔离。
    *
    *      实测（2026-09-03）：2,530 个 EVM 地址，与现役制裁名单零重叠。

@@ -22,8 +22,13 @@ const HASH_PREVIEW_LENGTH = 20;
    改图表布局会静默改变地址显示。 */
 const ADDRESS_TAIL_LENGTH = 6;
 const HASH_TAIL_LENGTH = 8;
-const RISK_SCORE_HIGH = 70;
-const RISK_SCORE_MEDIUM = 30; // [AUDIT FIX 2026-09-18 R3-L14] 与 shared RISK_THRESHOLDS 对齐（medium≥30）
+// [FIX 2026-10-02] 展示阈值对齐链上 RiskRegistry.RiskTier（30/50/80/95）：
+//   HIGH≥80、MEDIUM≥50（链上 tier 边界；展示层无 UNKNOWN，0-49 归 low）。
+//   原 70/30 与链上不一致，同一分数在链上判 MEDIUM、此处判 HIGH。
+//   注：本文件是硬编码常量（web 未依赖 @fidesorigin/shared，加依赖会引入
+//   turbo build 顺序耦合），值须与 packages/shared RISK_THRESHOLDS 手动保持一致。
+const RISK_SCORE_HIGH = 80;
+const RISK_SCORE_MEDIUM = 50;
 /* [AUDIT FIX] 仪表盘数据轮询间隔。此前复用 WS_MAX_RETRY_DELAY（WS 重连退避上限），
    数值凑巧 30s，但改 WS 退避策略会连带改刷新频率。 */
 const DASHBOARD_REFRESH_INTERVAL = 30000;

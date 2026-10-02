@@ -127,12 +127,23 @@ export const RISK_LEVEL_ORDER: Array<'low' | 'medium' | 'high' | 'critical'> = [
   'critical',
 ];
 
-/** Risk score thresholds for classification */
+/**
+ * Risk score thresholds for classification.
+ *
+ * [FIX 2026-10-02] 对齐链上 RiskRegistry.RiskTier 的分级阈值（30/50/80/95）。
+ * 原展示阈值 30/70/90 与链上 tier 不一致，导致同一 score 两端给不同档位
+ * （实证：scam score=75 → 链上 tier=MEDIUM(50-79) 不阻断，而 UI/后端显示 HIGH）。
+ * 按决策「展示对齐链上、不升合约」，展示档位边界改为与链上 tier 一致：
+ *   链上 5 档 UNKNOWN(0-29)/LOW(30-49)/MEDIUM(50-79)/HIGH(80-94)/CRITICAL(95-100)，
+ *   展示层无 UNKNOWN，故 UNKNOWN+LOW 合并为 low(0-49)，其余逐档对齐。
+ * ⚠️ 改这里等于改全站展示口径；链上 tier 阈值在 data-sync/merkleBuilder.js 与
+ *   合约 _checkRisk(>=80 阻断 / >=95 Critical)，两处仍是权威源，务必保持一致。
+ */
 export const RISK_THRESHOLDS = {
-  low: { min: 0, max: 29 },
-  medium: { min: 30, max: 69 },
-  high: { min: 70, max: 89 },
-  critical: { min: 90, max: 100 },
+  low: { min: 0, max: 49 },
+  medium: { min: 50, max: 79 },
+  high: { min: 80, max: 94 },
+  critical: { min: 95, max: 100 },
 } as const;
 
 // ============================================================================

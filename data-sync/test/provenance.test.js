@@ -46,14 +46,19 @@ const {
 
 const addr = (c) => '0x' + c.repeat(40);
 
-// ============ 1. 风险分级：两套阈值体系 ============
+// ============ 1. 风险分级：链上 tier 与展示 level（2026-10-02 起已对齐）============
 
-test('grade: 链上 tier 与展示 riskLevel 是两套阈值，互不混用', () => {
-  // score=75：链上 tier=2(MEDIUM，阈值 50/80)，展示 HIGH（阈值 70/90）
+test('grade: 展示 riskLevel 已对齐聚链上 tier（除 UNKNOWN 并入 LOW）', () => {
+  // [FIX 2026-10-02] 此前展示用 30/70/90、链上用 30/50/80/95，score=75 会
+  // 链上判 MEDIUM 而展示判 HIGH（执行面与预警面不一致）。现已统一到链上档位边界。
   const g = grade(75);
   assert.strictEqual(g.tier, 2);
   assert.strictEqual(g.tierName, 'MEDIUM');
-  assert.strictEqual(g.riskLevel, 'HIGH');
+  assert.strictEqual(g.riskLevel, 'MEDIUM', '对齐后展示应与链上同档');
+
+  // 唯一差异：链上有 UNKNOWN(0-29) 档，展示层无 UNKNOWN，故 0-29 归展示 LOW
+  assert.strictEqual(grade(10).tierName, 'UNKNOWN');
+  assert.strictEqual(grade(10).riskLevel, 'LOW');
 });
 
 test('grade: 链上 tier 边界与 merkleBuilder.scoreToTier 一致（30/50/80/95）', () => {
@@ -67,10 +72,10 @@ test('grade: 链上 tier 边界与 merkleBuilder.scoreToTier 一致（30/50/80/9
   }
 });
 
-test('grade: 展示 riskLevel 边界与 packages/shared 一致（30/70/90）', () => {
+test('grade: 展示 riskLevel 边界与 packages/shared 一致（对齐链上 50/80/95）', () => {
   const cases = [
-    [0, 'LOW'], [29, 'LOW'], [30, 'MEDIUM'], [69, 'MEDIUM'],
-    [70, 'HIGH'], [89, 'HIGH'], [90, 'CRITICAL'], [100, 'CRITICAL'],
+    [0, 'LOW'], [49, 'LOW'], [50, 'MEDIUM'], [79, 'MEDIUM'],
+    [80, 'HIGH'], [94, 'HIGH'], [95, 'CRITICAL'], [100, 'CRITICAL'],
   ];
   for (const [score, level] of cases) {
     assert.strictEqual(sharedRiskLevel(score), level, `score=${score}`);
@@ -79,7 +84,8 @@ test('grade: 展示 riskLevel 边界与 packages/shared 一致（30/70/90）', (
 });
 
 test('grade: 展示阈值表与 packages/shared RISK_THRESHOLDS 逐值一致', () => {
-  // packages/shared/src/constants/index.ts: low 0-29 / medium 30-69 / high 70-89 / critical 90-100
+  // packages/shared/src/constants/index.ts（2026-10-02 对齐链上）:
+  // low 0-49 / medium 50-79 / high 80-94 / critical 95-100
   assert.deepStrictEqual(
     {
       LOW: SHARED_RISK_THRESHOLDS.LOW,
@@ -88,10 +94,10 @@ test('grade: 展示阈值表与 packages/shared RISK_THRESHOLDS 逐值一致', (
       CRITICAL: SHARED_RISK_THRESHOLDS.CRITICAL,
     },
     {
-      LOW: { min: 0, max: 29 },
-      MEDIUM: { min: 30, max: 69 },
-      HIGH: { min: 70, max: 89 },
-      CRITICAL: { min: 90, max: 100 },
+      LOW: { min: 0, max: 49 },
+      MEDIUM: { min: 50, max: 79 },
+      HIGH: { min: 80, max: 94 },
+      CRITICAL: { min: 95, max: 100 },
     }
   );
 });

@@ -272,8 +272,10 @@ export default function AddressCheck({ dict }: { dict: D }) {
       const level = String(apiData.risk_level || dict.unknown).toUpperCase();
       const factors = apiData.risk_factors || [];
       const tags = apiData.tags || [];
-      const isHigh = level === "HIGH" || level === "CRITICAL" || score >= 70; // [R3-L14] 阈值统一 shared RISK_THRESHOLDS
-      const isMid = !isHigh && (level === "MEDIUM" || score >= 30); // [R3-L14]
+      // [FIX 2026-10-02] 分数兜底阈值对齐链上 RiskRegistry.RiskTier（HIGH≥80/MEDIUM≥50）。
+      // 原 70/30 与链上 tier 不一致；后端 level 字符串已随之对齐，此处兜底同步。
+      const isHigh = level === "HIGH" || level === "CRITICAL" || score >= 80;
+      const isMid = !isHigh && (level === "MEDIUM" || score >= 50);
       setResult({
         badgeClass: isHigh ? "risk-black" : isMid ? "risk-grey" : "risk-safe",
         badgeText: isHigh

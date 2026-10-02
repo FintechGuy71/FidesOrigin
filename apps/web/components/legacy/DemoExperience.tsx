@@ -158,7 +158,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
     const score = data.risk_score ?? 0;
     const level = data.risk_level || "UNKNOWN";
     const sanctioned = (data.tags || []).length > 0 || level === "CRITICAL";
-    const safe = !(sanctioned || level === "HIGH" || level === "CRITICAL" || score >= 70); // [R3-L14] 阈值统一 + CRITICAL 兜底
+    const safe = !(sanctioned || level === "HIGH" || level === "CRITICAL" || score >= 80); // [FIX 2026-10-02] 兜底阈值对齐链上 HIGH≥80 + CRITICAL 兜底
     setScreen({
       kind: "done",
       address,
