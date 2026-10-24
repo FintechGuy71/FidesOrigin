@@ -1555,7 +1555,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   color: var(--accent); padding: 4px 12px; border-radius: 4px;
   background: var(--accent-dim); margin-bottom: 16px;
 }
-.case-study-card h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
+.case-study-card h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
 .case-study-card p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
 /* flex-wrap: 3 项最宽 label 合计 ≈ 355px，超过 ≤900px 单列的可用宽度
    （约 327px），无 wrap 会被 body{overflow-x:hidden} 直接裁掉 */
@@ -1583,7 +1583,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   align-items: center; justify-content: center;
   color: var(--accent); font-weight: 700; font-size: 1rem;
 }
-.testimonial-info h4 { font-size: 0.95rem; font-weight: 600; }
+.testimonial-info h3 { font-size: 0.95rem; font-weight: 600; }
 .testimonial-info p { font-size: 0.8rem; color: var(--text-muted); }
 
 /* ─── Use-case / Case-study 代码块（.uc-code）────────────────────────

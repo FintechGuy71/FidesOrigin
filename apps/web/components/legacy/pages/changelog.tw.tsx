@@ -39,7 +39,7 @@ const PAGE_CSS = `
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
     .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
-    .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .timeline-item h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .timeline-item ul { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; padding-left: 18px; }
     .timeline-item li { margin-bottom: 4px; }
