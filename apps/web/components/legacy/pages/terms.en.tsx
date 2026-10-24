@@ -8,7 +8,7 @@ const PAGE_CSS = `
     .legal-section h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
     .legal-section p, .legal-section li { color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.75rem; }
     .legal-section ul { padding-left: 1.5rem; margin-bottom: 1rem; }
-    .legal-section a { color: var(--accent); transition: opacity 0.2s; }
+    .legal-section a { color: var(--accent); transition: opacity 0.2s; text-decoration: underline; text-underline-offset: 3px; }
     .legal-section a:hover { opacity: 0.8; text-decoration: underline; }
     .legal-section strong { color: var(--text); font-weight: 600; }
     @media (max-width: 768px) {

@@ -39,7 +39,7 @@ const PAGE_CSS = `
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
     .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
-    .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .timeline-item h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .timeline-item ul { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; padding-left: 18px; }
     .timeline-item li { margin-bottom: 4px; }
@@ -71,7 +71,7 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">Latest</span>
-            <h3>v3.1.0 — Security Audit Release</h3>
+            <h2>v3.1.0 — Security Audit Release</h2>
             <div className="date">August 2026</div>
             <ul>
               <li>Resolved all 53 findings from the independent security audit (6 High / 15 Medium / 26 Low / 6 Info)</li>
@@ -84,7 +84,7 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">Major</span>
-            <h3>v2.8.0 — Real-Time Demo & Multilingual Expansion</h3>
+            <h2>v2.8.0 — Real-Time Demo & Multilingual Expansion</h2>
             <div className="date">August 2026</div>
             <ul>
               <li>Live Sepolia demo page with MetaMask wallet integration and multi-RPC fallback</li>
@@ -97,7 +97,7 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">Major</span>
-            <h3>v2.7.0-A+ — Security Hardening</h3>
+            <h2>v2.7.0-A+ — Security Hardening</h2>
             <div className="date">August 2026</div>
             <ul>
               <li>A+ security audit report; Cloudflare Workers proxy for security headers</li>
@@ -109,7 +109,7 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">Major</span>
-            <h3>v2.1.0 — Guard Architecture</h3>
+            <h2>v2.1.0 — Guard Architecture</h2>
             <div className="date">July 2026</div>
             <ul>
               <li>FidesCompliance V2.1 with PreTransactionGuard for zero-gas pre-flight checks</li>
@@ -121,7 +121,7 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">Minor</span>
-            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <h2>v2.0.0 — RiskRegistryV2</h2>
             <div className="date">July 2026</div>
             <ul>
               <li>RiskRegistry V2 with CDD labels; PolicyEngine with per-wallet rules</li>
@@ -132,7 +132,7 @@ export default function ContentChangelogEN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">Minor</span>
-            <h3>v1.0.0 — Initial Release</h3>
+            <h2>v1.0.0 — Initial Release</h2>
             <div className="date">July 2026</div>
             <ul>
               <li>Initial protocol launch with basic KYC/AML screening</li>

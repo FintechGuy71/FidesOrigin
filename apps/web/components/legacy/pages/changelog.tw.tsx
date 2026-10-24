@@ -39,7 +39,7 @@ const PAGE_CSS = `
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
     .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
-    .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .timeline-item h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .timeline-item ul { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; padding-left: 18px; }
     .timeline-item li { margin-bottom: 4px; }
@@ -71,7 +71,7 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">最新</span>
-            <h3>v3.1.0 — 安全審計修復版本</h3>
+            <h2>v3.1.0 — 安全審計修復版本</h2>
             <div className="date">2026 年 8 月</div>
             <ul>
               <li>完整修復獨立安全審計發現的全部 53 項問題（High 6 / Medium 15 / Low 26 / Info 6）</li>
@@ -84,7 +84,7 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">重大</span>
-            <h3>v2.8.0 — 實時演示與多語言擴展</h3>
+            <h2>v2.8.0 — 實時演示與多語言擴展</h2>
             <div className="date">2026 年 8 月</div>
             <ul>
               <li>Sepolia 實時演示頁上線：MetaMask 錢包整合與多 RPC 回退</li>
@@ -97,7 +97,7 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">重大</span>
-            <h3>v2.7.0-A+ — 安全加固</h3>
+            <h2>v2.7.0-A+ — 安全加固</h2>
             <div className="date">2026 年 8 月</div>
             <ul>
               <li>A+ 安全審計報告；Cloudflare Workers 代理注入安全回應標頭</li>
@@ -109,7 +109,7 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">重大</span>
-            <h3>v2.1.0 — Guard 架構</h3>
+            <h2>v2.1.0 — Guard 架構</h2>
             <div className="date">2026 年 7 月</div>
             <ul>
               <li>FidesCompliance V2.1 整合 PreTransactionGuard，實現零 Gas 交易前攔截</li>
@@ -121,7 +121,7 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">次要</span>
-            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <h2>v2.0.0 — RiskRegistryV2</h2>
             <div className="date">2026 年 7 月</div>
             <ul>
               <li>RiskRegistry V2 引入 CDD 標籤；PolicyEngine 支援依錢包配置規則</li>
@@ -132,7 +132,7 @@ export default function ContentChangelogTW() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">次要</span>
-            <h3>v1.0.0 — 初始發布</h3>
+            <h2>v1.0.0 — 初始發布</h2>
             <div className="date">2026 年 7 月</div>
             <ul>
               <li>協議初始發布，內建基礎 KYC/AML 篩查</li>

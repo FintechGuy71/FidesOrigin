@@ -39,7 +39,7 @@ const PAGE_CSS = `
     .badge-latest { background: var(--accent-dim); color: var(--accent); }
     .badge-major { background: var(--success-dim); color: var(--success); }
     .badge-minor { background: var(--bg-card); color: var(--text-muted); }
-    .timeline-item h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .timeline-item h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
     .timeline-item .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .timeline-item ul { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; padding-left: 18px; }
     .timeline-item li { margin-bottom: 4px; }
@@ -71,7 +71,7 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">最新</span>
-            <h3>v3.1.0 — セキュリティ監査リリース</h3>
+            <h2>v3.1.0 — セキュリティ監査リリース</h2>
             <div className="date">2026年8月</div>
             <ul>
               <li>独立セキュリティ監査で指摘された全 53 件を完全修復（High 6 / Medium 15 / Low 26 / Info 6）</li>
@@ -84,7 +84,7 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">メジャー</span>
-            <h3>v2.8.0 — リアルタイムデモと多言語展開</h3>
+            <h2>v2.8.0 — リアルタイムデモと多言語展開</h2>
             <div className="date">2026年8月</div>
             <ul>
               <li>Sepolia リアルタイムデモページ公開：MetaMask ウォレット連携とマルチ RPC フォールバック</li>
@@ -97,7 +97,7 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">メジャー</span>
-            <h3>v2.7.0-A+ — セキュリティ強化</h3>
+            <h2>v2.7.0-A+ — セキュリティ強化</h2>
             <div className="date">2026年8月</div>
             <ul>
               <li>A+ セキュリティ監査レポート；Cloudflare Workers プロキシでセキュリティヘッダーを注入</li>
@@ -109,7 +109,7 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">メジャー</span>
-            <h3>v2.1.0 — Guard アーキテクチャ</h3>
+            <h2>v2.1.0 — Guard アーキテクチャ</h2>
             <div className="date">2026年7月</div>
             <ul>
               <li>FidesCompliance V2.1 に PreTransactionGuard を統合し、ガス不要の取引前チェックを実現</li>
@@ -121,7 +121,7 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">マイナー</span>
-            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <h2>v2.0.0 — RiskRegistryV2</h2>
             <div className="date">2026年7月</div>
             <ul>
               <li>RiskRegistry V2 に CDD ラベルを導入；PolicyEngine がウォレット単位のルールに対応</li>
@@ -132,7 +132,7 @@ export default function ContentChangelogJP() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">マイナー</span>
-            <h3>v1.0.0 — 初期リリース</h3>
+            <h2>v1.0.0 — 初期リリース</h2>
             <div className="date">2026年7月</div>
             <ul>
               <li>プロトコル初期リリース、基本的な KYC/AML スクリーニングを内蔵</li>
