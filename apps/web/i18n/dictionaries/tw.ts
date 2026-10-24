@@ -150,6 +150,9 @@ const tw: Dict = {
       colResources: "資源",
       colCompany: "公司",
       license: "開源許可 · BUSL-1.1",
+      privacy: "隱私政策",
+      terms: "服務條款",
+      security: "安全說明",
     },
     hero: {
       badge: "v1.0 — 已就緒香港《穩定幣條例》",

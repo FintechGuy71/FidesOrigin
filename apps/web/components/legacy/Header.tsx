@@ -52,13 +52,18 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
      Capabilities(首页锚点) / Pricing / Docs / Blog / Demo / GitHub，
      标签统一取自 home.chrome，不再维护第二套 nav.* 文案。 */
   const links = [
-    { href: `${homeHref(lang)}#capabilities`, label: chrome.capabilities },
-    { href: localize("/pricing", lang), label: chrome.pricing },
-    { href: localize("/docs", lang), label: chrome.docs },
-    { href: localize("/blog", lang), label: chrome.blog },
-    { href: localize("/demo", lang), label: chrome.demo },
-    { href: "https://github.com/FintechGuy71/FidesOrigin", label: chrome.github, external: true },
+    { href: `${homeHref(lang)}#capabilities`, label: chrome.capabilities, path: undefined },
+    { href: localize("/pricing", lang), label: chrome.pricing, path: "/pricing" },
+    { href: localize("/docs", lang), label: chrome.docs, path: "/docs" },
+    { href: localize("/blog", lang), label: chrome.blog, path: "/blog" },
+    { href: localize("/demo", lang), label: chrome.demo, path: "/demo" },
+    { href: "https://github.com/FintechGuy71/FidesOrigin", label: chrome.github, external: true, path: undefined },
   ];
+
+  /* [R2] 当前页高亮：机构站导航的位置感。路径前缀匹配（/docs/api → Docs），
+     aria-current="page" 同步给读屏；hash 与外链不参与。 */
+  const isActive = (path?: string) =>
+    !!path && (pagePath === path || pagePath.startsWith(path + "/"));
 
   /* [统一 v5] CTA 与首页一致：gold outline 的 Dashboard 入口 */
   const ctaHref = "/admin/dashboard";
@@ -211,7 +216,13 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
                  客户端路由，无整页刷新；跨 root layout 如 #capabilities 指向首页时
                  Link 自动回退硬导航，行为与 <a> 一致）。
                  prefetch=false：91 页站点避免默认预取扫全站。 */
-              <Link key={l.href + l.label} href={l.href} prefetch={false}>
+              <Link
+                key={l.href + l.label}
+                href={l.href}
+                prefetch={false}
+                aria-current={isActive(l.path) ? "page" : undefined}
+                className={isActive(l.path) ? "active" : undefined}
+              >
                 {l.label}
               </Link>
               )
@@ -332,7 +343,13 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
               {l.label}
             </a>
           ) : (
-            <Link key={l.href + l.label} href={l.href} prefetch={false} onClick={() => setMobileOpen(false)}>
+            <Link
+              key={l.href + l.label}
+              href={l.href}
+              prefetch={false}
+              aria-current={isActive(l.path) ? "page" : undefined}
+              onClick={() => setMobileOpen(false)}
+            >
               {l.label}
             </Link>
           )

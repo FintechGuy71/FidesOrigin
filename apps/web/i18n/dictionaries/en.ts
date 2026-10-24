@@ -149,6 +149,9 @@ const en = {
       colResources: "Resources",
       colCompany: "Company",
       license: "Open source · BUSL-1.1",
+      privacy: "Privacy",
+      terms: "Terms",
+      security: "Security",
     },
     hero: {
       badge: "v1.0 — HK Stablecoin Ordinance Ready",

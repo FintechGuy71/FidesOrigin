@@ -225,6 +225,14 @@ img { max-width: 100%; display: block; }
 .nav-left > a:hover::after {
   width: 100%;
 }
+
+/* [R2] 当前页高亮：与 hover 同一条金色下划线，但常驻 */
+.nav-left > a.active {
+  color: var(--accent);
+}
+.nav-left > a.active::after {
+  width: 100%;
+}
 .nav-actions {
   display: flex;
   align-items: center;
