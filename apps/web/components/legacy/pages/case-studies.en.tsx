@@ -21,7 +21,7 @@ export default function ContentCaseStudiesEN() {
         <div className="case-study-card reveal">
           <div>
             <span className="case-study-tag">Stablecoin</span>
-            <h3>European Stablecoin Issuer — MiCA-Ready Deployment</h3>
+            <h2>European Stablecoin Issuer — MiCA-Ready Deployment</h2>
             <p>A European issuer launched a EUR-backed stablecoin targeting the EU market. They needed real-time OFAC screening, MiCA reserve attestations, and automated KYC verification — all without introducing centralized infrastructure.</p>
             <p>FidesOrigin's CompliantStableCoin base contract provided deterministic screening on every mint, burn, and transfer. The Policy Engine was configured with MiCA-specific rules: 1:1 reserve requirements, daily transaction limits, and accredited investor checks.</p>
             <div className="case-study-stats">
@@ -65,7 +65,7 @@ export default function ContentCaseStudiesEN() {
         <div className="case-study-card reverse reveal">
           <div>
             <span className="case-study-tag">RWA</span>
-            <h3>Tokenized Real Estate Platform — Multi-Jurisdiction Compliance</h3>
+            <h2>Tokenized Real Estate Platform — Multi-Jurisdiction Compliance</h2>
             <p>A tokenization platform issues real estate assets across multiple jurisdictions. Each property has different investor requirements: US accredited investors only for some, EU MiCA for others, and jurisdiction-specific KYC.</p>
             <p>FidesOrigin's multi-policy support allowed the platform to assign different compliance rules per token. The Merkle-based risk registry enabled privacy-preserving verification without revealing investor data on-chain.</p>
             <div className="case-study-stats">
@@ -117,7 +117,7 @@ export default function ContentCaseStudiesEN() {
         <div className="case-study-card reveal">
           <div>
             <span className="case-study-tag">Smart Wallet</span>
-            <h3>Institutional Smart Wallet — ERC-4337 with Compliance</h3>
+            <h2>Institutional Smart Wallet — ERC-4337 with Compliance</h2>
             <p>An institutional wallet team built an ERC-4337 smart wallet for professional users. They needed every userOp screened before bundler submission — without adding latency or compromising the account abstraction flow.</p>
             <p>By integrating FidesOrigin at the validation phase, the wallet screens all destination addresses and call data before the bundler ever sees the userOp. The integration added less than 10ms to validation time.</p>
             <div className="case-study-stats">
@@ -171,7 +171,7 @@ export default function ContentCaseStudiesEN() {
             <div className="testimonial-author">
               <div className="testimonial-avatar">AL</div>
               <div className="testimonial-info">
-                <h4>Alex L.</h4>
+                <h3>Alex L.</h3>
                 <p>CTO, European Stablecoin Issuer</p>
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function ContentCaseStudiesEN() {
             <div className="testimonial-author">
               <div className="testimonial-avatar">SM</div>
               <div className="testimonial-info">
-                <h4>Sarah M.</h4>
+                <h3>Sarah M.</h3>
                 <p>Head of Compliance, RWA Platform</p>
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function ContentCaseStudiesEN() {
             <div className="testimonial-author">
               <div className="testimonial-avatar">DK</div>
               <div className="testimonial-info">
-                <h4>David K.</h4>
+                <h3>David K.</h3>
                 <p>Lead Engineer, Smart Wallet Team</p>
               </div>
             </div>

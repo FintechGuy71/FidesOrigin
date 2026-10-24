@@ -1668,3 +1668,27 @@ textarea.form-input { min-height: 120px; resize: vertical; }
    永不触发（表格宽度永远等于容器），窄屏 4 列被挤到约 86px/列。 */
 .compare-table { min-width: 640px; }
 } /* end @layer legacy */
+
+/* [R3-a11y] 浅色主题下的代码语法色：
+   深色系 --code-* 令牌在浅色底（--bg-elevated → #efece4）上对比度仅 ~2.6:1，
+   axe color-contrast 实测 10 处违规（case-studies）。改用浅底专用色，
+   全部 ≥4.5:1（实测：comment 4.99 / kw 4.9 / type 6.09 / func 5.34 /
+   str 4.53 / num 4.55），语义色直接 alias 浅色语义令牌保持一致。 */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]) {
+    --code-comment: #5f6757;
+    --code-kw:      var(--fio-gold);
+    --code-type:    var(--fio-accent);
+    --code-func:    var(--fio-info);
+    --code-str:     var(--fio-success);
+    --code-num:     var(--fio-warn);
+  }
+}
+html[data-theme="light"] {
+  --code-comment: #5f6757;
+  --code-kw:      var(--fio-gold);
+  --code-type:    var(--fio-accent);
+  --code-func:    var(--fio-info);
+  --code-str:     var(--fio-success);
+  --code-num:     var(--fio-warn);
+}

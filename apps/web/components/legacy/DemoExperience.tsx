@@ -26,7 +26,7 @@ const DEMO_CSS = `
   border-radius: var(--radius-lg);
   padding: 32px;
 }
-.demo-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
+.demo-card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
 .demo-input {
   width: 100%;
   padding: 12px 16px;
@@ -271,7 +271,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
               aria-labelledby="demo-tab-screen"
               style={{ gridColumn: "1 / -1" }}
             >
-              <h3>{dict.screenTitle}</h3>
+              <h2>{dict.screenTitle}</h2>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "16px" }}>
                 {dict.screenDesc}
               </p>
@@ -336,7 +336,7 @@ export default function DemoExperience({ dict }: { dict: D }) {
               aria-labelledby="demo-tab-risk"
               style={{ gridColumn: "1 / -1" }}
             >
-              <h3>{dict.riskTitle}</h3>
+              <h2>{dict.riskTitle}</h2>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "16px" }}>
                 {dict.riskDesc}
               </p>

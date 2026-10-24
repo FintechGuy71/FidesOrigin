@@ -71,7 +71,7 @@ export default function ContentChangelogCN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-latest">最新</span>
-            <h3>v3.1.0 — 安全审计修复版本</h3>
+            <h2>v3.1.0 — 安全审计修复版本</h2>
             <div className="date">2026 年 8 月</div>
             <ul>
               <li>完整修复独立安全审计发现的全部 53 项问题（High 6 / Medium 15 / Low 26 / Info 6）</li>
@@ -84,7 +84,7 @@ export default function ContentChangelogCN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">重大</span>
-            <h3>v2.8.0 — 实时演示与多语言扩展</h3>
+            <h2>v2.8.0 — 实时演示与多语言扩展</h2>
             <div className="date">2026 年 8 月</div>
             <ul>
               <li>Sepolia 实时演示页上线：MetaMask 钱包集成与多 RPC 回退</li>
@@ -97,7 +97,7 @@ export default function ContentChangelogCN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">重大</span>
-            <h3>v2.7.0-A+ — 安全加固</h3>
+            <h2>v2.7.0-A+ — 安全加固</h2>
             <div className="date">2026 年 8 月</div>
             <ul>
               <li>A+ 安全审计报告；Cloudflare Workers 代理注入安全响应头</li>
@@ -109,7 +109,7 @@ export default function ContentChangelogCN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-major">重大</span>
-            <h3>v2.1.0 — Guard 架构</h3>
+            <h2>v2.1.0 — Guard 架构</h2>
             <div className="date">2026 年 7 月</div>
             <ul>
               <li>FidesCompliance V2.1 集成 PreTransactionGuard，实现零 Gas 交易前拦截</li>
@@ -121,7 +121,7 @@ export default function ContentChangelogCN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">次要</span>
-            <h3>v2.0.0 — RiskRegistryV2</h3>
+            <h2>v2.0.0 — RiskRegistryV2</h2>
             <div className="date">2026 年 7 月</div>
             <ul>
               <li>RiskRegistry V2 引入 CDD 标签；PolicyEngine 支持按钱包配置规则</li>
@@ -132,7 +132,7 @@ export default function ContentChangelogCN() {
           <div className="timeline-item">
             <div className="timeline-dot"></div>
             <span className="timeline-badge badge-minor">次要</span>
-            <h3>v1.0.0 — 首次发布</h3>
+            <h2>v1.0.0 — 首次发布</h2>
             <div className="date">2026 年 7 月</div>
             <ul>
               <li>协议首次发布，内置基础 KYC/AML 筛查</li>
