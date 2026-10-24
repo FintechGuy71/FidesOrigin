@@ -150,6 +150,9 @@ const jp: Dict = {
       colResources: "リソース",
       colCompany: "会社",
       license: "オープンソース · BUSL-1.1",
+      privacy: "プライバシー",
+      terms: "利用規約",
+      security: "セキュリティ",
     },
     hero: {
       badge: "v1.0 — 香港ステーブルコイン条例対応",

@@ -72,9 +72,9 @@ export default function Footer({
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Upper — brand + link columns */}
-        <div className="grid gap-12 py-14 md:grid-cols-12 md:py-16">
+        <div className="grid grid-cols-2 gap-12 py-14 md:grid-cols-12 md:py-16">
           {/* Brand column */}
-          <div className="md:col-span-5 lg:col-span-6">
+          <div className="col-span-2 md:col-span-5 lg:col-span-6">
             <div className="flex items-center gap-2.5">
               <img
                 src="/brand/logo-icon-56.png"
@@ -106,7 +106,7 @@ export default function Footer({
             <nav
               key={col.title}
               aria-label={col.title}
-              className="md:col-span-2 lg:col-span-2"
+              className="col-span-1 md:col-span-2 lg:col-span-2"
             >
               <div
                 className="mb-4 font-mono text-[0.6875rem] uppercase tracking-widest"
@@ -139,7 +139,9 @@ export default function Footer({
           ))}
         </div>
 
-        {/* Lower — legal bar */}
+        {/* Lower — legal bar
+            [R2] 机构级合规要求：隐私/条款/安全从每一页可达。
+            此前仅 legacy 页脚有这三个链接，新版首页页脚缺失。 */}
         <div
           className="flex flex-col items-center justify-between gap-3 py-6 sm:flex-row"
           style={{ borderTop: "1px solid var(--fio-border-hairline)" }}
@@ -147,6 +149,17 @@ export default function Footer({
           <div className="font-mono text-xs" style={{ color: "var(--fio-text-3)" }}>
             {d.rights}
           </div>
+          <nav aria-label="Legal" className="flex items-center gap-5">
+            <Link href={href("/privacy", lang)} prefetch={false} className="font-mono text-xs text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm">
+              {d.privacy}
+            </Link>
+            <Link href={href("/terms", lang)} prefetch={false} className="font-mono text-xs text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm">
+              {d.terms}
+            </Link>
+            <Link href={href("/security", lang)} prefetch={false} className="font-mono text-xs text-[var(--fio-text-3)] transition-colors hover:text-[var(--fio-text-2)] focus-visible:ring-2 focus-visible:ring-[var(--fio-gold)] focus-visible:outline-none rounded-sm">
+              {d.security}
+            </Link>
+          </nav>
           <div className="font-mono text-[0.6875rem] tracking-wider" style={{ color: "var(--fio-text-3)" }}>
             {d.license}
           </div>

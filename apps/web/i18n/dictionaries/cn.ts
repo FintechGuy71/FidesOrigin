@@ -150,6 +150,9 @@ const cn: Dict = {
       colResources: "资源",
       colCompany: "公司",
       license: "开源许可 · BUSL-1.1",
+      privacy: "隐私政策",
+      terms: "服务条款",
+      security: "安全说明",
     },
     hero: {
       badge: "v1.0 — 已就绪香港《稳定币条例》",
