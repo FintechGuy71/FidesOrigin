@@ -4,6 +4,12 @@
   "_versionNotes": "[AUDIT FIX R2-013] 与根 package.json(3.1.0) 对齐。原 0.2.1 与 SDK 包版本(0.2.1)撞号，造成「站点版本=SDK 版本」的错觉。",
   "private": true,
   "description": "FidesOrigin Next.js Web Application",
+  "browserslist": [
+    "chrome >= 110",
+    "edge >= 110",
+    "firefox >= 110",
+    "safari >= 16"
+  ],
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/fetch-metrics.mjs",
