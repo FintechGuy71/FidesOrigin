@@ -121,7 +121,7 @@ async function main() {
   console.log('║   基于Sanctions API文档                 ║');
   console.log('╚════════════════════════════════════════╝\n');
   
-  console.log(`API Key: ${API_KEY.slice(0, 20)}...${API_KEY.slice(-4)}\n`);
+  console.log(`API Key: ${API_KEY.slice(0, 4)}...${API_KEY.slice(-4)}\n`);
   
   const allResults = [];
   

@@ -36,7 +36,7 @@ const CACHE_TTL = 3600; // seconds
    「已知链白名单」名存实亡。isValidChainId 保持范围校验（接受任意合法 EVM
    chain id，避免误伤新链），删除死常量，消除两套口径并存的误导。 */
 const CHAIN_ID_TO_NAME = {
-  1: 'ethereum', 10: 'optimism', 56: 'bsc', 137: 'polygon',
+  1: 'ethereum', 11155111: 'sepolia', 10: 'optimism', 56: 'bsc', 137: 'polygon',
   42161: 'arbitrum', 8453: 'base', 324: 'zksync', 59144: 'linea',
 };
 const ALLOWED_ORIGINS = [
@@ -598,7 +598,9 @@ function withMiddleware(handler, requiredScope = SCOPE.READ) {
     // 3. Auth（作用域分级）
     if (!checkApiKey(req, res, requiredScope)) return;
     // 4. JSON body parsing for POST/PUT/PATCH
-    if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.headers['content-type']?.includes('application/json')) {
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)
+        && req.body === undefined
+        && req.headers['content-type']?.includes('application/json')) {
       /* [AUDIT FIX 2026-09-18 R3-C2] parseBody 超限 reject 原在 try 之外 →
          未捕获 rejection，客户端拿不到 413（且 req.destroy 后表现为连接重置）。 */
       try {

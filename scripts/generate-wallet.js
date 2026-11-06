@@ -46,10 +46,14 @@ async function generate() {
   console.log('   https://cloud.google.com/application/web3/faucet/ethereum/sepolia');
   console.log('6. Update .env file with the new PRIVATE_KEY');
   console.log('='.repeat(70));
-  // Print mnemonic ONLY if user explicitly requested it (still not stored to disk)
-  console.log('📝 Mnemonic phrase (WRITE IT DOWN NOW — will not be shown again):');
-  console.log(wallet.mnemonic?.phrase);
-  console.log('='.repeat(70));
+  if (process.env.SHOW_MNEMONIC === 'true') {
+    console.warn('🚨  SHOW_MNEMONIC=true：助记词将写入终端日志，请仅在安全本地环境使用。');
+    console.log('📝 Mnemonic phrase (WRITE IT DOWN NOW — will not be shown again):');
+    console.log(wallet.mnemonic?.phrase);
+    console.log('='.repeat(70));
+  } else {
+    console.log('🔐 Mnemonic hidden. Set SHOW_MNEMONIC=true only in a secure local session to reveal it.');
+  }
 }
 
 generate().catch(err => {

@@ -109,6 +109,7 @@ function isOptionsEqual(a: ClientOptions, b: ClientOptions): boolean {
  */
 const CHAIN_TO_CHAIN_ID: Record<Chain, number> = {
   ethereum: 1,
+  sepolia: 11155111,
   polygon: 137,
   bsc: 56,
   arbitrum: 42161,

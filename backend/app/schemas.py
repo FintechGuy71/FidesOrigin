@@ -51,8 +51,10 @@ class AddressRiskResponse(BaseResponse):
     address: str
     chain: str
     risk_score: float = Field(..., ge=0, le=100, description="风险评分 0-100")
-    risk_level: str = Field(..., description="风险等级: low/medium/high/critical")
+    risk_level: str = Field(..., description="风险等级: low/medium/high/critical/unknown")
     risk_factors: List[RiskFactor] = Field(default_factory=list, description="风险因子")
+    known_address: bool = Field(default=False, description="是否存在权威风险档案")
+    confidence: Optional[float] = Field(default=None, ge=0, le=1, description="证据置信度；不可用时为 null")
     status: str = Field(..., description="风险状态")
     tags: List[str] = Field(default_factory=list, description="标签")
     report_count: int = Field(default=0, description="被报告次数")
@@ -81,6 +83,8 @@ class BatchRiskCheckResultItem(BaseResponse):
     risk_score: float
     risk_level: str
     risk_factors: List[Dict[str, Any]] = Field(default_factory=list)
+    known_address: bool = False
+    confidence: Optional[float] = Field(default=None, ge=0, le=1)
     timestamp: Optional[str] = None
 
 

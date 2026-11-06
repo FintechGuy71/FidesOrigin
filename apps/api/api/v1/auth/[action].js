@@ -47,10 +47,27 @@ async function handler(req, res) {
   });
   if (!allowed) return;
 
-  // ── logout：纯网关侧清 cookie，无需打后端 ────────────────────────────────
+  // ── logout：撤销服务端 refresh family，并清除本地 Cookie ────────────────
   if (action === 'logout') {
-    clearAuthCookies(res);
-    return res.status(200).json({ success: true });
+    const refreshToken = readRefreshCookie(req);
+    try {
+      if (refreshToken) {
+        const response = await proxyToBackend('/api/v1/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (!response.ok && response.status !== 401) {
+          clearAuthCookies(res);
+          return sendError(res, 502, 'REVOKE_FAILED', 'Server-side token revocation failed');
+        }
+      }
+      clearAuthCookies(res);
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('[auth/logout] revoke error:', error.message);
+      clearAuthCookies(res);
+      return sendError(res, 502, 'REVOKE_FAILED', 'Server-side token revocation failed');
+    }
   }
 
   // ── me：读 access cookie → 后端 /me 权威校验 → 返回用户信息 ────────────────

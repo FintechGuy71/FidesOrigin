@@ -23,7 +23,7 @@
     "test:visual": "playwright test"
   },
   "dependencies": {
-    "next": "15.1.9",
+    "next": "15.5.28",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "@fidesorigin/ui": "workspace:*"

@@ -27,6 +27,7 @@ export interface RiskUpdatePayload {
   address: string;
   score: number;
   tier: string;
+  chain?: string;
 }
 
 export interface MessageEnvelope {
@@ -48,8 +49,8 @@ export interface DLQEntry {
   failed_at: number;
 }
 
-const STREAM_KEY = 'fides:mq:risk_updates';
-const CONSUMER_GROUP = 'fides:mq:consumers';
+const STREAM_KEY = 'fides:stream:risk_updates';
+const CONSUMER_GROUP = 'fides:cg:publisher';
 const CONSUMER_NAME = `consumer-${process.pid}-${Date.now()}`;
 const DLQ_KEY = 'fides:mq:dlq';
 const MAX_RETRY_COUNT = 3;
@@ -76,7 +77,7 @@ export class MessageQueue {
   private async ensureConsumerGroup(): Promise<void> {
     const redis = await this.getRedis();
     try {
-      await redis.xGroupCreate(STREAM_KEY, CONSUMER_GROUP, '$', { MKSTREAM: true });
+      await redis.xGroupCreate(STREAM_KEY, CONSUMER_GROUP, '0', { MKSTREAM: true });
       logger.info('Redis Stream consumer group created', { group: CONSUMER_GROUP });
     } catch (err: any) {
       // BUSYGROUP means the group already exists — safe to ignore
@@ -94,10 +95,11 @@ export class MessageQueue {
     score: number,
     tier: string,
     source: string = 'publisher',
+    chain: string = 'sepolia',
   ): Promise<string> {
     const message: MessageEnvelope = {
       type: 'risk_update',
-      payload: { address, score, tier },
+      payload: { address, score, tier, chain },
       timestamp: Math.floor(Date.now() / 1000),
       source,
       message_id: randomUUID(),
@@ -281,6 +283,25 @@ export class MessageQueue {
     if (!this.isRunning) return;
 
     const redis = await this.getRedis();
+
+    // Reclaim stalled messages before reading new ones; failures must reach DLQ.
+    try {
+      const claimed = await redis.xAutoClaim(
+        STREAM_KEY,
+        CONSUMER_GROUP,
+        CONSUMER_NAME,
+        60_000,
+        '0-0',
+        { COUNT: 10 },
+      );
+      for (const message of claimed.messages || []) {
+        if (!message) continue;
+        await this.handleStreamMessage(message.id, message.message || {}, true);
+      }
+    } catch (error) {
+      logger.warn('Pending stream reclaim failed', { error: (error as Error).message });
+    }
+
     const messages = await redis.xReadGroup(
       CONSUMER_GROUP,
       CONSUMER_NAME,
@@ -302,13 +323,15 @@ export class MessageQueue {
    */
   private async handleStreamMessage(
     streamId: string,
-    fields: Record<string, string>
+    fields: Record<string, string>,
+    reclaimed = false,
   ): Promise<void> {
     let envelope: MessageEnvelope;
 
     try {
       const rawData = fields.data || fields.message || '';
       envelope = JSON.parse(rawData) as MessageEnvelope;
+      if (reclaimed) envelope.retry_count = (envelope.retry_count || 0) + 1;
     } catch (e) {
       logger.error('Failed to parse stream message', { error: (e as Error).message, fields });
       // Acknowledge malformed message so it doesn't get redelivered

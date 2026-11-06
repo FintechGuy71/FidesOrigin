@@ -25,6 +25,7 @@ from app.core.security import (
     create_refresh_token,
     decode_access_token,
     rotate_refresh_token,
+    revoke_refresh_token,
 )
 
 logger = get_logger(__name__)
@@ -421,6 +422,19 @@ async def refresh(body: RefreshRequest):
         token_type="bearer",
         expires_in=JWT_EXPIRE_MINUTES * 60,
     )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(body: RefreshRequest):
+    """Revoke the complete refresh-token family on the server side."""
+    try:
+        await revoke_refresh_token(body.refresh_token)
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
 
 
 @router.get(

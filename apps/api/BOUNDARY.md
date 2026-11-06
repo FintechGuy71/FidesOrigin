@@ -16,11 +16,12 @@
  * 4. All business logic lives in backend/ Python services
  *
  * Migration Status:
- * - [TODO] /v1/risk/check       → proxy to /api/v1/address/{address}/risk
- * - [TODO] /v1/risk/batch-check → proxy to /api/v1/address/batch-check
- * - [TODO] /v1/dashboard/stats  → proxy to /api/v1/dashboard/summary
- * - [TODO] /v1/rules            → proxy to /api/v1/rules
- * - [TODO] /v1/rules/[id]       → proxy to /api/v1/rules/{id}
+ * - [DONE] /v1/risk/check       → proxy to /api/v1/address/{address}/risk
+ * - [DONE] /v1/risk/batch-check → proxy to /api/v1/address/batch-check
+ * - [DONE] /v1/risk/address/:id → proxy to /api/v1/address/{address}/risk
+ * - [DONE] /v1/dashboard/stats  → proxy to /api/v1/dashboard/summary
+ * - [DONE] /v1/rules            → proxy to /api/v1/rules + PostgreSQL
+ * - [DONE] /v1/rules/[id]       → proxy to /api/v1/rules/{id} + PostgreSQL
  *
  * Backend Base URL: Set BACKEND_API_URL env var (default: http://localhost:8000)
  */

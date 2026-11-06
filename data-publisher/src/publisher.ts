@@ -334,8 +334,7 @@ export class BlockchainPublisher {
         const { address, score, tier } = envelope.payload as any;
         
         if (!address || score === undefined || !tier) {
-          logger.error('Invalid risk_update message payload', { payload: envelope.payload });
-          return;
+          throw new Error('Invalid risk_update message payload');
         }
         
         // 构建 RiskProfile 并发布到链上
@@ -353,24 +352,20 @@ export class BlockchainPublisher {
         // 使用锁保护发布
         const result = await this.publishSingleWithLock(profile);
         
-        if (result.status === 'success' || result.status === 'skipped') {
-          // P1-2 Fix: 确认消息已处理
-          await this.messageQueue.acknowledgeMessage(envelope.message_id);
-          
-          logger.info('Risk update from queue confirmed', {
-            messageId: envelope.message_id,
-            address,
-            txHash: result.hash,
-          });
-        } else {
+        if (result.status !== 'success' && result.hash !== 'skipped') {
           throw new Error(result.error || 'Publish failed');
         }
+        logger.info('Risk update from queue processed', {
+          messageId: envelope.message_id,
+          address,
+          txHash: result.hash,
+        });
       } catch (error) {
         logger.error('Failed to process queue message', {
           messageId: envelope.message_id,
           error: (error as Error).message,
         });
-        // 消息处理失败会自动重试或进入死信队列（由 MessageQueue 处理）
+        throw error;
       }
     });
     

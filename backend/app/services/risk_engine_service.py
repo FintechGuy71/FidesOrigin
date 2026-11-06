@@ -415,7 +415,7 @@ class RiskEngineService:
             cached = await self.cache.get_json(cache_key)
             if cached is not None:
                 if cached == "__NULL__":
-                    return 0, RiskLevel.LOW, []
+                    return 0, RiskLevel.UNKNOWN, []
                 
                 logger.info("risk_cache_hit", address=address, chain=chain)
                 # [AUDIT FIX 2026-09-18 R3-L6] 缓存条目形状校验：异版本/残缺条目
@@ -455,9 +455,13 @@ class RiskEngineService:
             raw_total_score = total_score
             triggered_rule_names = [f.name for f in risk_factors]
             
-            # 封顶 100
+            # 没有任何命中证据时返回 unknown，而不是把缺数据误报为低风险。
             total_score = min(total_score, 100)
-            risk_level = self._calculate_risk_level(total_score)
+            risk_level = (
+                RiskLevel.UNKNOWN
+                if not risk_factors
+                else self._calculate_risk_level(total_score)
+            )
             
             # 如果发生封顶，记录被截断的原始分数和规则
             if raw_total_score > 100:

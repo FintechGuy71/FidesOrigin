@@ -9,6 +9,7 @@
     "deploy": "vercel --prod",
     "lint": "eslint . --ext .ts,.js",
     "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.js",
     "clean": "rm -rf dist"
   },
   "dependencies": {

@@ -13,6 +13,7 @@ import {
   RuleUpdated,
   RuleActivated,
   RuleDeactivated,
+  PolicyEngine as PolicyEngineContract,
 } from '../../generated/PolicyEngine/PolicyEngine';
 import { BigInt, log } from '@graphprotocol/graph-ts';
 
@@ -28,17 +29,22 @@ function getDecision(decisionValue: i32): string {
 
 export function handleIssuerPolicySet(event: IssuerPolicySet): void {
   let issuer = event.params.issuer.toHexString();
+  let engine = PolicyEngineContract.bind(event.address);
+  let result = engine.try_issuerPolicies(event.params.issuer);
+  if (result.reverted) {
+    log.warning('[handleIssuerPolicySet] issuerPolicies reverted for {}; keeping previous state', [issuer]);
+    return;
+  }
+  let chainPolicy = result.value;
 
   let policy = Policy.load(issuer);
   let previousVersion = 0;
-
   if (!policy) {
     policy = new Policy(issuer);
     policy.issuer = issuer;
     policy.version = 0;
   } else {
-    let prevVersionId = issuer + '-' + policy.version.toString();
-    let prevVersion = PolicyVersion.load(prevVersionId);
+    let prevVersion = PolicyVersion.load(issuer + '-' + policy.version.toString());
     if (prevVersion) {
       prevVersion.active = false;
       prevVersion.save();
@@ -46,31 +52,28 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
     previousVersion = policy.version;
   }
 
-  // [P1-3 FIX] v3.1.0 合约事件为平铺参数（旧 tuple 订阅的 topic0 永不匹配，已实证零触发）；
-  // blockMixer/requireDestinationKYC/cooldownPeriod 不在新事件中，置缺省值
   let newVersion = previousVersion + 1;
   policy.version = newVersion;
-  policy.maxTxAmount = event.params.maxTxAmount;
-  policy.dailyLimit = event.params.dailyLimit;
-  policy.allowMediumRisk = event.params.allowMediumRisk;
-  policy.allowHighRisk = event.params.allowHighRisk;
-  policy.blockMixer = false;
-  policy.requireDestinationKYC = false;
-  policy.cooldownPeriod = BigInt.zero();
+  policy.maxTxAmount = chainPolicy.getMaxTxAmount();
+  policy.dailyLimit = chainPolicy.getDailyLimit();
+  policy.allowMediumRisk = chainPolicy.getAllowMediumRisk();
+  policy.allowHighRisk = chainPolicy.getAllowHighRisk();
+  policy.blockMixer = chainPolicy.getBlockMixer();
+  policy.requireDestinationKYC = chainPolicy.getRequireDestinationKYC();
+  policy.cooldownPeriod = chainPolicy.getCooldownPeriod();
   policy.updatedAt = event.block.timestamp;
   policy.save();
 
-  let versionId = issuer + '-' + newVersion.toString();
-  let version = new PolicyVersion(versionId);
+  let version = new PolicyVersion(issuer + '-' + newVersion.toString());
   version.policy = issuer;
   version.version = newVersion;
-  version.maxTxAmount = event.params.maxTxAmount;
-  version.dailyLimit = event.params.dailyLimit;
-  version.allowMediumRisk = event.params.allowMediumRisk;
-  version.allowHighRisk = event.params.allowHighRisk;
-  version.blockMixer = false;
-  version.requireDestinationKYC = false;
-  version.cooldownPeriod = BigInt.zero();
+  version.maxTxAmount = chainPolicy.getMaxTxAmount();
+  version.dailyLimit = chainPolicy.getDailyLimit();
+  version.allowMediumRisk = chainPolicy.getAllowMediumRisk();
+  version.allowHighRisk = chainPolicy.getAllowHighRisk();
+  version.blockMixer = chainPolicy.getBlockMixer();
+  version.requireDestinationKYC = chainPolicy.getRequireDestinationKYC();
+  version.cooldownPeriod = chainPolicy.getCooldownPeriod();
   version.updatedAt = event.block.timestamp;
   version.blockNumber = event.block.number;
   version.transactionHash = event.transaction.hash.toHexString();
@@ -82,26 +85,31 @@ export function handleIssuerPolicySet(event: IssuerPolicySet): void {
 
 export function handleWalletPolicySet(event: WalletPolicySet): void {
   let wallet = event.params.wallet.toHexString();
+  let engine = PolicyEngineContract.bind(event.address);
+  let result = engine.try_walletPolicies(event.params.wallet);
+  if (result.reverted) {
+    log.warning('[handleWalletPolicySet] walletPolicies reverted for {}; keeping previous state', [wallet]);
+    return;
+  }
+  let chainPolicy = result.value;
 
-  // [P1-3 FIX] v3.1.0 合约 WalletPolicySet 仅携带 wallet 地址（策略明细不再上事件），
-  // 明细字段置缺省；实体保留，作为"哪些钱包被设置过策略"的台账
   let walletPolicy = WalletPolicy.load(wallet);
   if (!walletPolicy) {
     walletPolicy = new WalletPolicy(wallet);
     walletPolicy.wallet = wallet;
     walletPolicy.version = 0;
+    walletPolicy.allowedDex = [];
+    walletPolicy.blockedContracts = [];
   }
 
   walletPolicy.version = walletPolicy.version + 1;
-  walletPolicy.maxTxValue = BigInt.zero();
-  walletPolicy.maxTokenTxAmount = BigInt.zero();
-  walletPolicy.dailyEthLimit = BigInt.zero();
-  walletPolicy.dailyTokenLimit = BigInt.zero();
-  walletPolicy.blockContractCalls = false;
-  walletPolicy.blockUnknownTokens = false;
-  walletPolicy.requireWhitelist = false;
-  walletPolicy.allowedDex = [];
-  walletPolicy.blockedContracts = [];
+  walletPolicy.maxTxValue = chainPolicy.getMaxTxValue();
+  walletPolicy.maxTokenTxAmount = chainPolicy.getMaxTokenTxAmount();
+  walletPolicy.dailyEthLimit = chainPolicy.getDailyEthLimit();
+  walletPolicy.dailyTokenLimit = chainPolicy.getDailyTokenLimit();
+  walletPolicy.blockContractCalls = chainPolicy.getBlockContractCalls();
+  walletPolicy.blockUnknownTokens = chainPolicy.getBlockUnknownToken();
+  walletPolicy.requireWhitelist = chainPolicy.getRequireWhitelist();
   walletPolicy.updatedAt = event.block.timestamp;
   walletPolicy.blockNumber = event.block.number;
   walletPolicy.transactionHash = event.transaction.hash.toHexString();

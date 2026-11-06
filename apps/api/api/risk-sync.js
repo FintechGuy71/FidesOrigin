@@ -244,11 +244,21 @@ module.exports = async function handler(req, res) {
      加 60 秒全局冷却（多实例下以 KV 为准，内存为降级）。 */
   let forceRefresh = req.query?.refresh === 'true';
   if (forceRefresh) {
-    const nowMs = Date.now();
-    if (nowMs - (global._riskSyncLastRefresh || 0) < 60000) {
-      forceRefresh = false; // 冷却期内静默降级为缓存读取
+    if (kvCache) {
+      try {
+        const acquired = await kvCache.set('risk-sync-refresh-lock', Date.now(), { nx: true, ex: 60 });
+        forceRefresh = Boolean(acquired);
+      } catch (error) {
+        console.warn('Refresh lock unavailable, using cached data:', error.message);
+        forceRefresh = false;
+      }
     } else {
-      global._riskSyncLastRefresh = nowMs;
+      const nowMs = Date.now();
+      if (nowMs - (global._riskSyncLastRefresh || 0) < 60000) {
+        forceRefresh = false;
+      } else {
+        global._riskSyncLastRefresh = nowMs;
+      }
     }
   }
 

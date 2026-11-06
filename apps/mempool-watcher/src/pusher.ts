@@ -1,6 +1,7 @@
 import { MempoolWatcher } from './watcher';
 import { DetectionEngine } from './detector';
 import { ethers, Contract, Wallet } from 'ethers';
+import { scoreToTier } from './riskTier';
 
 export interface PusherConfig {
   rpcUrl: string;
@@ -65,7 +66,8 @@ export class RiskPusher {
       if (riskScore >= 100 && allowSanction) {
         // 制裁地址 → 直接更新 Guard 缓存
         const tx = await this.guardContract.updateSanctionedCache(address, true);
-        await tx.wait();
+        const receipt = await tx.wait();
+        if (!receipt || receipt.status !== 1) throw new Error(`Transaction failed: ${tx.hash}`);
         console.log(`✅ Sanctioned cache updated: ${tx.hash}`);
       } else {
         if (riskScore >= 100 && !allowSanction) {
@@ -76,15 +78,17 @@ export class RiskPusher {
         const tx = await this.riskRegistryContract.updateRiskProfile(
           address,
           riskScore,
-          riskScore >= 80 ? 4 : riskScore >= 50 ? 3 : 2, // tier
+          scoreToTier(riskScore),
           [], // tags
           false // sanctioned
         );
-        await tx.wait();
+        const receipt = await tx.wait();
+        if (!receipt || receipt.status !== 1) throw new Error(`Transaction failed: ${tx.hash}`);
         console.log(`✅ Risk profile updated: ${tx.hash}`);
       }
     } catch (err) {
       console.error(`❌ Failed to push risk for ${address}:`, err);
+      throw err;
     }
   }
 

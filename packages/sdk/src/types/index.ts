@@ -78,6 +78,12 @@ export interface RiskCheckResult {
   scores?: RiskScore[];
   /** All risk flags — backend field: risk_factors */
   risk_factors: RiskFactor[];
+  /** Evidence confidence supplied by the backend; never invented by the SDK. */
+  confidence?: number | null;
+  /** Whether the address exists in an authoritative risk data source. */
+  knownAddress?: boolean;
+  /** Backend snake_case alias for knownAddress. */
+  known_address?: boolean;
   /** Address type classification */
   addressType?: AddressType;
   /** Assessment timestamp */
@@ -127,6 +133,8 @@ export interface RiskCheckResult {
 export interface BatchRiskCheckResult {
   /** Per-address results */
   results: RiskCheckResult[];
+  /** Addresses that could not be assessed. */
+  failed?: string[];
   /** Summary statistics */
   summary: {
     total: number;
@@ -168,12 +176,13 @@ export interface DashboardStats {
 // Core / Shared Types
 // ============================================================================
 
-export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical' | 'unknown';
 
 export type AddressType = 'wallet' | 'contract' | 'exchange' | 'mixer' | 'unknown';
 
 export type Chain =
   | 'ethereum'
+  | 'sepolia'
   | 'bitcoin'
   | 'polygon'
   | 'bsc'
@@ -198,8 +207,8 @@ export interface RiskScore {
   score: number;
   /** Risk level */
   level: RiskLevel;
-  /** Confidence level (0-1) */
-  confidence: number;
+  /** Evidence confidence (0-1); null when the backend cannot supply it. */
+  confidence: number | null;
 }
 
 export interface AddressRisk {
@@ -211,6 +220,8 @@ export interface AddressRisk {
   type: AddressType;
   /** Risk assessment */
   risk: RiskScore;
+  /** True only when an authoritative source contains this address. */
+  knownAddress?: boolean;
   /** Risk flags */
   flags: RiskFlag[];
   /** Associated entities */
@@ -332,31 +343,36 @@ export interface Rule {
 }
 
 export interface CreateRuleRequest {
-  /** Rule name */
+  /** Registered strategy name, or a custom name with condition.always_apply=true. */
   name: string;
-  /** Rule description */
   description?: string;
-  /** Rule conditions */
-  conditions: RuleCondition[];
-  /** Rule actions */
-  actions: RuleAction[];
-  /** Rule priority (default: 0) */
+  rule_type: string;
+  category: string;
+  condition: Record<string, unknown> & { always_apply?: boolean };
+  risk_weight?: number;
+  risk_score_impact?: number;
   priority?: number;
+  /** @deprecated Non-executable legacy fields are rejected. */
+  conditions?: RuleCondition[];
+  /** @deprecated Non-executable legacy fields are rejected. */
+  actions?: RuleAction[];
 }
 
 export interface UpdateRuleRequest {
-  /** Rule name */
   name?: string;
-  /** Rule description */
   description?: string;
-  /** Rule status */
+  rule_type?: string;
+  category?: string;
+  condition?: Record<string, unknown> & { always_apply?: boolean };
+  risk_weight?: number;
+  risk_score_impact?: number;
+  is_active?: boolean;
   status?: RuleStatus;
-  /** Rule conditions */
-  conditions?: RuleCondition[];
-  /** Rule actions */
-  actions?: RuleAction[];
-  /** Rule priority */
   priority?: number;
+  /** @deprecated Non-executable legacy fields are rejected. */
+  conditions?: RuleCondition[];
+  /** @deprecated Non-executable legacy fields are rejected. */
+  actions?: RuleAction[];
 }
 
 export interface RuleListOptions {
@@ -551,6 +567,8 @@ export interface FidesOriginConfig {
   baseUrl?: string;
   /** API key for authentication */
   apiKey?: string;
+  /** Server-side HMAC secret required by direct FastAPI rule endpoints. */
+  hmacSecret?: string;
   /** Custom retry configuration */
   retryConfig?: Partial<RetryConfig>;
   /** Enable debug logging */

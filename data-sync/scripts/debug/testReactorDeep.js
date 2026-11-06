@@ -55,8 +55,8 @@ async function testReactorWithDetails() {
 async function checkAPIKeyInfo() {
   console.log('\n\n🔍 检查API Key信息\n');
   console.log(`Key长度: ${API_KEY.length}`);
-  console.log(`Key前缀: ${API_KEY.slice(0, 10)}...`);
-  console.log(`Key后缀: ...${API_KEY.slice(-8)}`);
+  console.log(`Key前缀: ${API_KEY.slice(0, 4)}...`);
+  console.log(`Key后缀: ...${API_KEY.slice(-4)}`);
   
   // 尝试访问Reactor主页获取信息
   try {

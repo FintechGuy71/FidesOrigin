@@ -7,12 +7,13 @@
 // Risk & Compliance Types
 // ============================================================================
 
-/** Risk severity level */
-export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+/** Risk severity level; `unknown` means no defensible assessment is available. */
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical' | 'unknown';
 
 /** Supported blockchain networks */
 export type Chain =
   | 'ethereum'
+  | 'sepolia'
   | 'bitcoin'
   | 'polygon'
   | 'bsc'
@@ -52,6 +53,8 @@ export interface RiskScore {
   level: RiskLevel;
   /** Human-readable description */
   description: string;
+  /** Evidence confidence; null means unavailable. */
+  confidence?: number | null;
   /** Risk flags associated with this score */
   flags?: RiskFlag[];
 }

@@ -1,5 +1,6 @@
 import { FidesOriginClient } from './client';
 import { DEFAULT_API_BASE_URL } from './config';
+import { toAddressRisk, toBatchRiskCheckResponse } from './risk-mapper';
 import {
   AddressRisk,
   RiskCheckOptions,
@@ -50,21 +51,8 @@ export async function checkAddress(
   // [MEDIUM Fix #15] 使用缓存的 singleton client
   const client = getCachedClient(baseUrl, apiKey);
   
-  /* [AUDIT FIX 2026-09-18 R3] checkRisk 返回 RiskCheckResult（risk_score/risk_level
-     顶层字段），而本函数契约是 AddressRisk（risk:{score,level} 嵌套）。显式映射。 */
-  const r = await client.checkRisk({ address, chainId: 1, ...riskOptions });
-  return {
-    address: r.address,
-    chain: r.chain,
-    type: r.addressType || 'unknown',
-    risk: {
-      score: r.risk_score ?? 0,
-      level: (r.risk_level || 'low') as import('./types').RiskLevel,
-      confidence: 1.0,
-    },
-    flags: (r.risk_factors || []).map(f => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
-    assessedAt: r.timestamp || new Date().toISOString(),
-  };
+  const result = await client.checkRisk({ address, chainId: 1, ...riskOptions });
+  return toAddressRisk(result);
 }
 
 /**
@@ -95,21 +83,8 @@ export async function checkBatchAddresses(
   /* [AUDIT FIX 2026-09-18 R3] batchCheckRisk 返回 BatchRiskCheckResult
      （results: RiskCheckResult[]），契约是 BatchRiskCheckResponse
      （results: AddressRisk[]）。显式映射（与 client.checkBatchAddresses 同逻辑）。 */
-  const result = await client.batchCheckRisk({ addresses, chainId: 1, ...(chain ? { chainId: chain as any } : {}) });
-  return {
-    results: result.results.map((r) => ({
-      address: r.address,
-      chain: r.chain,
-      type: r.addressType || 'unknown',
-      risk: {
-        score: r.risk_score ?? 0,
-        level: (r.risk_level || 'low') as import('./types').RiskLevel,
-        confidence: 1.0,
-      },
-      flags: (r.risk_factors || []).map(f => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
-      assessedAt: r.timestamp || new Date().toISOString(),
-    })),
-  };
+  const result = await client.batchCheckRisk({ addresses, chainId: 1, ...(chain ? { chainId: chain } : {}) });
+  return toBatchRiskCheckResponse(result);
 }
 
 /**
@@ -133,24 +108,26 @@ export function isRisky(
   riskLevel: RiskLevel,
   threshold: RiskLevel = 'medium'
 ): boolean {
-  const levels: Record<RiskLevel, number> = {
+  if (riskLevel === 'unknown' || threshold === 'unknown') return false;
+  const levels: Record<Exclude<RiskLevel, 'unknown'>, number> = {
     low: 0,
     medium: 1,
     high: 2,
-    critical: 3
+    critical: 3,
   };
-  
   return levels[riskLevel] >= levels[threshold];
 }
 
 /**
- * Check if an address is safe (low risk)
- * 
- * @param riskLevel - The risk level to check
- * @returns true if risk level is 'low'
+ * Safe requires positive evidence: a known address, an explicit low level and
+ * backend-supplied confidence. Passing only a level is intentionally rejected.
  */
-export function isSafe(riskLevel: RiskLevel): boolean {
-  return riskLevel === 'low';
+export function isSafe(risk: AddressRisk | RiskLevel): boolean {
+  if (typeof risk === 'string') return false;
+  return risk.knownAddress === true
+    && risk.risk.level === 'low'
+    && risk.risk.confidence !== null
+    && risk.risk.confidence > 0;
 }
 
 /**
@@ -161,6 +138,7 @@ export function isSafe(riskLevel: RiskLevel): boolean {
  */
 export function getRiskColor(riskLevel: RiskLevel): string {
   const colors: Record<RiskLevel, string> = {
+    unknown: '#6B7280',  // Gray
     low: '#10B981',      // Green
     medium: '#F59E0B',   // Yellow/Orange
     high: '#EF4444',     // Red
@@ -178,6 +156,7 @@ export function getRiskColor(riskLevel: RiskLevel): string {
  */
 export function getRiskLabel(riskLevel: RiskLevel): string {
   const labels: Record<RiskLevel, string> = {
+    unknown: 'Unknown Risk',
     low: 'Low Risk',
     medium: 'Medium Risk',
     high: 'High Risk',
@@ -283,24 +262,7 @@ export class RiskAssessor {
    */
   async check(address: string, options?: RiskCheckOptions): Promise<AddressRisk> {
     const result = await this.client.checkRisk({ address, chainId: 1, ...options });
-    /* [AUDIT FIX 2026-09-18 R3-M14] 原读不存在的 overallScore/flags →
-       undefined.map TypeError。RiskCheckResult 真实字段为 risk_score/risk_level/
-       risk_factors。 */
-    return {
-      address: result.address,
-      chain: result.chain,
-      type: result.addressType,
-      risk: {
-        score: result.risk_score ?? result.overallScore ?? 0,
-        level: (result.risk_level ?? result.overallLevel ?? 'low') as RiskLevel,
-        confidence: 1.0,
-      },
-      // [R3] RiskFactor 仅 name/weight/score/description；RiskFlag 为字符串联合
-      flags: (result.risk_factors ?? result.flags ?? []).map(f =>
-        (typeof f === 'string' ? f : f.name || 'suspicious_activity') as import('./types').RiskFlag
-      ),
-      assessedAt: result.timestamp,
-    };
+    return toAddressRisk(result);
   }
 
   /**
@@ -310,24 +272,8 @@ export class RiskAssessor {
     addresses: string[],
     options?: Omit<BatchRiskCheckInput, 'addresses'>
   ): Promise<BatchRiskCheckResponse> {
-    // [AUDIT FIX 2026-09-18 R3] 与单地址同款契约修正：读 risk_score/risk_level/
-    // risk_factors 真实字段，flags 映射为 RiskFlag 字符串联合
     const result = await this.client.batchCheckRisk({ addresses, chainId: options?.chainId || 1 });
-    return {
-      results: result.results.map(r => ({
-        address: r.address,
-        chain: r.chain,
-        type: r.addressType || 'unknown',
-        risk: {
-          score: r.risk_score ?? 0,
-          level: (r.risk_level || 'low') as RiskLevel,
-          confidence: 1.0,
-        },
-        flags: (r.risk_factors || []).map(f => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
-        assessedAt: r.timestamp || new Date().toISOString(),
-      })),
-      failed: [],
-    };
+    return toBatchRiskCheckResponse(result);
   }
 
   /**
@@ -342,18 +288,20 @@ export class RiskAssessor {
   }
 
   /**
-   * Validate if all addresses are safe
+   * Safe requires every address to have positive, explicit low-risk evidence.
    */
   async validateAllSafe(addresses: string[]): Promise<{
     safe: boolean;
     riskyAddresses: AddressRisk[];
+    unknownAddresses: AddressRisk[];
   }> {
     const result = await this.checkBatch(addresses);
-    const riskyAddresses = filterByRiskLevel(result.results, 'medium');
-    
+    const unknownAddresses = result.results.filter((address) => !isSafe(address) && address.risk.level === 'unknown');
+    const riskyAddresses = result.results.filter((address) => !isSafe(address) && address.risk.level !== 'unknown');
     return {
-      safe: riskyAddresses.length === 0,
-      riskyAddresses
+      safe: unknownAddresses.length === 0 && riskyAddresses.length === 0,
+      riskyAddresses,
+      unknownAddresses,
     };
   }
 }

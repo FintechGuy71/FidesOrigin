@@ -1,9 +1,10 @@
+const { proxyToBackend } = require('../../../_lib/proxy');
 const {
   withMiddleware,
   isValidEthereumAddress,
+  isValidChainId,
+  getChainName,
   sendError,
-  getRiskData,
-  buildAddressRisk,
 } = require('../../../_lib/utils');
 
 // GET /v1/risk/address/:address
@@ -12,7 +13,7 @@ async function handler(req, res) {
     return sendError(res, 405, 'BAD_REQUEST', 'Method not allowed');
   }
 
-  const { address } = req.query || {};
+  const { address, chainId = '11155111' } = req.query || {};
 
   if (!address) {
     return sendError(res, 400, 'BAD_REQUEST', 'Missing address path parameter');
@@ -20,14 +21,22 @@ async function handler(req, res) {
   if (!isValidEthereumAddress(address)) {
     return sendError(res, 400, 'INVALID_ADDRESS', 'Invalid Ethereum address format');
   }
+  if (!isValidChainId(chainId)) {
+    return sendError(res, 400, 'INVALID_CHAIN_ID', 'Invalid chain ID');
+  }
+  const chain = getChainName(chainId);
+  if (chain === 'unknown') {
+    return sendError(res, 400, 'UNSUPPORTED_CHAIN', 'Unsupported chain ID');
+  }
 
-  // [AUDIT FIX 2026-09-18 R3] 默认链与 /v1/risk/check、/v1/public/risk-check
-  // 对齐为 Sepolia(11155111)——v3.1.0 仅部署测试网，默认主网造成跨端点口径分裂
-  const chainId = 11155111;
-  const riskData = await getRiskData();
-  const result = buildAddressRisk(address, chainId, riskData);
-
-  return res.status(200).json(result);
+  try {
+    const response = await proxyToBackend(`/api/v1/address/${address}/risk?chain=${chain}`);
+    const data = await response.json().catch(() => null);
+    return res.status(response.status).json(data);
+  } catch (error) {
+    console.error('[risk/address] Proxy error:', error.message);
+    return sendError(res, 502, 'PROXY_ERROR', 'Backend unavailable');
+  }
 }
 
 module.exports = withMiddleware(handler);

@@ -41,12 +41,14 @@ class RiskUpdateMessage:
     tier: str
     timestamp: int
     source: str
+    chain: str = "sepolia"
     
     def to_payload(self) -> Dict[str, Any]:
         return {
             "address": self.address,
             "score": self.score,
             "tier": self.tier,
+            "chain": self.chain,
         }
 
 
@@ -170,6 +172,7 @@ class MessageQueue:
         score: float,
         tier: str,
         source: str = "backend",
+        chain: str = "sepolia",
     ) -> str:
         """
         发布风险更新消息到 Redis Stream
@@ -191,6 +194,7 @@ class MessageQueue:
                 "address": address,
                 "score": score,
                 "tier": tier,
+                "chain": chain,
             },
             timestamp=int(time.time()),
             source=source,

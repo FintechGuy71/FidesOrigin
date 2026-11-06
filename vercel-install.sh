@@ -1,29 +1,5 @@
 #!/bin/bash
-# Vercel install script - handles pnpm onlyBuiltDependencies
+set -euo pipefail
 
-# Create pnpm-workspace.yaml with onlyBuiltDependencies
-cat > pnpm-workspace.yaml << 'EOF'
-packages:
-  - "apps/*"
-  - "packages/*"
-
-onlyBuiltDependencies:
-  - sharp
-  - "@napi-rs/canvas"
-  - secp256k1
-  - keccak
-  - bcrypt
-  - esbuild
-  - protobufjs
-  - msw
-
-overrides:
-  "@chainlink/contracts": "1.3.0"
-
-settings:
-  fetchTimeout: 600000
-  networkConcurrency: 3
-EOF
-
-# Run pnpm install
-pnpm install --no-frozen-lockfile
+# 保留仓库唯一的 pnpm-workspace.yaml，禁止部署时覆盖构建审批配置。
+pnpm install --frozen-lockfile --config.block-exotic-subdeps=false
