@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.di import get_db
 from app.core.logging import get_logger
-from app.core.security import get_current_user
+from app.core.security import get_current_admin_user
 from app.models import AddressRisk, RiskEvent, RiskLevel, Transaction
 
 logger = get_logger(__name__)
@@ -49,7 +49,7 @@ async def _count(db: AsyncSession, stmt) -> int:
 )
 async def get_dashboard_summary(
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_admin_user),
 ):
     """
     仪表盘汇总统计（需鉴权）
@@ -121,7 +121,7 @@ async def get_dashboard_summary(
 )
 async def get_dashboard_events(
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_admin_user),
 ):
     """
     近期风险事件列表（需鉴权）

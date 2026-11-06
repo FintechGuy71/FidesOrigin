@@ -37,7 +37,15 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
 
   console.log(`\n🗄️ Syncing ${entries.length} profiles to backend DB...`);
 
-  const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  const chain = process.env.BACKEND_CHAIN || 'sepolia';
+  if (!/^[a-z0-9_-]+$/i.test(chain)) throw new Error('Invalid BACKEND_CHAIN');
+  const ssl = process.env.DB_SSL === 'disable'
+    ? false
+    : {
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+        ...(process.env.DB_SSL_CA ? { ca: process.env.DB_SSL_CA } : {}),
+      };
+  const client = new Client({ connectionString: url, ssl });
   await client.connect();
 
   try {
@@ -71,7 +79,7 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
         values.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`);
         params.push(
           e.address.toLowerCase(),
-          'ethereum',
+          chain,
           score,
           level,
           JSON.stringify(tags),
@@ -108,10 +116,10 @@ async function pushToBackendDb(entries, delistedAddresses = []) {
       for (const addr of delistedAddresses) {
         await client.query(
           `UPDATE address_risks
-             SET risk_score = 0, risk_level = 'LOW', tags = '[]'::jsonb,
+             SET risk_score = 0, risk_level = 'UNKNOWN', tags = '[]'::jsonb,
                  status = 'CONFIRMED', last_updated_at = $2
-           WHERE address = $1 AND chain = 'ethereum'`,
-          [addr.toLowerCase(), now]
+           WHERE address = $1 AND chain = $3`,
+          [addr.toLowerCase(), now, chain]
         );
         delisted++;
       }

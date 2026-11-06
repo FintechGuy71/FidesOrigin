@@ -68,7 +68,7 @@ async function proxyToBackend(backendPath, options = {}) {
       ...(BACKEND_API_KEY ? { 'X-API-Key': BACKEND_API_KEY } : {}),
     };
 
-    if (options.sign && WRITE_METHODS.has(method)) {
+    if (options.sign) {
       if (!HMAC_SECRET) {
         // fail-closed：未配置密钥时不发送未签名写请求
         console.error('[proxyToBackend] HMAC_SECRET/SECRET_KEY not set — refusing to send unsigned write request.');
@@ -82,12 +82,13 @@ async function proxyToBackend(backendPath, options = {}) {
       headers['X-Request-Signature'] = _signRequest(method, backendPath, timestamp, bodyStr);
     }
 
-    const { sign, forwardAuth, ...fetchOptions } = options;
+    const { sign, forwardAuth, timeoutMs = 10000, ...fetchOptions } = options;
     const response = await fetch(url, {
       ...fetchOptions,
       method,
       body: WRITE_METHODS.has(method) ? bodyStr : undefined,
       headers,
+      signal: options.signal || AbortSignal.timeout(timeoutMs),
     });
     return response;
   } catch (err) {

@@ -71,6 +71,7 @@ class RiskSyncService:
         score: float,
         tier: RiskLevel,
         force_direct: bool = False,
+        chain: str = "sepolia",
     ) -> Dict[str, Any]:
         """
         同步单个地址风险到链上
@@ -91,6 +92,7 @@ class RiskSyncService:
             "address": address,
             "score": score,
             "tier": tier.value,
+            "chain": chain,
             "method": "queue",
             "success": True,
             "message_id": None,
@@ -105,6 +107,7 @@ class RiskSyncService:
                     score=score,
                     tier=tier.value,
                     source="backend",
+                    chain=chain,
                 )
                 
                 result["message_id"] = message_id
@@ -183,10 +186,6 @@ class RiskSyncService:
         result["lock_acquired"] = True
         
         try:
-            # P0-3 Fix: 持有锁期间执行链上写入
-            # 注意：这里是一个模拟实现，实际链上写入需要 Web3 连接
-            # 在实际环境中，这里会调用合约的 updateRiskProfile 方法
-            
             logger.info(
                 "direct_write_start",
                 address=address,
@@ -194,22 +193,11 @@ class RiskSyncService:
                 tier=tier.value,
                 lock_token=lock_token[:20] + "...",
             )
-            
-            # 模拟链上写入（实际项目中替换为真实合约调用）
-            # tx_hash = await self._call_contract_update(address, score, tier)
-            
-            await asyncio.sleep(0.1)  # 模拟链上写入耗时
-            
-            result["success"] = True
-            result["tx_hash"] = "simulated_tx_hash"  # 实际替换为真实交易哈希
-            
-            logger.info(
-                "direct_write_complete",
-                address=address,
-                score=score,
-                tier=tier.value,
+            # 后端没有合约签名能力。绝不把未发生的链上写入报告为成功。
+            raise NotImplementedError(
+                "Direct chain writing is not configured; use the data-publisher queue"
             )
-            
+
         except Exception as e:
             result["error"] = str(e)
             result["success"] = False
@@ -333,6 +321,7 @@ class RiskSyncService:
         address: str,
         score: float,
         tier: str,
+        chain: str = "sepolia",
     ) -> None:
         """
         处理消息队列中的风险更新确认
@@ -353,14 +342,14 @@ class RiskSyncService:
         level = tier if isinstance(tier, RiskLevel) else RiskLevel(str(tier).upper())
         await self.address_repo.create_or_update(
             address=address,
-            chain="ethereum",
+            chain=chain,
             risk_score=score,
             risk_level=level,
             risk_factors=[],
         )
         
         # 清除缓存
-        cache_key = self.cache.risk_key(address, "ethereum")
+        cache_key = self.cache.risk_key(address, chain)
         await self.cache.delete(cache_key)
         
         logger.info(

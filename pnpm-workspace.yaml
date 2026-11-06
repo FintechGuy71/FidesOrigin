@@ -18,6 +18,38 @@ allowBuilds:
 
 overrides:
   "@chainlink/contracts": "1.3.0"
+  # 安全修复：仅覆盖公告要求的最低兼容版本，避免全仓无差别升级。
+  "@openzeppelin/contracts": "5.6.1"
+  "@openzeppelin/contracts-upgradeable": "5.6.1"
+  "path-to-regexp": "6.3.0"
+  "parse-duration": "2.1.3"
+  "cross-spawn": "7.0.6"
+  "axios@0.21.4": "1.21.0"
+  "tar": "7.5.21"
+  "semver": "7.5.2"
+  "undici@5": "6.29.1"
+  "undici@6.26.0": "6.29.1"
+  "undici@7": "7.30.1"
+  "decompress": "npm:@xhmikosr/decompress@11.1.4"
+  "glob": "11.1.0"
+  "immutable": "4.3.9"
+  "protobufjs": "7.6.1"
+  "tmp": "0.2.7"
+  "ws": "8.21.0"
+  "brace-expansion@1": "1.1.20"
+  "brace-expansion@2": "2.1.6"
+  "brace-expansion@3": "3.0.11"
+  "brace-expansion@4": "5.0.11"
+  "brace-expansion@5": "5.0.11"
+  "js-yaml": "4.3.2"
+  "postcss": "8.5.18"
+  "nanoid": "3.3.18"
+  "@fastify/busboy": "3.2.1"
+  "follow-redirects": "1.16.2"
+  "zod": "4.6.6"
+  "vitest": "4.1.8"
+  "tinypool": "2.1.2"
+  "handlebars": "4.7.10"
 
 settings:
   fetchTimeout: 600000

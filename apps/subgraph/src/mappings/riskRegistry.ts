@@ -218,9 +218,14 @@ export function handleRiskProfileRemoved(event: RiskProfileRemoved): void {
     store.remove('RiskProfile', account);
   }
   let sanctioned = SanctionedAddress.load(account);
-  if (sanctioned) {
+  if (sanctioned && sanctioned.isActive) {
     sanctioned.isActive = false;
     sanctioned.removedAt = event.block.timestamp;
     sanctioned.save();
+
+    let stats = getOrCreateStats();
+    if (stats.totalSanctioned > 0) stats.totalSanctioned -= 1;
+    stats.lastUpdated = event.block.timestamp;
+    stats.save();
   }
 }

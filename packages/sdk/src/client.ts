@@ -21,6 +21,8 @@ import {
   UpdateRuleRequest,
 } from "./types";
 import { FidesOriginWebSocket } from "./websocket";
+import { toAddressRisk, toBatchRiskCheckResponse } from "./risk-mapper";
+import { normalizeRule, normalizeRuleList } from "./rule-mapper";
 
 import { FidesOriginError } from "./error";
 import type { ErrorCode } from "./error";
@@ -112,6 +114,29 @@ function mergeSignals(...signals: (AbortSignal | undefined | null)[]): AbortSign
   return controller.signal;
 }
 
+interface SigningInput {
+  secret: string;
+  method: string;
+  path: string;
+  body?: string;
+}
+
+async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
+  if (!globalThis.crypto?.subtle) {
+    throw new FidesOriginError("Web Crypto HMAC is unavailable in this runtime", "CONFIG_ERROR");
+  }
+  const encoder = new TextEncoder();
+  const key = await globalThis.crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await globalThis.crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 // ─── Sensitive Data Redaction (M-01) ─────────────────────────────────────────
 
 const SENSITIVE_PATTERNS: Array<{ re: RegExp; repl: string }> = [
@@ -144,7 +169,8 @@ async function fetchWithRetry<T>(
   options: RequestInit,
   retryConfig: RetryConfig,
   apiKey?: string,
-  timeoutMs: number = 15000
+  timeoutMs: number = 15000,
+  signing?: SigningInput,
 ): Promise<T> {
   const { maxRetries, baseDelayMs, maxDelayMs, retryableStatusCodes } = retryConfig;
 
@@ -165,6 +191,14 @@ async function fetchWithRetry<T>(
       if (options.headers) {
         const userHeaders = new Headers(options.headers);
         userHeaders.forEach((value, key) => headers.set(key, value));
+      }
+
+      if (signing) {
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const body = signing.body ?? "";
+        const payload = `${signing.method.toUpperCase()}\n${signing.path}\n${timestamp}\n${body}`;
+        headers.set("X-Request-Timestamp", timestamp);
+        headers.set("X-Request-Signature", await hmacSha256Hex(signing.secret, payload));
       }
 
       // 合并调用方传入的 signal 与我们的超时 signal，任一触发都会中止请求
@@ -297,12 +331,25 @@ const KNOWN_CHAIN_IDS = new Set<number>([
 
 const CHAIN_NAME_TO_ID: Record<string, number> = {
   ethereum: 1,
+  sepolia: 11155111,
   polygon: 137,
   bsc: 56,
   arbitrum: 42161,
   optimism: 10,
   base: 8453,
 };
+
+const CHAIN_ID_TO_NAME = Object.fromEntries(
+  Object.entries(CHAIN_NAME_TO_ID).map(([name, id]) => [id, name]),
+) as Record<number, string>;
+
+function getChainName(chainId: number): string {
+  const name = CHAIN_ID_TO_NAME[chainId];
+  if (!name) {
+    throw new FidesOriginError(`Unsupported chain ID: ${chainId}`, "INVALID_CHAIN_ID");
+  }
+  return name;
+}
 
 export function isValidChainId(chainId: number | string): boolean {
   let id: number;
@@ -364,12 +411,14 @@ export class FidesOriginClient {
   private readonly wsUrl: string;
   private readonly timeoutMs: number;
   private readonly allowBrowserUsage: boolean;
+  private readonly hmacSecret?: string;
 
   /** Public readonly config accessor */
   get config(): FidesOriginConfig {
     return {
       baseUrl: this.baseUrl,
       apiKey: this.apiKey,
+      hmacSecret: this.hmacSecret,
       timeout: this.timeoutMs,
       debug: false,
       retryConfig: this.retryConfig,
@@ -387,6 +436,7 @@ export class FidesOriginClient {
       );
     }
     this.apiKey = config.apiKey;
+    this.hmacSecret = config.hmacSecret;
     this.retryConfig = {
       ...DEFAULT_RETRY_CONFIG,
       ...config.retryConfig,
@@ -402,16 +452,24 @@ export class FidesOriginClient {
       typeof window.document !== 'undefined' &&
       typeof window.document.createElement === 'function';
 
-    if (isBrowser && this.apiKey) {
-      if (!this.apiKey.startsWith('pk_')) {
-        throw new FidesOriginError(
-          "[FidesOriginClient] Secret API keys are strictly forbidden in browser environments. " +
-          "Use a backend proxy or a public token (pk_*) instead. " +
-          "This restriction cannot be bypassed.",
-          "UNAUTHORIZED"
-        );
-      }
+    if (isBrowser && this.apiKey && !this.apiKey.startsWith('pk_')) {
+      throw new FidesOriginError(
+        "[FidesOriginClient] Secret API keys are strictly forbidden in browser environments. " +
+        "Use a backend proxy or a public token (pk_*) instead.",
+        "UNAUTHORIZED"
+      );
     }
+    if (isBrowser && this.hmacSecret) {
+      throw new FidesOriginError(
+        "[FidesOriginClient] hmacSecret must never be used in a browser environment.",
+        "UNAUTHORIZED"
+      );
+    }
+  }
+
+  private signingFor(method: string, path: string, body = ""): SigningInput | undefined {
+    if (!this.hmacSecret) return undefined;
+    return { secret: this.hmacSecret, method, path, body };
   }
 
   // ─── Risk Assessment ─────────────────────────────────────────────────────
@@ -424,8 +482,7 @@ export class FidesOriginClient {
     const chainId = validateChainId(input.chainId);
 
     const params: Record<string, string> = {
-      address: account,
-      chainId: String(chainId),
+      chain: getChainName(chainId),
     };
     if (input.amount !== undefined && input.amount !== null) {
       params.amount = validateAmount(input.amount);
@@ -453,17 +510,15 @@ export class FidesOriginClient {
       ...(input.amount ? { amount: validateAmount(input.amount) } : {}),
     };
 
+    const path = '/api/v1/address/batch-check';
+    const serializedBody = JSON.stringify(body);
     return fetchWithRetry<BatchRiskCheckResult>(
-      // [AUDIT FIX 2026-09-18 R3-H8] 原指向 /api/v1/address/search（后端仅注册
-      // GET 且语义为搜索）→ 405 必败。指向后端新增的 POST /batch-check。
-      buildUrl(this.baseUrl, '/api/v1/address/batch-check'),
-      {
-        method: 'POST',
-        body: JSON.stringify(body),
-      },
+      buildUrl(this.baseUrl, path),
+      { method: 'POST', body: serializedBody },
       this.retryConfig,
       this.apiKey,
-      this.timeoutMs
+      this.timeoutMs,
+      this.signingFor('POST', path, serializedBody),
     );
   }
 
@@ -471,14 +526,7 @@ export class FidesOriginClient {
    * 查询某地址的最新风险快照
    */
   async getAddressRisk(address: string): Promise<AddressRisk> {
-    const account = validateAddress(address);
-    return fetchWithRetry<AddressRisk>(
-      buildUrl(this.baseUrl, `/api/v1/address/${account}/risk`),
-      { method: 'GET' },
-      this.retryConfig,
-      this.apiKey,
-      this.timeoutMs
-    );
+    return toAddressRisk(await this.checkRisk({ address, chainId: 1 }));
   }
 
   // ─── Dashboard / Stats ───────────────────────────────────────────────────
@@ -506,57 +554,90 @@ export class FidesOriginClient {
     if (options.offset !== undefined) params.offset = String(options.offset);
     if (options.status) params.status = options.status;
 
-    return fetchWithRetry<RuleListResponse>(
-      buildUrl(this.baseUrl, '/api/v1/rules', params),
+    const query = new URLSearchParams(params).toString();
+    const path = '/api/v1/rules/' + (query ? `?${query}` : '');
+    const response = await fetchWithRetry<any>(
+      buildUrl(this.baseUrl, path),
       { method: 'GET' },
       this.retryConfig,
       this.apiKey,
-      this.timeoutMs
+      this.timeoutMs,
+      this.signingFor('GET', path),
     );
+    return normalizeRuleList(response);
   }
 
   async createRule(req: CreateRuleRequest): Promise<Rule> {
     if (!req || typeof req !== 'object') {
       throw new FidesOriginError('Invalid create rule request', 'BAD_REQUEST');
     }
-    return fetchWithRetry<Rule>(
-      buildUrl(this.baseUrl, '/api/v1/rules'),
-      { method: 'POST', body: JSON.stringify(req) },
+    if (req.conditions !== undefined || req.actions !== undefined) {
+      throw new FidesOriginError('Legacy conditions/actions are not executable by the backend', 'NON_EXECUTABLE_RULE');
+    }
+    if (!req.rule_type || !req.category || !req.condition) {
+      throw new FidesOriginError('rule_type, category and condition are required', 'BAD_REQUEST');
+    }
+    const strategies = new Set([
+      'reported_address', 'high_frequency_transactions', 'new_address',
+      'large_amount_transfer', 'sanctioned_list', 'scam_list',
+    ]);
+    if (!strategies.has(req.name) && req.condition.always_apply !== true) {
+      throw new FidesOriginError('Rule is not executable by the backend risk engine', 'NON_EXECUTABLE_RULE');
+    }
+    const path = '/api/v1/rules/';
+    const body = JSON.stringify(req);
+    const response = await fetchWithRetry<any>(
+      buildUrl(this.baseUrl, path),
+      { method: 'POST', body },
       this.retryConfig,
       this.apiKey,
-      this.timeoutMs
+      this.timeoutMs,
+      this.signingFor('POST', path, body),
     );
+    return normalizeRule(response);
   }
 
   async updateRule(id: string, req: UpdateRuleRequest): Promise<Rule> {
     if (!id) {
       throw new FidesOriginError('Rule id is required', 'BAD_REQUEST');
     }
-    return fetchWithRetry<Rule>(
-      buildUrl(this.baseUrl, `/api/v1/rules/${encodeURIComponent(id)}`),
-      { method: 'PATCH', body: JSON.stringify(req || {}) },
+    if (req.conditions !== undefined || req.actions !== undefined) {
+      throw new FidesOriginError('Legacy conditions/actions are not executable by the backend', 'NON_EXECUTABLE_RULE');
+    }
+    const path = `/api/v1/rules/${encodeURIComponent(id)}`;
+    const body = JSON.stringify(req || {});
+    const response = await fetchWithRetry<any>(
+      buildUrl(this.baseUrl, path),
+      { method: 'PATCH', body },
       this.retryConfig,
       this.apiKey,
-      this.timeoutMs
+      this.timeoutMs,
+      this.signingFor('PATCH', path, body),
     );
+    return normalizeRule(response);
   }
 
   async deleteRule(id: string): Promise<void> {
     if (!id) {
       throw new FidesOriginError('Rule id is required', 'BAD_REQUEST');
     }
+    const path = `/api/v1/rules/${encodeURIComponent(id)}`;
     await fetchWithRetry<void>(
-      buildUrl(this.baseUrl, `/api/v1/rules/${encodeURIComponent(id)}`),
+      buildUrl(this.baseUrl, path),
       { method: 'DELETE' },
       this.retryConfig,
       this.apiKey,
-      this.timeoutMs
+      this.timeoutMs,
+      this.signingFor('DELETE', path),
     );
   }
 
-  /** Check single address risk (alias for getAddressRisk) */
-  async checkAddress(address: string, _options?: RiskCheckOptions): Promise<AddressRisk> {
-    return this.getAddressRisk(address);
+  /** Check single address risk. */
+  async checkAddress(address: string, options: RiskCheckOptions = {}): Promise<AddressRisk> {
+    return toAddressRisk(await this.checkRisk({
+      address,
+      chainId: options.chain || 1,
+    }));
   }
 
   /** Check multiple addresses (alias for batchCheckRisk) */
@@ -569,24 +650,7 @@ export class FidesOriginClient {
       addresses: input.addresses,
       chainId: input.chain || 'ethereum',
     });
-    /* [AUDIT FIX 2026-09-18 R3-M14] 原裸断言把 RiskCheckResult[] 当
-       AddressRisk[]（后者是 risk:{score,level} 嵌套形状）→ 消费端读
-       results[i].risk.level 得 undefined。显式映射为契约形状。 */
-    return {
-      results: result.results.map((r) => ({
-        address: r.address,
-        chain: r.chain,
-        type: r.addressType || 'unknown',
-        risk: {
-          score: r.risk_score ?? 0,
-          level: (r.risk_level || 'low') as RiskLevel,
-          confidence: 1.0,
-        },
-        // [R3] RiskFactor 仅有 name/weight/score/description → 映射为 RiskFlag 字符串联合
-        flags: (r.risk_factors || []).map((f) => (f.name || 'suspicious_activity') as import('./types').RiskFlag),
-        assessedAt: r.timestamp || new Date().toISOString(),
-      })),
-    };
+    return toBatchRiskCheckResponse(result);
   }
 
   createWebSocket(config?: WebSocketConfig): FidesOriginWebSocket {

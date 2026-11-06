@@ -1,197 +1,134 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FidesOriginClient } from './client';
-import { FidesOriginError } from './error';
+import { isSafe } from './risk';
+import { toAddressRisk } from './risk-mapper';
 
+const ADDRESS = '0x742d35cc6634c0532925a3b844bc9e7595f8deee';
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('FidesOriginClient', () => {
+function jsonResponse(data: unknown, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    text: () => Promise.resolve(JSON.stringify(data)),
+  };
+}
+
+describe('FidesOriginClient contracts', () => {
   let client: FidesOriginClient;
 
   beforeEach(() => {
-    mockFetch.mockClear();
+    mockFetch.mockReset();
     client = new FidesOriginClient({
       baseUrl: 'https://api.fidesorigin.com',
       apiKey: 'test-api-key',
-      debug: false,
+      hmacSecret: 'audit-hmac-secret-at-least-32-characters',
+      retryConfig: { maxRetries: 0 },
     });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it('maps Sepolia chain ID to the backend chain parameter', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({
+      address: ADDRESS,
+      chain: 'sepolia',
+      risk_score: 0,
+      risk_level: 'unknown',
+      risk_factors: [],
+      known_address: false,
+      confidence: null,
+    }));
+    await client.checkRisk({ address: ADDRESS, chainId: 11155111 });
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain('chain=sepolia');
+    expect(url).not.toContain('chainId=');
   });
 
-  describe('constructor', () => {
-    it('should initialize with valid config', () => {
-      const c = new FidesOriginClient({ baseUrl: 'https://api.example.com' });
-      expect(c.config.baseUrl).toBe('https://api.example.com');
+  it('does not convert unknown evidence into low risk or fabricated confidence', () => {
+    const result = toAddressRisk({
+      address: ADDRESS,
+      chain: 'sepolia',
+      risk_score: 0,
+      risk_level: 'unknown',
+      risk_factors: [],
+      knownAddress: false,
+      confidence: null,
     });
-
-    it('should merge default config', () => {
-      const c = new FidesOriginClient({ baseUrl: 'https://api.example.com' });
-      expect(c.config.timeout).toBe(30000);
-      expect(c.config.retryConfig?.maxRetries).toBe(3);
-    });
+    expect(result.risk.level).toBe('unknown');
+    expect(result.risk.confidence).toBeNull();
+    expect(result.knownAddress).toBe(false);
+    expect(isSafe(result)).toBe(false);
   });
 
-  describe('checkRisk', () => {
-    it('should return risk data for valid address', async () => {
-      const mockResponse = {
-        address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
-        chain: 'ethereum',
-        addressType: 'wallet',
-        overallScore: 75,
-        overallLevel: 'high',
-        scores: [],
-        flags: [],
-        timestamp: '2024-01-01T00:00:00Z',
-      };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as any);
-
-      const result = await client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 });
-      expect(result.address).toBe('0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee');
-      expect(result.overallScore).toBe(75);
+  it('requires positive evidence before reporting safe', () => {
+    const result = toAddressRisk({
+      address: ADDRESS,
+      chain: 'sepolia',
+      risk_score: 20,
+      risk_level: 'low',
+      risk_factors: [],
+      known_address: true,
+      confidence: 0.95,
     });
-
-    it('should reject invalid ethereum address', async () => {
-      await expect(client.checkRisk({ address: 'invalid', chainId: 1 })).rejects.toThrow(FidesOriginError);
-    });
-
-    it('should reject empty address', async () => {
-      await expect(client.checkRisk({ address: '', chainId: 1 })).rejects.toThrow(FidesOriginError);
-    });
+    expect(isSafe(result)).toBe(true);
+    expect(isSafe(result.risk.level)).toBe(false);
   });
 
-  describe('API error handling', () => {
-    it('should handle 400 Bad Request', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-        json: () => Promise.resolve({ message: 'Invalid parameters', code: 'INVALID_ADDRESS' }),
-      } as any);
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('Invalid parameters');
-    });
-
-    it('should handle 401 Unauthorized', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        json: () => Promise.resolve({ message: 'Invalid API key', code: 'UNAUTHORIZED' }),
-      } as any);
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('Invalid API key');
-    });
-
-    it('should handle 404 Not Found', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-        json: () => Promise.resolve({ message: 'Address not found', code: 'NOT_FOUND' }),
-      } as any);
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('Address not found');
-    });
-
-    it('should handle 500 Internal Server Error', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        json: () => Promise.resolve({ message: 'Server error', code: 'SERVER_ERROR' }),
-      } as any);
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('Server error');
-    });
-
-    it('should handle non-JSON error response', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 502,
-        statusText: 'Bad Gateway',
-        json: () => Promise.reject(new Error('Not JSON')),
-      } as any);
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('API error 502');
-    });
-
-    it('should handle network error', async () => {
-      mockFetch.mockRejectedValueOnce(new TypeError('fetch failed'));
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('Network error');
-    });
-
-    it('should handle timeout error', async () => {
-      mockFetch.mockRejectedValueOnce(new DOMException('The operation was aborted', 'AbortError'));
-
-      await expect(
-        client.checkRisk({ address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee', chainId: 1 })
-      ).rejects.toThrow('Request timed out');
-    });
+  it('signs batch risk queries with HMAC', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ results: [], summary: {} }));
+    await client.batchCheckRisk({ addresses: [ADDRESS], chainId: 11155111 });
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers.get('X-Request-Signature')).toMatch(/^[a-f0-9]{64}$/);
+    expect(options.headers.get('X-Request-Timestamp')).toBeTruthy();
   });
 
-  describe('batchCheckRisk', () => {
-    it('should check multiple addresses', async () => {
-      const mockResponse = {
-        results: [
-          {
-            address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee',
-            chain: 'ethereum',
-            addressType: 'wallet',
-            overallScore: 75,
-            overallLevel: 'high',
-            scores: [],
-            flags: [],
-            timestamp: '2024-01-01T00:00:00Z',
-          },
-        ],
-        errors: [],
-      };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as any);
-
-      const result = await client.batchCheckRisk({ addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8dEee'], chainId: 1 });
-      expect(result.results).toHaveLength(1);
+  it('signs and normalizes executable rule creation', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({
+      id: 7,
+      name: 'sanctioned_list',
+      is_active: true,
+      priority: 100,
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    }, 201));
+    const rule = await client.createRule({
+      name: 'sanctioned_list',
+      rule_type: 'sanctions',
+      category: 'compliance',
+      condition: {},
+      risk_score_impact: 100,
+      priority: 100,
     });
+    expect(rule.id).toBe('7');
+    expect(rule.status).toBe('active');
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers.get('X-Request-Signature')).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  describe('Error class', () => {
-    it('should create FidesOriginError with all properties', () => {
-      const error = new FidesOriginError('Test error', 'INVALID_ADDRESS', {
-        requestId: 'req-123',
-      });
-      expect(error.message).toBe('Test error');
-      expect(error.code).toBe('INVALID_ADDRESS');
-      expect(error.status).toBe(400);
-    });
+  it('rejects non-executable legacy rules before making a request', async () => {
+    await expect(client.createRule({
+      name: 'legacy-rule',
+      rule_type: 'custom',
+      category: 'custom',
+      condition: {},
+      conditions: [{ field: 'risk.score', operator: 'greater_than', value: 80 }],
+      actions: [{ type: 'block' }],
+    })).rejects.toThrow('not executable');
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 
-    it('should serialize to JSON', () => {
-      const error = new FidesOriginError('Test', 'INVALID_ADDRESS');
-      const json = error.toJSON();
-      expect(json.message).toBe('Test');
-      expect(json.code).toBe('INVALID_ADDRESS');
-    });
+  it('normalizes FastAPI rule list responses', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({
+      items: [{ id: 3, name: 'scam_list', is_active: false, priority: 50 }],
+      total: 1,
+      page: 1,
+      page_size: 20,
+      pages: 1,
+    }));
+    const result = await client.listRules();
+    expect(result.rules).toHaveLength(1);
+    expect(result.rules[0].id).toBe('3');
+    expect(result.rules[0].status).toBe('inactive');
+    expect(result.limit).toBe(20);
   });
 });

@@ -47,7 +47,9 @@ import { FidesOriginClient } from '@fidesorigin/sdk';
 
 const client = new FidesOriginClient({
   baseUrl: 'https://api.fidesorigin.com',
-  apiKey: 'YOUR_API_KEY'
+  apiKey: 'YOUR_API_KEY',
+  // 直连 FastAPI 的规则读写及批量查询需要；禁止放入浏览器代码。
+  hmacSecret: process.env.FIDES_HMAC_SECRET,
 });
 
 // Check single address
@@ -159,8 +161,9 @@ if (isRisky(risk.risk.level, 'medium')) {
   // Block transaction
 }
 
-// Check if address is safe
-if (isSafe(risk.risk.level)) {
+// Safe requires knownAddress=true, level=low and non-null confidence.
+// Unknown or missing evidence never counts as safe.
+if (isSafe(risk)) {
   // Proceed with transaction
 }
 
@@ -181,15 +184,16 @@ import { RulesManager, RuleTemplates } from '@fidesorigin/sdk';
 const rules = new RulesManager(client);
 
 // Create rule from template
-await rules.createFromTemplate('blockHighRisk', 100);
+await rules.createFromTemplate('flagSanctioned', 100);
 
-// Create custom rule with builder
+// Create a rule backed by the real risk-engine strategy
 await rules.builder()
-  .name('My Custom Rule')
-  .description('Flag high-risk DeFi protocols')
-  .condition('risk.level', 'equals', 'high')
-  .condition('flags.category', 'contains', 'defi')
-  .action('flag', { reason: 'High risk DeFi' })
+  .name('large_amount_transfer')
+  .description('Review transfers above 100 ETH')
+  .ruleType('transaction_monitoring')
+  .category('amount')
+  .condition({ threshold_eth: 100 })
+  .impact(30)
   .priority(80)
   .build();
 

@@ -20,6 +20,7 @@ export type ErrorCode =
   | 'TIMEOUT'
   | 'UNKNOWN'
   | 'BAD_REQUEST'
+  | 'NON_EXECUTABLE_RULE'
   | 'CONFIG_ERROR';
 
 /** Error code to HTTP status mapping */
@@ -37,6 +38,7 @@ export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   TIMEOUT: 0,
   UNKNOWN: 500,
   BAD_REQUEST: 400,
+  NON_EXECUTABLE_RULE: 400,
   CONFIG_ERROR: 400,
 };
 

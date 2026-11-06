@@ -79,26 +79,13 @@ def _get_redis_refresh_client():
         return None
 
 
-async def create_refresh_token(username: str, family_id: str = None) -> dict:
-    """
-    生成 JWT refresh token（支持旋转）
-    
-    [MEDIUM-1 FIX] 实现 refresh token 旋转：
-    - 每个 refresh token 有唯一的 jti 和 family_id
-    - 刷新时使旧 jti 失效，生成新的 jti
-    - 检测 token 重放攻击（旧 token 被再次使用）
-    
-    Returns:
-        dict: {token: str, family_id: str, jti: str, username: str}
-    """
-    _settings = get_settings()
-    secret = _settings.SECRET_KEY
+def _build_refresh_token(username: str, family_id: str = None) -> dict:
+    """Build a signed token without persisting its one-time-use state."""
+    secret = get_settings().SECRET_KEY
     if not secret:
         raise RuntimeError("SECRET_KEY is not configured")
-    
     jti = str(uuid.uuid4())
     family = family_id or str(uuid.uuid4())
-    
     payload = {
         "sub": username,
         "type": "refresh",
@@ -107,97 +94,119 @@ async def create_refresh_token(username: str, family_id: str = None) -> dict:
         "jti": jti,
         "family": family,
     }
-    token = jwt.encode(payload, secret, algorithm=JWT_ALGORITHM)
-    
-    # [CRITICAL Fix #2] 将 jti 的 HMAC 哈希存入 Redis 白名单，不存储明文 JTI
-    redis = _get_redis_refresh_client()
-    if redis:
-        try:
-            jti_hash = _hash_jti(jti, secret)
-            await redis.set(
-                f"{REFRESH_TOKEN_JTI_PREFIX}{jti_hash}",
-                family,
-                expire=JWT_REFRESH_EXPIRE_MINUTES * 60
-            )
-        except Exception:
-            # [AUDIT FIX 2026-09-18 R3-L4] 降级期间旋转/重放检测失效是安全事件，
-            # 原仅静默 pass。升 error 级并说明影响面。
-            logger.error("refresh_token_rotation_store_unavailable",
-                         impact="replay detection and family revocation disabled while Redis is down")
-    
-    # [Auth Fix] 返回 username 供 /refresh 路由签发新 access token
-    return {"token": token, "family_id": family, "jti": jti, "username": username}
+    return {
+        "token": jwt.encode(payload, secret, algorithm=JWT_ALGORITHM),
+        "family_id": family,
+        "jti": jti,
+        "username": username,
+    }
+
+
+def _require_refresh_store():
+    """Refresh rotation is fail-closed when its authoritative store is unavailable."""
+    cache = _get_redis_refresh_client()
+    if not cache or not getattr(cache, "is_connected", False):
+        logger.error("refresh_token_store_unavailable_fail_closed")
+        raise AuthenticationException("Refresh token store unavailable")
+    try:
+        return cache.redis
+    except Exception as exc:
+        logger.error("refresh_token_store_unavailable_fail_closed")
+        raise AuthenticationException("Refresh token store unavailable") from exc
+
+
+async def create_refresh_token(username: str, family_id: str = None) -> dict:
+    """Issue and persist a refresh token; no token is returned on storage failure."""
+    issued = _build_refresh_token(username, family_id)
+    redis = _require_refresh_store()
+    secret = get_settings().SECRET_KEY
+    ttl = JWT_REFRESH_EXPIRE_MINUTES * 60
+    jti_hash = _hash_jti(issued["jti"], secret)
+    family_key = f"{REFRESH_TOKEN_FAMILY_PREFIX}{issued['family_id']}"
+    try:
+        pipe = redis.pipeline()
+        pipe.set(f"{REFRESH_TOKEN_JTI_PREFIX}{jti_hash}", issued["family_id"], ex=ttl)
+        pipe.sadd(family_key, jti_hash)
+        pipe.expire(family_key, ttl)
+        result = await pipe.execute()
+        if not result or not result[0]:
+            raise RuntimeError("refresh JTI was not persisted")
+    except Exception as exc:
+        logger.error("refresh_token_store_write_failed", error_type=type(exc).__name__)
+        raise AuthenticationException("Refresh token store unavailable") from exc
+    return issued
+
+
+def _decode_refresh_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(token, get_settings().SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError as exc:
+        raise AuthenticationException("Refresh token expired") from exc
+    except jwt.InvalidTokenError as exc:
+        raise AuthenticationException("Invalid refresh token") from exc
+    if payload.get("type") != "refresh":
+        raise AuthenticationException("Invalid token type: expected refresh token")
+    if not payload.get("sub") or not payload.get("jti") or not payload.get("family"):
+        raise AuthenticationException("Invalid refresh token format")
+    return payload
+
+
+async def _revoke_refresh_family(family: str) -> None:
+    redis = _require_refresh_store()
+    family_key = f"{REFRESH_TOKEN_FAMILY_PREFIX}{family}"
+    members = await redis.smembers(family_key)
+    if members:
+        await redis.delete(*(f"{REFRESH_TOKEN_JTI_PREFIX}{member}" for member in members))
+    await redis.delete(family_key)
+
+
+async def revoke_refresh_token(token: str) -> None:
+    """Revoke every token in the family identified by a valid refresh token."""
+    payload = _decode_refresh_token(token)
+    await _revoke_refresh_family(payload["family"])
 
 
 async def rotate_refresh_token(old_token: str) -> dict:
+    """Atomically consume the old JTI and issue its replacement."""
+    payload = _decode_refresh_token(old_token)
+    redis = _require_refresh_store()
+    secret = get_settings().SECRET_KEY
+    family = payload["family"]
+    issued = _build_refresh_token(payload["sub"], family)
+    old_hash = _hash_jti(payload["jti"], secret)
+    new_hash = _hash_jti(issued["jti"], secret)
+    family_key = f"{REFRESH_TOKEN_FAMILY_PREFIX}{family}"
+    script = """
+    local family = redis.call('GET', KEYS[1])
+    if not family then return {0, 'REUSE'} end
+    if family ~= ARGV[1] then return {0, 'MISMATCH'} end
+    redis.call('DEL', KEYS[1])
+    redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[2])
+    redis.call('SADD', KEYS[3], ARGV[3])
+    redis.call('EXPIRE', KEYS[3], ARGV[2])
+    return {1, family}
     """
-    旋转 refresh token
-    
-    [MEDIUM-1 FIX] 验证旧 token，使旧 jti 失效，返回新 token。
-    如果旧 token 已被使用过（重放攻击），则撤销整个 token family。
-    
-    Returns:
-        dict: {token: str, family_id: str, jti: str}
-    
-    Raises:
-        AuthenticationException: token 无效或已被撤销
-    """
-    _settings = get_settings()
-    secret = _settings.SECRET_KEY
-    if not secret:
-        raise AuthenticationException("SECRET_KEY is not configured")
-    
     try:
-        payload = jwt.decode(old_token, secret, algorithms=[JWT_ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise AuthenticationException("Refresh token expired")
-    except jwt.InvalidTokenError:
-        raise AuthenticationException("Invalid refresh token")
-    
-    # [CRITICAL Fix] Verify token type is "refresh"
-    if payload.get("type") != "refresh":
-        raise AuthenticationException("Invalid token type: expected refresh token")
-    
-    username = payload.get("sub")
-    old_jti = payload.get("jti")
-    family = payload.get("family")
-    
-    if not username or not old_jti or not family:
-        raise AuthenticationException("Invalid refresh token format")
-    
-    # [CRITICAL Fix #2] 检查旧 jti 的 HMAC 哈希是否在白名单中
-    redis = _get_redis_refresh_client()
-    if redis:
-        try:
-            old_jti_hash = _hash_jti(old_jti, secret)
-            jti_key = f"{REFRESH_TOKEN_JTI_PREFIX}{old_jti_hash}"
-            stored_family = await redis.get(jti_key)
-            
-            if stored_family is None:
-                # 旧 token 已被使用过或已过期 — 可能是重放攻击
-                # 撤销整个 token family
-                await redis.delete(f"{REFRESH_TOKEN_FAMILY_PREFIX}{family}")
-                raise AuthenticationException(
-                    "Refresh token reuse detected. Token family revoked."
-                )
-            
-            # 验证 family 匹配
-            if stored_family != family:
-                raise AuthenticationException("Refresh token family mismatch")
-            
-            # 使旧 jti 失效
-            await redis.delete(jti_key)
-        except AuthenticationException:
-            raise
-        except Exception:
-            # [AUDIT FIX 2026-09-22] 原静默 pass：Redis 故障期间 refresh 重放检测与
-            # family 撤销失效，属安全事件，却无任何日志（与 create_refresh_token
-            # 的 R3-L4 修复不一致）。升 error 级并说明影响面。
-            logger.error("refresh_token_rotation_store_unavailable",
-                         impact="replay detection and family revocation disabled while Redis is down")
-    
-    # 生成新的 refresh token（保持同一个 family）
-    return await create_refresh_token(username, family)
+        result = await redis.eval(
+            script,
+            3,
+            f"{REFRESH_TOKEN_JTI_PREFIX}{old_hash}",
+            f"{REFRESH_TOKEN_JTI_PREFIX}{new_hash}",
+            family_key,
+            family,
+            JWT_REFRESH_EXPIRE_MINUTES * 60,
+            new_hash,
+        )
+    except Exception as exc:
+        logger.error("refresh_token_rotation_store_failed", error_type=type(exc).__name__)
+        raise AuthenticationException("Refresh token store unavailable") from exc
+    if not result or result[0] != 1:
+        await _revoke_refresh_family(family)
+        reason = result[1] if result and len(result) > 1 else "REUSE"
+        if reason == "MISMATCH":
+            raise AuthenticationException("Refresh token family mismatch")
+        raise AuthenticationException("Refresh token reuse detected. Token family revoked.")
+    return issued
 
 
 # 向后兼容：create_refresh_token 返回字符串
@@ -233,12 +242,11 @@ def decode_access_token(token: str) -> TokenData:
     try:
         payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
-        role: str = payload.get("role", "admin")
-        # [CRITICAL Fix] Verify token type is "access"
+        role = payload.get("role")
         if payload.get("type") != "access":
             raise AuthenticationException("Invalid token type: expected access token")
-        if username is None:
-            raise AuthenticationException("Invalid token: missing subject")
+        if not username or not isinstance(role, str) or not role:
+            raise AuthenticationException("Invalid token: missing subject or role")
         return TokenData(username=username, role=role)
     except jwt.ExpiredSignatureError:
         raise AuthenticationException("Token expired")
@@ -269,6 +277,18 @@ async def get_current_user(
         return api_key
 
     raise AuthenticationException("Authentication required: provide JWT token or API key")
+
+
+async def get_current_admin_user(
+    token: Optional[str] = Depends(oauth2_scheme),
+) -> str:
+    """Require a JWT with an explicit admin role for operator-only endpoints."""
+    if not token:
+        raise AuthenticationException("Admin bearer token required")
+    token_data = decode_access_token(token)
+    if token_data.role != "admin":
+        raise AuthenticationException("Admin role required")
+    return token_data.username
 
 # ==================== CSRF 保护 ====================
 
@@ -461,6 +481,7 @@ async def request_signature_middleware(
     public_write_paths = (
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",
+        "/api/v1/auth/logout",
         "/api/v1/contact",
     )
     is_public_write = any(request.url.path.startswith(p) for p in public_write_paths)

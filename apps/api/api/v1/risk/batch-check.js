@@ -1,10 +1,9 @@
+const { proxyToBackend } = require('../../_lib/proxy');
 const {
   withMiddleware,
   isValidEthereumAddress,
   isValidChainId,
   sendError,
-  getRiskData,
-  buildAddressRisk,
 } = require('../../_lib/utils');
 
 // POST /v1/risk/batch-check
@@ -26,35 +25,46 @@ async function handler(req, res) {
     return sendError(res, 400, 'BAD_REQUEST', 'Maximum 100 addresses allowed per batch request');
   }
 
-  let resolvedChainId = chainId;
-  if (resolvedChainId !== undefined && !isValidChainId(resolvedChainId)) {
+  const resolvedChainId = chainId === undefined ? 11155111 : chainId;
+  if (!isValidChainId(resolvedChainId)) {
     return sendError(res, 400, 'INVALID_CHAIN_ID', 'Invalid chain ID');
   }
-  if (resolvedChainId === undefined) {
-    resolvedChainId = 1; // default to ethereum
-  }
 
-  const riskData = await getRiskData();
-  const results = [];
   const errors = [];
   const failed = [];
-
+  const validAddresses = [];
   for (const rawAddr of addresses) {
     if (!isValidEthereumAddress(rawAddr)) {
       errors.push({ address: rawAddr, error: 'Invalid Ethereum address format' });
       failed.push(rawAddr);
-      continue;
-    }
-    try {
-      const risk = buildAddressRisk(rawAddr, resolvedChainId, riskData);
-      results.push(risk);
-    } catch (err) {
-      errors.push({ address: rawAddr, error: err.message || 'Assessment failed' });
-      failed.push(rawAddr);
+    } else {
+      validAddresses.push(rawAddr);
     }
   }
+  if (validAddresses.length === 0) {
+    return res.status(200).json({ results: [], errors, failed });
+  }
 
-  return res.status(200).json({ results, errors: errors.length > 0 ? errors : undefined, failed: failed.length > 0 ? failed : undefined });
+  try {
+    const response = await proxyToBackend('/api/v1/address/batch-check', {
+      method: 'POST',
+      body: JSON.stringify({
+        addresses: validAddresses,
+        chainId: Number(resolvedChainId),
+        ...(amount !== undefined ? { amount } : {}),
+      }),
+      sign: true,
+    });
+    const data = await response.json().catch(() => null);
+    return res.status(response.status).json({
+      ...(data || { results: [] }),
+      ...(errors.length ? { errors } : {}),
+      ...(failed.length ? { failed } : {}),
+    });
+  } catch (error) {
+    console.error('[batch-check] Proxy error:', error.message);
+    return sendError(res, 502, 'PROXY_ERROR', 'Backend unavailable');
+  }
 }
 
 module.exports = withMiddleware(handler);

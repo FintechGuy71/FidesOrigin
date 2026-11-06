@@ -9,7 +9,7 @@ const API_KEY = process.env.ETHERSCAN_API_KEY;
 
 async function testAPI() {
   console.log('测试 Etherscan API...');
-  console.log(`API Key: ${API_KEY.slice(0, 10)}...${API_KEY.slice(-4)}\n`);
+  console.log(`API Key: ${API_KEY.slice(0, 4)}...${API_KEY.slice(-4)}\n`);
   
   try {
     const response = await axios.get('https://api.etherscan.io/api', {

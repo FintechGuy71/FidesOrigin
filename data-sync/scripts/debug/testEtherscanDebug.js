@@ -10,13 +10,16 @@ const API_KEY = process.env.ETHERSCAN_API_KEY;
 async function testAPI() {
   console.log('测试 Etherscan API...');
   console.log(`API Key长度: ${API_KEY.length}`);
-  console.log(`API Key: ${API_KEY}\n`);
+  console.log('API Key: [REDACTED]\n');
   
   try {
-    const url = `https://api.etherscan.io/api?module=account&action=balance&address=0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb&tag=latest&apikey=${API_KEY}`;
-    console.log('请求URL:', url.slice(0, 100) + '...\n');
-    
-    const response = await axios.get(url, {
+    console.log('请求: module=account, action=balance\n');
+    const response = await axios.get('https://api.etherscan.io/api', {
+      params: {
+        module: 'account', action: 'balance',
+        address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+        tag: 'latest', apikey: API_KEY,
+      },
       timeout: 30000,
     });
     

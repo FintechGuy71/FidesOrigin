@@ -10,18 +10,20 @@
 /** Chain ID mapping for supported networks */
 export const CHAIN_IDS: Record<string, number> = {
   ethereum: 1,
-  bitcoin: -1, // [AUDIT FIX 2026-09-18 R3-L9] 原 0 与 solana:0 碰撞；非 EIP-155 链用 -1 哨兵
+  sepolia: 11155111,
+  bitcoin: -1, // 非 EIP-155 链使用独立哨兵
   polygon: 137,
   bsc: 56,
   arbitrum: 42161,
   optimism: 10,
   base: 8453,
-  solana: -2, // [R3-L9] 同上，非 EIP-155 链各自唯一哨兵
+  solana: -2,
 } as const;
 
 /** Chain names for display */
 export const CHAIN_NAMES: Record<string, string> = {
   ethereum: 'Ethereum',
+  sepolia: 'Sepolia',
   bitcoin: 'Bitcoin',
   polygon: 'Polygon',
   bsc: 'BNB Chain',
@@ -34,6 +36,7 @@ export const CHAIN_NAMES: Record<string, string> = {
 /** Chain native currency symbols */
 export const CHAIN_CURRENCIES: Record<string, string> = {
   ethereum: 'ETH',
+  sepolia: 'ETH',
   bitcoin: 'BTC',
   polygon: 'MATIC',
   bsc: 'BNB',
@@ -46,6 +49,7 @@ export const CHAIN_CURRENCIES: Record<string, string> = {
 /** Chain explorer URLs */
 export const CHAIN_EXPLORERS: Record<string, string> = {
   ethereum: 'https://etherscan.io',
+  sepolia: 'https://sepolia.etherscan.io',
   bitcoin: 'https://blockchain.info',
   polygon: 'https://polygonscan.com',
   bsc: 'https://bscscan.com',
@@ -73,10 +77,21 @@ export const FIDES_REGISTRY_ADDRESSES: Record<string, string> = {
 
 /** Risk level definitions with thresholds and display properties */
 export const RISK_LEVELS = {
+  unknown: {
+    name: 'Unknown Risk',
+    label: 'Unknown',
+    threshold: 0,
+    color: '#6b7280',
+    bgColor: 'bg-gray-500',
+    textColor: 'text-gray-500',
+    borderColor: 'border-gray-500',
+    icon: 'help-circle',
+    description: 'No authoritative risk profile is available; this is not a safe assessment.',
+  },
   low: {
     name: 'Low Risk',
     label: 'Low',
-    threshold: 0,
+    threshold: 30,
     color: '#22c55e',
     bgColor: 'bg-green-500',
     textColor: 'text-green-500',
@@ -87,7 +102,7 @@ export const RISK_LEVELS = {
   medium: {
     name: 'Medium Risk',
     label: 'Medium',
-    threshold: 30,
+    threshold: 50,
     color: '#eab308',
     bgColor: 'bg-yellow-500',
     textColor: 'text-yellow-500',
@@ -98,7 +113,7 @@ export const RISK_LEVELS = {
   high: {
     name: 'High Risk',
     label: 'High',
-    threshold: 70,
+    threshold: 80,
     color: '#f97316',
     bgColor: 'bg-orange-500',
     textColor: 'text-orange-500',
@@ -109,7 +124,7 @@ export const RISK_LEVELS = {
   critical: {
     name: 'Critical Risk',
     label: 'Critical',
-    threshold: 90,
+    threshold: 95,
     color: '#ef4444',
     bgColor: 'bg-red-500',
     textColor: 'text-red-500',
@@ -140,7 +155,8 @@ export const RISK_LEVEL_ORDER: Array<'low' | 'medium' | 'high' | 'critical'> = [
  *   合约 _checkRisk(>=80 阻断 / >=95 Critical)，两处仍是权威源，务必保持一致。
  */
 export const RISK_THRESHOLDS = {
-  low: { min: 0, max: 49 },
+  unknown: { min: 0, max: 29 },
+  low: { min: 30, max: 49 },
   medium: { min: 50, max: 79 },
   high: { min: 80, max: 94 },
   critical: { min: 95, max: 100 },

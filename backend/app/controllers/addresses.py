@@ -43,7 +43,17 @@ from app.core.security import get_current_user
 # [AUDIT FIX 2026-09-18 R3-H8] SDK batchCheckRisk 以 POST 请求
 # /api/v1/address/search，而后端仅有 GET /search（搜索语义完全不同）→ 405。
 # 新增语义正确的批量端点。
-_CHAIN_ID_TO_NAME = {1: "ethereum", 11155111: "sepolia", 8453: "base", 137: "polygon", 42161: "arbitrum"}
+_CHAIN_ID_TO_NAME = {
+    1: "ethereum",
+    11155111: "sepolia",
+    8453: "base",
+    137: "polygon",
+    42161: "arbitrum",
+    10: "optimism",
+    56: "bsc",
+    324: "zksync",
+    59144: "linea",
+}
 
 
 @router.post(
@@ -63,18 +73,11 @@ async def batch_check_addresses(
     engine: RiskEngineService = Depends(get_risk_engine),
     current_user: str = Depends(get_current_user)
 ):
-    """批量风险查询（逐地址复用单地址评分管线，单地址失败不影响整体）
-
-    [AUDIT FIX 2026-09-24 F2] chain 键口径修正：v3.1.0 数据阶段，后端全部
-    AddressRisk 记录统一以 chain="ethereum" 为键（data-publisher 消息载荷不含
-    chain 字段、risk_sync_service.handle_message_queue_update 固定写
-    "ethereum"），apps/api 网关的单查路径实际生效链也是 "ethereum"。
-    原实现用 _CHAIN_ID_TO_NAME 把 11155111 映射为 "sepolia"，导致批量查询按
-    "sepolia" 键去查 sanctioned_list / scam_list 策略数据 → 同一在册地址
-    单查 100 分、批查 0 分的自相矛盾。语义映射表保留（数据按链重键后恢复
-    使用），当前阶段统一解析为 "ethereum"。
-    """
-    chain = "ethereum"
+    """批量风险查询；未知链显式拒绝，禁止静默回退到其他链。"""
+    chain_id = payload.chainId if payload.chainId is not None else 11155111
+    chain = _CHAIN_ID_TO_NAME.get(chain_id)
+    if chain is None:
+        raise ValidationException(f"Unsupported chain ID: {chain_id}")
 
     results: List[BatchRiskCheckResultItem] = []
     summary = {"total": 0, "highRisk": 0, "mediumRisk": 0, "lowRisk": 0}
@@ -92,6 +95,8 @@ async def batch_check_addresses(
                 risk_score=risk_score,
                 risk_level=level,
                 risk_factors=[f.model_dump() if hasattr(f, "model_dump") else dict(f) for f in (risk_factors or [])],
+                known_address=bool(risk_factors),
+                confidence=None,
                 timestamp=datetime.now(timezone.utc).isoformat(),
             ))
             summary["total"] += 1
@@ -99,8 +104,10 @@ async def batch_check_addresses(
                 summary["highRisk"] += 1
             elif level in ("medium", "MEDIUM"):
                 summary["mediumRisk"] += 1
-            else:
+            elif level in ("low", "LOW"):
                 summary["lowRisk"] += 1
+            else:
+                summary["unknownRisk"] = summary.get("unknownRisk", 0) + 1
         except Exception as e:
             # 单地址失败不拖垮整批：返回 unknown 占位并记日志
             logger.warning("batch_check_address_failed", address=address, error=str(e))
@@ -113,6 +120,7 @@ async def batch_check_addresses(
                 timestamp=datetime.now(timezone.utc).isoformat(),
             ))
             summary["total"] += 1
+            summary["unknownRisk"] = summary.get("unknownRisk", 0) + 1
 
     return BatchRiskCheckResponseModel(results=results, summary=summary)
 
@@ -147,7 +155,9 @@ async def get_address_risk(
     - **force_refresh**: 是否强制刷新缓存数据
     """
     address = validate_address(address)
-    
+    if chain not in _CHAIN_ID_TO_NAME.values():
+        raise ValidationException(f"Unsupported chain: {chain}")
+
     # 计算风险评分
     risk_score, risk_level, risk_factors = await engine.calculate_address_risk(
         address, chain, force_refresh=force_refresh
@@ -173,6 +183,8 @@ async def get_address_risk(
         risk_score=risk_score,
         risk_level=risk_level.value,
         risk_factors=risk_factors,
+        known_address=bool(risk_factors) or bool(address_risk.tags),
+        confidence=None,
         status=address_risk.status.value if hasattr(address_risk.status, 'value') else address_risk.status,
         tags=address_risk.tags or [],
         report_count=address_risk.report_count,

@@ -224,7 +224,7 @@ async function runTests() {
     console.log('   1. 如果错误是 "ETIMEDOUT" 或 "ECONNREFUSED"');
     console.log('      → 服务器网络被限制，无法访问Etherscan');
     console.log('   2. 如果错误是 "UNABLE_TO_VERIFY_LEAF_SIGNATURE"');
-    console.log('      → SSL证书问题，可以尝试设置 NODE_TLS_REJECT_UNAUTHORIZED=0');
+    console.log('      → SSL证书链不完整，请配置正确 CA；禁止关闭 TLS 证书校验');
     console.log('   3. 如果错误是 "ENOTFOUND"');
     console.log('      → DNS解析失败');
     console.log('\n💡 解决方案:');
