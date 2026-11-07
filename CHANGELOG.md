@@ -2,6 +2,29 @@
 
 All notable changes to the FidesOrigin project.
 
+## [v3.1.1] - 2026-11-07
+
+### Fixed — UK sanctions data source
+
+- 将已于 2026-01-28 停止更新的 OFSI ConList 默认数据源迁移到 FCDO UK Sanctions List (UKSL) 静态 CSV。
+- `data-sync/sanctions-sync.js` 同时兼容 UKSL 与旧 OFSI 的表头、`Unique ID` / `OFSI Group ID`、地址字段、实体类型和 Regime 字段。
+- `data-sync/scripts/daily-sync.js` 使用 UKSL 默认地址，并兼容 `Address Line 1..6` / `Address 1..6` 两套字段；保留来源健康位、陈旧快照保护和下架保护语义。
+- 新增 UKSL 真实表头与 EVM 地址提取回归测试；旧 OFSI 解析测试继续保留，避免兼容性回退。
+
+### Verification
+
+- PR #130 的 13/13 项检查通过；合并后 `main` 数据同步测试 80/80 通过。
+- UKSL 实源解析 58,836 条记录，产出 5 个有效且去重的 EVM 地址，来源健康位正常。
+- 完整 dry-run：OFAC 127、UKSL 5、OpenSanctions 132、Scam Sniffer 2,530；合并后 132 个唯一地址。
+- 链上差异读取 0 错误；6 个地址待更新、126 个幂等跳过；下架检查完成且 0 个下架；验证未发送交易。
+- Windows 本机原生部署验收：Redis PONG，发布器 `/health` 与 `/ready` 均为 200，Stream ACK 后 `pending=0`、`lag=0`、`DLQ=0`。
+
+### Upgrade notes
+
+- 无合约 ABI、Merkle leaf、角色或数据库 schema 变更，无需重新部署合约。
+- 自定义 `HMT_URL` 仍指向旧 ConList 的部署方，应删除该覆盖或改为 `https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv`。
+- 详细发布说明、运维经验与已知限制见 `RELEASE_v3.1.1.md`。
+
 ## [v3.1.0] - 2026-08-23
 
 **安全审计修复版本**：完整修复安全审计发现的全部 53 项问题（High 6 / Medium 15 / Low 26 / Info 6）。
