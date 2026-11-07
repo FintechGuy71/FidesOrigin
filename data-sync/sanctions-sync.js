@@ -49,7 +49,8 @@ const CONFIG = {
     },
     hmt: {
       name: 'HMT',
-      url: 'https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv',
+      // UKSL 自 2026-01-28 起取代已停止更新的 OFSI ConList。
+      url: 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv',
       type: 'csv',
       priority: 2
     },
@@ -1001,25 +1002,26 @@ class UNAdapter {
 }
 
 /**
- * OFSI ConList.csv 的真实列名（2022 格式）——用于定位表头行与字段映射。
- * 实测表头：Name 6 / Name 1..5 / Title / ... / Address 1..6 / Post~Zip Code /
- *          Country / Other Information / Group Type / Alias Type / Regime / Group ID
- * 注意首行是 "Last Updated","03/06/2026" 元数据，不是表头。
+ * 同时兼容 2026 UK Sanctions List (UKSL) 与旧 OFSI ConList 的列名。
+ * UKSL 首行是 Report Date 元数据，真表头包含 Unique ID / OFSI Group ID /
+ * Address Line 1..6；旧名单使用 Group ID / Address 1..6。
  */
-const HMT_KNOWN_COLUMNS = ['Name 1', 'Other Information', 'Group ID', 'Address 1'];
+const HMT_KNOWN_COLUMNS = [
+  'Name 1', 'Other Information', 'Group ID', 'Address 1',
+  'Unique ID', 'OFSI Group ID', 'Address Line 1',
+];
 
 /**
- * HMT (英国财政部 OFSI) 数据适配器
+ * HMT (英国 UK Sanctions List，兼容旧 OFSI) 数据适配器
  */
 class HMTAdapter {
   static async fetch() {
-    console.log('[HMT] Fetching consolidated list...');
+    console.log('[HMT] Fetching UK Sanctions List...');
 
     try {
       const { data } = await httpGet(CONFIG.sources.hmt.url);
 
-      // [HMT FIX] ConList.csv 首行是元数据（"Last Updated","03/06/2026"），真表头在其后。
-      // 按已知列名定位表头行，避免硬编码行号随 OFSI 改版失效。
+      // 按新旧名单的已知列名定位真表头，跳过 Report Date / Last Updated 元数据。
       const lines = data.split('\n');
       const headerLine = findHeaderLine(lines, HMT_KNOWN_COLUMNS);
       const records = parseCSV(data, { headerLine });
@@ -1027,34 +1029,31 @@ class HMTAdapter {
       console.log(`[HMT] Parsed ${records.length} records (header at line ${headerLine})`);
 
       const entries = records.map((r, idx) => {
-        // [HMT FIX] 列名对齐 OFSI 2022 格式真实表头：
-        // 原实现找 'Name' / 'Remarks' / 'Address' / 'Town'，这些列名在文件里都不存在，
-        // 取值恒为 undefined → 加密地址提取自空串。真实列名为
-        // Name 1..6（Name 6 为姓）、Other Information、Address 1..6、Country、Group ID。
         const forenames = ['Name 1', 'Name 2', 'Name 3', 'Name 4', 'Name 5']
           .map(k => r[k]).filter(Boolean).join(' ');
         const surname = r['Name 6'] || '';
         const entityName = [surname, forenames].filter(Boolean).join(', ');
         const remarks = r['Other Information'] || '';
         const fullAddress = [
-          r['Address 1'], r['Address 2'], r['Address 3'],
-          r['Address 4'], r['Address 5'], r['Address 6'],
-          r['Post/Zip Code'], r['Country']
+          r['Address Line 1'] || r['Address 1'], r['Address Line 2'] || r['Address 2'],
+          r['Address Line 3'] || r['Address 3'], r['Address Line 4'] || r['Address 4'],
+          r['Address Line 5'] || r['Address 5'], r['Address Line 6'] || r['Address 6'],
+          r['Address Postal Code'] || r['Post/Zip Code'], r['Address Country'] || r['Country'],
         ].filter(Boolean).join(', ');
 
         const cryptoAddresses = extractCryptoAddresses(remarks + ' ' + fullAddress);
 
         return {
-          uid: `HMT-${r['Group ID'] || r['GroupID'] || r['Unique ID'] || idx}`,
+          uid: `HMT-${r['Unique ID'] || r['OFSI Group ID'] || r['Group ID'] || r['GroupID'] || idx}`,
           source: 'HMT',
-          sourceId: r['Group ID'] || r['GroupID'] || r['Unique ID'] || '',
+          sourceId: r['Unique ID'] || r['OFSI Group ID'] || r['Group ID'] || r['GroupID'] || '',
           entityName: entityName,
-          entityType: r['Group Type'] || r['Entity Type'] || 'Unknown',
-          programs: (r['Regime'] || r['Sanctioning Regime'] || '').split(',').filter(Boolean),
+          entityType: r['Type of entity'] || r['Designation Type'] || r['Group Type'] || r['Entity Type'] || 'Unknown',
+          programs: (r['Regime Name'] || r['Regime'] || r['Sanctioning Regime'] || '').split(',').filter(Boolean),
           addresses: [{
             address: fullAddress,
-            city: r['Post/Zip Code'] || r['Town'] || '',
-            country: r['Country'] || r['COUNTRY'] || ''
+            city: r['Address Postal Code'] || r['Post/Zip Code'] || r['Town'] || '',
+            country: r['Address Country'] || r['Country'] || r['COUNTRY'] || ''
           }],
           cryptoAddresses,
           aliases: [],

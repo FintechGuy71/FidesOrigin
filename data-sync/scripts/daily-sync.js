@@ -274,8 +274,9 @@ class DailySyncService {
     // 每次成功产出后落盘，供端点故障时兜底，防止其独有地址当天进不了名单。
     const snapshotFile = path.join(CONFIG.cacheDir, 'hmt-eth-source.txt');
 
+    // 2026-01-28 起 UK Sanctions List (UKSL) 取代已停止更新的 OFSI ConList。
     const url = process.env.HMT_URL
-      || 'https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv';
+      || 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv';
     try {
       const response = await axios.get(url, {
         timeout: 120000,
@@ -308,9 +309,10 @@ class DailySyncService {
       for (const r of records) {
         const remarks = r['Other Information'] || '';
         const fullAddress = [
-          r['Address 1'], r['Address 2'], r['Address 3'],
-          r['Address 4'], r['Address 5'], r['Address 6'],
-          r['Post/Zip Code'], r['Country'],
+          r['Address Line 1'] || r['Address 1'], r['Address Line 2'] || r['Address 2'],
+          r['Address Line 3'] || r['Address 3'], r['Address Line 4'] || r['Address 4'],
+          r['Address Line 5'] || r['Address 5'], r['Address Line 6'] || r['Address 6'],
+          r['Address Postal Code'] || r['Post/Zip Code'], r['Address Country'] || r['Country'],
         ].filter(Boolean).join(', ');
 
         const crypto = extractCryptoAddresses(`${remarks} ${fullAddress}`);
