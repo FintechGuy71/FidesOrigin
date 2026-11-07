@@ -148,6 +148,24 @@ test('HMT 集成：OFSI 结构 + 别名重复行 → 去重后提取 EVM 地址'
   assert.deepStrictEqual(out, ['0x175d44451403edf28469df03a9280c1197adb92c']);
 });
 
+test('HMT 集成：2026 UKSL 新表头与地址字段兼容', () => {
+  const header = 'Last Updated,Unique ID,OFSI Group ID,Name 6,Name 1,Other Information,Address Line 1,Address Postal Code,Address Country';
+  const row = '03/11/2026,AFG0001,12703,AYASH,MUSTAFA,wallets 0x175d44451403Edf28469dF03A9280c1197ADb92c here,Branch Office 12,75001,Palestine';
+  const csv = ['Report Date: 03-Nov-2026', header, row].join('\n');
+  const hl = findHeaderLine(csv.split('\n'), HMT_KNOWN_COLUMNS);
+  const records = parseCSV(csv, { headerLine: hl });
+  assert.strictEqual(hl, 1);
+  assert.strictEqual(records.length, 1);
+  assert.strictEqual(records[0]['Unique ID'], 'AFG0001');
+  const fullAddress = [
+    records[0]['Address Line 1'] || records[0]['Address 1'],
+    records[0]['Address Postal Code'] || records[0]['Post/Zip Code'],
+    records[0]['Address Country'] || records[0]['Country'],
+  ].filter(Boolean).join(', ');
+  const crypto = extractCryptoAddresses(`${records[0]['Other Information']} ${fullAddress}`);
+  assert.deepStrictEqual(crypto.ethereum, ['0x175d44451403Edf28469dF03A9280c1197ADb92c']);
+});
+
 // ============ Q12a：mergeData 同分多源归因 ============
 
 test('mergeData: 同分（皆 100）两源重叠地址，来源累积归因', () => {
