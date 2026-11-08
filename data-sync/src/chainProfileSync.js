@@ -233,17 +233,29 @@ async function writeBatchWithRetry(contract, batch, opts = {}) {
       if (receipt.status !== 1) {
         throw new Error(`tx reverted (status=${receipt.status}) hash=${receipt.hash}`);
       }
-      // 统计合约 skip 事件（频率限制/校验不通过），便于排查"写了但没生效"
+      // 以合约事件为准统计实际更新与跳过，不能把交易 status=1 当作业务写入成功。
       let skipped = 0;
-      try {
-        const iface = contract.interface;
-        for (const l of receipt.logs || []) {
-          try {
-            const parsed = iface.parseLog({ topics: l.topics, data: l.data });
-            if (parsed && parsed.name === 'BatchUpdateSkipped') skipped++;
-          } catch { /* 非本合约日志 */ }
-        }
-      } catch { /* ignore */ }
+      let updated = 0;
+      let hasCompletionEvent = false;
+      const skippedDetails = [];
+      for (const l of receipt.logs || []) {
+        try {
+          const parsed = contract.interface.parseLog({ topics: l.topics, data: l.data });
+          if (parsed && parsed.name === 'BatchUpdateSkipped') {
+            skipped++;
+            skippedDetails.push({
+              index: Number(parsed.args[0]),
+              address: parsed.args[1],
+              reason: parsed.args[2],
+            });
+          } else if (parsed && parsed.name === 'BatchUpdateCompleted') {
+            hasCompletionEvent = true;
+            updated = Number(parsed.args[0]);
+          }
+        } catch { /* 非本合约日志 */ }
+      }
+      // 旧 mock 或不产生完成事件的兼容合约使用保守差额。
+      if (!hasCompletionEvent) updated = Math.max(0, accounts.length - skipped);
 
       return {
         ok: true,
@@ -251,7 +263,9 @@ async function writeBatchWithRetry(contract, batch, opts = {}) {
         block: Number(receipt.blockNumber),
         gasUsed: receipt.gasUsed.toString(),
         attempts: attempt,
+        updated,
         skipped,
+        skippedDetails,
       };
     } catch (e) {
       lastError = e;
@@ -302,12 +316,21 @@ async function syncProfilesToChain(contract, entries, opts = {}) {
 
   if (dryRun) {
     log(`   [DRY RUN] would write ${changed.length} addresses (${unchanged} already in sync)`);
-    return { dryRun: true, ok: true, total: entries.length, toWrite: changed.length, unchanged, batches: 0, results: [], readErrors, failedBatches: 0 };
+    return {
+      dryRun: true, ok: true, total: entries.length, toWrite: changed.length,
+      candidateCount: changed.length, actualUpdated: null, contractSkipped: null,
+      postWriteDiffCount: null, postWriteReadErrors: null,
+      unchanged, batches: 0, results: [], readErrors, failedBatches: 0,
+    };
   }
 
   if (changed.length === 0) {
     log('   ✅ All addresses already in sync — no chain write needed (idempotent)');
-    return { ok: true, total: entries.length, toWrite: 0, unchanged, batches: 0, results: [], readErrors, failedBatches: 0 };
+    return {
+      ok: true, total: entries.length, toWrite: 0, candidateCount: 0,
+      actualUpdated: 0, contractSkipped: 0, postWriteDiffCount: 0,
+      postWriteReadErrors: 0, unchanged, batches: 0, results: [], readErrors, failedBatches: 0,
+    };
   }
 
   const batches = [];
@@ -325,7 +348,10 @@ async function syncProfilesToChain(contract, entries, opts = {}) {
     r.count = batches[i].length;
     results.push(r);
     if (r.ok) {
-      log(`      ✅ Confirmed (block ${r.block}, gas ${r.gasUsed}${r.skipped ? `, skipped ${r.skipped}` : ''})`);
+      log(`      ✅ Confirmed (block ${r.block}, gas ${r.gasUsed}, updated ${r.updated}, skipped ${r.skipped})`);
+      for (const detail of r.skippedDetails || []) {
+        log(`      ⏭️ Skipped ${detail.address}: ${detail.reason}`);
+      }
     } else {
       failedBatches++;
       log(`      ❌ Batch ${i + 1} failed after ${r.attempts} attempts: ${r.error}`);
@@ -333,10 +359,36 @@ async function syncProfilesToChain(contract, entries, opts = {}) {
     if (i < batches.length - 1) await sleep(3000); // 批间延迟防限流
   }
 
+  const actualUpdated = results.reduce((sum, r) => sum + (r.updated || 0), 0);
+  const contractSkipped = results.reduce((sum, r) => sum + (r.skipped || 0), 0);
+  let postWriteDiffCount = null;
+  let postWriteReadErrors = null;
+  let postWriteChanged = null;
+  let postWriteUnchanged = null;
+
+  if (opts.verifyWrite !== false) {
+    log('   🔁 Verifying post-write on-chain state...');
+    const verification = await diffAgainstChain(contract, entries, { ...opts, onLog: log });
+    postWriteDiffCount = verification.changed.length;
+    postWriteReadErrors = verification.readErrors.length;
+    postWriteChanged = verification.changed;
+    postWriteUnchanged = verification.unchanged;
+  }
+
+  const verificationOk = opts.verifyWrite === false
+    || (postWriteDiffCount === 0 && postWriteReadErrors === 0);
+
   return {
-    ok: failedBatches === 0,
+    ok: failedBatches === 0 && verificationOk,
     total: entries.length,
     toWrite: changed.length,
+    candidateCount: changed.length,
+    actualUpdated,
+    contractSkipped,
+    postWriteDiffCount,
+    postWriteReadErrors,
+    postWriteChanged,
+    postWriteUnchanged,
     unchanged,
     batches: batches.length,
     results,

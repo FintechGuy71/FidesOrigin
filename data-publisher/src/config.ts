@@ -20,15 +20,23 @@ export interface FATFConfig {
 
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
-// [Fix] __dirname may not be available in ESM/bundled environments
+// [Fix] __dirname may be unavailable in ESM/bundled environments.
 const getDirname = (): string => {
   if (typeof __dirname !== 'undefined') return __dirname;
   return process.cwd();
 };
 
-// Load .env from data-publisher directory
-dotenv.config({ path: path.join(getDirname(), '../.env') });
+// ts-node uses src/.env's parent; compiled dist/src needs the package root two levels up.
+// Select the first existing candidate so both entry points load the same package .env.
+const envCandidates = [
+  path.resolve(getDirname(), '../.env'),
+  path.resolve(getDirname(), '../../.env'),
+  path.resolve(process.cwd(), '.env'),
+];
+const envPath = envCandidates.find(candidate => fs.existsSync(candidate));
+if (envPath) dotenv.config({ path: envPath });
 
 function getEnv(key: string, defaultValue?: string): string {
   const value = process.env[key];
@@ -52,7 +60,7 @@ function getEnvInt(key: string, defaultValue: number): number {
   return parsed;
 }
 
-export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig } = {
+export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig; batchSync: { enabled: boolean } } = {
   env: (process.env.NODE_ENV as any) || 'development',
   logLevel: (process.env.LOG_LEVEL as any) || 'info',
 
@@ -141,6 +149,9 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
   // [P2-fix] Unified key management: support both data-publisher and data-sync env var names
   publisher: {
     rpcUrl: getEnv('RPC_URL', 'https://ethereum-sepolia-rpc.publicnode.com'),
+    rpcUrls: process.env.RPC_URLS
+      ? process.env.RPC_URLS.split(',').map(value => value.trim()).filter(Boolean)
+      : undefined,
     chainId: getEnvInt('CHAIN_ID', 11155111),
     riskRegistryAddress: getEnv('RISK_REGISTRY_ADDRESS'),
     /** RiskOracle address for deferred count monitoring (optional) */
@@ -179,8 +190,14 @@ export const config: AppConfig & { fatf: FATFConfig; publisher: PublisherConfig 
   },
 
   scheduler: {
+    // Queue-driven publishing remains active when scheduled collection is disabled.
+    enabled: getEnvBool('PUBLISHER_SCHEDULER_ENABLED', true),
     fullSync: getEnv('FULL_SYNC_CRON', '0 2 * * *'),
     incrementalSync: getEnv('INCREMENTAL_SYNC_CRON', '0 */4 * * *'),
+  },
+
+  batchSync: {
+    enabled: getEnvBool('BATCH_SYNC_ENABLED', true),
   },
 
   cluster: {

@@ -19,6 +19,7 @@ from app.schemas import RiskFactor
 from app.services.alert_service import AlertService
 from app.services.blockscout_service import BlockscoutService
 from app.services.cache_service import CacheService
+from app.services.chain_registry_service import chain_registry_service
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -98,31 +99,36 @@ class SanctionedListStrategy(RiskRuleStrategy):
         db: AsyncSession,
         blockscout: BlockscoutService
     ) -> Tuple[float, str]:
-        result = await db.execute(
-            select(AddressRisk.tags).where(
-                AddressRisk.address == address,
-                AddressRisk.chain == chain,
+        tags = None
+        try:
+            result = await db.execute(
+                select(AddressRisk.tags).where(
+                    AddressRisk.address == address,
+                    AddressRisk.chain == chain,
+                )
             )
-        )
-        tags = result.scalar()
+            tags = result.scalar()
+        except Exception as exc:
+            # 数据库不可用时仍可通过链上事实源判断；全部 RPC 失败则由上层显式报错。
+            logger.warning("sanction_db_read_failed", error=str(exc))
+
         hit = False
         if tags:
             for t in tags:
                 ts = str(t)
-                # [R3-L7] 精确匹配防子串误判
                 if any(m == ts for m in self.MARKERS):
                     hit = True
                     break
 
+        impact = float(rule.risk_score_impact or 100)
+        weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
+        score = min(min(impact, 100) * weight, 100)
         if hit:
-            impact = float(rule.risk_score_impact or 100)
-            # [AUDIT-FIX] risk_weight 为 NULL（手动建规则未填权重）时降级 1.0：
-            # None 传入 float() 抛 TypeError → 接口 500（实测 10/11 在册地址查询失败）。
-            # 同一缺口存在于全部策略与 RiskFactor 构造，此处统一加防御。
-            weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
-            # [R3-M1] 钳制上界防 RiskFactor 校验 500
-            return min(min(impact, 100) * weight, 100), "OFAC/SDN 官方制裁名单在册"
+            return score, "OFAC/SDN 官方制裁名单在册"
 
+        onchain = await chain_registry_service.is_sanctioned(address, chain)
+        if onchain:
+            return score, "Sepolia RiskRegistry 官方制裁名单在册（链上回读）"
         return 0, ""
 
 

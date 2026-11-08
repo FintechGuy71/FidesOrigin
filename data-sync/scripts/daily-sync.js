@@ -139,7 +139,12 @@ class DailySyncService {
   async init() {
     console.log('🚀 DailySync initializing...');
     
-    this.provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+    const rpcUrls = (process.env.RPC_URLS || CONFIG.rpcUrl)
+      .split(',').map(value => value.trim()).filter(Boolean);
+    const providers = rpcUrls.map(url => new ethers.JsonRpcProvider(url, 11155111));
+    this.provider = providers.length > 1
+      ? new ethers.FallbackProvider(providers, 11155111, { quorum: 1 })
+      : providers[0];
     
     if (CONFIG.privateKey) {
       this.wallet = new ethers.Wallet(CONFIG.privateKey, this.provider);
@@ -176,32 +181,42 @@ class DailySyncService {
     // 0. 主源：OFAC 官方 SDN_ADVANCED.XML（每日更新，Feature/VersionDetail 内含链上地址）
     const advUrl = process.env.OFAC_ADVANCED_URL
       || 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML';
-    try {
-      const response = await axios.get(advUrl, {
-        timeout: 120000,
-        responseType: 'text',
-        maxContentLength: 200 * 1024 * 1024,
-        maxBodyLength: 200 * 1024 * 1024,
-      });
-      // [P1-7 FIX] 结构化解析（「Digital Currency Address - *」特征块内提 0x 形态），替代全文档正则
-      const unique = extractEvmAddresses(response.data);
+    const rawCache = path.join(CONFIG.cacheDir, 'ofac-sdn-advanced.xml');
+    const parsePrimary = (xml, sourceLabel) => {
+      const unique = extractEvmAddresses(xml);
       if (unique.length === 0) {
-        // 结构解析归零 = OFAC 格式变更（常态百余个 EVM 地址）。按数据源故障处理：
-        // 抛错走 catch 回退静态源，同时 primarySourceOk=false 会阻止下架 diff 误删
         throw new Error('SDN_ADVANCED structured parse yielded 0 EVM addresses (OFAC format changed?)');
       }
       this.primarySourceOk = true;
-      console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} EVM addresses (official, daily-fresh)`);
+      console.log(`   📥 OFAC SDN_ADVANCED: ${unique.length} EVM addresses (${sourceLabel})`);
       for (const addr of unique) {
-        addresses.push({
-          address: addr,
-          source: 'OFAC_SDN_ADVANCED',
-          riskScore: 100,
-          reason: 'OFAC Sanctioned',
-        });
+        addresses.push({ address: addr, source: 'OFAC_SDN_ADVANCED', riskScore: 100, reason: 'OFAC Sanctioned' });
       }
+    };
+    try {
+      const { downloadTextWithResume } = require('../src/services/resilientDownload');
+      const { text, metadata } = await downloadTextWithResume(advUrl, rawCache, {
+        inactivityMs: Number(process.env.OFAC_DOWNLOAD_INACTIVITY_MS) || 60000,
+        maxDurationMs: Number(process.env.OFAC_DOWNLOAD_MAX_DURATION_MS) || 15 * 60 * 1000,
+        attempts: 3,
+      });
+      parsePrimary(text, `official, sha256=${metadata.sha256.slice(0, 12)}…, resumed=${metadata.resumed}`);
     } catch (e) {
-      console.log(`   ⚠️ SDN_ADVANCED fetch failed: ${e.message} — falling back to static sources`);
+      console.log(`   ⚠️ SDN_ADVANCED fetch failed: ${e.message} — checking fresh raw cache`);
+      let recovered = false;
+      if (fs.existsSync(rawCache)) {
+        const ageMs = Date.now() - fs.statSync(rawCache).mtimeMs;
+        const maxAge = Number(process.env.OFAC_CACHE_MAX_AGE_MS) || 24 * 60 * 60 * 1000;
+        if (ageMs <= maxAge) {
+          try {
+            parsePrimary(fs.readFileSync(rawCache, 'utf8'), `fresh raw cache, age=${Math.round(ageMs / 60000)}m`);
+            recovered = true;
+          } catch (cacheError) {
+            console.log(`   ⚠️ Raw cache parse failed: ${cacheError.message}`);
+          }
+        }
+      }
+      if (!recovered) console.log('   ⚠️ No fresh raw cache; falling back to static sources with delisting protection');
     }
 
     // 1. 加载本地静态列表（后备来源：ofac-crypto-sanctions.json 或 ofac-eth-source.txt）
@@ -278,19 +293,17 @@ class DailySyncService {
     const url = process.env.HMT_URL
       || 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv';
     try {
-      const response = await axios.get(url, {
-        timeout: 120000,
-        responseType: 'text',
-        maxContentLength: 200 * 1024 * 1024,
-        maxBodyLength: 200 * 1024 * 1024,
+      const { downloadTextWithResume } = require('../src/services/resilientDownload');
+      const { text } = await downloadTextWithResume(url, path.join(CONFIG.cacheDir, 'uk-sanctions-list.csv'), {
+        inactivityMs: 60000, maxDurationMs: 15 * 60 * 1000, attempts: 3,
       });
 
       const {
         parseCSV, findHeaderLine, HMT_KNOWN_COLUMNS, extractCryptoAddresses,
       } = require('../sanctions-sync');
 
-      const headerLine = findHeaderLine(response.data.split('\n'), HMT_KNOWN_COLUMNS);
-      const records = parseCSV(response.data, { headerLine });
+      const headerLine = findHeaderLine(text.split('\n'), HMT_KNOWN_COLUMNS);
+      const records = parseCSV(text, { headerLine });
       console.log(`   📄 HMT records: ${records.length} (header line ${headerLine})`);
 
       // 只有成功解析出记录才置健康位。0 条记录意味着 CSV 结构变了或抓到了空内容
@@ -406,14 +419,12 @@ class DailySyncService {
     const url = process.env.OPEN_SANCTIONS_URL
       || 'https://data.opensanctions.org/datasets/latest/sanctions/targets.simple.csv';
     try {
-      const response = await axios.get(url, {
-        timeout: 180000,
-        responseType: 'text',
-        maxContentLength: 200 * 1024 * 1024,
-        maxBodyLength: 200 * 1024 * 1024,
+      const { downloadTextWithResume } = require('../src/services/resilientDownload');
+      const { text } = await downloadTextWithResume(url, path.join(CONFIG.cacheDir, 'open-sanctions-targets.csv'), {
+        inactivityMs: 60000, maxDurationMs: 15 * 60 * 1000, attempts: 3,
       });
 
-      const matches = response.data.match(/0x[a-fA-F0-9]{40}/g) || [];
+      const matches = text.match(/0x[a-fA-F0-9]{40}/g) || [];
       const seen = new Set();
       for (const raw of matches) {
         const addr = raw.toLowerCase();
@@ -1036,25 +1047,28 @@ class DailySyncService {
     // 3. 构建 Merkle Tree
     const tree = this.buildMerkleTree(merged);
     
-    // 4. 同步到链上
-    const chainResult = await this.syncToChain(merged, dryRun);
+    // 4. 所有链上写操作与 data-publisher 共用同一把 Redis 所有权锁。
+    let chainResult;
+    let merkleResult;
+    let delistResult;
+    const { ChainWriteLock } = require('../src/services/chainWriteLock');
+    const chainWriteLock = new ChainWriteLock();
+    await chainWriteLock.runExclusive(async () => {
+      chainResult = await this.syncToChain(merged, dryRun);
+      merkleResult = await this.syncMerkleRoot(tree, dryRun);
+      delistResult = await this.syncDelisted(merged, dryRun);
+    });
 
-    // 4a. 推 Merkle 根上链（D-1：MerkleRiskRegistry.updateMerkleRoot，幂等）
-    const merkleResult = await this.syncMerkleRoot(tree, dryRun);
-
-    // 4b. 制裁下架传播（P1-1：链上制裁集 diff 今日名单，下架地址置 sanctioned=false）
-    const delistResult = await this.syncDelisted(merged, dryRun);
-
-    // 4c. 同步到后端 DB（Neon address_risks）——让 demo/address-check 的后端视角与链上一致
+    // 4c. 同步到后端 DB，并显式记录成功、跳过或失败，禁止含糊的“整体成功”。
+    const backendDbResults = [];
+    let backendDbError = null;
     if (!dryRun) {
       const { pushToBackendDb } = require('./push-to-backend-db');
       try {
-        // 下架地址一并推送（置 score=0/清空 tags），DB 视角与链上同步移除
-        await pushToBackendDb(merged, delistResult.addresses || []);
-        // 风险地址（scam/phishing）单独写库——不写链，tags 走 risk 兜底标记
-        await pushToBackendDb(scamSnifferData);
+        backendDbResults.push(await pushToBackendDb(merged, delistResult.addresses || []));
+        backendDbResults.push(await pushToBackendDb(scamSnifferData));
       } catch (e) {
-        // 后端库同步失败不阻断主流程（链上已是事实源），告警并继续
+        backendDbError = e.message;
         console.error('   ⚠️ Backend DB sync failed (chain 已是事实源，明日重试):', e.message);
       }
     }
@@ -1086,10 +1100,26 @@ class DailySyncService {
       chain: chainResult,
       merkleOnChain: merkleResult,
       delist: delistResult,
-      // 增量写入效果：toWrite=本轮实际写链数，unchanged=已一致跳过数（幂等证据）
+      backendDb: {
+        status: dryRun ? 'not_run' : backendDbError ? 'failed'
+          : backendDbResults.length > 0 && backendDbResults.every(result => result && result.skipped) ? 'skipped' : 'success',
+        results: backendDbResults,
+        error: backendDbError,
+      },
+      sourceHealth: {
+        ofac: this.primarySourceOk,
+        hmt: this.hmtSourceOk,
+        openSanctions: this.openSanctionsOk,
+        scamSniffer: this.scamSnifferOk,
+      },
+      // 区分候选数、合约实际更新数、跳过数和写后回读结果，避免把 status=1 误报为业务成功。
       chainDiff: {
-        toWrite: chainResult.toWrite ?? null,
-        unchanged: chainResult.unchanged ?? null,
+        candidateCount: chainResult.candidateCount ?? chainResult.toWrite ?? null,
+        actualUpdated: chainResult.actualUpdated ?? null,
+        contractSkipped: chainResult.contractSkipped ?? null,
+        postWriteDiffCount: chainResult.postWriteDiffCount ?? null,
+        postWriteReadErrors: chainResult.postWriteReadErrors ?? null,
+        unchanged: chainResult.postWriteUnchanged ?? chainResult.unchanged ?? null,
         readErrors: (chainResult.readErrors || []).length,
         failedBatches: chainResult.failedBatches ?? 0,
       },
@@ -1097,14 +1127,24 @@ class DailySyncService {
       provenance: this.lastProvenanceSummary || null,
       duration: Date.now() - startTime,
     };
-    
+
+    const { sendAlert } = require('../src/alertManager');
+    const unhealthySources = Object.entries(summary.sourceHealth)
+      .filter(([, healthy]) => !healthy).map(([name]) => name);
+    if (chainResult.ok === false) {
+      await sendAlert(`Daily chain sync verification failed: ${chainResult.postWriteDiffCount} differences remain`);
+    }
+    if (backendDbError) await sendAlert(`Backend DB sync failed: ${backendDbError}`);
+    if (unhealthySources.length > 0) {
+      await sendAlert(`Risk data sources unhealthy: ${unhealthySources.join(', ')}; delisting protection remains active`);
+    }
     this.writeLog(summary);
     
     console.log('\n' + '='.repeat(60));
     console.log('Sync Complete');
     console.log(`⏱️ Duration: ${summary.duration}ms`);
     console.log(`📊 Addresses: ${summary.stats.merged}`);
-    console.log(`⛓️ Chain write: ${summary.chainDiff.toWrite ?? 'n/a'} written, ${summary.chainDiff.unchanged ?? 'n/a'} already in sync`);
+    console.log(`⛓️ Chain: ${summary.chainDiff.candidateCount ?? 'n/a'} candidates, ${summary.chainDiff.actualUpdated ?? 'n/a'} updated, ${summary.chainDiff.contractSkipped ?? 'n/a'} skipped, ${summary.chainDiff.postWriteDiffCount ?? 'n/a'} remaining`);
     console.log(`🌲 Merkle Root: ${summary.merkle.root}`);
     console.log('='.repeat(60));
     

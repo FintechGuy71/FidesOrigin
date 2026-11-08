@@ -66,9 +66,18 @@ export class MessageQueue {
   private async getRedis(): Promise<RedisClientType> {
     if (!this.redis) {
       this.redis = createClient({ url: config.cluster.redisUrl });
+      // node-redis emits transport errors; always attach a listener to avoid uncaughtException.
+      this.redis.on('error', err => {
+        logger.error('Message queue Redis error', { error: err.message });
+      });
       await this.redis.connect();
     }
     return this.redis;
+  }
+
+  /** Business readiness for the health endpoint, independent of process liveness. */
+  isHealthy(): boolean {
+    return this.isRunning && Boolean(this.redis && this.redis.isOpen);
   }
 
   /**

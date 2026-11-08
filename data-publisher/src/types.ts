@@ -31,6 +31,7 @@ export interface DataSourceConfig {
 
 export interface PublisherConfig {
   rpcUrl: string;
+  rpcUrls?: string[];
   chainId: number;
   riskRegistryAddress: string;
   /** RiskOracle address for deferred count monitoring */
@@ -79,6 +80,7 @@ export interface AppConfig {
   publisher: PublisherConfig;
   monitor: MonitorConfig;
   scheduler: {
+    enabled: boolean;
     fullSync: string;
     incrementalSync: string;
   };

@@ -27,6 +27,7 @@ interface WebhookPayload {
 export class MonitorServer {
   private app = express();
   private server?: ReturnType<typeof express.application.listen>;
+  private backgroundTimers: NodeJS.Timeout[] = [];
   private publisher: BlockchainPublisher;
   private registry: Registry;
   private provider: ethers.JsonRpcProvider;
@@ -199,9 +200,9 @@ export class MonitorServer {
 
   private startBackgroundTasks(): void {
     // Update oracle balance every 60s
-    setInterval(() => this.updateOracleBalance(), 60000);
+    this.backgroundTimers.push(setInterval(() => this.updateOracleBalance(), 60000));
     // Check alert rules every 30s
-    setInterval(() => this.evaluateAlertRules(), 30000);
+    this.backgroundTimers.push(setInterval(() => this.evaluateAlertRules(), 30000));
   }
 
   private async updateOracleBalance(): Promise<void> {
@@ -448,6 +449,8 @@ export class MonitorServer {
   }
 
   stop(): void {
+    for (const timer of this.backgroundTimers) clearInterval(timer);
+    this.backgroundTimers = [];
     if (this.server) {
       this.server.close(() => {
         logger.info('Monitor server stopped');
