@@ -6,7 +6,7 @@ import os
 import sys
 
 # 必须在导入任何应用模块之前设置测试数据库
-os.environ["TEST_DATABASE_URL"] = "postgresql+asyncpg://fidesorigin:fidesorigin@localhost:5432/fidesorigin_test"
+os.environ.setdefault("TEST_DATABASE_URL", "postgresql+asyncpg://fidesorigin:fidesorigin@localhost:5432/fidesorigin_test")
 os.environ["DB_PASSWORD"] = "fidesorigin"
 os.environ["SECRET_KEY"] = "test-secret-key-at-least-32-characters-long"
 

@@ -52,8 +52,9 @@ async function main(): Promise<void> {
     // Start RiskOracle deferred count monitoring
     publisher.startDeferredCountReporting(monitor);
 
-    // Start scheduled jobs
-    scheduler.start();
+    // data-sync owns scheduled sanctions/Merkle writes when this is disabled.
+    // Queue-driven risk updates remain active in either mode.
+    if (config.scheduler.enabled) scheduler.start();
 
     // Start FATF pipeline (weekly)
     let fatfScheduler: FATFScheduler | undefined;
@@ -69,62 +70,55 @@ async function main(): Promise<void> {
       }
     }
 
-    // Start batch risk data sync (daily — OFAC + ScamSniffer)
-    const batchSyncOpts = {
-      incremental: process.env.BATCH_SYNC_INCREMENTAL === 'true',
-      days: process.env.BATCH_SYNC_DAYS ? parseInt(process.env.BATCH_SYNC_DAYS, 10) : 7,
-      dryRun: process.env.BATCH_SYNC_DRY_RUN === 'true' ? true : undefined,
-    };
-    const batchScheduler = new BatchScheduler(
-      process.env.BATCH_SYNC_CRON || '30 3 * * *',
-      batchSyncOpts
-    );
-    batchScheduler.start();
+    let batchScheduler: BatchScheduler | undefined;
+    if (config.batchSync.enabled) {
+      const batchSyncOpts = {
+        incremental: process.env.BATCH_SYNC_INCREMENTAL === 'true',
+        days: process.env.BATCH_SYNC_DAYS ? parseInt(process.env.BATCH_SYNC_DAYS, 10) : 7,
+        dryRun: process.env.BATCH_SYNC_DRY_RUN === 'true' ? true : undefined,
+      };
+      batchScheduler = new BatchScheduler(
+        process.env.BATCH_SYNC_CRON || '30 3 * * *',
+        batchSyncOpts
+      );
+      batchScheduler.start();
+    }
 
-    // Graceful shutdown
-    const shutdown = async (signal: string) => {
+    let shuttingDown = false;
+    const shutdown = async (signal: string, exitCode: number = 0) => {
+      if (shuttingDown) return;
+      shuttingDown = true;
       logger.info(`Received ${signal}, shutting down gracefully...`);
       scheduler.stop();
-      batchScheduler.stop();
+      batchScheduler?.stop();
       if (fatfScheduler) fatfScheduler.stop();
       monitor.stop();
+      await publisher.close().catch(err => {
+        logger.error('Publisher cleanup failed', { error: (err as Error).message });
+      });
       if (cluster) {
         await cluster.disconnect();
       }
       logger.info('Shutdown complete');
-      process.exit(0);
+      process.exit(exitCode);
     };
 
-    process.on('SIGINT', () => shutdown('SIGINT'));
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => { void shutdown('SIGINT'); });
+    process.on('SIGTERM', () => { void shutdown('SIGTERM'); });
     process.on('uncaughtException', (err) => {
       logger.error('Uncaught exception', { error: err.stack });
-      // [FIX] Use process.exitCode instead of process.exit(1) to allow async cleanup
-      process.exitCode = 1;
-      // Attempt best-effort synchronous cleanup
-      try {
-        scheduler.stop();
-        batchScheduler.stop();
-        if (fatfScheduler) fatfScheduler.stop();
-        monitor.stop();
-      } catch (cleanupErr) {
-        logger.error('Sync cleanup failed during uncaughtException', { error: (cleanupErr as Error).message });
-      }
+      // Never leave a half-alive process with its monitor closed and cron still active.
+      void shutdown('uncaughtException', 1);
     });
     process.on('unhandledRejection', (reason) => {
       logger.error('Unhandled rejection', { reason });
-      // [Audit-Fix #23] Call shutdown before exiting instead of raw process.exit(1).
-      // This allows pending HTTP responses to complete, connections to close, and
-      // cluster state to be cleaned up before the process terminates.
-      shutdown('unhandledRejection').finally(() => {
-        process.exit(1);
-      });
+      void shutdown('unhandledRejection', 1);
     });
 
     logger.info('Data publisher ready and running');
 
-    // If DRY_RUN, run a test sync immediately
-    if (config.publisher.dryRun) {
+    // If DRY_RUN, run a test sync immediately when scheduled collection is enabled.
+    if (config.publisher.dryRun && config.scheduler.enabled) {
       logger.info('Running test sync in dry-run mode...');
       await scheduler.runFullSync();
     }

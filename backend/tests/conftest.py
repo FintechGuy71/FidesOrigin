@@ -11,7 +11,8 @@ import os
 
 # 必须在导入任何应用模块之前设置测试环境变量
 os.environ["TESTING"] = "true"
-os.environ["TEST_DATABASE_URL"] = "postgresql+asyncpg://fidesorigin:fidesorigin@localhost:5432/fidesorigin_test"
+# Allow isolated unit-test runs to override the shared PostgreSQL test database.
+os.environ.setdefault("TEST_DATABASE_URL", "postgresql+asyncpg://fidesorigin:fidesorigin@localhost:5432/fidesorigin_test")
 os.environ["DB_PASSWORD"] = "fidesorigin"
 os.environ["SECRET_KEY"] = "test-secret-key-at-least-32-characters-long"
 

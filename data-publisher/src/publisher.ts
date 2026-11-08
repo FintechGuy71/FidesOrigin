@@ -43,6 +43,9 @@ class DistributedLockManager {
   private async getRedis(): Promise<RedisClientType> {
     if (!this.redis) {
       this.redis = createClient({ url: this.redisUrl });
+      this.redis.on('error', err => {
+        logger.error('Lock manager Redis error', { error: err.message });
+      });
       await this.redis.connect();
     }
     return this.redis;
@@ -249,7 +252,11 @@ export class BlockchainPublisher {
   private lockEnabled: boolean = true;
 
   constructor(cfg: PublisherConfig) {
-    this.provider = new JsonRpcProvider(cfg.rpcUrl, cfg.chainId);
+    const rpcUrls = (cfg.rpcUrls && cfg.rpcUrls.length > 0) ? cfg.rpcUrls : [cfg.rpcUrl];
+    const providers = rpcUrls.map(url => new JsonRpcProvider(url, cfg.chainId));
+    this.provider = providers.length > 1
+      ? new ethers.FallbackProvider(providers, cfg.chainId, { quorum: 1 }) as unknown as JsonRpcProvider
+      : providers[0];
     this.contract = new Contract(cfg.riskRegistryAddress, RISK_REGISTRY_ABI, this.provider);
 
     // Initialize RiskOracle contract if address is provided
@@ -791,6 +798,11 @@ export class BlockchainPublisher {
         } catch (e) {
           return { healthy: false, error: `Lock manager error: ${(e as Error).message}` };
         }
+      }
+
+      // Process liveness is insufficient: queue consumption must also be active.
+      if (!this.messageQueue.isHealthy()) {
+        return { healthy: false, error: 'Message queue subscriber is not connected' };
       }
 
       return { healthy: true };

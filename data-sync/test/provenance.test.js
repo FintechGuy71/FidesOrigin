@@ -458,6 +458,13 @@ function makeMockContract(onchainMap = {}, failTimes = 0) {
     writeCalls++;
     if (writeCalls <= failTimes) throw new Error('replacement transaction underpriced (mock)');
     written.push({ accounts: [...accounts], tags: tags.map((t) => [...t]) });
+    // 模拟真实合约状态变更，使默认的写后回读能验证业务结果。
+    accounts.forEach((account, i) => {
+      onchainMap[String(account).toLowerCase()] = {
+        riskScore: scores[i], tier: tiers[i], sanctioned: sanctioned[i],
+        tags: tags[i].map(bytes32ToTag),
+      };
+    });
     return {
       hash: '0xmock' + writeCalls,
       wait: async () => ({
@@ -679,4 +686,58 @@ test('sync: 单批失败不影响其他批（部分成功可审计）', async ()
   assert.strictEqual(r.failedBatches, 1);
   assert.strictEqual(r.ok, false);
   assert.strictEqual(r.results[1].ok, true, '第 2 批应成功');
+});
+
+test('sync: 交易成功但全部跳过且写后仍有差异 → 不得判定业务成功', async () => {
+  const mk = makeMockContract({});
+  mk.contract.interface.parseLog = ({ data }) => data;
+  mk.contract.batchUpdateRiskProfiles = Object.assign(
+    async (accounts) => ({
+      hash: '0xskipped', wait: async () => ({
+        status: 1, hash: '0xskipped', blockNumber: 200, gasUsed: 50000n,
+        logs: [
+          ...accounts.map((account, i) => ({ data: { name: 'BatchUpdateSkipped', args: [i, account, 'Update too frequent'] } })),
+          { data: { name: 'BatchUpdateCompleted', args: [0, 50000n] } },
+        ],
+      }),
+    }),
+    { estimateGas: async () => 100000n }
+  );
+  const r = await syncProfilesToChain(mk.contract, TARGETS, { onLog: () => {} });
+  assert.strictEqual(r.actualUpdated, 0);
+  assert.strictEqual(r.contractSkipped, 2);
+  assert.strictEqual(r.postWriteDiffCount, 2);
+  assert.strictEqual(r.ok, false);
+});
+
+test('sync: 合约跳过但写后目标已一致 → 成功并保留实际更新数 0', async () => {
+  const mk = makeMockContract({});
+  mk.contract.interface.parseLog = ({ data }) => data;
+  let externallyUpdated = false;
+  mk.contract.getRiskProfile = async (a) => {
+    if (!externallyUpdated) return [0, 0, [], 0, false];
+    const entry = TARGETS.find((e) => e.address.toLowerCase() === a.toLowerCase());
+    const normalized = require('../src/chainProfileSync').normalizeTarget(entry);
+    return [normalized.riskScore, normalized.tier, normalized.tags.map(tagToBytes32), 100, normalized.sanctioned];
+  };
+  mk.contract.batchUpdateRiskProfiles = Object.assign(
+    async (accounts) => ({
+      hash: '0xexternal', wait: async () => {
+        externallyUpdated = true; // 模拟另一写入方已在冷却期内写入目标状态。
+        return {
+          status: 1, hash: '0xexternal', blockNumber: 201, gasUsed: 50000n,
+          logs: [
+            ...accounts.map((account, i) => ({ data: { name: 'BatchUpdateSkipped', args: [i, account, 'Update too frequent'] } })),
+            { data: { name: 'BatchUpdateCompleted', args: [0, 50000n] } },
+          ],
+        };
+      },
+    }),
+    { estimateGas: async () => 100000n }
+  );
+  const r = await syncProfilesToChain(mk.contract, TARGETS, { onLog: () => {} });
+  assert.strictEqual(r.actualUpdated, 0);
+  assert.strictEqual(r.contractSkipped, 2);
+  assert.strictEqual(r.postWriteDiffCount, 0);
+  assert.strictEqual(r.ok, true);
 });

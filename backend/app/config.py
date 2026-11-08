@@ -176,6 +176,17 @@ class Settings(BaseSettings):
     # ==================== 风险引擎配置 ====================
     RISK_CACHE_TTL: int = Field(default=300, description="风险缓存 TTL（秒）")
     RISK_ENGINE_TIMEOUT: int = Field(default=30, description="风险引擎超时")
+    CHAIN_READ_FALLBACK_ENABLED: bool = Field(default=True, description="数据库未命中时回读 RiskRegistry")
+    RISK_REGISTRY_ADDRESS: str = Field(
+        default="0x953f985f38f94d6159c0600d1f15D543895cE896",
+        description="Sepolia RiskRegistry 地址",
+    )
+    SEPOLIA_RPC_URL: str = Field(
+        default="https://ethereum-sepolia-rpc.publicnode.com",
+        description="Sepolia 只读 RPC",
+    )
+    SEPOLIA_RPC_URLS: Optional[str] = Field(default=None, description="逗号分隔的备用 Sepolia RPC")
+    CHAIN_READ_TIMEOUT: int = Field(default=10, description="链上回读超时（秒）")
     
     # ==================== 监控配置 ====================
     MONITOR_WS_PING_INTERVAL: int = Field(default=30, description="WebSocket ping 间隔")
