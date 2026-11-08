@@ -2,6 +2,33 @@
 
 All notable changes to the FidesOrigin project.
 
+## [v3.2.0] - 2026-11-08
+
+### Added — runtime verification and resilient scheduling
+
+- 链上同步新增候选数、实际更新数、跳过原因、写后剩余差异和读错误统计；写后不一致时返回失败。
+- 新增版本化每日调度器：持久化执行状态、错过任务补跑、单实例锁、30 分钟超时、失败与超龄告警。
+- `data-sync` 与 `data-publisher` 通过 Redis `fides:lock:chain:write` 共享写锁协调链上写入。
+- OFAC、UKSL、OpenSanctions 下载支持断点续传、独立超时、SHA-256 Digest 校验和新鲜缓存回退。
+- 后端官方制裁策略支持数据库未命中/不可用后的 Sepolia RiskRegistry 回读与备用 RPC；全部 RPC 失败时显式报错。
+
+### Fixed — publisher and data consistency
+
+- 编译后的发布器可从包根目录加载 `.env`；异常时清理并退出，Redis 错误不再形成无监听器异常。
+- 健康检查增加消息队列订阅状态；监控后台定时器完整清理；定时采集与队列发布职责可拆分。
+- `data-sync` 与发布器支持 `RPC_URLS` 备用节点；数据库同步状态、数据源健康状态写入同步摘要。
+- 补齐 Redis、Winston、Winston Daily Rotate File 运行依赖；`follow-redirects` 升级至 1.16.2，生产依赖审计为 0。
+
+### Verification
+
+- 数据同步 90/90、发布器 48/48、后端链上回读 3/3 测试通过。
+- 真实 dry-run：132/132 档案一致，0 读错误，Merkle 根匹配，退出码 0。
+- 真实 Sepolia 回读：已知制裁地址为 true，零地址为 false。
+- Redis 强制终止后自动恢复，发布器健康和就绪探针恢复；队列 pending/lag/DLQ 均为 0。
+- 版本化调度器继承当天成功记录，未重复写链；PR #132 的 13/13 项远端检查通过。
+
+详细运行说明、升级步骤、验收证据和剩余边界见 `RELEASE_v3.2.0.md`。
+
 ## [v3.1.1] - 2026-11-07
 
 ### Fixed — UK sanctions data source
