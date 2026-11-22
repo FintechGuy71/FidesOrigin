@@ -73,3 +73,13 @@ async def test_chain_registry_fails_explicitly_instead_of_false_unknown():
     service = ChainRegistryService()
     with pytest.raises(RuntimeError, match="All Sepolia RPC endpoints failed"):
         await service.is_sanctioned(ADDRESS, "sepolia")
+
+
+def test_rpc_logging_helpers_remove_credentials_and_urls():
+    redacted = module._redact_url("https://user:pass@example.com:8443/v2/secret?key=value")
+    assert redacted == "https://example.com:8443"
+    assert "pass" not in redacted
+    assert "secret" not in redacted
+    error = module._safe_error(RuntimeError("failed https://user:pass@example.com/v2/secret"))
+    assert "example.com" not in error
+    assert "secret" not in error

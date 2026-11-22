@@ -123,12 +123,17 @@ class SanctionedListStrategy(RiskRuleStrategy):
         impact = float(rule.risk_score_impact or 100)
         weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
         score = min(min(impact, 100) * weight, 100)
+
+        # Chain is authoritative in both directions when enabled. A stale DB hit must
+        # never override an on-chain delisting; RPC failure remains an explicit error.
+        onchain = await chain_registry_service.is_sanctioned(address, chain)
+        if onchain is True:
+            return score, "Sepolia RiskRegistry 官方制裁名单在册（链上回读）"
+        if onchain is False:
+            return 0, ""
+
         if hit:
             return score, "OFAC/SDN 官方制裁名单在册"
-
-        onchain = await chain_registry_service.is_sanctioned(address, chain)
-        if onchain:
-            return score, "Sepolia RiskRegistry 官方制裁名单在册（链上回读）"
         return 0, ""
 
 

@@ -20,6 +20,8 @@ const alertAxios = axios.create({
  * @param {string} message - 告警消息
  */
 async function sendAlert(message) {
+  // Always leave a local operational record, even when no external channel is configured.
+  secureLog.warn(`[Operational Alert] ${message}`);
   const alerts = [];
 
   if (process.env.SLACK_WEBHOOK_URL) {

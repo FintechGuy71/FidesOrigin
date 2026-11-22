@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { DataCollector } from './collector';
 import { DataProcessor } from './processor';
 import { BlockchainPublisher } from './publisher';
@@ -43,7 +43,7 @@ export class JobScheduler {
   private publisher: BlockchainPublisher;
   private cluster?: ClusterCoordinator;
   private jobs: Map<string, SyncJob> = new Map();
-  private tasks: cron.ScheduledTask[] = [];
+  private tasks: ScheduledTask[] = [];
   private isRunning: boolean = false;
   private localMutex: AsyncMutex = new AsyncMutex();
 
@@ -77,22 +77,22 @@ export class JobScheduler {
     }
 
     // Full sync job
-    const fullSyncTask = cron.schedule(config.scheduler.fullSync, async () => {
+    const fullSyncTask = cron.createTask(config.scheduler.fullSync, async () => {
       await this.runFullSync();
     }, {
-      scheduled: false,
       timezone: 'UTC',
+      noOverlap: true,
     });
     this.tasks.push(fullSyncTask);
     fullSyncTask.start();
     logger.info('Full sync scheduled', { cron: config.scheduler.fullSync });
 
     // Incremental sync job
-    const incrementalTask = cron.schedule(config.scheduler.incrementalSync, async () => {
+    const incrementalTask = cron.createTask(config.scheduler.incrementalSync, async () => {
       await this.runIncrementalSync();
     }, {
-      scheduled: false,
       timezone: 'UTC',
+      noOverlap: true,
     });
     this.tasks.push(incrementalTask);
     incrementalTask.start();

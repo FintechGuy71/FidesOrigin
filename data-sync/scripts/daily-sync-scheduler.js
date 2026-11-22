@@ -12,6 +12,8 @@ const { sendAlert } = require('../src/alertManager');
 const hour = Number(process.env.DAILY_SYNC_HOUR || 3);
 const minute = Number(process.env.DAILY_SYNC_MINUTE || 37);
 const timeoutMs = Number(process.env.DAILY_SYNC_TIMEOUT_MS || 30 * 60 * 1000);
+const retryDelayMs = Number(process.env.DAILY_SYNC_RETRY_DELAY_MS || 15 * 60 * 1000);
+const maxAttempts = Number(process.env.DAILY_SYNC_MAX_ATTEMPTS || 3);
 const stateFile = process.env.DAILY_SYNC_STATE_FILE || path.join(app, 'cache', 'daily-sync-scheduler-state.json');
 const logFile = process.env.DAILY_SYNC_LOG_FILE || path.join(app, 'logs', 'daily-sync-scheduler.log');
 const liveLogFile = process.env.DAILY_SYNC_LIVE_LOG_FILE || path.join(app, 'logs', 'daily-sync-live.log');
@@ -20,7 +22,15 @@ fs.mkdirSync(path.dirname(logFile), { recursive: true });
 fs.mkdirSync(path.dirname(liveLogFile), { recursive: true });
 
 let state = { status: 'scheduled', lastResult: null };
-try { state = { ...state, ...JSON.parse(fs.readFileSync(stateFile, 'utf8')) }; } catch { /* first run */ }
+try {
+  state = { ...state, ...JSON.parse(fs.readFileSync(stateFile, 'utf8')) };
+} catch (error) {
+  if (error.code !== 'ENOENT') {
+    const backup = `${stateFile}.corrupt-${Date.now()}`;
+    try { fs.renameSync(stateFile, backup); } catch { /* retain original if backup fails */ }
+    console.warn(`Invalid scheduler state was quarantined: ${error.message}`);
+  }
+}
 let child = null;
 let nextRun = null;
 let releaseLock;
@@ -53,10 +63,15 @@ function runSync(scheduledFor) {
   if (child) return;
   timedOut = false;
   nextRun = scheduledFor;
+  const scheduledIso = scheduledFor.toISOString();
+  const previous = state.lastResult && state.lastResult.scheduledFor === scheduledIso
+    ? state.lastResult
+    : null;
+  const attempt = previous ? (Number(previous.attempt) || 1) + 1 : 1;
   const startedAt = new Date().toISOString();
-  state.lastResult = { scheduledFor: scheduledFor.toISOString(), startedAt };
+  state.lastResult = { scheduledFor: scheduledIso, startedAt, attempt };
   saveState('running');
-  log(`Starting daily-sync for ${scheduledFor.toISOString()}`);
+  log(`Starting daily-sync for ${scheduledIso}, attempt=${attempt}/${maxAttempts}`);
   const output = fs.createWriteStream(liveLogFile, { flags: 'a' });
   child = spawn(process.execPath, [path.join(app, 'scripts', 'daily-sync.js')], {
     cwd: app,
@@ -65,6 +80,7 @@ function runSync(scheduledFor) {
   });
   child.stdout.pipe(output);
   child.stderr.pipe(output);
+  saveState('running');
   const timeout = setTimeout(() => {
     if (!child) return;
     timedOut = true;
@@ -75,32 +91,37 @@ function runSync(scheduledFor) {
   child.on('exit', (code, signal) => {
     clearTimeout(timeout);
     const finishedAt = new Date().toISOString();
+    const exitCodeHex = code === null ? null : `0x${code.toString(16)}`;
     state.lastResult = {
       ...state.lastResult,
-      scheduledFor: scheduledFor.toISOString(),
+      scheduledFor: scheduledIso,
       startedAt,
       finishedAt,
+      attempt,
       exitCode: code,
+      exitCodeHex,
       signal,
-      error: timedOut ? `Timed out after ${timeoutMs}ms` : null,
+      error: timedOut
+        ? `Timed out after ${timeoutMs}ms`
+        : code !== 0 ? 'Non-zero exit; inspect daily-sync-live.log' : null,
     };
     child = null;
     output.end();
-    nextRun = new Date();
-    nextRun.setHours(hour, minute, 0, 0);
-    if (nextRun <= new Date()) nextRun.setDate(nextRun.getDate() + 1);
+    nextRun = resolveSchedule(
+      state, new Date(finishedAt), hour, minute, retryDelayMs, maxAttempts
+    ).nextRun;
     const status = code === 0 && !timedOut ? 'scheduled' : 'failed';
     saveState(status);
-    log(`Daily-sync exited code=${code} signal=${signal} timedOut=${timedOut}`);
+    log(`Daily-sync exited code=${code} (${exitCodeHex}) signal=${signal} timedOut=${timedOut} attempt=${attempt}/${maxAttempts}`);
     if (status === 'failed') {
-      void sendAlert(`Daily sync failed at ${finishedAt}: exit=${code}, signal=${signal}, timeout=${timedOut}`);
+      void sendAlert(`Daily sync failed at ${finishedAt}: exit=${code} (${exitCodeHex}), signal=${signal}, timeout=${timedOut}, attempt=${attempt}/${maxAttempts}`);
     }
   });
 }
 
 function tick() {
   if (child) return;
-  const decision = resolveSchedule(state, new Date(), hour, minute);
+  const decision = resolveSchedule(state, new Date(), hour, minute, retryDelayMs, maxAttempts);
   nextRun = decision.nextRun;
   if (decision.runNow) runSync(decision.scheduledFor);
   else saveState(state.status === 'failed' ? 'failed' : 'scheduled');

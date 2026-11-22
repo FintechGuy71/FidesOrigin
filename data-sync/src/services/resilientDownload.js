@@ -38,8 +38,12 @@ function request(url, options, redirects = 0) {
 
 function digestFromHeader(value) {
   if (!value) return null;
-  const match = String(value).match(/sha-256=([A-Za-z0-9+/=]+)/i);
-  return match ? Buffer.from(match[1], 'base64').toString('hex') : null;
+  const text = String(value);
+  // Standards-compliant Digest uses Base64. OFAC currently also emits sha-256<hex>.
+  const base64 = text.match(/sha-256=([A-Za-z0-9+/]+={0,2})/i);
+  if (base64) return Buffer.from(base64[1], 'base64').toString('hex');
+  const hexadecimal = text.match(/sha-256:?([a-f0-9]{64})/i);
+  return hexadecimal ? hexadecimal[1].toLowerCase() : null;
 }
 
 async function sha256File(file) {
@@ -65,6 +69,21 @@ async function downloadWithResume(sourceUrl, destination, options = {}) {
     } catch { /* GET Digest remains an optional verification source */ }
   }
 
+  // Never append bytes to an unknown or different source's partial file.
+  const partMeta = `${part}.json`;
+  if (fs.existsSync(part)) {
+    let reusable = false;
+    try {
+      const meta = JSON.parse(fs.readFileSync(partMeta, 'utf8'));
+      reusable = meta.sourceUrl === sourceUrl
+        && (!expectedDigest || meta.expectedDigest === expectedDigest);
+    } catch { /* legacy/invalid partial files are discarded */ }
+    if (!reusable) {
+      fs.unlinkSync(part);
+      fs.rmSync(partMeta, { force: true });
+    }
+  }
+
   let lastError;
   for (let attempt = 1; attempt <= (options.attempts || 3); attempt++) {
     const offset = fs.existsSync(part) ? fs.statSync(part).size : 0;
@@ -82,6 +101,14 @@ async function downloadWithResume(sourceUrl, destination, options = {}) {
       }
       const append = response.statusCode === 206 && offset > 0;
       const responseDigest = digestFromHeader(response.headers.digest);
+      if (options.requireDigest && !responseDigest && !expectedDigest) {
+        response.resume();
+        throw new Error(`SHA-256 Digest is required for ${path.basename(destination)}`);
+      }
+      if (responseDigest && expectedDigest && responseDigest.toLowerCase() !== expectedDigest.toLowerCase()) {
+        response.resume();
+        throw new Error(`Digest changed between HEAD and GET for ${path.basename(destination)}`);
+      }
       const timer = setTimeout(() => response.destroy(new Error('Download total duration timeout')), options.maxDurationMs || 15 * 60 * 1000);
       await new Promise((resolve, reject) => {
         const output = fs.createWriteStream(part, { flags: append ? 'a' : 'w' });
@@ -110,6 +137,13 @@ async function downloadWithResume(sourceUrl, destination, options = {}) {
       return metadata;
     } catch (error) {
       lastError = error;
+      if (fs.existsSync(part)) {
+        fs.writeFileSync(partMeta, JSON.stringify({
+          sourceUrl,
+          expectedDigest,
+          updatedAt: new Date().toISOString(),
+        }));
+      }
       if (attempt < (options.attempts || 3)) {
         await new Promise(resolve => setTimeout(resolve, Math.min(5000, attempt * 1000)));
       }

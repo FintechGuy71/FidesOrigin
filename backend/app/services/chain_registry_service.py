@@ -3,6 +3,7 @@
 import logging
 import re
 import time
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -10,6 +11,21 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+
+def _redact_url(value: str) -> str:
+    """Log only scheme/host/port, never credentials, paths, or query strings."""
+    try:
+        parsed = urlsplit(value)
+        host = parsed.hostname or "unknown"
+        port = f":{parsed.port}" if parsed.port else ""
+        return f"{parsed.scheme}://{host}{port}"
+    except Exception:
+        return "[invalid-url]"
+
+
+def _safe_error(error: Exception) -> str:
+    return re.sub(r"https?://\S+", "[redacted-url]", str(error))[:300]
 
 
 class ChainRegistryService:
@@ -59,8 +75,12 @@ class ChainRegistryService:
                 self._cache[key] = (time.monotonic(), value)
                 return value
             except Exception as exc:
-                errors.append(str(exc))
-                logger.warning("chain_registry_rpc_failed rpc=%s error=%s", rpc_url, exc)
+                errors.append(_safe_error(exc))
+                logger.warning(
+                    "chain_registry_rpc_failed rpc=%s error=%s",
+                    _redact_url(rpc_url),
+                    _safe_error(exc),
+                )
         raise RuntimeError("All Sepolia RPC endpoints failed: " + " | ".join(errors))
 
 

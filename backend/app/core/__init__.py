@@ -1,55 +1,36 @@
-"""
-FidesOrigin Core 包初始化
-"""
-from app.core.di import DIContainer, get_container
-from app.core.exceptions import (
-    AuthenticationException,
-    ConflictException,
-    DatabaseException,
-    ErrorCode,
-    FidesException,
-    NotFoundException,
-    RateLimitException,
-    RiskCalculationException,
-    ValidationException,
-)
-from app.core.lock_manager import DistributedLockManager, get_lock_manager
-from app.core.logging import get_logger
-from app.core.message_queue import MessageQueue, get_message_queue
-from app.core.security import (
-    HMACValidator,
-    RateLimiter,
-    get_hmac_validator,
-    get_rate_limiter,
-    verify_api_key,
-)
+"""FidesOrigin core exports with lazy imports to prevent circular initialization."""
+from importlib import import_module
 
-__all__ = [
-    # DI
-    "DIContainer",
-    "get_container",
-    # Lock Manager
-    "DistributedLockManager",
-    "get_lock_manager",
-    # Message Queue
-    "MessageQueue",
-    "get_message_queue",
-    # Exceptions
-    "ErrorCode",
-    "FidesException",
-    "AuthenticationException",
-    "NotFoundException",
-    "ValidationException",
-    "ConflictException",
-    "RateLimitException",
-    "DatabaseException",
-    "RiskCalculationException",
-    # Logging
-    "get_logger",
-    # Security
-    "HMACValidator",
-    "RateLimiter",
-    "get_hmac_validator",
-    "get_rate_limiter",
-    "verify_api_key",
-]
+_EXPORTS = {
+    "DIContainer": "di",
+    "get_container": "di",
+    "DistributedLockManager": "lock_manager",
+    "get_lock_manager": "lock_manager",
+    "MessageQueue": "message_queue",
+    "get_message_queue": "message_queue",
+    "get_logger": "logging",
+    "ErrorCode": "exceptions",
+    "FidesException": "exceptions",
+    "AuthenticationException": "exceptions",
+    "NotFoundException": "exceptions",
+    "ValidationException": "exceptions",
+    "ConflictException": "exceptions",
+    "RateLimitException": "exceptions",
+    "DatabaseException": "exceptions",
+    "RiskCalculationException": "exceptions",
+    "HMACValidator": "security",
+    "RateLimiter": "security",
+    "get_hmac_validator": "security",
+    "get_rate_limiter": "security",
+    "verify_api_key": "security",
+}
+__all__ = list(_EXPORTS)
+
+
+def __getattr__(name):
+    if name not in _EXPORTS:
+        raise AttributeError(name)
+    module = import_module(f"app.core.{_EXPORTS[name]}")
+    value = getattr(module, name)
+    globals()[name] = value
+    return value

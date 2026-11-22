@@ -2,7 +2,8 @@
 # Python 3.11+
 
 # Web Framework
-fastapi==0.110.0
+fastapi==0.165.0
+starlette==1.10.0
 uvicorn[standard]==0.27.1
 # [Deploy Fix] Dockerfile CMD 依赖 gunicorn 启动（原遗漏导致容器秒退 128）
 gunicorn==22.0.0
@@ -16,27 +17,27 @@ alembic==1.13.1
 redis[hiredis]==5.0.1
 
 # Environment
-python-dotenv==1.0.1
+python-dotenv==1.2.4
 
 # Data Validation
-pydantic==2.6.3
-pydantic-settings==2.2.1
+pydantic==2.13.4
+pydantic-settings==2.15.0
 
 # Utilities
-python-multipart==0.0.9
+python-multipart==0.0.34
 httpx==0.27.0
 
 # Security
 bcrypt==4.1.2
 
 # Development (可选)
-pytest==8.0.2
-pytest-asyncio==0.23.5
-black==24.2.0
+pytest==9.2.0
+pytest-asyncio==1.4.0
+black==26.10.1
 isort==5.13.2
 mypy==1.8.0
 aiosqlite==0.20.0
-pyjwt==2.8.0
+pyjwt==2.15.1
 structlog==24.1.0
 tenacity==8.2.3
 asgi-lifespan==2.1.0
