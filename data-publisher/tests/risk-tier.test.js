@@ -197,3 +197,34 @@ describe('三处 scoreToTier 调用点均已委托单一实现（缺陷 A）', (
     }
   });
 });
+
+describe('dry-run 最终写链边界', () => {
+  it.each([false, true])('队列单条路径在 lockEnabled=%s 时均不得发送交易', async (lockEnabled) => {
+    const { config } = require('../dist/src/config.js');
+    const previous = config.publisher.dryRun;
+    config.publisher.dryRun = true;
+    let chainWrites = 0;
+    try {
+      const publisher = new BlockchainPublisher(config.publisher);
+      publisher.lockEnabled = lockEnabled;
+      publisher.lockManager = {
+        isLocked: async () => false,
+        acquireLock: async () => 'test-token',
+        releaseLock: async () => true,
+      };
+      publisher.contract = {
+        updateRiskProfile: async () => { chainWrites++; throw new Error('must not write'); },
+      };
+      const result = await publisher.publishSingleWithLock({
+        address: '0x0000000000000000000000000000000000000001',
+        riskScore: 100, tier: 4, tags: [], isSanctioned: true,
+        source: 'test', confidence: 1, timestamp: Date.now(),
+      });
+      expect(result.status).toBe('success');
+      expect(result.hash).toMatch(/^dryrun-/);
+      expect(chainWrites).toBe(0);
+    } finally {
+      config.publisher.dryRun = previous;
+    }
+  });
+});

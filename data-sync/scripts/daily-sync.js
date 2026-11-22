@@ -199,6 +199,7 @@ class DailySyncService {
         inactivityMs: Number(process.env.OFAC_DOWNLOAD_INACTIVITY_MS) || 60000,
         maxDurationMs: Number(process.env.OFAC_DOWNLOAD_MAX_DURATION_MS) || 15 * 60 * 1000,
         attempts: 3,
+        requireDigest: true,
       });
       parsePrimary(text, `official, sha256=${metadata.sha256.slice(0, 12)}…, resumed=${metadata.resumed}`);
     } catch (e) {
@@ -857,11 +858,18 @@ class DailySyncService {
       console.log(`   📝 TX: ${tx.hash}`);
 
       const receipt = await tx.wait();
-      console.log(`   ✅ Root updated (block ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
+      if (receipt.status !== 1) throw new Error(`Merkle root transaction reverted: ${receipt.hash}`);
+      const confirmedRoot = await this.merkleContract.merkleRoot();
+      if (confirmedRoot.toLowerCase() !== tree.root.toLowerCase()) {
+        throw new Error(`Merkle root post-write mismatch: ${confirmedRoot} != ${tree.root}`);
+      }
+      console.log(`   ✅ Root updated and verified (block ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
 
       return {
         root: tree.root,
         previousRoot: onchainRoot,
+        confirmedRoot,
+        verified: true,
         hash: receipt.hash,
         block: receipt.blockNumber,
         gasUsed: receipt.gasUsed.toString(),
@@ -955,6 +963,7 @@ class DailySyncService {
       try {
         const tx = await this.contract.updateRiskProfile(addr, 0, 0, [], false);
         const receipt = await tx.wait();
+        if (receipt.status !== 1) throw new Error(`Delist transaction reverted: ${receipt.hash}`);
         console.log(`      ✅ Delisted ${addr} (tx ${receipt.hash})`);
         results.push({ address: addr, hash: receipt.hash, status: receipt.status });
       } catch (e) {
@@ -963,7 +972,23 @@ class DailySyncService {
       }
     }
 
-    return { delisted: delisted.length, addresses: delisted, results };
+    let postWriteRemaining = [];
+    let verificationError = null;
+    try {
+      const remaining = await this.contract.getSanctionedAddresses();
+      const remainingSet = new Set(remaining.map(a => a.toLowerCase()));
+      postWriteRemaining = delisted.filter(addr => remainingSet.has(addr));
+    } catch (e) {
+      verificationError = e.message;
+    }
+    return {
+      delisted: delisted.length,
+      addresses: delisted,
+      results,
+      postWriteRemaining,
+      verificationError,
+      ok: results.every(result => !result.error) && postWriteRemaining.length === 0 && !verificationError,
+    };
   }
 
   // ========== 7. 保存最终数据库 ==========
@@ -1059,6 +1084,18 @@ class DailySyncService {
       delistResult = await this.syncDelisted(merged, dryRun);
     });
 
+    // 最后一次读取覆盖档案写入、Merkle 更新和下架之后的最终状态。
+    let finalStateDiffCount = null;
+    let finalStateReadErrors = [];
+    if (!dryRun && this.contract) {
+      const { diffAgainstChain } = require('../src/chainProfileSync');
+      const finalState = await diffAgainstChain(this.contract, merged, {
+        onLog: message => console.log(`   [Final verification] ${message}`),
+      });
+      finalStateDiffCount = finalState.changed.length;
+      finalStateReadErrors = finalState.readErrors;
+    }
+
     // 4c. 同步到后端 DB，并显式记录成功、跳过或失败，禁止含糊的“整体成功”。
     const backendDbResults = [];
     let backendDbError = null;
@@ -1119,6 +1156,8 @@ class DailySyncService {
         contractSkipped: chainResult.contractSkipped ?? null,
         postWriteDiffCount: chainResult.postWriteDiffCount ?? null,
         postWriteReadErrors: chainResult.postWriteReadErrors ?? null,
+        finalStateDiffCount,
+        finalStateReadErrors: finalStateReadErrors.length,
         unchanged: chainResult.postWriteUnchanged ?? chainResult.unchanged ?? null,
         readErrors: (chainResult.readErrors || []).length,
         failedBatches: chainResult.failedBatches ?? 0,
@@ -1133,6 +1172,12 @@ class DailySyncService {
       .filter(([, healthy]) => !healthy).map(([name]) => name);
     if (chainResult.ok === false) {
       await sendAlert(`Daily chain sync verification failed: ${chainResult.postWriteDiffCount} differences remain`);
+    }
+    if (finalStateDiffCount > 0 || finalStateReadErrors.length > 0) {
+      await sendAlert(`Final on-chain verification failed: ${finalStateDiffCount} differences, ${finalStateReadErrors.length} read errors`);
+    }
+    if (delistResult && delistResult.ok === false) {
+      await sendAlert(`Delist verification failed: ${(delistResult.postWriteRemaining || []).length} addresses remain`);
     }
     if (backendDbError) await sendAlert(`Backend DB sync failed: ${backendDbError}`);
     if (unhealthySources.length > 0) {
@@ -1176,8 +1221,11 @@ async function main() {
     // [增量写入] 新结构下 chainResult.ok===false 表示有批次重试耗尽；
     // readErrors 表示读链失败（保守降级为重写，但需告警以便排查 RPC）。
     const chainNotOk = result?.chain?.ok === false;
+    const delistNotOk = result?.delist?.ok === false || Boolean(result?.delist?.verificationError);
+    const finalStateNotOk = (result?.chainDiff?.finalStateDiffCount ?? 0) > 0
+      || (result?.chainDiff?.finalStateReadErrors ?? 0) > 0;
     const readErrors = (result?.chain?.readErrors || []).length;
-    if (!dryRun && (failedBatches.length > 0 || chainNotOk || merkleError || delistFailures.length > 0)) {
+    if (!dryRun && (failedBatches.length > 0 || chainNotOk || merkleError || delistFailures.length > 0 || delistNotOk || finalStateNotOk)) {
       if (failedBatches.length > 0) {
         console.error(`\n❌ ${failedBatches.length} batches failed after retries:`);
         for (const f of failedBatches) {
@@ -1196,6 +1244,8 @@ async function main() {
           console.error(`   ${f.address}: ${f.error}`);
         }
       }
+      if (delistNotOk) console.error('\n❌ Delist post-write verification failed');
+      if (finalStateNotOk) console.error('\n❌ Final on-chain verification did not match the target');
       process.exit(1);
     }
 

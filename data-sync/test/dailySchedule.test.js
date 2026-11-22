@@ -39,6 +39,24 @@ test('schedule: 新的一天会再次执行任务', () => {
   assert.strictEqual(resolveSchedule(state, at(9, 3, 38), HOUR, MINUTE).runNow, true);
 });
 
+test('schedule: 启动后异常中断且未 finishedAt → 立即补跑', () => {
+  const state = { lastResult: { scheduledFor: at(8, HOUR, MINUTE).toISOString(), startedAt: at(8, HOUR, MINUTE).toISOString(), attempt: 1 } };
+  assert.strictEqual(resolveSchedule(state, at(8, 10, 45), HOUR, MINUTE).runNow, true);
+});
+
+test('schedule: 失败超过重试间隔后允许受控重试', () => {
+  const state = { lastResult: { scheduledFor: at(8, HOUR, MINUTE).toISOString(), finishedAt: at(8, 10, 40).toISOString(), exitCode: 1, attempt: 1 } };
+  const result = resolveSchedule(state, at(8, 11, 0), HOUR, MINUTE);
+  assert.strictEqual(result.runNow, true);
+});
+
+test('schedule: 达到最大次数后停止当天重试', () => {
+  const state = { lastResult: { scheduledFor: at(8, HOUR, MINUTE).toISOString(), finishedAt: at(8, 10, 40).toISOString(), exitCode: 1, attempt: 3 } };
+  const result = resolveSchedule(state, at(8, 12, 0), HOUR, MINUTE);
+  assert.strictEqual(result.runNow, false);
+  assert.strictEqual(result.nextRun.toISOString(), at(9, HOUR, MINUTE).toISOString());
+});
+
 test('schedule lock: 清理陈旧锁并拒绝第二个活跃实例', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fides-schedule-'));
   const lock = path.join(dir, 'scheduler.lock');

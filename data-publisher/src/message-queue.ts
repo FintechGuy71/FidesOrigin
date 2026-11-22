@@ -60,6 +60,10 @@ export class MessageQueue {
   private handlers: Map<string, MessageHandler[]> = new Map();
   private isRunning: boolean = false;
   private readInterval: NodeJS.Timeout | null = null;
+  private isPolling: boolean = false;
+  private subscriberStartedAt: number = 0;
+  private lastPollSuccess: number = 0;
+  private lastPollError?: string;
 
   constructor() {}
 
@@ -75,9 +79,12 @@ export class MessageQueue {
     return this.redis;
   }
 
-  /** Business readiness for the health endpoint, independent of process liveness. */
+  /** Require an active connection and recent polling progress, not just process liveness. */
   isHealthy(): boolean {
-    return this.isRunning && Boolean(this.redis && this.redis.isOpen);
+    if (!this.isRunning || !this.redis || !this.redis.isOpen) return false;
+    const lastProgress = this.lastPollSuccess || this.subscriberStartedAt;
+    if (Date.now() - lastProgress > 10000) return false;
+    return !this.lastPollError || Date.now() - this.lastPollSuccess < 5000;
   }
 
   /**
@@ -270,12 +277,12 @@ export class MessageQueue {
 
     await this.ensureConsumerGroup();
     this.isRunning = true;
+    this.subscriberStartedAt = Date.now();
+    this.lastPollError = undefined;
 
-    // Poll Redis Streams every 1 second
+    // Poll Redis Streams every 1 second without overlapping slow polls.
     this.readInterval = setInterval(() => {
-      this.pollStream().catch((error) => {
-        logger.error('Stream poll error', { error: error.message });
-      });
+      void this.pollSerialized();
     }, 1000);
 
     logger.info('Redis Stream subscriber started', {
@@ -283,6 +290,21 @@ export class MessageQueue {
       group: CONSUMER_GROUP,
       consumer: CONSUMER_NAME,
     });
+  }
+
+  private async pollSerialized(): Promise<void> {
+    if (this.isPolling || !this.isRunning) return;
+    this.isPolling = true;
+    try {
+      await this.pollStream();
+      this.lastPollSuccess = Date.now();
+      this.lastPollError = undefined;
+    } catch (error) {
+      this.lastPollError = (error as Error).message;
+      logger.error('Stream poll error', { error: this.lastPollError });
+    } finally {
+      this.isPolling = false;
+    }
   }
 
   /**
@@ -392,6 +414,11 @@ export class MessageQueue {
     if (this.readInterval) {
       clearInterval(this.readInterval);
       this.readInterval = null;
+    }
+
+    const deadline = Date.now() + 5000;
+    while (this.isPolling && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     logger.info('Redis Stream subscriber stopped');

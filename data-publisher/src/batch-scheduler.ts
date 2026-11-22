@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { runBatchSync, BatchSyncOptions } from './batch-collector';
 import logger from './logger';
 
@@ -8,7 +8,7 @@ import logger from './logger';
  * Replaces the slow per-address sync with 100-address batches (~2 min vs 9 hours).
  */
 export class BatchScheduler {
-  private task?: cron.ScheduledTask;
+  private task?: ScheduledTask;
   private isRunning: boolean = false;
   private cronExpression: string;
   private syncOptions: BatchSyncOptions;
@@ -24,7 +24,7 @@ export class BatchScheduler {
       return;
     }
 
-    this.task = cron.schedule(this.cronExpression, async () => {
+    this.task = cron.createTask(this.cronExpression, async () => {
       if (this.isRunning) {
         logger.warn('Batch sync already in progress, skipping');
         return;
@@ -42,8 +42,8 @@ export class BatchScheduler {
         this.isRunning = false;
       }
     }, {
-      scheduled: false,
       timezone: 'Asia/Shanghai',
+      noOverlap: true,
     });
 
     this.task.start();

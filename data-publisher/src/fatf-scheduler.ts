@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { FATFCollector } from './fatf-collector';
 import { OpenSanctionsCollector } from './opensanctions-collector';
 import { AddressEnricher } from './address-enricher';
@@ -21,7 +21,7 @@ export class FATFScheduler {
   private openSanctions: OpenSanctionsCollector;
   private enricher: AddressEnricher;
   private publisher?: FATFPublisher;
-  private task?: cron.ScheduledTask;
+  private task?: ScheduledTask;
   private running = false;
 
   constructor(opts?: {
@@ -56,11 +56,11 @@ export class FATFScheduler {
     const cronExpr = config.fatf.cron;
     logger.info('FATFScheduler: scheduling', { cron: cronExpr });
 
-    this.task = cron.schedule(cronExpr, async () => {
+    this.task = cron.createTask(cronExpr, async () => {
       await this.runPipeline();
     }, {
-      scheduled: true,
       timezone: 'UTC',
+      noOverlap: true,
     });
 
     logger.info('FATFScheduler: started');

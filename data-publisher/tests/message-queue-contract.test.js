@@ -46,4 +46,38 @@ describe('message queue reliability contract', () => {
     expect(redis.calls.some(([name]) => name === 'lPush')).toBe(true);
     expect(redis.calls.filter(([name]) => name === 'xAck')).toHaveLength(1);
   });
+
+  it('serializes overlapping timer polls and records progress', async () => {
+    const queue = new MessageQueue();
+    queue.isRunning = true;
+    queue.redis = { isOpen: true };
+    queue.subscriberStartedAt = Date.now();
+    let active = 0;
+    let maxActive = 0;
+    let calls = 0;
+    queue.pollStream = async () => {
+      calls++;
+      active++;
+      maxActive = Math.max(maxActive, active);
+      await new Promise(resolve => setTimeout(resolve, 20));
+      active--;
+    };
+    await Promise.all([
+      queue.pollSerialized(), queue.pollSerialized(), queue.pollSerialized(),
+    ]);
+    expect(calls).toBe(1);
+    expect(maxActive).toBe(1);
+    expect(queue.lastPollSuccess).toBeGreaterThan(0);
+    expect(queue.isHealthy()).toBe(true);
+  });
+
+  it('reports unhealthy when polling has stopped making progress', () => {
+    const queue = new MessageQueue();
+    queue.isRunning = true;
+    queue.redis = { isOpen: true };
+    queue.subscriberStartedAt = Date.now() - 20000;
+    queue.lastPollSuccess = Date.now() - 20000;
+    queue.lastPollError = 'stalled';
+    expect(queue.isHealthy()).toBe(false);
+  });
 });

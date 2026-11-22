@@ -608,6 +608,12 @@ export class BlockchainPublisher {
    * [Audit Fix #10] Added idempotency check: skips if on-chain data is already up to date.
    */
   private async publishSingle(profile: RiskProfile): Promise<TxResult> {
+    // Final write-boundary guard: every caller, including queue subscribers, is dry-run safe.
+    if (config.publisher.dryRun) {
+      logger.info(`[DRY RUN] Would publish ${profile.address}`);
+      return { hash: `dryrun-${profile.address}`, status: 'success' };
+    }
+
     // [Audit Fix #10] Idempotency check: read on-chain state before publishing
     try {
       const onChain = await this.contract.riskProfiles(profile.address);
