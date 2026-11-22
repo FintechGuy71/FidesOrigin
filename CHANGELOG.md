@@ -2,6 +2,38 @@
 
 All notable changes to the FidesOrigin project.
 
+## [v3.3.0] - 2026-11-23
+
+### Fixed — audit closure and runtime recovery
+
+- dry-run 保护下沉到最终单条写链入口，队列消息在锁开启或关闭时都不能绕过。
+- 每日调度区分启动、完成、失败、中断和超时；异常中断可补跑，失败按间隔与最大次数受控重试。
+- 链上撤榜状态可覆盖数据库陈旧制裁标签，链上回读同时覆盖数据库命中和未命中。
+- Merkle 更新后重新读根，下架后重新读取制裁集合，所有写操作完成后再次验证最终档案状态。
+- 下载器绑定 `.part` 的来源与摘要，OFAC 强制 Digest，并兼容标准 Base64 与 OFAC 实际十六进制摘要格式。
+- Redis Stream 轮询串行化，健康检查纳入轮询进度，关闭时等待进行中轮询结束。
+- 后端 RPC 日志仅保留脱敏后的源地址；核心与服务包按需导入，消除初始化循环依赖。
+- Windows 监督器纳入版本管理，加入指数退避、重启计数、结构化状态和可选告警 Webhook。
+- Subgraph 测试固定 matchstick 0.6.0；Web 从 `next lint` 迁移到原生 ESLint，依赖覆盖收窄到实际公告路径。
+
+### Security and dependencies
+
+- 发布器升级 Express 5.3、node-cron 4.6、Axios 1.21、Azure Identity 4.14 等，生产审计为 0。
+- 后端升级 FastAPI、Starlette、PyJWT、python-multipart、python-dotenv、pytest 和 black，pip-audit 无已知漏洞。
+- 工作区依赖公告仅剩 elliptic 的一条低危例外；上游尚未发布公告所列修复版本，没有伪造清零。
+- 精确移除未使用的 zkSync Git 间接依赖，保留供应链保护，不全局关闭检查。
+
+### Verification
+
+- 数据同步 96/96、发布器 52/52、后端专项 7/7、监督器 2/2 测试通过。
+- 工作区测试包含合约 450/450；全部生产构建通过。
+- 真实 dry-run：132/132 档案一致，0 候选、0 读错误、Merkle 根匹配。
+- 真实调度补跑退出码 0，无交易需求，最终回读通过，重启后无重复执行。
+- Redis 强制终止后自动恢复，发布器探针恢复，队列 pending/lag/DLQ 均为 0。
+- PR #134 的 14/14 项远端检查通过。
+
+详见 `RELEASE_v3.3.0.md`。
+
 ## [v3.2.0] - 2026-11-08
 
 ### Added — runtime verification and resilient scheduling
