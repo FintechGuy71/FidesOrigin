@@ -62,3 +62,16 @@ jobs:
         env:
           # GitHub Packages 用 CI 自动注入的 GITHUB_TOKEN，无需用户配 npm 凭据
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify published package version
+        working-directory: packages/sdk
+        run: |
+          EXPECTED_VERSION="$(node -p "require('./package.json').version")"
+          PUBLISHED_VERSION="$(npm view "@fintechguy71/fidesorigin-sdk@${EXPECTED_VERSION}" version)"
+          if [ "$PUBLISHED_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "Registry version mismatch: expected=$EXPECTED_VERSION actual=$PUBLISHED_VERSION"
+            exit 1
+          fi
+          echo "✅ GitHub Packages serves @fintechguy71/fidesorigin-sdk@$PUBLISHED_VERSION"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
