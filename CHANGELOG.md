@@ -2,6 +2,23 @@
 
 All notable changes to the FidesOrigin project.
 
+## [v3.3.1] - 2026-11-23
+
+### Fixed — SDK publishing hotfix
+
+- 将 `@fintechguy71/fidesorigin-sdk` 从已存在的 0.3.1 升至 0.3.2，解决 v3.3.0 标签工作流的 npm 409 不可覆盖冲突。
+- SDK 发布后新增注册表精确版本回读，避免仅凭标签检查、构建或上传步骤宣称发布成功。
+- 规范化 SDK repository URL，消除 npm 发布时的自动修正警告。
+- 修正额外 Vercel `repo` 项目的框架和根目录配置；保留并重新执行检查，不关闭部署保护。
+
+### Verification and release discipline
+
+- v3.3.0 的 13 项适用检查与三个 Vercel 项目均已通过；视觉回归按路径过滤器不适用于纯文档/版本变更。
+- v3.3.0 的 annotated tag 校验和 SDK 构建成功，但 0.3.1 上传返回 409，因此由本热修复版本取代。
+- 每次 SDK 发布必须递增 `packages/sdk/package.json` 版本，且验收注册表实际返回该版本。
+
+详见 `RELEASE_v3.3.1.md`。
+
 ## [v3.3.0] - 2026-11-23
 
 ### Fixed — audit closure and runtime recovery
