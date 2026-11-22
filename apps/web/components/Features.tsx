@@ -5,7 +5,6 @@ import type { Dict } from "@/i18n/dictionaries/en";
 
 const RADAR_CIRCLES = [40, 70, 100];
 const RADAR_CENTER = 100;
-const SVG_VIEWBOX = 200;
 
 /* ================================================================
    FEATURES v4 — Three protection layers. Technical frames with

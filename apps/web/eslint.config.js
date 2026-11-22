@@ -60,7 +60,7 @@ export default tseslint.config(
   },
   {
     // Config files and scripts
-    files: ['**/*.config.{js,ts,mjs}', '**/scripts/**/*.js'],
+    files: ['**/*.config.{js,ts,mjs}', '**/scripts/**/*.{js,mjs,ts}'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
       'no-undef': 'off',
@@ -68,10 +68,11 @@ export default tseslint.config(
   },
   {
     // Test files
-    files: ['**/*.test.{js,ts,tsx}', '**/__tests__/**/*'],
+    files: ['**/*.test.{js,ts,tsx}', '**/__tests__/**/*', '**/test/**/*.{js,mjs,ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       'no-console': 'off',
+      'no-undef': 'off',
     },
   },
   {
@@ -79,8 +80,14 @@ export default tseslint.config(
     ignores: [
       '.next/**',
       'dist/**',
+      'out/**',
       'node_modules/**',
       '.vercel/**',
+      'coverage/**',
+      'test-results/**',
+      'playwright-report/**',
+      'next-env.d.ts',
+      '_*.js',
       '*.min.js',
       'public/**/*.js',
     ],

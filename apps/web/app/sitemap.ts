@@ -57,9 +57,7 @@ const LEGAL_LASTMOD = "2026-01-01";
    那两类才是 sitemap 分级的实际价值所在。读文件失败回退构建时刻，不中断构建。 */
 function contentFileMtime(slug: string): Date | null {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const fs = require("fs");
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const path = require("path");
     const file = path.join(
       process.cwd(),
