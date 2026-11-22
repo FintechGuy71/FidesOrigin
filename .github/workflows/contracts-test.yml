@@ -80,4 +80,4 @@ jobs:
 
       - name: Run subgraph tests
         working-directory: apps/subgraph
-        run: npx graph test
+        run: npm run test:matchstick
