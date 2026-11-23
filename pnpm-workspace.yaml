@@ -60,6 +60,9 @@ overrides:
   "minimatch": "11.0.9"
   "fast-uri": "3.1.9"
 
+patchedDependencies:
+  jayson@4.2.0: patches/jayson@4.2.0.patch
+
 settings:
   fetchTimeout: 600000
   networkConcurrency: 3
