@@ -2,6 +2,17 @@
 
 All notable changes to the FidesOrigin project.
 
+## [v3.3.3] - 2026-11-24
+
+### Fixed — Subgraph production deployment
+
+- 为 jayson 4.2.0 添加两行可审查补丁，兼容 stream-json 3.9.0 的 ESM 导出与新文件名。
+- 不使用 stream-json 1.9.1 降级方案，避免重新引入三条中危公告。
+- Graph 部署命令真实加载通过；生产依赖审计高/中危为 0，仅保留既有 elliptic 低危边界。
+- 包含 v3.3.2 的全部系统、每日验证、官网和真实视觉基线修复。
+
+详见 `RELEASE_v3.3.3.md`。
+
 ## [v3.3.2] - 2026-11-24
 
 ### Fixed — full-stack runtime and website verification
