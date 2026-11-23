@@ -1183,6 +1183,12 @@ class DailySyncService {
     if (unhealthySources.length > 0) {
       await sendAlert(`Risk data sources unhealthy: ${unhealthySources.join(', ')}; delisting protection remains active`);
     }
+    // 同步日志写入前完成独立的只读验收，报告与本次汇总使用同一文件。
+    const { verifyDailyRuntime } = require('./verify-daily-runtime');
+    summary.runtimeVerification = await verifyDailyRuntime(summary);
+    if (!summary.runtimeVerification.pass) {
+      await sendAlert('Daily runtime verification failed; inspect runtimeVerification.checks in the sync log');
+    }
     this.writeLog(summary);
     
     console.log('\n' + '='.repeat(60));
@@ -1246,6 +1252,11 @@ async function main() {
       }
       if (delistNotOk) console.error('\n❌ Delist post-write verification failed');
       if (finalStateNotOk) console.error('\n❌ Final on-chain verification did not match the target');
+      process.exit(1);
+    }
+
+    if (result?.runtimeVerification?.pass === false) {
+      console.error('\n❌ Daily runtime verification failed (chain/public/local checks); see runtimeVerification in the sync log');
       process.exit(1);
     }
 

@@ -44,7 +44,7 @@ export default async function LocaleRootLayout({
   if (!isPrefixedLocale(lang)) notFound();
   return (
     /* 同上：scroll-behavior 由 css/fio-design-system.css 的 @layer base 提供 */
-    <html lang={htmlLang[lang]}>
+    <html lang={htmlLang[lang]} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

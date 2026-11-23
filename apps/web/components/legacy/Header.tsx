@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Script from "next/script";
 import {
   Locale,
@@ -195,7 +196,7 @@ export default function LegacyHeader({ lang, dict, pagePath, availableLocales, w
       <nav className="nav" aria-label={dict.nav.mainNav}>
         <div className="nav-inner">
           <a href={homeHref(lang)} className="nav-logo">
-            <img
+            <Image
               src="/brand/logo-icon-56.png"
               alt=""
               className="nav-logo-icon"

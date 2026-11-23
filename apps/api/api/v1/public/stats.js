@@ -19,7 +19,12 @@ async function handler(req, res) {
   if (!(await checkRateLimit(req, res, PUBLIC_LIMIT))) return;
 
   try {
-    const response = await proxyToBackend('/api/v1/public/stats');
+    // Render 免费实例冷启动可能超过 10 秒；仅只读请求允许一次受控重试。
+    const response = await proxyToBackend('/api/v1/public/stats', {
+      timeoutMs: 25000,
+      retries: 1,
+      retryDelayMs: 1000,
+    });
     const data = await response.json();
     // 聚合指标允许短暂 CDN 缓存（60s），降低源站压力
     res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');

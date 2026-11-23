@@ -82,7 +82,7 @@ async function proxyToBackend(backendPath, options = {}) {
       headers['X-Request-Signature'] = _signRequest(method, backendPath, timestamp, bodyStr);
     }
 
-    const { sign, forwardAuth, timeoutMs = 10000, ...fetchOptions } = options;
+    const { sign, forwardAuth, timeoutMs = 10000, retries = 0, retryDelayMs = 500, ...fetchOptions } = options;
     const response = await fetch(url, {
       ...fetchOptions,
       method,
@@ -92,6 +92,14 @@ async function proxyToBackend(backendPath, options = {}) {
     });
     return response;
   } catch (err) {
+    // 仅显式启用的幂等只读请求可重试；写操作默认且始终不重试。
+    const retries = Number.isInteger(options.retries) ? options.retries : 0;
+    if (retries > 0 && (method === 'GET' || method === 'HEAD')) {
+      const delay = Number.isFinite(options.retryDelayMs) ? Math.max(0, options.retryDelayMs) : 500;
+      console.error(`[proxyToBackend] Network error; retrying ${method} once more in ${delay}ms:`, err.message);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return proxyToBackend(backendPath, { ...options, retries: retries - 1 });
+    }
     // [ERR-FIX] Wrap network errors so callers get a predictable response shape.
     // [AUDIT FIX 2026-09-17 B2-013] 不再把 err.message 透传给客户端
     // （内网地址/堆栈片段可随 message 外泄）；细节仅落服务端日志。

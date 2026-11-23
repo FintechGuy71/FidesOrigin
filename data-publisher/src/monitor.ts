@@ -157,6 +157,7 @@ export class MonitorServer {
           timestamp: new Date().toISOString(),
           service: 'fidesorigin-data-publisher',
           version: process.env.npm_package_version || '1.0.0',
+          pid: process.pid,
           checks: {
             publisher: health.healthy ? 'ok' : health.error,
           },
@@ -166,6 +167,7 @@ export class MonitorServer {
           status: 'unhealthy',
           error: (error as Error).message,
           timestamp: new Date().toISOString(),
+          pid: process.pid,
         });
       }
     });

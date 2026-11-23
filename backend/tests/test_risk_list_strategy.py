@@ -27,7 +27,8 @@ async def test_risk_list_hits_scam_sniffer():
         _make_db(['SCAM_SNIFFER', 'scam']), None,
     )
     assert score == 75.0, f"期望 75 得 {score}"
-    assert '风险名单' in desc
+    assert '风险情报库' in desc
+    assert '链上风险名单' not in desc
 
 
 @pytest.mark.asyncio

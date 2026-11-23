@@ -181,7 +181,7 @@ class RiskListStrategy(RiskRuleStrategy):
             impact = float(rule.risk_score_impact if rule.risk_score_impact is not None else 75)
             weight = float(rule.risk_weight if rule.risk_weight is not None else 1.0)
             # [R3-M1] 钳制上界防 RiskFactor 校验 500
-            return min(min(impact, 100) * weight, 100), "链上风险名单在册（钓鱼/诈骗等风险情报）"
+            return min(min(impact, 100) * weight, 100), "风险情报库在册（钓鱼/诈骗等社区情报；非官方制裁链上回读）"
 
         return 0, ""
 

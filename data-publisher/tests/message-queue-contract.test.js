@@ -80,4 +80,40 @@ describe('message queue reliability contract', () => {
     queue.lastPollError = 'stalled';
     expect(queue.isHealthy()).toBe(false);
   });
+
+  it('removes a stopped consumer only when it has no pending messages', async () => {
+    const calls = [];
+    const queue = new MessageQueue();
+    queue.isRunning = true;
+    queue.isPolling = false;
+    queue.redis = {
+      isOpen: true,
+      async xPendingRange(...args) { calls.push(['xPendingRange', ...args]); return []; },
+      async xGroupDelConsumer(...args) { calls.push(['xGroupDelConsumer', ...args]); return 1; },
+    };
+    await queue.stopSubscriber();
+    const removal = calls.find(([name]) => name === 'xGroupDelConsumer');
+    expect(removal).toBeDefined();
+    expect(removal[1]).toBe('fides:stream:risk_updates');
+    expect(removal[2]).toBe('fides:cg:publisher');
+    expect(removal[3]).toMatch(/^consumer-/);
+  });
+
+  it('reclaims every zero-pending duplicate without deleting pending work', async () => {
+    const removed = [];
+    const queue = new MessageQueue();
+    queue.redis = {
+      async xInfoConsumers() {
+        return [
+          { name: 'stale-safe', pending: 0, idle: 120000 },
+          { name: 'stale-with-work', pending: 1, idle: 120000 },
+          { name: 'active-other', pending: 0, idle: 1000 },
+        ];
+      },
+      async xGroupDelConsumer(stream, group, name) { removed.push({ stream, group, name }); return 1; },
+    };
+    await queue.removeStaleConsumers();
+    expect(removed).toHaveLength(2);
+    expect(new Set(removed.map(x => x.name))).toEqual(new Set(['stale-safe', 'active-other']));
+  });
 });
