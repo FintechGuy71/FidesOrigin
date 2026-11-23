@@ -3,6 +3,7 @@ const path = require('path');
 
 const nextConfig = {
   output: 'export',
+  outputFileTracingRoot: path.resolve(__dirname, '../../'),
   // [Deploy Fix] 移除 distDir: 'dist'——export 构建不在 distDir 生成
   // routes-manifest.json，Vercel Next builder 会报缺文件；恢复默认 .next，
   // 静态站点产物固定输出到 out/，由 Vercel 零配置自动识别。
@@ -14,11 +15,6 @@ const nextConfig = {
        此前这里是空对象 {}（注释声称"启用图片优化"），只是因为 next/image
        恰好不在渲染树上才没炸。显式声明 unoptimized 把这个约束固化下来。 */
     unoptimized: true,
-  },
-  eslint: {
-    // Temporarily disable during A+ transition
-    // Code style issues being fixed incrementally
-    ignoreDuringBuilds: true,
   },
   typescript: {
     // [H-5 Fix] Strict: never ignore TypeScript errors during builds

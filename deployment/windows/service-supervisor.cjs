@@ -16,6 +16,67 @@ function nextBackoff(current, maximum = 60000) {
   return Math.min(Math.max(1000, current * 2), maximum);
 }
 
+function isProcessAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === 'EPERM';
+  }
+}
+
+function healthPidMatches(body, field, expectedPid) {
+  if (!field) return true;
+  try {
+    const value = JSON.parse(body);
+    return Number.isInteger(expectedPid) && expectedPid > 0 && Number(value[field]) === expectedPid;
+  } catch {
+    return false;
+  }
+}
+
+function acquireSingletonLock(lockFile, service, options = {}) {
+  const alive = options.isProcessAlive || isProcessAlive;
+  const owner = options.pid || process.pid;
+  fs.mkdirSync(path.dirname(lockFile), { recursive: true });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const fd = fs.openSync(lockFile, 'wx');
+      try {
+        fs.writeFileSync(fd, JSON.stringify({ service, pid: owner, startedAt: new Date().toISOString() }));
+      } finally {
+        fs.closeSync(fd);
+      }
+      return {
+        release() {
+          try {
+            const current = JSON.parse(fs.readFileSync(lockFile, 'utf8'));
+            if (current.pid === owner) fs.rmSync(lockFile, { force: true });
+          } catch (error) {
+            if (error.code !== 'ENOENT') throw error;
+          }
+        },
+      };
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      let existing;
+      try {
+        existing = JSON.parse(fs.readFileSync(lockFile, 'utf8'));
+      } catch {
+        const quarantine = `${lockFile}.corrupt-${Date.now()}`;
+        fs.renameSync(lockFile, quarantine);
+        continue;
+      }
+      const existingPid = Number(existing.pid);
+      if (Number.isInteger(existingPid) && existingPid > 0 && alive(existingPid)) {
+        throw new Error(`${service} supervisor is already running with PID ${existingPid}`);
+      }
+      fs.rmSync(lockFile, { force: true });
+    }
+  }
+  throw new Error(`Unable to acquire ${service} supervisor lock after stale-lock recovery`);
+}
+
 function required(name) {
   const value = process.env[name];
   if (!value) throw new Error(`Missing ${name}`);
@@ -52,6 +113,17 @@ function main() {
 
   function log(message) {
     fs.appendFileSync(logFile, `${new Date().toISOString()} ${redactText(message)}\n`);
+  }
+
+  let singleton;
+  try {
+    singleton = acquireSingletonLock(`${stateFile}.lock`, service);
+    process.on('exit', () => singleton.release());
+  } catch (error) {
+    log(`Refusing duplicate supervisor: ${error.message}`);
+    console.error(redactText(error.message));
+    process.exitCode = 1;
+    return;
   }
 
   async function alert(message) {
@@ -163,8 +235,15 @@ function main() {
         let body = '';
         response.on('data', chunk => { body += chunk; });
         response.on('end', () => {
-          if (response.statusCode === 200) healthy(body);
-          else unhealthy(`HTTP ${response.statusCode}: ${body}`);
+          if (response.statusCode !== 200) {
+            unhealthy(`HTTP ${response.statusCode}: ${body}`);
+            return;
+          }
+          if (!healthPidMatches(body, process.env.SERVICE_HEALTH_PID_FIELD || '', child?.pid)) {
+            unhealthy('Health endpoint PID does not match the supervised child');
+            return;
+          }
+          healthy(body);
         });
       });
       request.on('timeout', () => request.destroy(new Error('health check timeout')));
@@ -193,4 +272,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { nextBackoff, redactText };
+module.exports = { nextBackoff, redactText, acquireSingletonLock, healthPidMatches, isProcessAlive };

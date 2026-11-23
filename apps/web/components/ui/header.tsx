@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
+import Image from "next/image";
 
 import type { Dict } from "@/i18n/dictionaries/en";
 import { langNames, langShort, locales, type Locale } from "@/i18n/locales";
@@ -159,7 +160,7 @@ export default function Header({
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link href={homeHref(lang)} className="flex items-center gap-2.5">
-          <img
+          <Image
             src="/brand/logo-icon-56.png"
             alt="FidesOrigin"
             width="28"

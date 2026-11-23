@@ -35,7 +35,7 @@ export default function DefaultRootLayout({
     /* ⚠ 不要写 className="scroll-smooth"：css/fio-design-system.css 的
        @layer base 里已有 html{scroll-behavior:smooth}。两处表达同一意图时，
        改一处会被另一处"救回"，造成"改了没效果"的假象。 */
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

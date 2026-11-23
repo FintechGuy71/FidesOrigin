@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import CountUp from "@/components/CountUp";
 import HeroScreen from "@/components/HeroScreen";
 import type { Dict } from "@/i18n/dictionaries/en";
@@ -265,9 +266,9 @@ export default function HeroHome({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                 </svg>
               </a>
-              <a href="/admin/dashboard" className="fio-btn fio-btn-ghost">
+              <Link href="/admin/dashboard" className="fio-btn fio-btn-ghost">
                 {d.ctaGhost}
-              </a>
+              </Link>
             </div>
 
             {/* Live screening — 真实产品能力前置 */}
