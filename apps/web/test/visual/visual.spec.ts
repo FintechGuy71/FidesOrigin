@@ -1,9 +1,21 @@
 import { test, expect, type Page } from "@playwright/test";
 
-/* 视觉回归：关键页面截图对比。
-   动态元素处理：
-   - reducedMotion=reduce 使 canvas 网格/count-up/滚动叙事静止
-   - 仍对 canvas 与实时筛查组件遮罩（网络结果不可控） */
+/* 视觉回归使用真实页面内容，不再遮罩全屏 canvas。
+   固定 Math.random 种子使粒子与演示交易在测试间可复现；
+   reducedMotion 停止动画，最终截图仍包含真实文字、布局和指标。 */
+async function stabilize(page: Page) {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    let state = 0x5f3759df;
+    Math.random = () => {
+      state |= 0;
+      state = (state + 0x6d2b79f5) | 0;
+      let value = Math.imul(state ^ (state >>> 15), 1 | state);
+      value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+      return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+    };
+  });
+}
 
 const PAGES: { path: string; name: string }[] = [
   { path: "/", name: "home-en" },
@@ -18,16 +30,10 @@ const PAGES: { path: string; name: string }[] = [
 ];
 
 async function shoot(page: Page, path: string, name: string) {
-  /* reducedMotion：全站动效遵循 prefers-reduced-motion，
-     截图时粒子网格/count-up/滚动叙事全部静止，结果确定 */
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await stabilize(page);
   await page.goto(path, { waitUntil: "networkidle" });
-  /* 等首屏入场动画（fade-up 0.6s）全部落定 */
   await page.waitForTimeout(1200);
-  await expect(page).toHaveScreenshot(`${name}.png`, {
-    fullPage: false,
-    mask: [page.locator("canvas"), page.locator('[role="status"]')],
-  });
+  await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: false });
 }
 
 for (const { path, name } of PAGES) {
@@ -36,7 +42,6 @@ for (const { path, name } of PAGES) {
   });
 }
 
-/* [v5] 移动端视觉基线：首页 390px 首屏（移动排版回归的最低保障） */
 const MOBILE_PAGES: { path: string; name: string }[] = [
   { path: "/", name: "mobile-home-en" },
   { path: "/cn", name: "mobile-home-cn" },
@@ -49,9 +54,8 @@ for (const { path, name } of MOBILE_PAGES) {
   });
 }
 
-/* [v5] 页脚法律行回归：滚到页底截屏（多栏页脚 + 许可行是机构级基线要素） */
 test("visual: footer-en", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await stabilize(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await page.waitForTimeout(1200);
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
