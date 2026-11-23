@@ -1,5 +1,7 @@
 # FidesOrigin v3.3.2 — Full-Stack Verification & Website Truthfulness
 
+> **状态**：已被 v3.3.3 替代。该标签的 SDK 0.3.3 已成功发布，但 Subgraph 生产部署因 jayson/stream-json 模块不兼容失败；v3.3.3 使用可审查补丁完成闭环。
+
 **发布日期**：2026-11-24  
 **版本类型**：系统可靠性、每日综合验收、官网事实口径与构建修复  
 **目标环境**：Sepolia、本机 Windows、Render、Vercel、GitHub Actions
