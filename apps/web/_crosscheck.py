@@ -119,12 +119,17 @@ check("--color-fio-* 别名在产物中清零", n_alias == 0, "残留 %d 个" % 
 for comp in ("ModalVideo", "PageIllustration", "Spotlight"):
     exists = os.path.exists(os.path.join("components", comp + ".tsx"))
     check("死组件 %s.tsx 已删除" % comp, not exists, "存在=%s" % exists)
-# next/image 引爆点（output:'export' 下 next/image 会让导出报错）
+# next/image 在 output:'export' 且 images.unoptimized=true 时安全；
+# 不再用旧的“零引用”断言误伤已验证的静态导出用法。
 n_img = 0
 for p in glob.glob("components/**/*.tsx", recursive=True) + glob.glob("app/**/*.tsx", recursive=True):
     if 'next/image' in read(p):
         n_img += 1
-check("全站无 next/image 引用（消除导出引爆点）", n_img == 0, "%d 处" % n_img)
+next_config = read("next.config.js")
+static_export = bool(re.search(r"output\s*:\s*['\"]export['\"]", next_config))
+unoptimized_images = bool(re.search(r"images\s*:\s*\{[\s\S]*?unoptimized\s*:\s*true", next_config))
+check("next/image 仅用于 unoptimized 静态导出", n_img == 0 or (static_export and unoptimized_images),
+      "%d 处；static_export=%s, unoptimized=%s" % (n_img, static_export, unoptimized_images))
 
 # ═══ 8. LiveTransactionStream（报告 §三-3.4）═══
 lts = read("components/LiveTransactionStream.tsx") if os.path.exists("components/LiveTransactionStream.tsx") else ""
