@@ -4,4 +4,4 @@
    三处组件均从此导入（构建期 env 覆盖 > 已部署网关默认值）。 */
 export const PUBLIC_RISK_CHECK_URL =
   process.env.NEXT_PUBLIC_RISK_CHECK_URL ||
-  "https://fidesorigin-api.vercel.app/v1/public/risk-check";
+  "/api/v1/public/risk-check";

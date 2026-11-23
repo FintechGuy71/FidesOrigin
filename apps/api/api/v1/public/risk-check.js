@@ -50,7 +50,8 @@ async function handler(req, res) {
 
   try {
     const response = await proxyToBackend(
-      `/api/v1/address/${address}/risk?chain=${chain}`
+      `/api/v1/address/${address}/risk?chain=${chain}`,
+      { timeoutMs: 25000, retries: 1, retryDelayMs: 1000 }
     );
     const data = await response.json();
     return res.status(response.status).json(data);

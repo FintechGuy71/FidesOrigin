@@ -33,6 +33,28 @@ function resolvePath(url) {
 }
 
 createServer(async (req, res) => {
+  // 可选的生产同源代理：只转发只读 /api/v1/ 请求，模拟 Vercel rewrite。
+  // 不转发客户端凭证，也不开放任意路径或写操作。
+  if ((req.url || '').startsWith('/api/v1/') && process.env.VISUAL_API_ORIGIN) {
+    if (!['GET', 'HEAD'].includes(req.method || 'GET')) {
+      res.writeHead(405).end('method not allowed');
+      return;
+    }
+    try {
+      const target = new URL(req.url, process.env.VISUAL_API_ORIGIN);
+      const response = await fetch(target, {
+        method: req.method,
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(60000),
+      });
+      const body = Buffer.from(await response.arrayBuffer());
+      res.writeHead(response.status, { 'content-type': response.headers.get('content-type') || 'application/json' });
+      res.end(body);
+    } catch {
+      res.writeHead(502).end('upstream unavailable');
+    }
+    return;
+  }
   const file = resolvePath(req.url || "/");
   if (!file) {
     res.writeHead(403).end();

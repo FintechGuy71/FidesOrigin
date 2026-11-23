@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { Locale, langPrefix, localize } from "@/i18n/locales";
 import type { Dict } from "@/i18n/dictionaries/en";
@@ -23,7 +24,7 @@ export default function LegacyFooter({ lang, dict }: Props) {
         <div className="footer-grid">
           <div className="footer-brand">
             <a href={homeHref(lang)} className="nav-logo">
-              <img
+              <Image
                 src="/brand/logo-icon-56.png"
                 alt=""
                 className="nav-logo-icon"

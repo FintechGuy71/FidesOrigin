@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
@@ -76,7 +77,7 @@ export default function Footer({
           {/* Brand column */}
           <div className="col-span-2 md:col-span-5 lg:col-span-6">
             <div className="flex items-center gap-2.5">
-              <img
+              <Image
                 src="/brand/logo-icon-56.png"
                 alt="FidesOrigin"
                 width="26"

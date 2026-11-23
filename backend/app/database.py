@@ -141,7 +141,7 @@ async def ensure_default_rules():
             },
             {
                 "name": "scam_list",
-                "description": "链上风险名单在册（钓鱼/诈骗等风险情报）",
+                "description": "风险情报库在册（钓鱼/诈骗等社区情报）",
                 "rule_type": "PATTERN",
                 "category": "reputation",
                 "risk_weight": 1.0,

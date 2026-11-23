@@ -103,6 +103,17 @@ export class MessageQueue {
     }
   }
 
+  /** Remove zero-pending duplicate/stale metadata; live consumers are recreated on their next poll. */
+  private async removeStaleConsumers(): Promise<void> {
+    const redis = await this.getRedis();
+    const consumers = await redis.xInfoConsumers(STREAM_KEY, CONSUMER_GROUP);
+    for (const consumer of consumers) {
+      if (consumer.name === CONSUMER_NAME || consumer.pending > 0) continue;
+      await redis.xGroupDelConsumer(STREAM_KEY, CONSUMER_GROUP, consumer.name);
+      logger.info('Removed stale Redis Stream consumer', { consumer: consumer.name, idle: consumer.idle });
+    }
+  }
+
   /**
    * Publish risk update message to Redis Stream.
    */
@@ -276,6 +287,7 @@ export class MessageQueue {
     }
 
     await this.ensureConsumerGroup();
+    await this.removeStaleConsumers();
     this.isRunning = true;
     this.subscriberStartedAt = Date.now();
     this.lastPollError = undefined;
@@ -419,6 +431,22 @@ export class MessageQueue {
     const deadline = Date.now() + 5000;
     while (this.isPolling && Date.now() < deadline) {
       await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // 正常停止时注销当前消费者，避免每次重启都留下无主的元数据。
+    // 有 pending 时保留记录，由下一实例通过 XAUTOCLAIM 安全接管。
+    if (this.redis?.isOpen) {
+      try {
+        const pending = await this.redis.xPendingRange(STREAM_KEY, CONSUMER_GROUP, '-', '+', 1, { consumer: CONSUMER_NAME });
+        const pendingCount = pending.length;
+        if (pendingCount === 0) {
+          await this.redis.xGroupDelConsumer(STREAM_KEY, CONSUMER_GROUP, CONSUMER_NAME);
+        } else {
+          logger.warn('Retaining consumer with pending messages for recovery', { pending: pendingCount });
+        }
+      } catch (error) {
+        logger.warn('Failed to remove stopped consumer metadata', { error: (error as Error).message });
+      }
     }
 
     logger.info('Redis Stream subscriber stopped');

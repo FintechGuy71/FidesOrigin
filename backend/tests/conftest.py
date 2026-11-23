@@ -38,7 +38,7 @@ test_engine = create_async_engine(
 )
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=True, loop_scope="session")
 async def setup_test_database():
     """设置测试数据库（会话级别，自动执行）"""
     # 创建所有表

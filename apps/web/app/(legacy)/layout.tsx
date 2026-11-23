@@ -24,7 +24,7 @@ export default function LegacyRootLayout({
 }) {
   return (
     /* 同上：scroll-behavior 由 css/fio-design-system.css 的 @layer base 提供 */
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
