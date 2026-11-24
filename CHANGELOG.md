@@ -2,6 +2,28 @@
 
 All notable changes to the FidesOrigin project.
 
+## [v3.3.4] - 2026-11-24
+
+### Added — live metrics and public verification
+
+- 首页采用构建快照首屏兜底，并在每次访问时同时核验公开统计 API 与 Subgraph；仅双源成功才显示实时已验证，失败明确保留缓存快照。
+- 新增英文、简体中文、繁体中文、日文公开验证中心，提供真实地址查询、当前合约链接和最新 Release 证据下载。
+- 验证中心进入现有静态路由、canonical、hreflang 与 sitemap 流程，桌面和移动端均纳入浏览器验收。
+
+### Fixed — contact and deployment truthfulness
+
+- 首页与页尾预约 CTA 改接真实 `/contact` 表单；默认提交到同源 `/api/v1/contact`，消息必填，单次 30 秒超时且不自动重试写入。
+- 首页 RiskRegistry 链接从已弃用地址修正为当前 UUPS 代理，并统一读取合约部署注册表。
+- 地址查询与运行期指标的前端超时对齐只读网关冷启动窗口，避免后端尚未完成时提前失败。
+
+### Verification
+
+- Web lint、TypeScript 和静态生产构建通过，共生成 99 个页面。
+- 全仓 9/9 测试任务通过，合约 450/450 通过；缓存回退和预约单次提交行为测试通过。
+- 本地真实浏览器验收覆盖四语首页、四语验证中心、375px 移动端和联系页，控制台、页面异常、HTTP 错误与请求失败均为 0。
+
+详见 `RELEASE_v3.3.4.md`。
+
 ## [v3.3.3] - 2026-11-24
 
 ### Fixed — Subgraph production deployment

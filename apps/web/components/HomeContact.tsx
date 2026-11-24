@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
@@ -41,7 +42,7 @@ export default function HomeContact({
               {d.body}
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="mailto:contact@fidesorigin.com" className="fio-btn fio-btn-primary group">
+              <Link href="/contact" className="fio-btn fio-btn-primary group">
                 {d.ctaPrimary}
                 <svg
                   className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
@@ -52,7 +53,7 @@ export default function HomeContact({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                 </svg>
-              </a>
+              </Link>
               <a href={localize("/docs", lang)} className="fio-btn fio-btn-ghost">
                 {d.ctaDocs}
               </a>
