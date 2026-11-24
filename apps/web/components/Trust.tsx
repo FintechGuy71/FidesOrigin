@@ -4,15 +4,13 @@ import Link from "next/link";
 import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
+import { RISK_REGISTRY_ADDRESS, etherscanAddress } from "@/lib/deployment";
 
 /* ================================================================
    TRUST v4 — Regulatory coverage band + institutional quote.
    [v5] 增补「链上自行验证」行：机构级信任背书不依赖口号，
    而是给出可独立核实的入口（Sepolia 合约 / 开源代码 / 文档）。
    ================================================================ */
-
-/* RiskRegistry 主合约（Sepolia 测试网，见 repo CONTRACT_DEPLOYMENT_STATUS.md） */
-const RISK_REGISTRY_ADDRESS = "0xdA4D86D812b4AdF3e0023a6D4b1FF20139abD3b3";
 
 export default function Trust({ d, lang }: { d: Dict["home"]["trust"]; lang: Locale }) {
   const badges = [
@@ -93,7 +91,7 @@ export default function Trust({ d, lang }: { d: Dict["home"]["trust"]; lang: Loc
                   {
                     key: "contract",
                     label: d.verifyContract,
-                    href: `https://sepolia.etherscan.io/address/${RISK_REGISTRY_ADDRESS}`,
+                    href: etherscanAddress(RISK_REGISTRY_ADDRESS),
                     external: true,
                   },
                   {
@@ -105,7 +103,7 @@ export default function Trust({ d, lang }: { d: Dict["home"]["trust"]; lang: Loc
                   {
                     key: "docs",
                     label: d.verifyDocs,
-                    href: localize("/docs", lang),
+                    href: localize("/verification", lang),
                     external: false,
                   },
                 ].map((v) =>

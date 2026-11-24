@@ -33,24 +33,48 @@ function resolvePath(url) {
 }
 
 createServer(async (req, res) => {
-  // 可选的生产同源代理：只转发只读 /api/v1/ 请求，模拟 Vercel rewrite。
-  // 不转发客户端凭证，也不开放任意路径或写操作。
-  if ((req.url || '').startsWith('/api/v1/') && process.env.VISUAL_API_ORIGIN) {
-    if (!['GET', 'HEAD'].includes(req.method || 'GET')) {
+  // 可选的生产同源代理：默认仅转发只读 /api/v1/ 请求。
+  // 只有显式设置 VISUAL_ALLOW_CONTACT_POST=true 才放行精确的预约 POST，
+  // 不转发客户端凭证，不开放其他写操作。
+  const pathname = new URL(req.url || '/', 'http://visual.local').pathname;
+  if (pathname.startsWith('/api/v1/') && process.env.VISUAL_API_ORIGIN) {
+    const contactPost = pathname === '/api/v1/contact' && req.method === 'POST' &&
+      process.env.VISUAL_ALLOW_CONTACT_POST === 'true';
+    if (!['GET', 'HEAD'].includes(req.method || 'GET') && !contactPost) {
       res.writeHead(405).end('method not allowed');
       return;
     }
     try {
-      const target = new URL(req.url, process.env.VISUAL_API_ORIGIN);
+      let requestBody;
+      if (contactPost) {
+        const chunks = [];
+        let size = 0;
+        for await (const chunk of req) {
+          size += chunk.length;
+          if (size > 16384) {
+            res.writeHead(413).end('request too large');
+            return;
+          }
+          chunks.push(chunk);
+        }
+        requestBody = Buffer.concat(chunks);
+      }
+      const gatewayRoute = pathname === '/api/v1/public/risk-check' || pathname === '/api/v1/contact';
+      const upstream = gatewayRoute && process.env.VISUAL_GATEWAY_ORIGIN
+        ? process.env.VISUAL_GATEWAY_ORIGIN
+        : process.env.VISUAL_API_ORIGIN;
+      const target = new URL(req.url, upstream);
       const response = await fetch(target, {
         method: req.method,
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', ...(contactPost ? { 'Content-Type': 'application/json' } : {}) },
+        body: requestBody,
         signal: AbortSignal.timeout(60000),
       });
       const body = Buffer.from(await response.arrayBuffer());
       res.writeHead(response.status, { 'content-type': response.headers.get('content-type') || 'application/json' });
       res.end(body);
-    } catch {
+    } catch (error) {
+      console.error(`[visual-proxy] ${pathname}: ${error.message}`, error.cause?.code || '');
       res.writeHead(502).end('upstream unavailable');
     }
     return;
