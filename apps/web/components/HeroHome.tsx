@@ -6,6 +6,7 @@ import CountUp from "@/components/CountUp";
 import HeroScreen from "@/components/HeroScreen";
 import type { Dict } from "@/i18n/dictionaries/en";
 import type { Locale } from "@/i18n/locales";
+import { useLiveMetrics } from "@/lib/live-metrics";
 
 /* ================================================================
    HERO v4 — "Compliance Mesh"
@@ -44,6 +45,7 @@ export default function HeroHome({
   lang: Locale;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const liveMetrics = useLiveMetrics();
 
   /* [v5] 交易流：每 ~4.5s 注入一条新筛查记录（新行进入动效）。
      首 3 条种子用确定性地址（SSR 输出稳定，hydration 零漂移）；
@@ -254,7 +256,7 @@ export default function HeroHome({
             <div
               className="fio-animate-fade-up fio-delay-4 mt-10 flex flex-col items-center gap-3 sm:flex-row lg:justify-start"
             >
-              <a href="mailto:contact@fidesorigin.com" className="fio-btn fio-btn-primary group">
+              <Link href="/contact" className="fio-btn fio-btn-primary group">
                 {d.ctaPrimary}
                 <svg
                   className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
@@ -265,7 +267,7 @@ export default function HeroHome({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
                 </svg>
-              </a>
+              </Link>
               <Link href="/admin/dashboard" className="fio-btn fio-btn-ghost">
                 {d.ctaGhost}
               </Link>
@@ -427,30 +429,44 @@ export default function HeroHome({
           </div>
         </div>
 
-        {/* Metrics strip — hairline grid, tabular numerals */}
+        {/* 构建快照保证首屏可用；公开 API 与 Subgraph 均成功后才标记实时。 */}
         <div
           className="fio-animate-fade-up fio-delay-5 relative z-[var(--z-content)] grid grid-cols-2 border-t md:grid-cols-4"
           style={{ borderColor: "var(--fio-border-hairline)" }}
         >
-          {d.metrics.map((m, i) => (
-            <div
-              key={m.label}
-              /* [AUDIT FIX 2026-09-25 R6-9] 原条件类串会产出重复的
-                 md:border-l（i 为奇数时两个分支都追加）；化简为单一表达式：
-                 移动端奇数列加左分隔线，桌面端除首列外加左分隔线。 */
-              className={`py-7 md:py-9 ${i % 2 === 1 ? "border-l" : ""} ${i > 0 ? "md:border-l" : ""}`}
-              style={{ borderColor: "var(--fio-border-hairline)" }}
-            >
-              <div className="px-2 text-center md:px-4">
-                <div className="fio-num text-2xl font-semibold md:text-3xl" style={{ color: "var(--fio-cream)" }}>
-                  <CountUp value={m.value} />
-                </div>
-                <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--fio-text-3)" }}>
-                  {m.label}
+          {d.metrics.map((m, i) => {
+            const value = i === 0 ? liveMetrics.riskAddresses : i === 1 ? liveMetrics.onchainProfiles : m.value;
+            return (
+              <div
+                key={m.label}
+                className={`py-7 md:py-9 ${i % 2 === 1 ? "border-l" : ""} ${i > 0 ? "md:border-l" : ""}`}
+                style={{ borderColor: "var(--fio-border-hairline)" }}
+              >
+                <div className="px-2 text-center md:px-4">
+                  <div className="fio-num text-2xl font-semibold md:text-3xl" style={{ color: "var(--fio-cream)" }}>
+                    <CountUp value={value} />
+                  </div>
+                  <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--fio-text-3)" }}>
+                    {m.label}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+        <div
+          className="relative z-[var(--z-content)] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t px-4 py-3 text-center font-mono text-[0.6875rem]"
+          style={{ borderColor: "var(--fio-border-hairline)", color: "var(--fio-text-3)" }}
+          role="status"
+          aria-live="polite"
+          data-metrics-status={liveMetrics.status}
+        >
+          <span style={{ color: liveMetrics.status === "live" ? "var(--fio-success)" : undefined }}>
+            {liveMetrics.status === "live" ? d.metricsLive : liveMetrics.status === "cached" ? d.metricsCached : d.metricsSnapshot}
+          </span>
+          <time dateTime={liveMetrics.updatedAt}>
+            {liveMetrics.updatedAt.slice(0, 16).replace("T", " ")} UTC
+          </time>
         </div>
       </div>
 

@@ -7,8 +7,7 @@ import { useState } from "react";
 
 type SubmitStatus = "idle" | "submitting" | "success" | "error";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://fidesorigin-api.vercel.app/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1";
 
 export default function ContentContactEN() {
   const [status, setStatus] = useState<SubmitStatus>("idle");
@@ -22,12 +21,10 @@ export default function ContentContactEN() {
     const fd = new FormData(form);
     setStatus("submitting");
     setErrorMsg(null);
+    /* 单次最长 30 秒；写入请求绝不自动重试，避免重复收单。 */
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     try {
-      /* [AUDIT FIX R2-053] 补 AbortController 8s 超时：同仓 AddressCheck 与
-         DemoExperience 均有同款模板，唯独联系表单没有——慢网关下按钮永久
-         停留 "Sending..."（disabled），用户无法重试。 */
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
       const res = await fetch(`${API_BASE}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,7 +38,6 @@ export default function ContentContactEN() {
           website: fd.get("website") || "", // 蜜罐字段，正常用户留空
         }),
       });
-      clearTimeout(timeoutId);
       if (res.ok) {
         setStatus("success");
         form.reset();
@@ -58,6 +54,8 @@ export default function ContentContactEN() {
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please try again later.");
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
@@ -116,7 +114,7 @@ export default function ContentContactEN() {
             </div>
             <div className="form-group">
               <label htmlFor="message">Message</label>
-              <textarea id="message" name="message" className="form-input" placeholder="Tell us about your project and compliance requirements..."></textarea>
+              <textarea id="message" name="message" className="form-input" placeholder="Tell us about your project and compliance requirements..." required></textarea>
             </div>
             <button
               type="submit"

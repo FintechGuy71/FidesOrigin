@@ -1,7 +1,7 @@
 {
   "name": "@fidesorigin/web",
-  "version": "3.3.3",
-  "_versionNotes": "站点版本与根发布版本 3.3.3 对齐；SDK 使用独立的包版本号。",
+  "version": "3.3.4",
+  "_versionNotes": "站点版本与根发布版本 3.3.4 对齐；SDK 使用独立的包版本号。",
   "private": true,
   "description": "FidesOrigin Next.js Web Application",
   "browserslist": [

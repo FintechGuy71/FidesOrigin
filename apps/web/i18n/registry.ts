@@ -88,6 +88,10 @@ import p_use_cases_stablecoin_compliance_en from "@/components/legacy/pages/use-
 import p_use_cases_stablecoin_compliance_cn from "@/components/legacy/pages/use-cases-stablecoin-compliance.cn";
 import p_use_cases_stablecoin_compliance_tw from "@/components/legacy/pages/use-cases-stablecoin-compliance.tw";
 import p_use_cases_stablecoin_compliance_jp from "@/components/legacy/pages/use-cases-stablecoin-compliance.jp";
+import p_verification_en from "@/components/legacy/pages/verification.en";
+import p_verification_cn from "@/components/legacy/pages/verification.cn";
+import p_verification_tw from "@/components/legacy/pages/verification.tw";
+import p_verification_jp from "@/components/legacy/pages/verification.jp";
 
 export type PageMeta = { title: string; description: string };
 export type PageDef = {
@@ -321,6 +325,16 @@ export const pageDefs: Record<string, PageDef> = {
       jp: { title: "ステーブルコイン コンプライアンスソリューション — FidesOrigin", description: "オンチェーンのリスクスクリーニングで準拠型ステーブルコインを構築。決定論的なコンプライアンス執行で MiCA、香港、各国の規制に対応します。" },
       },
     },
+    "verification": {
+      available: ["en", "cn", "tw", "jp"] as const,
+      wallet: false,
+      meta: {
+      en: { title: "Public Verification Center — FidesOrigin", description: "Verify live public metrics, Sepolia contract deployments, address risk, and downloadable release evidence." },
+      cn: { title: "公开验证中心 — FidesOrigin", description: "独立核验实时公开指标、Sepolia 合约部署、地址风险与可下载的发布证据。" },
+      tw: { title: "公開驗證中心 — FidesOrigin", description: "獨立核驗即時公開指標、Sepolia 合約部署、地址風險與可下載的發布證據。" },
+      jp: { title: "公開検証センター — FidesOrigin", description: "ライブ公開指標、Sepolia コントラクト、アドレスリスク、ダウンロード可能なリリース証拠を独立して検証できます。" },
+      },
+    },
 };
 
 export const pageContent: Record<string, Partial<Record<Locale, ComponentType>>> = {
@@ -347,4 +361,5 @@ export const pageContent: Record<string, Partial<Record<Locale, ComponentType>>>
     "use-cases/rwa-tokenization": { en: p_use_cases_rwa_tokenization_en, cn: p_use_cases_rwa_tokenization_cn, tw: p_use_cases_rwa_tokenization_tw, jp: p_use_cases_rwa_tokenization_jp },
     "use-cases/smart-wallet": { en: p_use_cases_smart_wallet_en, cn: p_use_cases_smart_wallet_cn, tw: p_use_cases_smart_wallet_tw, jp: p_use_cases_smart_wallet_jp },
     "use-cases/stablecoin-compliance": { en: p_use_cases_stablecoin_compliance_en, cn: p_use_cases_stablecoin_compliance_cn, tw: p_use_cases_stablecoin_compliance_tw, jp: p_use_cases_stablecoin_compliance_jp },
+    "verification": { en: p_verification_en, cn: p_verification_cn, tw: p_verification_tw, jp: p_verification_jp },
 };

@@ -49,7 +49,7 @@ export default function HeroScreen({
     setState({ kind: "checking" });
     try {
       const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 12000);
+      const t = setTimeout(() => controller.abort(), 60000);
       const res = await fetch(
         `${PUBLIC_RISK_CHECK_URL}?address=${encodeURIComponent(value.trim())}&chainId=11155111`,
         { headers: { Accept: "application/json" }, signal: controller.signal }

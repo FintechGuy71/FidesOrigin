@@ -1,6 +1,6 @@
 {
   "name": "@fintechguy71/fidesorigin-sdk",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "FidesOrigin client SDK for risk assessment and compliance",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
