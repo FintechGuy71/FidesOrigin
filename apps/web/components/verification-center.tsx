@@ -112,7 +112,6 @@ export default function VerificationCenter({ d, hero, lang }: Props) {
                 rel="noopener noreferrer"
                 className="reveal group flex min-h-44 flex-col justify-between border p-6 transition-colors sm:p-7"
                 style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
-                aria-label={`${contract.name} — ${d.openExplorer}`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-4">

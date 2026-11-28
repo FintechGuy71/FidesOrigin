@@ -1,0 +1,59 @@
+/* FidesOrigin operations console — high-contrast editorial data theme. */
+:root {
+  --bg-primary: #000;
+  --bg-secondary: #0d0d0d;
+  --bg-card: #171717;
+  --bg-hover: #242424;
+  --text-primary: #fff;
+  --text-secondary: #b2b2b2;
+  --text-muted: #b2b2b2;
+  --accent-gold: #ffe600;
+  --accent-cyan: #aae2ff;
+  --success: #00bb7f;
+  --warning: #ffe600;
+  --danger: #fb2c36;
+  --border: rgba(255,255,255,.25);
+}
+body { font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; background: #000; }
+.sidebar { background: #0d0d0d; border-right-color: #fff; }
+.logo-icon { border-radius: 0; background: #ffe600; }
+.nav-title { color: #b2b2b2; letter-spacing: .12em; }
+.nav-title > span { opacity: 1 !important; color: #b2b2b2; }
+#networkBadge { background: #ffe600 !important; color: #000 !important; }
+.nav-item { min-height: 44px; border-radius: 0; color: #b2b2b2; }
+.nav-item > span { display: none; }
+.nav-item:hover { background: #242424; color: #fff; }
+.nav-item.active { border-left: 1px solid #000; padding-left: 12px; background: #ffe600; color: #000; }
+.main { background: #000; }
+.header { border-bottom-color: #fff; }
+.header-title h2 { font-size: clamp(2rem,4vw,3.5rem); font-weight: 500; letter-spacing: -.05em; }
+.wallet-status, .badge, .tag { border-radius: 0; }
+.btn { min-height: 44px; border: 1px solid #fff; border-radius: 15px; transition: background-color .18s ease,color .18s ease,transform .15s ease; }
+.btn-primary { border-color: #000; background: #ffe600; color: #000; }
+.btn-primary:hover { background: #000; color: #ffe600; border-color: #ffe600; }
+.btn-secondary { background: transparent; color: #fff; }
+.btn-secondary:hover { background: #aae2ff; color: #000; }
+.btn-success { background: #00bb7f; color: #000; }
+.btn-danger { background: #fb2c36; color: #000; }
+.btn:disabled { cursor: not-allowed; opacity: .48; }
+.stat-card, .card, .chart-container { border: 1px solid rgba(255,255,255,.3); border-radius: 0; background: #0d0d0d; box-shadow: none; }
+.stat-card:hover { border-color: #ffe600; transform: none; }
+.stat-value { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+th { color: #b2b2b2; }
+td { border-bottom-color: rgba(255,255,255,.18); }
+tr:hover { background: rgba(170,226,255,.08); }
+.form-input, .form-select { min-height: 44px; border: 1px solid rgba(255,255,255,.4); border-radius: 0; background: #000; color: #fff; }
+.form-input:focus, .form-select:focus { border-color: #aae2ff; box-shadow: 0 0 0 2px #aae2ff; }
+.modal-content { border: 1px solid #fff; border-radius: 0; background: #0d0d0d; }
+.progress-bar, .progress-fill { border-radius: 0; }
+.progress-fill { background: #ffe600; }
+.toast { border-radius: 0; box-shadow: none; }
+.skip-link { z-index: 400; border-radius: 0; background: #ffe600; color: #000; }
+.mobile-header { background: #0d0d0d; border-bottom-color: #fff; }
+.mobile-header h1 { margin: 0; font-size: 1rem; font-weight: 700; }
+.card-body { overflow-x: auto; }
+body > div > form { border: 1px solid #fff !important; border-radius: 0 !important; background: #0d0d0d !important; }
+body > div > form button { border: 1px solid #000 !important; border-radius: 15px !important; background: #ffe600 !important; color: #000 !important; }
+body > div > form input { border: 1px solid rgba(255,255,255,.4) !important; border-radius: 0 !important; background: #000 !important; }
+:focus-visible { outline: 3px solid #aae2ff; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; } }

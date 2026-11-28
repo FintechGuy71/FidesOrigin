@@ -55,7 +55,7 @@ export default function LegacyShell({ lang, pagePath, availableLocales, wallet, 
       <main id="main-content">{children}</main>
       <LegacyFooter lang={lang} dict={dict} />
       <LegacyFx scrollTopLabel={dict.nav.scrollTop} />
-      {docsFx && <DocsFx copyLabel={dict.docs.copy} copiedLabel={dict.docs.copied} />}
+      {docsFx && <DocsFx copyLabel={dict.docs.copy} copiedLabel={dict.docs.copied} sidebarLabel={dict.docs.sidebarToggle} />}
     </>
   );
 }

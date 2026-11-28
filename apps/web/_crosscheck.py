@@ -169,8 +169,8 @@ if os.path.exists(sm_path):
     check("sitemap 语言首页无尾斜杠", not bad_loc, ", ".join(bad_loc) if bad_loc else "")
 
 # ═══ 12. 语言菜单高亮（报告 L-8）═══
-hdr = read(os.path.join("components", "legacy", "Header.tsx"))
-check("legacy Header 按当前语言高亮（.active 类）", "active" in hdr and 'l === lang' in hdr, "")
+hdr = read(os.path.join("components", "SiteHeader.tsx"))
+check("共享 Header 按当前语言高亮（.active 类）", "active" in hdr and 'locale === lang' in hdr, "")
 check("legacy.css 不再用 :first-child 高亮语言菜单",
       "#langMenu a:first-child" not in strip_comments(read("css/legacy.css")), "")
 

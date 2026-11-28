@@ -636,18 +636,24 @@ export default function DashboardPage() {
      焦点不移入、背景可 Tab 穿透。 */
   useEffect(() => {
     if (!selectedTx) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedTx(null);
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setSelectedTx(null); return; }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(modalRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])') ?? []);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     };
     document.addEventListener("keydown", onKeyDown);
-    // 打开后把焦点移入模态（聚焦关闭按钮，避免焦点留在被遮挡的背景）
-    const focusTarget = modalRef.current?.querySelector<HTMLElement>("[data-modal-close]");
-    focusTarget?.focus();
+    modalRef.current?.querySelector<HTMLElement>("[data-modal-close]")?.focus();
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
+      previousFocus?.focus();
     };
   }, [selectedTx]);
 
@@ -656,61 +662,39 @@ export default function DashboardPage() {
      authed === false → 渲染登录表单；
      authed === true → 渲染后台本体。 */
   if (authed === null) {
-    return <div className="min-h-screen bg-[var(--fio-ink)]" />;
+    return <div role="main" className="admin-shell min-h-screen bg-[var(--fio-ink)]" />;
   }
   if (authed === false) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--fio-ink)] px-4">
-        <form
-          onSubmit={tryLogin}
-          className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--fio-border)] bg-[var(--fio-surface)] p-8"
-        >
-          {/* [AUDIT FIX R2-066] 登录表单原为英文，与主体中文界面混杂。
-              后台受众为运营团队，统一为中文。 */}
-          <h1 className="mb-2 text-xl font-semibold text-[var(--fio-text)]">管理员登录</h1>
-          <p className="mb-6 text-sm text-[var(--fio-text-2)]">使用管理员账号登录以继续。</p>
-          <label htmlFor="admin-username" className="mb-1 block text-sm text-[var(--fio-text-2)]">
-            用户名
-          </label>
+      <div role="main" className="admin-shell admin-login flex min-h-screen items-center justify-center bg-[var(--fio-ink)] px-4">
+        <form onSubmit={tryLogin} className="admin-login-card" aria-label="管理员登录">
+          <p className="admin-login-kicker">FIDESORIGIN / OPERATIONS</p>
+          <h1>管理员登录</h1>
+          <p className="admin-login-lead">使用管理员账号登录以继续。</p>
+          <label htmlFor="admin-username">用户名</label>
           <input
             id="admin-username"
             type="text"
+            required
             value={usernameInput}
-            onChange={(e) => {
-              setUsernameInput(e.target.value);
-              setLoginError(null);
-            }}
+            onChange={(e) => { setUsernameInput(e.target.value); setLoginError(null); }}
             placeholder="请输入用户名"
             aria-label="管理员用户名"
             autoComplete="username"
-            className="mb-4 w-full rounded-[var(--radius-md)] border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
-          <label htmlFor="admin-password" className="mb-1 block text-sm text-[var(--fio-text-2)]">
-            密码
-          </label>
+          <label htmlFor="admin-password">密码</label>
           <input
             id="admin-password"
             type="password"
+            required
             value={pwdInput}
-            onChange={(e) => {
-              setPwdInput(e.target.value);
-              setLoginError(null);
-            }}
+            onChange={(e) => { setPwdInput(e.target.value); setLoginError(null); }}
             placeholder="请输入密码"
             aria-label="管理员密码"
             autoComplete="current-password"
-            className="mb-4 w-full rounded-[var(--radius-md)] border border-[var(--fio-border)] bg-[var(--fio-ink)] px-4 py-3 text-[var(--fio-text)] focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)]"
           />
-          {loginError && (
-            <p className="mb-4 text-sm text-[var(--fio-danger)]" role="alert">
-              {loginError}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={loginSubmitting}
-            className="w-full rounded-[var(--radius-md)] bg-[var(--fio-gold)] px-4 py-3 font-medium text-[var(--fio-ink)] transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--fio-gold)] focus:ring-offset-2 focus:ring-offset-[var(--fio-ink)] disabled:opacity-50"
-          >
+          {loginError && <p className="admin-login-error" role="alert">{loginError}</p>}
+          <button type="submit" disabled={loginSubmitting} className="fio-btn fio-btn-primary">
             {loginSubmitting ? "登录中..." : "登录"}
           </button>
         </form>
@@ -719,7 +703,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--fio-ink)]">
+    <div role="main" className="admin-shell min-h-screen bg-[var(--fio-ink)]">
       {/* Header */}
       <div className="border-b border-[var(--fio-border)] bg-[var(--fio-surface)] backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

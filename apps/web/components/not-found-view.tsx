@@ -23,7 +23,7 @@ export default function NotFoundView({ lang = "en" }: { lang?: Locale }) {
       className="flex min-h-screen flex-col items-center justify-center px-6 text-center"
       style={{ background: "var(--fio-ink)", color: "var(--fio-text)" }}
     >
-      <p className="mb-4 font-mono text-xs font-medium uppercase tracking-[0.2em] text-[var(--fio-gold)]">
+      <p className="mb-4 font-mono text-xs font-medium uppercase tracking-[0.2em] text-[var(--p-black)]">
         404
       </p>
       <h1 className="mb-4 font-serif text-4xl font-medium tracking-tight sm:text-5xl">

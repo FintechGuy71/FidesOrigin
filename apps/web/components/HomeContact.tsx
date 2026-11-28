@@ -1,68 +1,22 @@
-"use client";
-
 import Link from "next/link";
-import Reveal from "@/components/Reveal";
 import type { Dict } from "@/i18n/dictionaries/en";
 import { localize, type Locale } from "@/i18n/locales";
 
-/* ================================================================
-   HOME CONTACT v4 — final CTA band. Corner-ticked frame,
-   direct business line.
-   ================================================================ */
-
-export default function HomeContact({
-  d,
-  lang,
-}: {
-  d: Dict["home"]["contact"];
-  lang: Locale;
-}) {
+export default function HomeContact({ d, lang }: { d: Dict["home"]["contact"]; lang: Locale }) {
   return (
-    <section id="contact" style={{ background: "var(--fio-ink-soft)" }}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
-        <div className="border-t py-[var(--section-py)] md:py-[var(--section-py-lg)]" style={{ borderColor: "var(--fio-border-hairline)" }}>
-          <Reveal>
-          <div
-            className="fio-ticks relative mx-auto max-w-4xl border px-6 py-16 text-center md:px-16 md:py-24"
-            style={{
-              borderColor: "var(--fio-border-light)",
-              background:
-                "radial-gradient(ellipse 70% 60% at 50% 0%, var(--fio-gold-glow) 0%, transparent 65%), var(--fio-surface)",
-            }}
-          >
-            {/* [AUDIT FIX 2026-09-25 R6-10] 同 Trust：inline-flex 的居中由父级
-                text-center 承担，删除无效的 justifyContent 内联声明。 */}
-            <div className="fio-eyebrow mb-6">
-              {d.caption}
-            </div>
-            <h2 className="fio-heading-lg mb-6" style={{ color: "var(--fio-text)" }}>
-              {d.title}
-            </h2>
-            <p className="fio-body-lg mx-auto max-w-xl">
-              {d.body}
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href="/contact" className="fio-btn fio-btn-primary group">
-                {d.ctaPrimary}
-                <svg
-                  className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-                </svg>
-              </Link>
-              <a href={localize("/docs", lang)} className="fio-btn fio-btn-ghost">
-                {d.ctaDocs}
-              </a>
-            </div>
-            <div className="mt-8 font-mono text-xs tracking-wider" style={{ color: "var(--fio-text-3)" }}>
-              contact@fidesorigin.com
-            </div>
+    <section id="contact" className="home-contact">
+      <div className="home-shell home-contact-grid">
+        <div>
+          <p className="home-caption">{d.caption}</p>
+          <h2>{d.title}</h2>
+        </div>
+        <div className="home-contact-action">
+          <p>{d.body}</p>
+          <div>
+            <Link href="/contact" className="fio-btn fio-btn-primary">{d.ctaPrimary}<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" /></svg></Link>
+            <Link href={localize("/docs", lang)} className="origin-text-link">{d.ctaDocs}<span aria-hidden="true">↗</span></Link>
           </div>
-          </Reveal>
+          <a href="mailto:contact@fidesorigin.com">contact@fidesorigin.com</a>
         </div>
       </div>
     </section>
