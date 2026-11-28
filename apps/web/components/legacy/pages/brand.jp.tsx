@@ -1,4 +1,4 @@
-/* Brand book — v4 Ledger Precision 品牌资产页（EN-only，对客/对媒体） */
+/* Brand book — v4 Editorial Verification 品牌资产页（EN-only，对客/对媒体） */
 
 const PAGE_CSS = `
     .brand-hero { padding: 140px 0 60px; }
@@ -71,14 +71,14 @@ const PAGE_CSS = `
 `;
 
 const SWATCHES = [
-  { name: "Ink", hex: "#0a141f", token: "--fio-ink" },
-  { name: "Surface Elevated", hex: "#162638", token: "--fio-surface-2" },
-  { name: "Bronze", hex: "#af915f", token: "--fio-gold" },
-  { name: "Cream", hex: "#fce1b6", token: "--fio-cream" },
-  { name: "Light Bronze", hex: "#e3c892", token: "--fio-accent" },
-  { name: "Steel", hex: "#7a94ab", token: "--fio-steel" },
-  { name: "Warm White", hex: "#f4f1e9", token: "--fio-text" },
-  { name: "Warm Grey", hex: "#98917f", token: "--fio-text-3" },
+  { name: "Sage Paper", hex: "#dddec9", token: "--fio-ink" },
+  { name: "Paper White", hex: "#ffffff", token: "--fio-surface" },
+  { name: "Sun Action", hex: "#ffe600", token: "--fio-gold" },
+  { name: "Sky Data", hex: "#aae2ff", token: "--fio-steel" },
+  { name: "Soft Cream", hex: "#fcedb1", token: "--p-cream" },
+  { name: "Ink Black", hex: "#000000", token: "--p-black" },
+  { name: "Data Green", hex: "#00bb7f", token: "--fio-success" },
+  { name: "Risk Red", hex: "#fb2c36", token: "--fio-danger" },
 ];
 
 export default function ContentBrandJP() {
@@ -93,8 +93,8 @@ export default function ContentBrandJP() {
             FidesOrigin <span>ブランドアセット</span>
           </h1>
           <p className="lead" style={{ maxWidth: "640px", marginTop: "20px" }}>
-            Ledger Precision（台帳の精密さ）アイデンティティシステム——ディープネイビー、バーントブロンズ、製図のような規律。
-            プレス・パートナーシップ・連携で FidesOrigin を取り上げる際はこれらのアセットをご利用ください。
+            Editorial Verification（編集による検証）アイデンティティシステム——セージの紙面、スカイブルーのデータ領域、太陽のイエロー、墨のグリッド。
+            プレス・パートナーシップ・連携で FidesOrigin を取り上げる際は、これらの最新アセットをご利用ください。
           </p>
         </div>
       </section>
@@ -143,31 +143,31 @@ export default function ContentBrandJP() {
             <div className="brand-panel">
               <h2>タイポグラフィ</h2>
               <div className="type-row">
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
-                  Fraunces — ディスプレイ
+                <div style={{ fontFamily: "var(--font-sans)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
+                  Inter — ディスプレイと本文
                 </div>
-                <div className="spec">見出し · clamp(2.4rem, 5.4vw, 4.6rem) · 500</div>
+                <div className="spec">見出しと UI · 流体タイプスケール · 400/500/600</div>
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-sans)", fontSize: "1rem", color: "var(--text)" }}>
-                  Plus Jakarta Sans — 本文
+                  Hiragino / Noto — 日本語システムスタック
                 </div>
-                <div className="spec">UI と本文 · 400/500 · CJK フォールバック Hiragino / Noto</div>
+                <div className="spec">ローカライズ本文 · 明示的な日本語フォールバック</div>
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--text)" }}>
-                  JetBrains Mono — 例：20,645 件 · &lt;50ms レイテンシ
+                  JetBrains Mono — 5,348 レコード · HTTP 200
                 </div>
-                <div className="spec">指標 · ラベル · タビュラー数字 · 大文字トラッキング</div>
+                <div className="spec">指標 · ラベル · タビュラー数字 · 検証済みライブデータ</div>
               </div>
             </div>
 
             {/* Motif */}
             <div className="brand-panel">
-              <h2>モチーフ — Ledger Precision</h2>
+              <h2>モチーフ — Editorial Verification</h2>
               <div className="motif-demo" />
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.7 }}>
-                コーナーの刻線、ヘアラインルール、コンプライアンスメッシュ——すべてのグラフィック要素が情報を担います。意味のない装飾はしません。
+                可視のインクルール、機能的な色領域、検証ネットワーク——すべてのグラフィック要素が証拠を担います。意味のない装飾はしません。
               </p>
               <div className="brand-download">
                 <a href="/brand/og-image.png" download>OG カード PNG</a>

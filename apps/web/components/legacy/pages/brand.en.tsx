@@ -1,4 +1,4 @@
-/* Brand book — v4 Ledger Precision 品牌资产页（EN-only，对客/对媒体） */
+/* Brand book — v4 Editorial Verification 品牌资产页（EN-only，对客/对媒体） */
 
 const PAGE_CSS = `
     .brand-hero { padding: 140px 0 60px; }
@@ -71,14 +71,14 @@ const PAGE_CSS = `
 `;
 
 const SWATCHES = [
-  { name: "Ink", hex: "#0a141f", token: "--fio-ink" },
-  { name: "Surface Elevated", hex: "#162638", token: "--fio-surface-2" },
-  { name: "Bronze", hex: "#af915f", token: "--fio-gold" },
-  { name: "Cream", hex: "#fce1b6", token: "--fio-cream" },
-  { name: "Light Bronze", hex: "#e3c892", token: "--fio-accent" },
-  { name: "Steel", hex: "#7a94ab", token: "--fio-steel" },
-  { name: "Warm White", hex: "#f4f1e9", token: "--fio-text" },
-  { name: "Warm Grey", hex: "#98917f", token: "--fio-text-3" },
+  { name: "Sage Paper", hex: "#dddec9", token: "--fio-ink" },
+  { name: "Paper White", hex: "#ffffff", token: "--fio-surface" },
+  { name: "Sun Action", hex: "#ffe600", token: "--fio-gold" },
+  { name: "Sky Data", hex: "#aae2ff", token: "--fio-steel" },
+  { name: "Soft Cream", hex: "#fcedb1", token: "--p-cream" },
+  { name: "Ink Black", hex: "#000000", token: "--p-black" },
+  { name: "Data Green", hex: "#00bb7f", token: "--fio-success" },
+  { name: "Risk Red", hex: "#fb2c36", token: "--fio-danger" },
 ];
 
 export default function ContentBrandEN() {
@@ -93,8 +93,8 @@ export default function ContentBrandEN() {
             FidesOrigin <span>brand assets</span>
           </h1>
           <p className="lead" style={{ maxWidth: "640px", marginTop: "20px" }}>
-            The Ledger Precision identity system — deep navy, burnished bronze, and technical-drawing discipline.
-            Use these assets when featuring FidesOrigin in press, partnerships, or integrations.
+            The Editorial Verification identity system — sage paper, sky data fields, sun-yellow actions, and visible ink-grid discipline.
+            Use these current assets when featuring FidesOrigin in press, partnerships, or integrations.
           </p>
         </div>
       </section>
@@ -143,31 +143,31 @@ export default function ContentBrandEN() {
             <div className="brand-panel">
               <h2>Typography</h2>
               <div className="type-row">
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
-                  Fraunces — Display
+                <div style={{ fontFamily: "var(--font-sans)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
+                  Inter — Display & Body
                 </div>
-                <div className="spec">Headlines · clamp(2.4rem, 5.4vw, 4.6rem) · 500</div>
+                <div className="spec">Headlines & UI · fluid type scale · 400/500/600</div>
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-sans)", fontSize: "1rem", color: "var(--text)" }}>
-                  Plus Jakarta Sans — Body
+                  PingFang / Noto — CJK System Stack
                 </div>
-                <div className="spec">UI & body · 400/500 · CJK fallback PingFang / Noto</div>
+                <div className="spec">Localized text · explicit Chinese / Japanese fallbacks</div>
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--text)" }}>
-                  JetBrains Mono — Sample: 20,645 addresses · &lt;50ms latency
+                  JetBrains Mono — 5,348 records · HTTP 200
                 </div>
-                <div className="spec">Metrics · labels · tabular numerals · uppercase tracking</div>
+                <div className="spec">Metrics · labels · tabular numerals · verified live data</div>
               </div>
             </div>
 
             {/* Motif */}
             <div className="brand-panel">
-              <h2>Motif — Ledger Precision</h2>
+              <h2>Motif — Editorial Verification</h2>
               <div className="motif-demo" />
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.7 }}>
-                Corner tick marks, hairline rules, and the compliance mesh — every graphic element carries information.
+                Visible ink rules, functional color fields, and the verification network — every graphic element carries evidence.
                 No decoration without meaning.
               </p>
               <div className="brand-download">

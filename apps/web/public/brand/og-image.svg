@@ -1,69 +1,7 @@
-<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
-  <!-- FidesOrigin OG card — v4 "Ledger Precision"（与 scripts/generate-og.py 同源） -->
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#0a141f"/>
-      <stop offset="100%" stop-color="#162638"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="-10%" r="70%">
-      <stop offset="0%" stop-color="#e3c892" stop-opacity="0.10"/>
-      <stop offset="100%" stop-color="#e3c892" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <rect width="1200" height="630" fill="url(#glow)"/>
-
-  <!-- 合规网络网格（右下） -->
-  <g stroke-width="1">
-    <line x1="700" y1="360" x2="830" y2="390" stroke="#24384d"/>
-    <line x1="830" y1="390" x2="900" y2="330" stroke="#af915f" opacity="0.7"/>
-    <line x1="830" y1="390" x2="950" y2="420" stroke="#24384d"/>
-    <line x1="900" y1="330" x2="1020" y2="370" stroke="#24384d"/>
-    <line x1="950" y1="420" x2="1060" y2="470" stroke="#24384d"/>
-    <line x1="700" y1="540" x2="790" y2="530" stroke="#af915f" opacity="0.7"/>
-    <line x1="790" y1="530" x2="900" y2="545" stroke="#24384d"/>
-    <line x1="830" y1="390" x2="830" y2="470" stroke="#24384d"/>
-    <line x1="830" y1="470" x2="950" y2="420" stroke="#24384d"/>
-    <line x1="1060" y1="470" x2="1100" y2="410" stroke="#24384d"/>
-  </g>
-  <g>
-    <circle cx="700" cy="360" r="2.2" fill="#7a94ab"/>
-    <circle cx="900" cy="330" r="2.2" fill="#7a94ab"/>
-    <circle cx="950" cy="420" r="2.2" fill="#7a94ab"/>
-    <circle cx="1020" cy="370" r="2.2" fill="#7a94ab"/>
-    <circle cx="1060" cy="470" r="2.2" fill="#7a94ab"/>
-    <circle cx="1100" cy="410" r="2.2" fill="#7a94ab"/>
-    <circle cx="900" cy="545" r="2.2" fill="#7a94ab"/>
-    <circle cx="830" cy="470" r="2.2" fill="#7a94ab"/>
-    <circle cx="830" cy="390" r="4.5" fill="#af915f"/>
-    <circle cx="700" cy="540" r="4.5" fill="#af915f"/>
-    <circle cx="790" cy="530" r="2.2" fill="#7a94ab"/>
-  </g>
-
-  <!-- 外框 + 四角刻线 -->
-  <rect x="30" y="30" width="1140" height="570" fill="none" stroke="#24384d" stroke-width="1"/>
-  <g stroke="#af915f" stroke-width="2">
-    <line x1="9" y1="23" x2="37" y2="23"/><line x1="23" y1="9" x2="23" y2="37"/>
-    <line x1="1163" y1="23" x2="1191" y2="23"/><line x1="1177" y1="9" x2="1177" y2="37"/>
-    <line x1="9" y1="607" x2="37" y2="607"/><line x1="23" y1="593" x2="23" y2="621"/>
-    <line x1="1163" y1="607" x2="1191" y2="607"/><line x1="1177" y1="593" x2="1177" y2="621"/>
-  </g>
-
-  <!-- 封印徽章（右上） -->
-  <g transform="translate(1034,151)">
-    <circle r="56" fill="none" stroke="#af915f" stroke-width="1.4"/>
-    <circle r="38" fill="none" stroke="#24384d" stroke-width="1"/>
-    <path d="M0,-28 L24,-15.4 L24,7 L0,28 L-24,7 L-24,-15.4 Z" fill="none" stroke="#af915f" stroke-width="1.6"/>
-    <path d="M-9,0 L-2.5,7 L10,-8" fill="none" stroke="#fce1b6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
-
-  <!-- 文案 -->
-  <line x1="84" y1="130" x2="106" y2="130" stroke="#af915f" stroke-width="1"/>
-  <text x="114" y="136" font-family="'JetBrains Mono', monospace" font-size="17" font-weight="700" fill="#af915f" letter-spacing="3.2">PROGRAMMABLE ON-CHAIN COMPLIANCE</text>
-  <text x="84" y="252" font-family="'Space Grotesk', 'Noto Sans SC', sans-serif" font-size="96" font-weight="700" fill="#f4f1e9">FidesOrigin</text>
-  <text x="84" y="334" font-family="'Plus Jakarta Sans', 'Noto Sans SC', sans-serif" font-size="44" fill="#d9d4c7">Compliance, executed at</text>
-  <text x="84" y="396" font-family="'Plus Jakarta Sans', 'Noto Sans SC', sans-serif" font-size="44" font-weight="700" fill="#fce1b6">block speed.</text>
-  <text x="84" y="512" font-family="'JetBrains Mono', monospace" font-size="15" font-weight="700" fill="#98917f" letter-spacing="1.6">20,645+ RISK ADDRESSES   ·   &lt;50MS SCREENING   ·   6 NETWORKS   ·   24/7 ENFORCEMENT</text>
-  <text x="1116" y="578" font-family="'JetBrains Mono', monospace" font-size="17" font-weight="700" fill="#af915f" text-anchor="end">fidesorigin.com</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#dddec9"/><rect x="820" width="380" height="630" fill="#000000"/>
+<rect x="56" y="52" width="68" height="68" fill="#ffe600" stroke="#000000"/><path d="M75 101V71h26M75 86h18" stroke="#000000" stroke-width="4"/><circle cx="104" cy="100" r="5" fill="#000000"/>
+<text x="148" y="100" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="700" fill="#000000">FidesOrigin</text>
+<path d="M56 156H760" stroke="#000000"/><text x="56" y="254" font-family="Inter,Arial,sans-serif" font-size="60" font-weight="700" fill="#000000">Compliance, executed at</text><text x="56" y="334" font-family="Inter,Arial,sans-serif" font-size="60" font-weight="700" fill="#000000">block speed</text>
+<text x="56" y="504" font-family="monospace" font-size="18" fill="#3f413a">5,348 RISK INTELLIGENCE RECORDS</text><text x="56" y="550" font-family="monospace" font-size="14" fill="#000000">SEPOLIA · FINAL-STATE READBACK · fidesorigin.com</text>
+<circle cx="1019.0" cy="330.0" r="3.5" fill="#ffe600"/><circle cx="770.0" cy="457.3" r="2.2" fill="#ffffff"/><circle cx="904.7" cy="136.4" r="2.2" fill="#ffffff"/><circle cx="1004.9" cy="503.6" r="2.2" fill="#ffffff"/><circle cx="740.4" cy="299.3" r="2.2" fill="#ffffff"/><circle cx="990.2" cy="256.2" r="2.2" fill="#ffffff"/><circle cx="842.4" cy="535.2" r="2.2" fill="#ffffff"/><circle cx="808.6" cy="148.5" r="3.5" fill="#ffe600"/><circle cx="932.6" cy="348.0" r="2.2" fill="#ffffff"/><circle cx="738.5" cy="402.4" r="2.2" fill="#ffffff"/><circle cx="914.9" cy="268.3" r="2.2" fill="#ffffff"/><circle cx="943.5" cy="527.6" r="2.2" fill="#ffffff"/><circle cx="818.4" cy="281.9" r="2.2" fill="#ffffff"/><circle cx="986.1" cy="305.5" r="2.2" fill="#ffffff"/><circle cx="797.5" cy="482.4" r="3.5" fill="#ffe600"/><circle cx="867.7" cy="130.7" r="2.2" fill="#ffffff"/><circle cx="995.5" cy="433.0" r="2.2" fill="#ffffff"/><circle cx="799.6" cy="334.3" r="2.2" fill="#ffffff"/><circle cx="999.0" cy="204.4" r="2.2" fill="#ffffff"/><circle cx="884.3" cy="472.3" r="2.2" fill="#ffffff"/><circle cx="794.6" cy="197.7" r="2.2" fill="#ffffff"/><circle cx="966.6" cy="341.9" r="3.5" fill="#ffe600"/><circle cx="844.2" cy="366.9" r="2.2" fill="#ffffff"/><circle cx="914.0" cy="206.3" r="2.2" fill="#ffffff"/><circle cx="964.5" cy="480.6" r="2.2" fill="#ffffff"/><circle cx="810.4" cy="300.6" r="2.2" fill="#ffffff"/><circle cx="919.7" cy="314.1" r="2.2" fill="#ffffff"/><circle cx="858.7" cy="416.6" r="2.2" fill="#ffffff"/><circle cx="850.6" cy="203.0" r="3.5" fill="#ffe600"/><circle cx="1047.6" cy="425.9" r="2.2" fill="#ffffff"/><circle cx="715.6" cy="383.2" r="2.2" fill="#ffffff"/><circle cx="947.3" cy="226.9" r="2.2" fill="#ffffff"/><circle cx="919.7" cy="530.2" r="2.2" fill="#ffffff"/><circle cx="819.2" cy="266.5" r="2.2" fill="#ffffff"/><circle cx="979.9" cy="321.4" r="2.2" fill="#ffffff"/><circle cx="798.2" cy="444.9" r="3.5" fill="#ffe600"/><circle cx="890.9" cy="127.1" r="2.2" fill="#ffffff"/><circle cx="1013.5" cy="487.7" r="2.2" fill="#ffffff"/><circle cx="721.8" cy="311.9" r="2.2" fill="#ffffff"/><circle cx="982.5" cy="248.7" r="2.2" fill="#ffffff"/><circle cx="859.4" cy="524.6" r="2.2" fill="#ffffff"/><circle cx="843.7" cy="244.8" r="2.2" fill="#ffffff"/><text x="852" y="64" font-family="monospace" font-size="14" fill="#ffe600">VERIFIED / SEPOLIA</text><text x="852" y="580" font-family="monospace" font-size="13" fill="#aae2ff">CHAIN ID 11155111</text></svg>

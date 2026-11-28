@@ -1,4 +1,5 @@
 import { chromium } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const out = path.join(root, "out");
 const base = process.env.UI_BASE_URL || "http://127.0.0.1:8310";
+const fullPage = process.env.UI_FULL_PAGE === "true";
+const checkA11y = process.env.UI_A11Y === "true";
 const evidence = path.resolve(process.env.UI_EVIDENCE_DIR || path.join(root, "test-results/all-routes"));
 fs.mkdirSync(evidence, { recursive: true });
 
@@ -68,7 +71,7 @@ try {
       page.on("console", message => { if (message.type() === "error") errors.push(`console: ${message.text()}`); });
       page.on("response", response => { if (response.status() >= 400) errors.push(`http ${response.status()}: ${response.url()}`); });
       page.on("requestfailed", request => errors.push(`request: ${request.url()} ${request.failure()?.errorText || "failed"}`));
-      const check = { name, route, viewport: viewport.name, screenshot: "", errors: [], badLinks: [], overflow: 0, mainCount: 0, h1Visible: false };
+      const check = { name, route, viewport: viewport.name, screenshot: "", errors: [], badLinks: [], a11y: [], overflow: 0, mainCount: 0, h1Visible: false };
       try {
         const response = await page.goto(`${base}${route}`, { waitUntil: "networkidle", timeout: 30_000 });
         if (!response || response.status() !== 200) errors.push(`navigation: ${response?.status() ?? "no response"}`);
@@ -82,8 +85,12 @@ try {
           if (href.startsWith("#") && !(await page.locator(href).count())) check.badLinks.push(`missing anchor ${href}`);
           if ((href.startsWith("/") || href.startsWith("./")) && !targetExists(href)) check.badLinks.push(`missing target ${href}`);
         }
+        if (checkA11y) {
+          const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+          check.a11y = result.violations.map(violation => ({ id: violation.id, impact: violation.impact, nodes: violation.nodes.map(node => ({ target: node.target, summary: node.failureSummary })) }));
+        }
         const screenshotPath = path.join(evidence, `${name}.jpg`);
-        await page.screenshot({ path: screenshotPath, type: "jpeg", quality: 65, fullPage: false });
+        await page.screenshot({ path: screenshotPath, type: "jpeg", quality: 65, fullPage });
         check.screenshot = screenshotPath;
       } catch (error) {
         errors.push(`exception: ${error.message}`);
@@ -93,9 +100,10 @@ try {
       if (!check.h1Visible) check.failures = [...(check.failures || []), "no visible h1"];
       if (check.overflow > 1) check.failures = [...(check.failures || []), `overflow ${check.overflow}`];
       if (check.badLinks.length) check.failures = [...(check.failures || []), `${check.badLinks.length} bad links`];
+      if (check.a11y.length) check.failures = [...(check.failures || []), `${check.a11y.length} accessibility violations`];
       if (errors.length) check.failures = [...(check.failures || []), `${errors.length} runtime errors`];
       report.checks.push(check);
-      if (check.failures?.length) report.failures.push({ name, failures: check.failures, errors, badLinks: check.badLinks });
+      if (check.failures?.length) report.failures.push({ name, failures: check.failures, errors, badLinks: check.badLinks, a11y: check.a11y });
       console.log(`${check.failures?.length ? "FAIL" : "PASS"} ${name}`);
       await context.close();
     }

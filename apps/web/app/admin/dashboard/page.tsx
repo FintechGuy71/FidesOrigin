@@ -884,7 +884,7 @@ export default function DashboardPage() {
               </span>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="最近风险事件列表">
             <table className="w-full">
               <thead>
                 <tr className="bg-[var(--fio-surface-2)]/50">
