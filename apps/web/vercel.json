@@ -6,56 +6,16 @@
     }
   ],
   "redirects": [
-    {
-      "source": "/whitepaper",
-      "destination": "/docs",
-      "permanent": true
-    },
-    {
-      "source": "/whitepaper.html",
-      "destination": "/docs",
-      "permanent": true
-    },
-    {
-      "source": "/cn/contact",
-      "destination": "/contact",
-      "permanent": true
-    },
-    {
-      "source": "/tw/contact",
-      "destination": "/contact",
-      "permanent": true
-    },
-    {
-      "source": "/jp/contact",
-      "destination": "/contact",
-      "permanent": true
-    },
-    {
-      "source": "/cn/case-studies",
-      "destination": "/case-studies",
-      "permanent": true
-    },
-    {
-      "source": "/tw/case-studies",
-      "destination": "/case-studies",
-      "permanent": true
-    },
-    {
-      "source": "/jp/case-studies",
-      "destination": "/case-studies",
-      "permanent": true
-    },
-    {
-      "source": "/:path*.html",
-      "destination": "/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/((?!admin|_next|brand|api|chart|ethers).*)/",
-      "destination": "/$1",
-      "permanent": false
-    }
+    { "source": "/whitepaper", "destination": "/docs", "permanent": true },
+    { "source": "/whitepaper.html", "destination": "/docs", "permanent": true },
+    { "source": "/cn/contact", "destination": "/contact", "permanent": true },
+    { "source": "/tw/contact", "destination": "/contact", "permanent": true },
+    { "source": "/jp/contact", "destination": "/contact", "permanent": true },
+    { "source": "/cn/case-studies", "destination": "/case-studies", "permanent": true },
+    { "source": "/tw/case-studies", "destination": "/case-studies", "permanent": true },
+    { "source": "/jp/case-studies", "destination": "/case-studies", "permanent": true },
+    { "source": "/:path*.html", "destination": "/:path*", "permanent": true },
+    { "source": "/((?!admin|_next|brand|api|chart|ethers).*)/", "destination": "/$1", "permanent": false }
   ],
   "headers": [
     {
@@ -63,28 +23,13 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://plausible.io https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.fidesorigin.com wss://api.fidesorigin.com https://api.studio.thegraph.com https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://plausible.io; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.fidesorigin.com wss://api.fidesorigin.com https://api.studio.thegraph.com https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=()"
-        },
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=63072000; includeSubDomains; preload"
-        }
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
       ]
     }
   ]
