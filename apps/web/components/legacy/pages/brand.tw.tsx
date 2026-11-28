@@ -1,4 +1,4 @@
-/* Brand book — v4 Ledger Precision 品牌资产页（EN-only，对客/对媒体） */
+/* Brand book — v4 Editorial Verification 品牌资产页（EN-only，对客/对媒体） */
 
 const PAGE_CSS = `
     .brand-hero { padding: 140px 0 60px; }
@@ -71,14 +71,14 @@ const PAGE_CSS = `
 `;
 
 const SWATCHES = [
-  { name: "Ink", hex: "#0a141f", token: "--fio-ink" },
-  { name: "Surface Elevated", hex: "#162638", token: "--fio-surface-2" },
-  { name: "Bronze", hex: "#af915f", token: "--fio-gold" },
-  { name: "Cream", hex: "#fce1b6", token: "--fio-cream" },
-  { name: "Light Bronze", hex: "#e3c892", token: "--fio-accent" },
-  { name: "Steel", hex: "#7a94ab", token: "--fio-steel" },
-  { name: "Warm White", hex: "#f4f1e9", token: "--fio-text" },
-  { name: "Warm Grey", hex: "#98917f", token: "--fio-text-3" },
+  { name: "Sage Paper", hex: "#dddec9", token: "--fio-ink" },
+  { name: "Paper White", hex: "#ffffff", token: "--fio-surface" },
+  { name: "Sun Action", hex: "#ffe600", token: "--fio-gold" },
+  { name: "Sky Data", hex: "#aae2ff", token: "--fio-steel" },
+  { name: "Soft Cream", hex: "#fcedb1", token: "--p-cream" },
+  { name: "Ink Black", hex: "#000000", token: "--p-black" },
+  { name: "Data Green", hex: "#00bb7f", token: "--fio-success" },
+  { name: "Risk Red", hex: "#fb2c36", token: "--fio-danger" },
 ];
 
 export default function ContentBrandTW() {
@@ -93,8 +93,8 @@ export default function ContentBrandTW() {
             FidesOrigin <span>品牌資產</span>
           </h1>
           <p className="lead" style={{ maxWidth: "640px", marginTop: "20px" }}>
-            Ledger Precision（賬本精密）視覺體系——深海軍藍、古銅金與技術圖紙式的克制。
-            在媒體報導、合作或整合中引用 FidesOrigin 時，請使用這些資產。
+            Editorial Verification（編輯式驗證）視覺體系——鼠尾草紙面、天藍資料區、明黃行動點與清晰的墨跡網格。
+            在媒體報導、合作或整合中引用 FidesOrigin 時，請使用這些當前資產。
           </p>
         </div>
       </section>
@@ -143,31 +143,31 @@ export default function ContentBrandTW() {
             <div className="brand-panel">
               <h2>字體</h2>
               <div className="type-row">
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
-                  Fraunces — 展示標題
+                <div style={{ fontFamily: "var(--font-sans)", fontSize: "1.6rem", fontWeight: 500, color: "var(--text)" }}>
+                  Inter — 展示與正文
                 </div>
-                <div className="spec">標題 · clamp(2.4rem, 5.4vw, 4.6rem) · 500</div>
+                <div className="spec">標題與介面 · 流式字號 · 400/500/600</div>
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-sans)", fontSize: "1rem", color: "var(--text)" }}>
-                  Plus Jakarta Sans — 正文
+                  PingFang / Noto — 中文系統字體堆疊
                 </div>
-                <div className="spec">介面與正文 · 400/500 · CJK 回退 PingFang / Noto</div>
+                <div className="spec">本地化正文 · 顯式中文回退</div>
               </div>
               <div className="type-row">
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--text)" }}>
-                  JetBrains Mono — 示例：20,645 地址 · &lt;50ms 延遲
+                  JetBrains Mono — 5,348 筆記錄 · HTTP 200
                 </div>
-                <div className="spec">指標 · 標籤 · 等寬數字 · 大寫寬字距</div>
+                <div className="spec">指標 · 標籤 · 等寬數字 · 已驗證即時資料</div>
               </div>
             </div>
 
             {/* Motif */}
             <div className="brand-panel">
-              <h2>母題 — 賬本精密</h2>
+              <h2>母題 — 編輯式驗證</h2>
               <div className="motif-demo" />
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.7 }}>
-                四角刻線、細線規則與合規網格——每個圖形元素都承載資訊，無意義不裝飾。
+                可見墨跡規則、功能色區與驗證網絡——每個圖形元素都承載證據，無意義不裝飾。
               </p>
               <div className="brand-download">
                 <a href="/brand/og-image.png" download>OG 卡 PNG</a>

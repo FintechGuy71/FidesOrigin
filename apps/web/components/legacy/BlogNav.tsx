@@ -32,7 +32,7 @@ export default function BlogNav({
                 fontFamily: "var(--font-mono)",
                 fontSize: "0.6875rem",
                 letterSpacing: "0.1em",
-                opacity: 0.7,
+                opacity: 1,
               }}
             >
               ← {prevLabel}
@@ -49,7 +49,7 @@ export default function BlogNav({
                 fontFamily: "var(--font-mono)",
                 fontSize: "0.6875rem",
                 letterSpacing: "0.1em",
-                opacity: 0.7,
+                opacity: 1,
               }}
             >
               {nextLabel} →

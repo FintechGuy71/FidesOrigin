@@ -14,7 +14,7 @@
   --danger: #fb2c36;
   --border: rgba(255,255,255,.25);
 }
-body { font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; background: #000; }
+body { font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif; background: #000; }
 .sidebar { background: #0d0d0d; border-right-color: #fff; }
 .logo-icon { border-radius: 0; background: #ffe600; }
 .nav-title { color: #b2b2b2; letter-spacing: .12em; }

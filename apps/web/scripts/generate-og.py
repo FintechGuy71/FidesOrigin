@@ -1,192 +1,146 @@
 # -*- coding: utf-8 -*-
-"""FidesOrigin OG 社交分享卡生成器 —— v4「Ledger Precision」设计语言。
-
-1200×630（内部 2x 渲染后降采样抗锯齿）。
-深海军蓝底 + 青铜金刻线 + 合规网络网格 + 封印徽章。
-
-用法：python scripts/generate-og.py
-产物：brand/og-image.png 与 public/brand/og-image.png（og-image.svg 为手写同源文件），
-     以及三个本地化变体 og-image-{cn,tw,jp}.png（写入 public/brand/）。
-"""
+"""Generate FidesOrigin editorial-verification OG cards in four locales."""
+from pathlib import Path
 import math
 import random
-from pathlib import Path
-
+import re
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT_DIR = Path(r"C:\Users\wesleyyang\AppData\Roaming\kimi-desktop\daimon-share\daimon\runtime\python\fonts")
-
-# v4 设计令牌
-INK = (10, 20, 31)         # --fio-ink
-SURFACE2 = (22, 38, 56)    # --fio-surface-2
-BORDER_L = (36, 56, 77)    # --fio-border-light
-TEXT = (244, 241, 233)     # --fio-text
-TEXT3 = (152, 145, 127)    # --fio-text-3
-GOLD = (175, 145, 95)      # --fio-gold
-CREAM = (252, 225, 182)    # --fio-cream
-ACCENT = (227, 200, 146)   # --fio-accent
-STEEL = (122, 148, 171)    # --fio-steel
-
-S = 2  # 2x supersampling
+S = 2
 W, H = 1200 * S, 630 * S
+SAGE = "#dddec9"
+SUN = "#ffe600"
+SKY = "#aae2ff"
+BLACK = "#000000"
+WHITE = "#ffffff"
+MUTED = "#3f413a"
 
-# 四语言文案（标题与 i18n/dictionaries 的 home.hero 保持一致）
-def _current_risk_addresses():
-    """从 i18n/metrics.generated.ts 读最新真实值（fetch-metrics.mjs 产物）。"""
-    import re as _re
-    mg = ROOT / "i18n" / "metrics.generated.ts"
-    try:
-        m = _re.search(r'riskAddresses: "([^"]+)"', mg.read_text(encoding="utf-8"))
-        if m:
-            return m.group(1)
-    except FileNotFoundError:
-        pass
-    return "20,645+"  # 兜底（首次克隆未构建时）
-
-_RA = _current_risk_addresses()
-
-VARIANTS = {
-    "en": {
-        "eyebrow": "PROGRAMMABLE ON-CHAIN COMPLIANCE",
-        "sub1": "Compliance, executed at",
-        "sub2": "block speed.",
-        "metrics": f"{_RA} RISK ADDRESSES   ·   <50MS SCREENING   ·   6 NETWORKS   ·   24/7 ENFORCEMENT",
-        "tracking": 3.2,
-        "out": ["brand/og-image.png", "public/brand/og-image.png"],
-    },
-    "cn": {
-        "eyebrow": "可编程链上合规",
-        "sub1": "合规，以区块速度",
-        "sub2": "实时执行。",
-        "metrics": f"{_RA} 风险地址   ·   <50MS 筛查   ·   6 条网络   ·   24/7 自动执行",
-        "tracking": 4.0,
-        "out": ["public/brand/og-image-cn.png"],
-    },
-    "tw": {
-        "eyebrow": "可程式化鏈上合規",
-        "sub1": "合規，以區塊速度",
-        "sub2": "即時執行。",
-        "metrics": f"{_RA} 風險地址   ·   <50MS 篩查   ·   6 條網絡   ·   24/7 自動執行",
-        "tracking": 4.0,
-        "out": ["public/brand/og-image-tw.png"],
-    },
-    "jp": {
-        "eyebrow": "プログラマブル・オンチェーン・コンプライアンス",
-        "sub1": "コンプライアンスを、",
-        "sub2": "ブロックスピードで実行",
-        "metrics": f"{_RA} リスクアドレス   ·   <50MS スクリーニング   ·   6 ネットワーク   ·   24/7 実行",
-        "tracking": 1.2,
-        "out": ["public/brand/og-image-jp.png"],
-    },
-}
 
 def font(size, bold=False):
-    name = "NotoSansSC-Bold.ttf" if bold else "NotoSansSC-Regular.ttf"
-    return ImageFont.truetype(str(FONT_DIR / name), size * S)
+    return ImageFont.truetype(str(FONT_DIR / ("NotoSansSC-Bold.ttf" if bold else "NotoSansSC-Regular.ttf")), size * S)
 
-def lerp(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
-def draw_tracked(draw, xy, text, f, fill, tracking):
-    """逐字绘制带字距的文本。tracking 单位为 px（1x 坐标系）。"""
-    x, y = xy
-    for ch in text:
-        draw.text((x, y), ch, font=f, fill=fill)
-        x += draw.textlength(ch, font=f) + tracking * S
-    return x
+def current_records():
+    path = ROOT / "i18n" / "metrics.generated.ts"
+    try:
+        match = re.search(r'riskAddresses: "([^"]+)"', path.read_text(encoding="utf-8"))
+        return match.group(1) if match else None
+    except FileNotFoundError:
+        return None
 
-def render(v):
-    img = Image.new("RGB", (W, H), INK)
-    d = ImageDraw.Draw(img)
 
-    # ── 背景：对角渐变 + 顶部青铜光晕 ──
-    for y in range(H):
-        d.line([(0, y), (W, y)], fill=lerp(INK, SURFACE2, y / H * 0.85))
-    glow = Image.new("L", (W, H), 0)
-    gd = ImageDraw.Draw(glow)
-    gd.ellipse([W * 0.25, -H * 0.55, W * 0.75, H * 0.35], fill=26)
-    glow = glow.filter(__import__("PIL.ImageFilter", fromlist=["GaussianBlur"]).GaussianBlur(120 * S))
-    bronze = Image.new("RGB", (W, H), ACCENT)
-    img.paste(bronze, (0, 0), glow)
-    d = ImageDraw.Draw(img)
+RECORDS = current_records()
+VARIANTS = {
+    "en": {"title": ["Compliance, executed at", "block speed"], "outputs": ["brand/og-image.png", "public/brand/og-image.png"]},
+    "cn": {"title": ["合规，以区块速度", "实时执行"], "outputs": ["public/brand/og-image-cn.png"]},
+    "tw": {"title": ["合規，以區塊速度", "即時執行"], "outputs": ["public/brand/og-image-tw.png"]},
+    "jp": {"title": ["コンプライアンスを、", "ブロックスピードで実行"], "outputs": ["public/brand/og-image-jp.png"]},
+}
 
-    # ── 合规网络网格（右下区域，确定性种子）──
-    rng = random.Random(20260913)
+
+def fit_font(text, max_width, start, bold=True):
+    probe = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    for size in range(start, 24, -2):
+        candidate = font(size, bold)
+        if probe.textlength(text, font=candidate) <= max_width:
+            return candidate
+    return font(24, bold)
+
+
+def draw_mark(image, box):
+    draw = ImageDraw.Draw(image)
+    x0, y0, x1, y1 = box
+    size = x1 - x0
+    draw.rectangle(box, fill=SUN, outline=BLACK, width=max(2, S))
+    stroke = max(2, round(size * .065))
+    draw.line([(x0 + size * .28, y0 + size * .72), (x0 + size * .28, y0 + size * .28), (x0 + size * .69, y0 + size * .28)], fill=BLACK, width=stroke)
+    draw.line([(x0 + size * .28, y0 + size * .50), (x0 + size * .56, y0 + size * .50)], fill=BLACK, width=stroke)
+    radius = size * .078
+    cx, cy = x0 + size * .70, y0 + size * .70
+    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=BLACK)
+
+
+def bezier(a, b, lift, steps=48):
+    points = []
+    control = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - lift)
+    for index in range(steps + 1):
+        t = index / steps
+        x = (1 - t) ** 2 * a[0] + 2 * (1 - t) * t * control[0] + t ** 2 * b[0]
+        y = (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * control[1] + t ** 2 * b[1]
+        points.append((x, y))
+    return points
+
+
+def network_nodes():
+    rng = random.Random(20261128)
     nodes = []
-    for _ in range(16):
-        x = rng.uniform(W * 0.55, W * 0.94)
-        y = rng.uniform(H * 0.42, H * 0.9)
-        hot = rng.random() < 0.25
-        nodes.append((x, y, hot))
-    link = 150 * S
-    for i, (x1, y1, h1) in enumerate(nodes):
-        for x2, y2, h2 in nodes[i + 1:]:
-            dist = math.hypot(x1 - x2, y1 - y2)
-            if dist < link:
-                a = 1 - dist / link
-                col = lerp(BORDER_L, GOLD if (h1 or h2) else BORDER_L, 0.9 if (h1 or h2) else 0.0)
-                d.line([(x1, y1), (x2, y2)], fill=col, width=max(1, int(1.2 * S * a)))
-    for x, y, hot in nodes:
-        r = (3.4 if hot else 2.2) * S
-        if hot:
-            d.ellipse([x - r * 3, y - r * 3, x + r * 3, y + r * 3], fill=(GOLD[0], GOLD[1], GOLD[2]))
-        d.ellipse([x - r, y - r, x + r, y + r], fill=GOLD if hot else STEEL)
+    for index in range(42):
+        angle = index * math.pi * (3 - math.sqrt(5))
+        radius = math.sqrt(rng.random())
+        nodes.append((890 * S + math.cos(angle) * radius * 190 * S, 330 * S + math.sin(angle) * radius * 220 * S))
+    return nodes
 
-    # ── 外框 hairline + 四角刻线 ──
-    m = 30 * S
-    d.rectangle([m, m, W - m, H - m], outline=BORDER_L, width=S)
-    tick = 14 * S
-    off = m - 7 * S
-    for cx, cy in [(off, off), (W - off, off), (off, H - off), (W - off, H - off)]:
-        d.line([(cx - tick, cy), (cx + tick, cy)], fill=GOLD, width=2 * S)
-        d.line([(cx, cy - tick), (cx, cy + tick)], fill=GOLD, width=2 * S)
 
-    # ── 封印徽章（右上）──
-    bx, by, br = W * 0.862, H * 0.24, 56 * S
-    d.ellipse([bx - br, by - br, bx + br, by + br], outline=GOLD, width=int(1.4 * S))
-    d.ellipse([bx - br * 0.68, by - br * 0.68, bx + br * 0.68, by + br * 0.68], outline=BORDER_L, width=S)
-    sw, sh = 24 * S, 28 * S
-    pts = [
-        (bx, by - sh), (bx + sw, by - sh * 0.55), (bx + sw, by + sh * 0.25),
-        (bx, by + sh), (bx - sw, by + sh * 0.25), (bx - sw, by - sh * 0.55),
-    ]
-    d.line(pts + [pts[0]], fill=GOLD, width=int(1.6 * S), joint="curve")
-    d.line([(bx - 9 * S, by), (bx - 2.5 * S, by + 7 * S), (bx + 10 * S, by - 8 * S)],
-           fill=CREAM, width=int(2.4 * S), joint="curve")
+def render(lines):
+    image = Image.new("RGB", (W, H), SAGE)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((820 * S, 0, W, H), fill=BLACK)
+    draw_mark(image, (56 * S, 52 * S, 124 * S, 120 * S))
+    draw.text((148 * S, 68 * S), "FidesOrigin", font=font(30, True), fill=BLACK)
+    draw.line((56 * S, 156 * S, 760 * S, 156 * S), fill=BLACK, width=S)
 
-    # ── 文案（左对齐）──
-    x0 = 84 * S
-    # eyebrow（拉丁语系宽字距；CJK 用语言自带 tracking）
-    draw_tracked(d, (x0 + 30 * S, 118 * S), v["eyebrow"],
-                 font(17, bold=True), GOLD, tracking=v["tracking"])
-    d.line([(x0, 118 * S + 12 * S), (x0 + 22 * S, 118 * S + 12 * S)], fill=GOLD, width=S)
+    y = 208 * S
+    for line in lines:
+        face = fit_font(line, 700 * S, 62)
+        draw.text((56 * S, y), line, font=face, fill=BLACK)
+        y += 92 * S
 
-    # 主标题
-    d.text((x0, 168 * S), "FidesOrigin", font=font(96, bold=True), fill=TEXT)
-    # 副标题两行
-    d.text((x0, 300 * S), v["sub1"], font=font(44), fill=lerp(TEXT, TEXT3, 0.25))
-    d.text((x0, 362 * S), v["sub2"], font=font(44, bold=True), fill=CREAM)
+    metric = f"{RECORDS} RISK INTELLIGENCE RECORDS" if RECORDS else "LIVE VERIFIED METRICS"
+    draw.text((56 * S, 486 * S), metric, font=font(17, True), fill=MUTED)
+    draw.text((56 * S, 536 * S), "SEPOLIA  ·  FINAL-STATE READBACK  ·  fidesorigin.com", font=font(14), fill=BLACK)
 
-    # 底部指标行（mono 风，字符级字距）
-    draw_tracked(d, (x0, 500 * S), v["metrics"], font(15, bold=True), TEXT3, tracking=1.6)
+    nodes = network_nodes()
+    for index, a in enumerate(nodes):
+        for b in nodes[index + 1:]:
+            if math.hypot(a[0] - b[0], a[1] - b[1]) < 92 * S:
+                draw.line((a, b), fill="#333333", width=S)
+    for index in (4, 17, 29):
+        a, b = nodes[index], nodes[(index + 11) % len(nodes)]
+        draw.line(bezier(a, b, 100 * S), fill=SUN if index % 2 == 0 else SKY, width=2 * S)
+    for index, (x, y) in enumerate(nodes):
+        radius = (3 if index % 7 == 0 else 1.7) * S
+        draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=SUN if index % 7 == 0 else WHITE)
+    draw.text((852 * S, 46 * S), "VERIFIED / SEPOLIA", font=font(13, True), fill=SUN)
+    draw.text((852 * S, 566 * S), "CHAIN ID 11155111", font=font(12), fill=SKY)
+    return image.resize((1200, 630), Image.LANCZOS)
 
-    # 右下角域名
-    dom = "fidesorigin.com"
-    fdom = font(17, bold=True)
-    dw = d.textlength(dom, font=fdom)
-    d.text((W - 84 * S - dw, 560 * S), dom, font=fdom, fill=GOLD)
 
-    # ── 降采样输出 ──
-    return img.resize((1200, 630), Image.LANCZOS)
+def render_svg():
+    nodes = network_nodes()
+    circles = "".join(f'<circle cx="{x / S:.1f}" cy="{y / S:.1f}" r="{2.2 if i % 7 else 3.5}" fill="{SUN if i % 7 == 0 else WHITE}"/>' for i, (x, y) in enumerate(nodes))
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="{SAGE}"/><rect x="820" width="380" height="630" fill="{BLACK}"/>
+<rect x="56" y="52" width="68" height="68" fill="{SUN}" stroke="{BLACK}"/><path d="M75 101V71h26M75 86h18" stroke="{BLACK}" stroke-width="4"/><circle cx="104" cy="100" r="5" fill="{BLACK}"/>
+<text x="148" y="100" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="700" fill="{BLACK}">FidesOrigin</text>
+<path d="M56 156H760" stroke="{BLACK}"/><text x="56" y="254" font-family="Inter,Arial,sans-serif" font-size="60" font-weight="700" fill="{BLACK}">Compliance, executed at</text><text x="56" y="334" font-family="Inter,Arial,sans-serif" font-size="60" font-weight="700" fill="{BLACK}">block speed</text>
+<text x="56" y="504" font-family="monospace" font-size="18" fill="{MUTED}">{RECORDS or 'LIVE'} RISK INTELLIGENCE RECORDS</text><text x="56" y="550" font-family="monospace" font-size="14" fill="{BLACK}">SEPOLIA · FINAL-STATE READBACK · fidesorigin.com</text>
+{circles}<text x="852" y="64" font-family="monospace" font-size="14" fill="{SUN}">VERIFIED / SEPOLIA</text><text x="852" y="580" font-family="monospace" font-size="13" fill="{SKY}">CHAIN ID 11155111</text></svg>'''
+
 
 def main():
-    for lang, v in VARIANTS.items():
-        img = render(v)
-        for rel in v["out"]:
-            out = ROOT / rel
-            img.save(out, optimize=True)
-            print(f"written [{lang}]:", out)
+    for locale, variant in VARIANTS.items():
+        image = render(variant["title"])
+        for relative in variant["outputs"]:
+            target = ROOT / relative
+            image.save(target, optimize=True)
+            print(f"written [{locale}]:", target)
+    svg = render_svg()
+    (ROOT / "public/brand/og-image.svg").write_text(svg, encoding="utf-8")
+    if (ROOT / "brand").exists():
+        (ROOT / "brand/og-image.svg").write_text(svg, encoding="utf-8")
+
 
 if __name__ == "__main__":
     main()

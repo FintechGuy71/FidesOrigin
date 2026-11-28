@@ -120,3 +120,41 @@
   .hr-fade { background: var(--p-black); }
   :is([lang="zh-CN"],[lang="zh-TW"],[lang="zh-HK"],[lang="ja"]) .article em { font-style: normal; }
 }
+
+
+@layer legacy {
+  /* Long-form article code uses a dark terminal surface with a complete syntax ladder. */
+  .article .blog-code-block {
+    border-color: var(--p-black);
+    background: var(--p-black);
+    --code-kw: var(--p-sun);
+    --code-type: var(--p-sky);
+    --code-func: var(--p-sky);
+    --code-comment: #b2b2b2;
+    --code-str: var(--p-cream);
+  }
+  .article .blog-code-header { border-bottom-color: rgba(255,255,255,.35); background: var(--p-black); color: var(--p-white); }
+  .article .blog-code-body pre { color: var(--p-white); }
+}
+
+
+@layer legacy {
+  .brand-panel .motif-demo { border-color: var(--p-black); background: var(--p-black); }
+  .brand-panel .motif-demo::before {
+    content: "F.";
+    display: flex;
+    width: 4.5rem;
+    height: 4.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--p-black);
+    border-radius: 0;
+    background: var(--p-sun);
+    color: var(--p-black);
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 600;
+    opacity: 1;
+  }
+  .brand-panel .motif-demo::after { display: none; }
+}
