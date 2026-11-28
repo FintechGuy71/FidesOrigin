@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fidesorigin-api.vercel.app https://api.studio.thegraph.com https://rpc.sepolia.org https://ethereum-sepolia-rpc.publicnode.com https://mainnet.base.org https://ethereum-rpc.publicnode.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+  <!-- X-Frame-Options 与 frame-ancestors 由 HTTP 响应头提供，见 vercel.json。 -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -734,6 +734,8 @@
         .table-loading { text-align: center; color: var(--text-secondary); padding: 24px; }
         .table-loading .spinner { margin-bottom: 8px; width: 24px; height: 24px; }
     </style>
+    <link rel="stylesheet" href="admin-theme.css">
+    <link rel="icon" href="/brand/brand-mark.svg" type="image/svg+xml">
   <!-- [AUDIT FIX R2-009] 移除 plausible 统计脚本：
        ① 运营后台为 noindex 内部页，无需公开站点分析；
        ② 该脚本的 src(plausible.io) 从未被本页 meta CSP 的 script-src 允许，
@@ -858,7 +860,7 @@
         <!-- Mobile Header -->
         <div class="mobile-header">
             <button type="button" class="hamburger" data-action="toggleMobileSidebar" aria-label="Toggle sidebar">☰</button>
-            <span>FidesOrigin Admin</span>
+            <h1>FidesOrigin Admin</h1>
             <div style="width:36px;"></div>
         </div>
         <div class="overlay" id="overlay" data-action="toggleMobileSidebar"></div>
@@ -867,7 +869,7 @@
         <aside class="sidebar">
             <div class="logo">
                 <a href="/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
-                <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><img src="/brand/logo-dark-icon.png" alt="FidesOrigin" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+                <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><img src="/brand/brand-mark.svg" alt="FidesOrigin" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
                 <div>
                     <h1 class="logo-text">FidesOrigin</h1>
                     <div class="logo-sub">运营后台</div>

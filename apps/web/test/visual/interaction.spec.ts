@@ -9,10 +9,17 @@ test("mobile menu opens and closes", async ({ page }) => {
   await toggle.click();
   const menu = page.locator("#mobile-menu");
   await expect(menu).toBeVisible();
-  /* 菜单内链接可点 */
+  /* 全屏模态菜单内链接可点，并通过自带的关闭按钮退出。 */
   await expect(menu.getByRole("link").first()).toBeVisible();
-  await toggle.click();
+  const close = page.getByRole("button", { name: /close menu|关闭菜单/i });
+  await expect(close).toBeFocused();
+  await close.click();
   await expect(menu).not.toBeVisible();
+  await expect(toggle).toBeFocused();
+  await toggle.click();
+  await page.keyboard.press("Escape");
+  await expect(menu).not.toBeVisible();
+  await expect(toggle).toBeFocused();
 });
 
 test("docs sidebar toggle on mobile", async ({ page }) => {

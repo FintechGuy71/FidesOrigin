@@ -29,7 +29,9 @@ all_css = "".join(read(f) for f in css_files)
 main_css = None
 for f in css_files:
     c = read(f)
-    if "@layer utilities" in c or "--fio-ink:" in c:
+    # Next 按路由拆分 CSS；后台专用文件也含 --fio-ink，不能当作主样式。
+    # 主样式同时包含核心色、三类字体与层级令牌。
+    if all(token in c for token in ("--fio-ink:", "--font-sans:", "--font-serif:", "--font-mono:", "--z-nav:")):
         main_css = (f, c)
         break
 
@@ -63,16 +65,16 @@ if main_css:
     for lang, stack in [("zh-CN", "PingFang SC"), ("zh-TW", "PingFang TC"), ("ja", "Noto Sans JP")]:
         ok = bool(re.search(r'html\[lang="?%s"?\]' % lang, c))
         check("CJK 回退块存在 html[lang=%s]" % lang, ok, stack if ok else "缺失")
-    # 1.6 --font-serif / --font-mono 必须也有 CJK 回退（这是本轮新修的）
+    # 1.6 字体允许继承另一条已含 CJK 的令牌；解析别名与直接栈均可。
     for prop in ("--font-serif", "--font-mono"):
         m = re.findall(prop + r":[^;]*?;", c)
-        has_cjk = any(("PingFang" in v) or ("Noto Sans" in v) or ("Hiragino" in v) for v in m)
+        has_cjk = any(("PingFang" in v) or ("Noto Sans" in v) or ("Hiragino" in v) or ("var(--font-sans)" in v and prop == "--font-serif") for v in m)
         check("%s 至少一处含 CJK 回退栈" % prop, has_cjk, "%d 处定义" % len(m))
-    # 1.7 --fio-text-3 已提亮到 AA 达标值
-    m = re.search(r"--fio-text-3:\s*(#[0-9a-fA-F]{6})", c)
-    check("--fio-text-3 已提亮（旧值 #717885 在卡片底 4.14:1 不达标）",
-          bool(m) and m.group(1).lower() != "#717885",
-          "当前值 %s" % (m.group(1) if m else "?"))
+    # 1.7 语义令牌或字面值均可；实际对比度由浏览器验收另测。
+    m = re.search(r"--fio-text-3:\s*([^;]+)", c)
+    value = m.group(1).strip() if m else ""
+    check("--fio-text-3 使用非旧低对比令牌", bool(value) and value.lower() != "#717885",
+          "当前值 %s" % (value or "?"))
     # 1.8 死配置 --color-fio-* 已清除
     n = len(set(re.findall(r"--color-fio-[a-z0-9-]+", c)))
     check("已清除被 tree-shake 的 --color-fio-* 死别名", n == 0, "残留 %d 个" % n)

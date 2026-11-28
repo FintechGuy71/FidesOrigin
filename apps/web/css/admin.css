@@ -1,0 +1,51 @@
+@layer components {
+  .admin-shell {
+    --fio-ink: var(--p-black);
+    --fio-ink-soft: oklch(12% 0 0);
+    --fio-surface: oklch(15% 0 0);
+    --fio-surface-2: oklch(21% 0 0);
+    --fio-surface-3: oklch(26% 0 0);
+    --fio-elevated: oklch(30% 0 0);
+    --fio-ink-scrim: rgba(0,0,0,.92);
+    --fio-border: rgba(255,255,255,.22);
+    --fio-border-light: rgba(255,255,255,.42);
+    --fio-border-subtle: rgba(255,255,255,.18);
+    --fio-border-hairline: rgba(255,255,255,.14);
+    --fio-text: var(--p-white);
+    --fio-text-2: #b2b2b2;
+    --fio-text-3: #b2b2b2;
+    --fio-gold: var(--p-sun);
+    --fio-gold-bright: var(--p-sun);
+    --fio-gold-dim: rgba(255,230,0,.18);
+    --fio-accent: var(--p-sky);
+    --fio-cream: var(--p-white);
+    --fio-success: #00bb7f;
+    --fio-warn: var(--p-sun);
+    --fio-danger: #fb2c36;
+    --fio-danger-light: #fb2c36;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--p-black);
+    color: var(--p-white);
+    color-scheme: dark;
+  }
+  .admin-shell :focus-visible { outline-color: var(--p-sun); }
+  .admin-shell input { border-radius: 0; }
+  .admin-shell table { font-variant-numeric: tabular-nums; }
+  .admin-shell th { letter-spacing: .08em; }
+  .admin-shell [aria-disabled="true"] { opacity: .68; }
+}
+
+
+@layer components {
+  .admin-login { padding: 1.25rem; }
+  .admin-login-card { width: 100%; max-width: 27rem; padding: 2rem; border: 1px solid rgba(255,255,255,.4); background: var(--fio-surface); }
+  .admin-login-kicker { margin: 0 0 3rem; color: var(--p-sky); font-family: var(--font-mono); font-size: .625rem; letter-spacing: .12em; }
+  .admin-login-card h1 { margin: 0; color: var(--p-white); font-size: 2.25rem; font-weight: 500; letter-spacing: -.045em; }
+  .admin-login-lead { margin: .75rem 0 2rem; color: var(--fio-text-2); font-size: .875rem; }
+  .admin-login-card label { display: block; margin: 1rem 0 .5rem; color: var(--fio-text-2); font-size: .8125rem; }
+  .admin-login-card input { width: 100%; min-height: 3rem; padding: .75rem; border: 1px solid rgba(255,255,255,.35); background: var(--p-black); color: var(--p-white); }
+  .admin-login-card input:focus { border-color: var(--p-sky); outline: 0; box-shadow: 0 0 0 2px var(--p-sky); }
+  .admin-login-error { margin: 1rem 0 0; color: var(--fio-danger); font-size: .8125rem; }
+  .admin-login-card .fio-btn { width: 100%; margin-top: 1.5rem; }
+}

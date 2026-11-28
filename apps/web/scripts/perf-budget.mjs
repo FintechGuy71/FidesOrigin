@@ -34,7 +34,9 @@ for (const m of htmlBuf.toString("utf8").matchAll(/(?:src|href)="(\/?_next\/[^"]
 let cssSize = 0, jsSize = 0, imgSize = 0;
 const missing = [];
 for (const ref of refs) {
-  const fp = path.join(OUT, ref.replace(/^\//, ""));
+  // HTML 中的动态路由 chunk 会 URL 编码方括号，磁盘文件名则是字面量。
+  const decodedRef = decodeURIComponent(ref.replace(/^\//, ""));
+  const fp = path.join(OUT, decodedRef);
   if (!existsSync(fp)) { missing.push(ref); continue; }
   const size = gz(readFileSync(fp));
   if (ref.endsWith(".css")) cssSize += size;
@@ -58,6 +60,9 @@ for (const [name, size, budget] of rows) {
     `${ok ? "PASS" : "FAIL"}  ${name.padEnd(22)} ${(size / 1024).toFixed(1).padStart(8)} KB / 预算 ${(budget / 1024).toFixed(0)} KB`
   );
 }
-if (missing.length) console.log("\n⚠ 引用缺失:", missing.join(", "));
-console.log(fail ? `\n${fail} 项超预算` : "\n全部在预算内");
+if (missing.length) {
+  fail += 1;
+  console.log("\nFAIL 引用缺失:", missing.join(", "));
+}
+console.log(fail ? `\n${fail} 项未通过` : "\n全部在预算内，且无缺失引用");
 process.exit(fail ? 1 : 0);

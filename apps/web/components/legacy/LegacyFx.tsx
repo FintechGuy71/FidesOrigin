@@ -23,6 +23,11 @@ export default function LegacyFx({ scrollTopLabel }: { scrollTopLabel: string })
     );
     document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 
+    /* 横向滚动的表格与代码块必须能由键盘聚焦并用方向键滚动。 */
+    document.querySelectorAll<HTMLElement>(".compare-table-wrap, .docs-table-wrap, .uc-code > pre").forEach((region) => {
+      if (region.scrollWidth > region.clientWidth) region.tabIndex = 0;
+    });
+
     const btn = document.createElement("button");
     btn.className = "scroll-top";
     btn.innerHTML = "&uarr;";

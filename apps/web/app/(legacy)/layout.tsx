@@ -5,6 +5,7 @@ import { jsonLd, siteMetadata } from "../_lib/site";
 
 import "@/css/style.css";
 import "@/css/legacy.css";
+import "@/css/legacy-world.css";
 
 /* ================================================================
    ROOT LAYOUT — 英文经典站（/pricing /docs /blog/... ）

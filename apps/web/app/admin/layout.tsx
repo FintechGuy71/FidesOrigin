@@ -2,6 +2,7 @@ import { fontVariableClassNames } from "../_lib/fonts";
 import { adminMetadata } from "../_lib/site";
 
 import "@/css/style.css";
+import "@/css/admin.css";
 
 /* ================================================================
    ROOT LAYOUT — 后台（/admin/dashboard）

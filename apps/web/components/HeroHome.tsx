@@ -1,480 +1,61 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import CountUp from "@/components/CountUp";
 import HeroScreen from "@/components/HeroScreen";
+import OriginField from "@/components/OriginField";
 import type { Dict } from "@/i18n/dictionaries/en";
 import type { Locale } from "@/i18n/locales";
 import { useLiveMetrics } from "@/lib/live-metrics";
 
-/* ================================================================
-   HERO v4 — "Compliance Mesh"
-   Canvas 粒子网络（风险情报网格）：节点漂移、近距连线、
-   高亮节点脉冲。下方是等宽数字指标带 + 旋转监管封印。
-   [v5] 右侧筛查面板交易流滚动注入（新行顶部进入），
-   "实时"从文案变成体感；reduced-motion 下静态。
-   ================================================================ */
-
-type Particle = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  r: number;
-  hot: boolean; // 高亮节点（被筛查命中的风险点）
-  phase: number;
-};
-
-/* [v5] 交易流行 */
-type TxRow = { id: number; addr: string; flagged: boolean };
-
-function randomAddr(): string {
-  const hex = () =>
-    Array.from({ length: 4 }, () =>
-      Math.floor(Math.random() * 16).toString(16)
-    ).join("");
-  return `0x${hex()}...${hex()}`;
-}
-
-export default function HeroHome({
-  d,
-  lang,
-}: {
-  d: Dict["home"]["hero"];
-  lang: Locale;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export default function HeroHome({ d, lang }: { d: Dict["home"]["hero"]; lang: Locale }) {
   const liveMetrics = useLiveMetrics();
 
-  /* [v5] 交易流：每 ~4.5s 注入一条新筛查记录（新行进入动效）。
-     首 3 条种子用确定性地址（SSR 输出稳定，hydration 零漂移）；
-     reduced-motion 下不启动定时器，面板保持静态。 */
-  const txIdRef = useRef(3);
-  const [txRows, setTxRows] = useState<TxRow[]>([]);
-  useEffect(() => {
-    setTxRows([
-      { id: 0, addr: "0x7a2f...9e3d", flagged: false },
-      { id: 1, addr: "0x3b1c...7a2e", flagged: true },
-      { id: 2, addr: "0x9f4d...2c1b", flagged: false },
-    ]);
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = setInterval(() => {
-      setTxRows((prev) => [
-        { id: txIdRef.current++, addr: randomAddr(), flagged: Math.random() < 0.22 },
-        ...prev,
-      ].slice(0, 3));
-    }, 4500);
-    return () => clearInterval(timer);
-  }, []);
-
-  /* ---- Compliance mesh: particle network with proximity links ---- */
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    /* Canvas 2D 不支持 var() —— 用 getComputedStyle 解析一次令牌色值。 */
-    const cs = getComputedStyle(document.documentElement);
-    const cLine = cs.getPropertyValue("--fio-border-light").trim();
-    const cNode = cs.getPropertyValue("--fio-steel").trim();
-    const cHot = cs.getPropertyValue("--fio-gold").trim();
-    const cHotDim = cs.getPropertyValue("--fio-gold-dim").trim();
-    const cCream = cs.getPropertyValue("--fio-accent").trim();
-    if (!cLine || !cNode || !cHot || !cHotDim || !cCream) return; // [AUDIT FIX 2026-09-18 R3] 原漏 cHotDim → 金色光晕静默消失
-
-    let w = 0, h = 0;
-    let particles: Particle[] = [];
-
-    /* [v5 性能] 低端机降级：核数/内存低则粒子密度减半。
-       （隐藏/离屏暂停已由 R6-11 提供，此处不重复。） */
-    const lowPower =
-      (navigator.hardwareConcurrency ?? 8) <= 4 ||
-      // @ts-expect-error deviceMemory 是 Chromium 专有实验字段
-      (navigator.deviceMemory ?? 8) <= 4;
-    const densityDivisor = lowPower ? 52000 : 26000;
-
-    const seed = () => {
-      const count = Math.max(36, Math.min(90, Math.floor((w * h) / densityDivisor)));
-      particles = Array.from({ length: count }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: (Math.random() - 0.5) * 0.22,
-        r: 1 + Math.random() * 1.4,
-        hot: Math.random() < 0.12,
-        phase: Math.random() * Math.PI * 2,
-      }));
-    };
-
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      w = canvas.width = canvas.offsetWidth * dpr;
-      h = canvas.height = canvas.offsetHeight * dpr;
-      seed();
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const LINK_DIST = () => Math.min(w, h) * 0.16;
-    let frame = 0;
-    let t = 0;
-    /* [AUDIT FIX 2026-09-25 R6-11] 性能精修：首屏粒子网络是常驻 rAF 循环。
-       ① 文档隐藏（切后台标签）时 rAF 已被浏览器节流但回调仍排队，显式暂停；
-       ② hero 滚出视口后继续绘制纯浪费 GPU/CPU —— IO 观察，离屏即停，
-       回屏恢复。两者都不改变任何视觉结果（回屏后从当前状态续画）。 */
-    let running = true;
-    let inView = true;
-
-    const loop = () => {
-      frame = requestAnimationFrame(loop);
-      if (!running || !inView) return;
-      t += 0.016;
-      drawFrame();
-    };
-
-    const drawFrame = () => {
-      ctx.clearRect(0, 0, w, h);
-
-      const dpr = window.devicePixelRatio || 1;
-      const linkDist = LINK_DIST();
-
-      /* links */
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-        for (let j = i + 1; j < particles.length; j++) {
-          const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < linkDist) {
-            const alpha = (1 - dist / linkDist) * 0.5;
-            ctx.globalAlpha = alpha;
-            ctx.strokeStyle = a.hot || b.hot ? cHot : cLine;
-            ctx.lineWidth = (a.hot || b.hot ? 0.7 : 0.5) * dpr;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-      }
-      ctx.globalAlpha = 1;
-
-      /* nodes */
-      for (const p of particles) {
-        p.x += p.vx * dpr;
-        p.y += p.vy * dpr;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-
-        if (p.hot) {
-          /* 高亮节点：金色脉冲光晕 */
-          const pulse = 0.5 + 0.5 * Math.sin(t * 2 + p.phase);
-          ctx.globalAlpha = 0.25 + pulse * 0.3;
-          ctx.fillStyle = cHotDim;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, (6 + pulse * 5) * dpr, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.fillStyle = cHot;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, (p.r + 0.6) * dpr, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          ctx.globalAlpha = 0.75;
-          ctx.fillStyle = cNode;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r * dpr, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-      }
-    };
-
-    const onVisibility = () => { running = !document.hidden; };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    const io = new IntersectionObserver(
-      (entries) => { inView = entries[0].isIntersecting; },
-      { threshold: 0 }
-    );
-    io.observe(canvas);
-
-    loop();
-
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
-      document.removeEventListener("visibilitychange", onVisibility);
-      io.disconnect();
-    };
-  }, []);
-
   return (
-    <section className="relative overflow-hidden fio-gradient-hero">
-      <canvas
-        ref={canvasRef}
-        /* [AUDIT FIX 2026-09-25 R6-1] 必须显式 h-full w-full：canvas 是 replaced
-           element，absolute + inset-0 不会拉伸它（CSS2.1 §10.3.8：绝对定位替换元素
-           width:auto 取固有尺寸，over-constrained 时忽略 right）→ 此前恒为默认
-           300×150 贴在左上角；且 resize() 把 offsetWidth×dpr 写回 width 属性，
-           HiDPI 下固有尺寸每轮 resize 翻倍（dpr=2 → 600px）造成移动端横向溢出。
-           显式 CSS 尺寸切断「属性尺寸=固有尺寸=布局尺寸」的自反馈环。 */
-        className="pointer-events-none absolute inset-0 h-full w-full z-[var(--z-decor)]"
-        aria-label={d.canvasLabel}
-        role="img"
-      />
+    <section className="origin-hero" aria-labelledby="origin-hero-title">
+      <div className="origin-hero-grid">
+        <div className="origin-visual">
+          <OriginField label={d.badge} detail="RISK REGISTRY · FINAL-STATE READBACK" />
+        </div>
 
-      <div className="relative z-[var(--z-content)] mx-auto max-w-6xl px-4 sm:px-6 2xl:max-w-7xl">
-        <div className="fio-hero-min flex flex-col justify-center py-28 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
-          {/* LEFT — Positioning */}
-          <div className="text-center lg:col-span-7 lg:text-left">
-            <div className="fio-animate-fade-up fio-delay-1 mb-9">
-              {/* [v5] 公告胶囊：粒子背景上的可读性 + 机构站 announcement pill 惯例 */}
-              <span className="fio-badge">{d.badge}</span>
-            </div>
-
-            <h1
-              className="fio-animate-fade-up fio-delay-2 fio-heading-xl"
-              style={{ color: "var(--fio-text)" }}
-            >
-              {d.titlePre}
-              <br />
-              <span style={{ color: "var(--fio-cream)" }}>{d.titleEm}</span>
+        <div className="origin-copy">
+          <div className="origin-copy-inner">
+            <p className="origin-kicker">{d.badge}</p>
+            <h1 id="origin-hero-title" className="origin-title">
+              {d.titlePre} <span>{d.titleEm}</span>
             </h1>
-
-            <p
-              className="fio-animate-fade-up fio-delay-3 mx-auto mt-7 max-w-xl text-base leading-relaxed lg:mx-0"
-              style={{ color: "var(--fio-text-2)" }}
-            >
-              {d.sub}
-            </p>
-
-            <div
-              className="fio-animate-fade-up fio-delay-4 mt-10 flex flex-col items-center gap-3 sm:flex-row lg:justify-start"
-            >
-              <Link href="/contact" className="fio-btn fio-btn-primary group">
+            <p className="origin-lead">{d.sub}</p>
+            <div className="origin-actions">
+              <Link href="/contact" className="fio-btn fio-btn-primary">
                 {d.ctaPrimary}
-                <svg
-                  className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               </Link>
-              <Link href="/admin/dashboard" className="fio-btn fio-btn-ghost">
-                {d.ctaGhost}
+              <Link href="/admin/dashboard" className="origin-text-link">
+                {d.ctaGhost}<span aria-hidden="true">↗</span>
               </Link>
             </div>
-
-            {/* Live screening — 真实产品能力前置 */}
             <HeroScreen d={d.screen} lang={lang} />
           </div>
-
-          {/* RIGHT — Live screening panel + rotating seal */}
-          <div className="fio-animate-fade-up fio-delay-3 relative mt-16 w-full lg:col-span-5 lg:mt-0">
-            <div
-              className="fio-ticks relative rounded-sm border"
-              style={{
-                borderColor: "var(--fio-border-light)",
-                background: "var(--fio-ink-scrim)",
-                boxShadow: "var(--fio-panel-shadow)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)", /* [AUDIT FIX 2026-09-25 R7-5] Safari ≤15 需前缀 */
-              }}
-            >
-              {/* Window chrome */}
-              <div
-                className="flex items-center justify-between px-5 py-3.5"
-                style={{ borderBottom: "1px solid var(--fio-border-hairline)" }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
-                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
-                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--fio-elevated)" }} />
-                </div>
-                {/* [AUDIT FIX 2026-09-25 R7-2b] 标签避让旋转封印：seal 印在面板
-                    右上角，右对齐标签被圆环压住。用 margin（flex 布局中 margin
-                    参与分配，文字实际左移；inline 的 padding 推不动文字）。
-                    sm-xl 贴边态避让 96px，xl 悬挑态避让 112px。 */}
-                <span className="font-mono text-[0.6875rem] tracking-wider sm:mr-24 xl:mr-28" style={{ color: "var(--fio-text-3)" }}>
-                  fidesorigin.com/admin
-                </span>
-              </div>
-
-              <div className="px-5 py-5">
-                {/* Stats row */}
-                <div className="mb-5 grid grid-cols-3 gap-3">
-                  {[
-                    { label: d.statRisk, value: d.statRiskValue, color: "var(--fio-gold)" },
-                    { label: d.statTx, value: d.statTxValue, color: "var(--fio-accent)" },
-                    { label: d.statAlerts, value: d.statAlertsValue, color: "var(--fio-danger)" },
-                  ].map((s) => (
-                    <div
-                      key={s.label}
-                      className="p-3"
-                      style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
-                    >
-                      <div className="font-mono text-[0.6875rem] uppercase tracking-wider" style={{ color: "var(--fio-text-3)" }}>
-                        {s.label}
-                      </div>
-                      <div className="fio-num mt-1 text-lg font-semibold" style={{ color: s.color }}>
-                        {s.value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Scanning bar */}
-                <div className="mb-4">
-                  <div className="mb-1.5 flex items-center justify-between font-mono text-[0.6875rem]" style={{ color: "var(--fio-text-3)" }}>
-                    <span>{d.scanLabel}</span>
-                    <span style={{ color: "var(--fio-gold)" }}>{d.scanActive}</span>
-                  </div>
-                  <div className="h-1 w-full overflow-hidden" style={{ background: "var(--fio-surface-2)" }}>
-                    <div
-                      className="h-full"
-                      style={{
-                        width: "72%",
-                        background: "linear-gradient(90deg, var(--fio-steel), var(--fio-gold))",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Transaction stream — [v5] 滚动注入，新行自顶部进入 */}
-                <div className="space-y-2" aria-live="off">
-                  {txRows.map((tx, i) => (
-                    <div
-                      key={tx.id}
-                      className={`flex items-center justify-between px-3 py-2 ${i === 0 && tx.id >= 3 ? "fio-tx-enter" : ""}`}
-                      style={{ background: "var(--fio-surface)", border: "1px solid var(--fio-border-hairline)" }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{
-                            background: tx.flagged ? "var(--fio-danger)" : "var(--fio-gold)",
-                            boxShadow: `0 0 4px ${tx.flagged ? "var(--fio-danger-dim)" : "var(--fio-gold-dim)"}`,
-                          }}
-                        />
-                        <span className="font-mono text-xs" style={{ color: "var(--fio-text-2)" }}>
-                          {tx.addr}
-                        </span>
-                      </div>
-                      <span
-                        className="px-2 py-0.5 font-mono text-[0.6875rem]"
-                        style={{
-                          color: tx.flagged ? "var(--fio-danger-light)" : "var(--fio-accent)",
-                          background: tx.flagged ? "var(--fio-danger-dim)" : "var(--fio-gold-dim)",
-                        }}
-                      >
-                        {tx.flagged ? d.statusFlagged : d.statusCleared}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Rotating regulatory seal */}
-            {/* [AUDIT FIX 2026-09-25 R7-2] 旋转文字环的 bbox 随角度超出 svg 盒
-                （环直径≈盒宽，旋转 45° 时 bbox 外扩约 21px）。容器富余：
-                <1200px 时 max-w-6xl==viewport-48，任何负 right 都会越界；
-                ≥1280(xl) 起侧向富余 ≥64px，悬挑 20px 安全。故 sm-xl 贴边、
-                xl 起恢复悬挑设计。 */}
-            <div
-              aria-hidden="true"
-              className="absolute right-0 -top-8 hidden h-28 w-28 sm:block xl:-right-5"
-            >
-              <svg viewBox="0 0 120 120" className="h-full w-full">
-                <defs>
-                  <path id="fio-seal-circle" d="M 60,60 m -44,0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0" />
-                </defs>
-                <circle cx="60" cy="60" r="59" fill="var(--fio-ink-scrim)" stroke="var(--fio-gold-dim)" strokeWidth="1" />
-                <circle cx="60" cy="60" r="33" fill="none" stroke="var(--fio-gold-dim)" strokeWidth="0.5" />
-                <g className="fio-seal-ring">
-                  {/* [AUDIT FIX 2026-09-25 R7-9] 原 9.5px/2.2 字距 × 45 字符
-                      ≈ 355 单位，超出圆路径周长 276.5 —— 超出末端的字形沿
-                      切线甩出 svg viewBox 被裁（探针实测 bbox x1=-21），
-                      且首尾字符在起点重叠。收紧为 8.5px/0.8（45×5.9=266）
-                      使全部字形落在路径内。 */}
-                  <text fontSize="8.5" letterSpacing="0.8" fill="var(--fio-gold)" fontFamily="var(--font-mono)">
-                    <textPath href="#fio-seal-circle">{d.sealText}</textPath>
-                  </text>
-                </g>
-                {/* Center mark — shield check */}
-                <path
-                  d="M60 46 L72 52 L72 64 Q72 74 60 78 Q48 74 48 64 L48 52 Z"
-                  fill="none"
-                  stroke="var(--fio-gold)"
-                  strokeWidth="1.2"
-                />
-                <path
-                  d="M55 61 L58.5 64.5 L66 56.5"
-                  fill="none"
-                  stroke="var(--fio-cream)"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* 构建快照保证首屏可用；公开 API 与 Subgraph 均成功后才标记实时。 */}
-        <div
-          className="fio-animate-fade-up fio-delay-5 relative z-[var(--z-content)] grid grid-cols-2 border-t md:grid-cols-4"
-          style={{ borderColor: "var(--fio-border-hairline)" }}
-        >
-          {d.metrics.map((m, i) => {
-            const value = i === 0 ? liveMetrics.riskAddresses : i === 1 ? liveMetrics.onchainProfiles : m.value;
-            return (
-              <div
-                key={m.label}
-                className={`py-7 md:py-9 ${i % 2 === 1 ? "border-l" : ""} ${i > 0 ? "md:border-l" : ""}`}
-                style={{ borderColor: "var(--fio-border-hairline)" }}
-              >
-                <div className="px-2 text-center md:px-4">
-                  <div className="fio-num text-2xl font-semibold md:text-3xl" style={{ color: "var(--fio-cream)" }}>
-                    <CountUp value={value} />
-                  </div>
-                  <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--fio-text-3)" }}>
-                    {m.label}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div
-          className="relative z-[var(--z-content)] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t px-4 py-3 text-center font-mono text-[0.6875rem]"
-          style={{ borderColor: "var(--fio-border-hairline)", color: "var(--fio-text-3)" }}
-          role="status"
-          aria-live="polite"
-          data-metrics-status={liveMetrics.status}
-        >
-          <span style={{ color: liveMetrics.status === "live" ? "var(--fio-success)" : undefined }}>
-            {liveMetrics.status === "live" ? d.metricsLive : liveMetrics.status === "cached" ? d.metricsCached : d.metricsSnapshot}
-          </span>
-          <time dateTime={liveMetrics.updatedAt}>
-            {liveMetrics.updatedAt.slice(0, 16).replace("T", " ")} UTC
-          </time>
         </div>
       </div>
 
-      {/* Bottom fade */}
-      <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 z-[var(--z-decor)] h-24"
-        style={{ background: "linear-gradient(to top, var(--fio-ink), transparent)" }}
-      />
+      <div className="origin-metrics">
+        {d.metrics.map((metric, index) => {
+          const value = index === 0 ? liveMetrics.riskAddresses : index === 1 ? liveMetrics.onchainProfiles : metric.value;
+          return (
+            <div className="origin-metric" key={metric.label}>
+              <strong className="fio-num"><CountUp value={value} /></strong>
+              <span>{metric.label}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="origin-metrics-status" role="status" aria-live="polite" data-metrics-status={liveMetrics.status}>
+        <span>{liveMetrics.status === "live" ? d.metricsLive : liveMetrics.status === "cached" ? d.metricsCached : d.metricsSnapshot}</span>
+        <time dateTime={liveMetrics.updatedAt}>{liveMetrics.updatedAt.slice(0, 16).replace("T", " ")} UTC</time>
+      </div>
     </section>
   );
 }

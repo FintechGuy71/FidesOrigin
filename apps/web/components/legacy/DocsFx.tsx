@@ -2,17 +2,16 @@
 
 import { useEffect } from "react";
 
-/* ================================================================
-   DOCS FX — docs-page interactions ported from the legacy inline
-   scripts: mobile sidebar toggle + code-block copy buttons.
-   ================================================================ */
+type Props = { copyLabel: string; copiedLabel: string; sidebarLabel: string };
 
-type Props = { copyLabel: string; copiedLabel: string };
-
-export default function DocsFx({ copyLabel, copiedLabel }: Props) {
+export default function DocsFx({ copyLabel, copiedLabel, sidebarLabel }: Props) {
   useEffect(() => {
     const sidebar = document.getElementById("docsSidebar");
     const toggle = document.getElementById("sidebarToggle");
+    if (toggle) {
+      const visible = toggle.textContent?.trim() || "Documentation Menu";
+      toggle.setAttribute("aria-label", `${sidebarLabel}: ${visible}`);
+    }
     const onToggle = () => {
       if (!sidebar || !toggle) return;
       const active = sidebar.classList.toggle("active");
@@ -21,39 +20,25 @@ export default function DocsFx({ copyLabel, copiedLabel }: Props) {
     toggle?.addEventListener("click", onToggle);
 
     const timers = new Map<Element, ReturnType<typeof setTimeout>>();
+    document.querySelectorAll(".docs-code-copy").forEach((btn) => { btn.textContent = copyLabel; });
 
-    // Localize the initial (hardcoded) labels coming from converted HTML
-    document.querySelectorAll(".docs-code-copy").forEach((btn) => {
-      btn.textContent = copyLabel;
-    });
-
-    /* [a11y v5] 可横向滚动的代码块必须键盘可达（axe scrollable-region-focusable）。
-       只对实际溢出的 <pre> 加 tabindex，避免无谓的 Tab 停靠点。 */
     document.querySelectorAll<HTMLElement>(".docs-code-block > pre").forEach((pre) => {
-      if (pre.scrollWidth > pre.clientWidth && !pre.hasAttribute("tabindex")) {
-        pre.setAttribute("tabindex", "0");
-      }
+      if (pre.scrollWidth > pre.clientWidth && !pre.hasAttribute("tabindex")) pre.setAttribute("tabindex", "0");
     });
 
-    const onCopy = (e: Event) => {
-      const btn = (e.target as Element).closest(".docs-code-copy");
+    const onCopy = (event: Event) => {
+      const btn = (event.target as Element).closest(".docs-code-copy");
       if (!btn) return;
-      const block = btn.closest(".docs-code-block");
-      const code = block?.querySelector("pre");
+      const code = btn.closest(".docs-code-block")?.querySelector("pre");
       if (!code) return;
-      // [AUDIT FIX 2026-09-18 R3] 原无 .catch：权限被拒/非安全上下文时
-      // 未捕获 rejection，且按钮停在"已复制"假象。失败时恢复原样。
       navigator.clipboard.writeText(code.textContent || "").then(() => {
         btn.textContent = copiedLabel;
         btn.classList.add("copied");
         clearTimeout(timers.get(btn));
-        timers.set(
-          btn,
-          setTimeout(() => {
-            btn.textContent = copyLabel;
-            btn.classList.remove("copied");
-          }, 2000)
-        );
+        timers.set(btn, setTimeout(() => {
+          btn.textContent = copyLabel;
+          btn.classList.remove("copied");
+        }, 2000));
       }).catch(() => {
         btn.textContent = copyLabel;
         btn.classList.remove("copied");
@@ -64,9 +49,9 @@ export default function DocsFx({ copyLabel, copiedLabel }: Props) {
     return () => {
       toggle?.removeEventListener("click", onToggle);
       document.removeEventListener("click", onCopy);
-      timers.forEach((t) => clearTimeout(t));
+      timers.forEach((timer) => clearTimeout(timer));
     };
-  }, [copyLabel, copiedLabel]);
+  }, [copyLabel, copiedLabel, sidebarLabel]);
 
   return null;
 }
